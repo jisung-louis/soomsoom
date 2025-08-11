@@ -1,0 +1,14 @@
+<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+<mask id="mask0_1691_28345" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24">
+<rect width="24" height="24" fill="currentColor"/>
+</mask>
+<g mask="url(#mask0_1691_28345)">
+<mask id="mask1_1691_28345" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="2" y="2" width="20" height="20">
+<circle cx="12" cy="12" r="10" fill="currentColor"/>
+</mask>
+<g mask="url(#mask1_1691_28345)">
+<circle cx="12" cy="11" r="4" fill="currentColor"/>
+<ellipse cx="12" cy="23" rx="9" ry="8" fill="currentColor"/>
+</g>
+</g>
+</svg>
