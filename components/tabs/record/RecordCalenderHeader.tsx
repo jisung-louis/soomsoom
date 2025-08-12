@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { colors } from '../../../constants/colors';
-import { typography } from '../../../constants/typography';
+import { syongsyongTypography } from '../../../constants/typography';
 import { Toggle } from '../../common/toggle/Toggle';
 import ArrowLeftIcon from '../../../assets/icons/common/arrow_back.svg';
 import ArrowRightIcon from '../../../assets/icons/common/arrow_right.svg';
@@ -31,7 +31,12 @@ export const RecordCalenderHeader: React.FC<CalenderHeaderProps> = ({
         <Pressable onPress={onPrev} style={styles.arrowBtn} accessibilityLabel="이전 달">
           <ArrowLeftIcon width={24} height={24} color={colors.grayScale800} />
         </Pressable>
-        <Text style={styles.monthText}>{`${year}년 ${month}월`}</Text>
+        <View style={styles.monthTextContainer}>
+          <Text style={styles.monthNumberText}>{`${year}`}</Text>
+          <Text style={styles.monthText}>년 </Text>
+          <Text style={styles.monthNumberText}>{`${month}`}</Text>
+          <Text style={styles.monthText}>월</Text>
+        </View>
         <Pressable onPress={onNext} style={styles.arrowBtn} accessibilityLabel="다음 달">
           <ArrowRightIcon width={24} height={24} color={colors.grayScale800} />
         </Pressable>
@@ -53,7 +58,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 20,
     paddingVertical: 8,
-    gap: 'auto',
   },
   left: {
     flexDirection: 'row',
@@ -61,12 +65,17 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   arrowBtn: {
-    padding: 8,
+    padding: 0,
+  },
+  monthTextContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  monthNumberText: {
+    ...syongsyongTypography.title3,
   },
   monthText: {
-    fontSize: typography.heading5.fontSize,
-    fontWeight: typography.heading5.fontWeight,
-    color: colors.grayScale900,
+    ...syongsyongTypography.title4,
   },
   toggle: {
   },

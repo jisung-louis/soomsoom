@@ -28,7 +28,7 @@ const PlayResultScreen = () => {
                 <TopNavigation
                     isShopButtonVisible={false}
                     isHeartButtonVisible={true}
-                    isAddMenuButtonVisible={false}
+                    isMessageButtonVisible={false}
                 />
                 <View style={styles.contentContainer}>
                     <View style={styles.characterWrapper}>

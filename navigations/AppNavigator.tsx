@@ -4,7 +4,7 @@ import { createBottomTabNavigator, BottomTabBarProps } from '@react-navigation/b
 import { getFocusedRouteNameFromRoute } from '@react-navigation/native';
 import { BottomNavigation, BottomTabKey } from '../components/navigation/BottomNavigation';
 import { StyleSheet, Animated } from 'react-native';
-import HomeTab from '../screens/tabs/HomeTab';
+import HomeStackNavigator from './tabs/HomeStackNavigator';
 import RecordStackNavigator from './tabs/RecordStackNavigator';
 import PlayStackNavigator from './tabs/PlayStackNavigator';
 import AlarmStackNavigator from './tabs/AlarmStackNavigator';
@@ -29,7 +29,7 @@ export default function AppNavigator() {
         tabBar={(props) => <CustomTabBar {...props} />}
         
       >
-        <Tab.Screen name="home" component={HomeTab} />
+        <Tab.Screen name="home" component={HomeStackNavigator} />
         <Tab.Screen name="record" component={RecordStackNavigator} />
         <Tab.Screen name="play" component={PlayStackNavigator} />
         <Tab.Screen name="alarm" component={AlarmStackNavigator} />
@@ -53,7 +53,7 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
   // 바텀 네비게이션을 숨겨야 하는 화면들 정의
   const HIDDEN_BOTTOM_NAV_SCREENS: Record<string, string[]> = {
     record: ['EmotionSelectScreen', 'EmotionRecordScreen', 'EmotionRecordHelpScreen'],
-    home: ['DetailScreen'],
+    home: ['ShopScreen'],
     play: ['PlayFavoriteScreen', 'PlayHistoryScreen', 'PlayDetailScreen', 'PlayTeacherDetailScreen', 'PlayBreathScreen', 'PlayMeditationScreen', 'PlayResultScreen'],
     alarm: ['AlarmAddScreen', ],
     my: [],

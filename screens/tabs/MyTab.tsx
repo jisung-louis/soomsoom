@@ -54,6 +54,7 @@ const MyTab = () => {
   const navigation = useNavigation<StackNavigationProp<MyStackParamList>>();
   const scrollViewRef = useRef<ScrollView>(null);
   const bottomSheetRef = useRef<BottomSheetModal>(null);
+  const catLottieRef = useRef<LottieView>(null); // 고양이 LottieView ref
 
   const [isEditMode, setIsEditMode] = useState(false); // 방 꾸미기 모드 
   const [selectedTab, setSelectedTab] = useState(0);
@@ -95,6 +96,12 @@ const MyTab = () => {
     }
   }, [isEditMode]);
 
+  // 컴포넌트 마운트 시 고양이 애니메이션 시작
+  useEffect(() => {
+    // 고양이 애니메이션 시작
+    catLottieRef.current?.play();
+  }, []);
+
   // selectedItems가 변경될 때마다 placedItems 업데이트
   useEffect(() => {
     // 선택된 아이템들을 고정 위치에 배치
@@ -117,6 +124,13 @@ const MyTab = () => {
     }).filter(Boolean) as PlacedItem[];
     
     setPlacedItems(newPlacedItems);
+    
+    // 새로운 아이템들이 배치되면 고양이 애니메이션 재시작
+    if (newPlacedItems.length > 0) {
+      // 고양이 애니메이션을 처음부터 재시작
+      catLottieRef.current?.reset();
+      catLottieRef.current?.play();
+    }
   }, [selectedItems]);
 
   return (
@@ -145,8 +159,9 @@ const MyTab = () => {
         </View>
         <View style={styles.catAnimationContainer}>
           <LottieView
+            ref={catLottieRef}
             source={require('../../assets/animations/cat_basic_motion.json')}
-            autoPlay
+            autoPlay={false}
             loop
             style={{ width: '100%', height: '100%' }}
           />

@@ -1,17 +1,33 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, TouchableWithoutFeedback, ImageBackground, LayoutRectangle } from 'react-native';
+import { StyleSheet, ImageBackground, LayoutRectangle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
 import TopNavigation from '../../components/common/top-navigation/TopNavigation';
-import MoreMenu from '../../components/tabs/home/MoreMenu';
 import LottieView from 'lottie-react-native';
+import { HomeStackParamList } from '../../navigations/tabs/HomeStackNavigator';
+
+type HomeTabNavigationProp = StackNavigationProp<HomeStackParamList, 'HomeTab'>;
 
 const HomeTab = () => {
-  const [moreMenuVisible, setMoreMenuVisible] = useState(false);
   const [catLayout, setCatLayout] = useState<LayoutRectangle>({x: 0, y: 0, width: 0, height: 0});
+  const navigation = useNavigation<HomeTabNavigationProp>();
 
+  const handleShopPress = () => {
+    navigation.navigate('ShopScreen');
+  };
+
+  const handleHeartPress = () => {
+    // 하트 버튼 기능 구현
+    console.log('하트 버튼 클릭');
+  };
+
+  const handleMessagePress = () => {
+    // 메시지 버튼 기능 구현
+    console.log('메시지 버튼 클릭');
+  };
   
   return (
-    <TouchableWithoutFeedback onPress={() => setMoreMenuVisible(false)}>
       <ImageBackground 
         source={require('../../assets/images/background.png')}
         style={styles.background}
@@ -19,8 +35,9 @@ const HomeTab = () => {
       >
         <SafeAreaView style={styles.safeArea} edges={['top']}>
           <TopNavigation 
-            onMoreMenuToggle={(visible) => setMoreMenuVisible(visible)}
-            moreMenuVisible={moreMenuVisible}
+            shopButtonPress={handleShopPress}
+            heartButtonPress={handleHeartPress}
+            messageButtonPress={handleMessagePress}
           />
           {/* 여기에 고양이, 텍스트 등 추가 */}
           <LottieView
@@ -45,13 +62,7 @@ const HomeTab = () => {
             }}
           />
         </SafeAreaView>
-        <MoreMenu 
-          visible={moreMenuVisible} 
-          style={styles.moreMenu} 
-          onClose={() => setMoreMenuVisible(false)} 
-        />
       </ImageBackground>
-    </TouchableWithoutFeedback>
   );
 };
 
