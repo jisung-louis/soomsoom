@@ -11,8 +11,7 @@ import { radius } from '../../../constants/radius';
 import EmotionIcon from '../../../assets/icons/common/emotion.svg';
 import Badge from '../../../components/common/badge/Badge';
 import CheckIcon from '../../../assets/icons/common/stroke_check copy.svg';
-
-
+import { roomItemList, RoomItem, IN_POSSESSION_ITEMS } from '../../../data/roomItemData';
 
 const ITEM_IMAGE_WIDTH = 105;
 const ITEM_IMAGE_HEIGHT = 105;
@@ -40,8 +39,6 @@ const tabMenu = [
   },
 ];
 
-const InPossessionItems = [1, 7, 8]; // 보유중 아이템 아이디 리스트
-
 type ItemList = {
   id: number;
   type?: string;
@@ -50,77 +47,6 @@ type ItemList = {
   price?: number;
   __isPlaceholder?: boolean;
 };
-
-const itemList: ItemList[] = [
-  {
-    id: 1,
-    type: '악세사리',
-    title: '선글라스',
-    image: require('../../../assets/animations/sunglass_motion.json'),
-    price: 300,
-  },
-  {
-    id: 2,
-    type: '가전 ・ 가구',
-    title: '가전1',
-    image: 'https://via.placeholder.com/150',
-    price: 300,
-  },
-  {
-    id: 3,
-    type: '장식품',
-    title: '장식품1',
-    image: 'https://via.placeholder.com/150',
-    price: 300,
-  },
-  {
-    id: 4,
-    type: '벽지 ・ 바닥',
-    title: '벽지1',
-    image: 'https://via.placeholder.com/150',
-    price: 300,
-  },
-  {
-    id: 5,
-    type: '악세사리',
-    title: '악세사리2',
-    image: 'https://via.placeholder.com/150',
-    price: 300,
-  },
-  {
-    id: 6,
-    type: '가전 ・ 가구',
-    title: '가전2',
-    image: 'https://via.placeholder.com/150',
-    price: 300,
-  },
-  {
-    id: 7,
-    type: '장식품',
-    title: '장식품2',
-    image: 'https://via.placeholder.com/150',
-  },
-  {
-    id: 8,
-    type: '벽지 ・ 바닥',
-    title: '벽지2',
-    image: 'https://via.placeholder.com/150',
-  },
-  {
-    id: 9,
-    type: '악세사리',
-    title: '악세사리3',
-    image: 'https://via.placeholder.com/150',
-    price: 300,
-  },
-  {
-    id: 10,
-    type: '악세사리',
-    title: '악세사리4',
-    image: 'https://via.placeholder.com/150',
-    price: 300,
-  },
-];
 
 // 3의 배수로 맞추는 패딩 함수
 function padToThreeColumns(data: ItemList[]) {
@@ -136,17 +62,26 @@ function padToThreeColumns(data: ItemList[]) {
     return [...data, ...placeholders];
   }
 
-const MyRoomDecoration = ({selectedTab, handleTabPress}: {selectedTab: number, handleTabPress: (index: number) => void}) => {
-    const InPossessionItemData: ItemList[] = itemList.filter(item => InPossessionItems.includes(item.id));
+const MyRoomDecoration = ({
+  selectedTab, 
+  handleTabPress, 
+  selectedItems, 
+  onItemSelection
+}: {
+  selectedTab: number, 
+  handleTabPress: (index: number) => void,
+  selectedItems: number[],
+  onItemSelection: (itemId: number) => void
+}) => {
+    const InPossessionItemData: ItemList[] = roomItemList.filter(item => IN_POSSESSION_ITEMS.includes(item.id));
     const filteredData = selectedTab === 0
       ? InPossessionItemData
-      : itemList.filter(item => item.type === tabMenu[selectedTab].title);
+      : roomItemList.filter(item => item.type === tabMenu[selectedTab].title);
     const paddedData = padToThreeColumns(filteredData);
-    const isOwned = (id: number) => InPossessionItems.includes(id);
-    const [selectedItems, setSelectedItems] = useState<number[]>([]); // 방에 꾸며진 아이템 아이디 리스트
+    const isOwned = (id: number) => IN_POSSESSION_ITEMS.includes(id);
 
     const handleItemPress = (id: number) => {
-        setSelectedItems(selectedItems.includes(id) ? selectedItems.filter(itemId => itemId !== id) : [...selectedItems, id]);
+        onItemSelection(id);
     };
 
     return (

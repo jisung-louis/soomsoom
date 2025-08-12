@@ -16,6 +16,7 @@ import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import MyRoomDecoration from '../subpages/my/MyRoomDecoration';
 import { ButtonSmall } from '../../components/common/buttons/ButtonSmall';
 import MyTabTopNavigation from '../../components/common/top-navigation/MyTabTopNavigation';
+import { roomItemList, RoomItem, IN_POSSESSION_ITEMS, getItemPosition } from '../../data/roomItemData';
 
 const screenWidth = Dimensions.get('window').width;
 const screenHeight = Dimensions.get('window').height;
@@ -29,12 +30,25 @@ const BOTTOM_SHEET_HEIGHT = screenHeight - (cat.y + cat.height)
 const BOTTOM_SHEET_MIN_HEIGHT = 300
 const BOTTOM_SHEET_MAX_HEIGHT = screenHeight * 0.5
 
+// 아이템 배치 관련 상수
+const ITEM_SIZE = 80;
+
 const mockStatusData = [
   { title: '기록', valueType: '회', value: 0 },
   { title: '운동', valueType: '회', value: 0 },
   { title: '시간', valueType: 'mm:ss', value: '00:00' },
 ];
 const statusCardContentItemWidth = 100 / mockStatusData.length;
+
+// 아이템 데이터 타입 (RoomItem에서 필요한 속성만 추출)
+type PlacedItem = {
+  id: number;
+  x: number;
+  y: number;
+  title: string;
+  image: any;
+  type: string;
+};
 
 const MyTab = () => {
   const navigation = useNavigation<StackNavigationProp<MyStackParamList>>();
@@ -43,8 +57,33 @@ const MyTab = () => {
 
   const [isEditMode, setIsEditMode] = useState(false); // 방 꾸미기 모드 
   const [selectedTab, setSelectedTab] = useState(0);
+  const [selectedItems, setSelectedItems] = useState<number[]>([]); // 선택된 아이템 ID들
+  const [placedItems, setPlacedItems] = useState<PlacedItem[]>([]); // 배치된 아이템들
+
   const handleTabPress = (index: number) => {
     setSelectedTab(index);
+  };
+
+  // 아이템 선택/해제 핸들러 (positionType당 하나만 선택 가능)
+  const handleItemSelection = (itemId: number) => {
+    const itemData = roomItemList.find(item => item.id === itemId);
+    if (!itemData) return;
+
+    setSelectedItems(prev => {
+      // 같은 positionType의 기존 아이템 제거
+      const filteredItems = prev.filter(id => {
+        const existingItem = roomItemList.find(item => item.id === id);
+        return existingItem?.positionType !== itemData.positionType;
+      });
+
+      // 현재 아이템이 이미 선택되어 있다면 제거, 아니면 추가
+      const isAlreadySelected = prev.includes(itemId);
+      if (isAlreadySelected) {
+        return filteredItems; // 제거만
+      } else {
+        return [...filteredItems, itemId]; // 기존 것 제거하고 새 것 추가
+      }
+    });
   };
 
   useEffect(() => {
@@ -55,6 +94,30 @@ const MyTab = () => {
       bottomSheetRef.current?.close();
     }
   }, [isEditMode]);
+
+  // selectedItems가 변경될 때마다 placedItems 업데이트
+  useEffect(() => {
+    // 선택된 아이템들을 고정 위치에 배치
+    const newPlacedItems: PlacedItem[] = selectedItems.map((itemId, index) => {
+      // 실제 아이템 데이터에서 정보 가져오기
+      const itemData = roomItemList.find(item => item.id === itemId);
+      if (!itemData) return null;
+      
+      // 아이템의 고정 위치를 동적으로 계산
+      const position = getItemPosition(cat.x, cat.y, itemData.positionType, index);
+      
+      return {
+        id: itemId,
+        x: position.x,
+        y: position.y,
+        title: itemData.title,
+        image: itemData.image,
+        type: itemData.type,
+      };
+    }).filter(Boolean) as PlacedItem[];
+    
+    setPlacedItems(newPlacedItems);
+  }, [selectedItems]);
 
   return (
   <View style={styles.container}>
@@ -88,6 +151,32 @@ const MyTab = () => {
             style={{ width: '100%', height: '100%' }}
           />
         </View>
+        
+        {/* 배치된 아이템들 렌더링 */}
+        {placedItems.map((item) => (
+          <View
+            key={item.id}
+            style={[
+              styles.placedItem,
+              {
+                left: item.x,
+                top: item.y,
+              }
+            ]}
+          >
+            {item.image === null ? (
+              <View style={styles.placedItemPlaceholder} />
+            ) : (
+              <LottieView
+                source={item.image}
+                autoPlay
+                loop
+                style={styles.placedItemImage}
+              />
+            )}
+          </View>
+        ))}
+
         {!isEditMode && (
           <View style={styles.content}>
             <Button 
@@ -145,7 +234,12 @@ const MyTab = () => {
     <CustomBottomSheet
       children={
         <View style={styles.bottomSheetContent}>
-          <MyRoomDecoration selectedTab={selectedTab} handleTabPress={handleTabPress} />
+          <MyRoomDecoration 
+            selectedTab={selectedTab} 
+            handleTabPress={handleTabPress}
+            selectedItems={selectedItems}
+            onItemSelection={handleItemSelection}
+          />
         </View>
       }
       hasBackDrop={false}
@@ -172,6 +266,7 @@ const styles = StyleSheet.create({
     left: cat.x,
     width: cat.width,
     height: cat.height,
+    backgroundColor: 'red',
   },
   content: {
     flex: 1,
@@ -249,6 +344,23 @@ const styles = StyleSheet.create({
     height: BOTTOM_SHEET_HEIGHT,
     minHeight: BOTTOM_SHEET_MIN_HEIGHT,
     maxHeight: BOTTOM_SHEET_MAX_HEIGHT,
+  },
+  placedItem: {
+    position: 'absolute',
+    width: ITEM_SIZE,
+    height: ITEM_SIZE,
+    zIndex: 10, // 다른 요소들 위에 표시
+  },
+  placedItemImage: {
+    width: '100%',
+    height: '100%',
+  },
+  placedItemPlaceholder: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.grayScale200,
   },
 });
 
