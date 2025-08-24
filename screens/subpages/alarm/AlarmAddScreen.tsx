@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useRef } from 'react';
-import { View, Text, StyleSheet, Alert } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors } from '../../../constants/colors';
 import AlarmHeader from '../../../components/tabs/alarm/AlarmHeader';
@@ -16,6 +16,7 @@ import SoundSelector from '../../../components/tabs/alarm/AlarmAddScreen/SoundSe
 import { useAlarmStore } from '../../../stores/alarmStore';
 import BottomSheet from '@gorhom/bottom-sheet';
 import CustomBottomSheet from '../../../components/common/bottomsheet/CustomBottomSheet';
+import { CustomAlert, AlertButton } from '../../../components/common/alert';
 
 type BottomSheetType = 'repeat' | 'mission' | 'sound' | null;
 
@@ -29,6 +30,15 @@ const AlarmAddScreen = () => {
   
   // 바텀시트 ref 추가
   const bottomSheetRef = useRef<BottomSheet>(null);
+  
+  // CustomAlert 상태들 추가
+  const [showValidationAlert, setShowValidationAlert] = useState(false);
+  const [showChangesAlert, setShowChangesAlert] = useState(false);
+  const [showSuccessAlert, setShowSuccessAlert] = useState(false);
+  const [showErrorAlert, setShowErrorAlert] = useState(false);
+  const [showDeleteAlert, setShowDeleteAlert] = useState(false);
+  const [showDeleteSuccessAlert, setShowDeleteSuccessAlert] = useState(false);
+  const [showDeleteErrorAlert, setShowDeleteErrorAlert] = useState(false);
   
   // 기존 알람 데이터 로드 (수정 모드일 때)
   const existingAlarm = alarmId ? getAlarmById(alarmId) : null;
@@ -84,18 +94,71 @@ const AlarmAddScreen = () => {
     return `${hour24.toString().padStart(2, '0')}:${time12.minute.padStart(2, '0')}`;
   };
 
+  // Alert 버튼들 설정
+  const validationAlertButtons: AlertButton[] = [
+    { text: '확인', onPress: () => setShowValidationAlert(false) }
+  ];
+
+  const changesAlertButtons: AlertButton[] = [
+    { text: '취소', onPress: () => setShowChangesAlert(false) },
+    { text: '나가기', onPress: () => {
+      setShowChangesAlert(false);
+      navigation.goBack();
+    } }
+  ];
+
+  const successAlertButtons: AlertButton[] = [
+    { text: '확인', onPress: () => {
+      setShowSuccessAlert(false);
+      navigation.goBack();
+    } }
+  ];
+
+  const errorAlertButtons: AlertButton[] = [
+    { text: '확인', onPress: () => setShowErrorAlert(false) }
+  ];
+
+  const deleteAlertButtons: AlertButton[] = [
+    { text: '취소', onPress: () => setShowDeleteAlert(false) },
+    { text: '삭제', onPress: async () => {
+      if (!alarmId) return;
+      
+      setIsLoading(true);
+      try {
+        await deleteAlarm(alarmId);
+        setShowDeleteSuccessAlert(true);
+      } catch (error) {
+        console.error('알람 삭제 실패:', error);
+        setShowDeleteErrorAlert(true);
+      } finally {
+        setIsLoading(false);
+      }
+    }}
+  ];
+
+  const deleteSuccessAlertButtons: AlertButton[] = [
+    { text: '확인', onPress: () => {
+      setShowDeleteSuccessAlert(false);
+      navigation.goBack();
+    } }
+  ];
+
+  const deleteErrorAlertButtons: AlertButton[] = [
+    { text: '확인', onPress: () => setShowDeleteErrorAlert(false) }
+  ];
+
   // 유효성 검사 함수
   const validateAlarmData = (): boolean => {
     const hour = parseInt(selectedTime.hour);
     const minute = parseInt(selectedTime.minute);
     
     if (hour < 1 || hour > 12) {
-      Alert.alert('오류', '시간을 올바르게 설정해주세요.');
+      setShowValidationAlert(true);
       return false;
     }
     
     if (minute < 0 || minute > 59) {
-      Alert.alert('오류', '분을 올바르게 설정해주세요.');
+      setShowValidationAlert(true);
       return false;
     }
     
@@ -111,16 +174,9 @@ const AlarmAddScreen = () => {
                       !isVibrationOn;
     
     if (hasChanges) {
-      Alert.alert(
-        '변경사항 저장',
-        '변경사항이 있습니다. \n저장하지 않고 나가시겠습니까?',
-        [
-          { text: '취소', style: 'cancel' },
-          { text: '나가기', style: 'destructive', onPress: () => navigation.goBack() }
-        ]
-      );
+      setShowChangesAlert(true);
     } else {
-    navigation.goBack();
+      navigation.goBack();
     }
   };
   
@@ -152,9 +208,7 @@ const AlarmAddScreen = () => {
         // 새 알람 추가
         const newAlarmId = await addAlarm(alarmData);
         console.log('알람 추가 완료 - ID:', newAlarmId);
-        Alert.alert('성공', '알람이 성공적으로 추가되었습니다.', [
-          { text: '확인', onPress: () => navigation.goBack() }
-        ]);
+        setShowSuccessAlert(true);
       } else {
         // 기존 알람 수정
         if (!alarmId) {
@@ -162,14 +216,12 @@ const AlarmAddScreen = () => {
         }
         await updateAlarm(alarmId, alarmData);
         console.log('알람 수정 완료 - ID:', alarmId);
-        Alert.alert('성공', '알람이 성공적으로 수정되었습니다.', [
-          { text: '확인', onPress: () => navigation.goBack() }
-        ]);
+        setShowSuccessAlert(true);
       }
       
     } catch (error) {
       console.error(isCreateMode ? '알람 추가 실패:' : '알람 수정 실패:', error);
-      Alert.alert('오류', isCreateMode ? '알람 추가에 실패했습니다.' : '알람 수정에 실패했습니다. 다시 시도해주세요.');
+      setShowErrorAlert(true);
     } finally {
       setIsLoading(false);
     }
@@ -281,36 +333,9 @@ const AlarmAddScreen = () => {
                 <Button 
                   title="알람 삭제" 
                   variant="secondary"  
-                  onPress={async () => {
+                  onPress={() => {
                     if (isLoading) return;
-                    
-                    Alert.alert(
-                      '알람 삭제',
-                      '정말로 이 알람을 삭제하시겠습니까?',
-                      [
-                        { text: '취소', style: 'cancel' },
-                        { 
-                          text: '삭제', 
-                          style: 'destructive',
-                          onPress: async () => {
-                            if (!alarmId) return;
-                            
-                            setIsLoading(true);
-                            try {
-                              await deleteAlarm(alarmId);
-                              Alert.alert('성공', '알람이 삭제되었습니다.', [
-                                { text: '확인', onPress: () => navigation.goBack() }
-                              ]);
-                            } catch (error) {
-                              console.error('알람 삭제 실패:', error);
-                              Alert.alert('오류', '알람 삭제에 실패했습니다.');
-                            } finally {
-                              setIsLoading(false);
-                            }
-                          }
-                        }
-                      ]
-                    );
+                    setShowDeleteAlert(true);
                   }} 
                 />
             </View>
@@ -324,6 +349,58 @@ const AlarmAddScreen = () => {
             </View>
           }
           bottomSheetModalRef={bottomSheetRef}
+        />
+
+        {/* CustomAlert들 */}
+        <CustomAlert
+          visible={showValidationAlert}
+          message="시간을 올바르게 설정해주세요."
+          buttons={validationAlertButtons}
+          onClose={() => setShowValidationAlert(false)}
+        />
+
+        <CustomAlert
+          visible={showChangesAlert}
+          message="변경사항이 있어요!"
+          subMessage="저장하지 않고 나가시겠어요?"
+          buttons={changesAlertButtons}
+          onClose={() => setShowChangesAlert(false)}
+        />
+
+        <CustomAlert
+          visible={showSuccessAlert}
+          message={isCreateMode ? "알람이 성공적으로 추가되었어요!" : "알람이 성공적으로 수정되었어요!"}
+          buttons={successAlertButtons}
+          onClose={() => setShowSuccessAlert(false)}
+        />
+
+        <CustomAlert
+          visible={showErrorAlert}
+          message={isCreateMode ? "알람 추가에 실패했어요." : "알람 수정에 실패했어요."}
+          subMessage="다시 시도해주세요."
+          buttons={errorAlertButtons}
+          onClose={() => setShowErrorAlert(false)}
+        />
+
+        <CustomAlert
+          visible={showDeleteAlert}
+          message="정말로 이 알람을 삭제하시겠어요?"
+          buttons={deleteAlertButtons}
+          onClose={() => setShowDeleteAlert(false)}
+        />
+
+        <CustomAlert
+          visible={showDeleteSuccessAlert}
+          message="알람이 삭제되었어요."
+          buttons={deleteSuccessAlertButtons}
+          onClose={() => setShowDeleteSuccessAlert(false)}
+        />
+
+        <CustomAlert
+          visible={showDeleteErrorAlert}
+          message="알람 삭제에 실패했어요."
+          buttons={deleteErrorAlertButtons}
+          onClose={() => setShowDeleteErrorAlert(false)}
         />
     </SafeAreaView>
   );

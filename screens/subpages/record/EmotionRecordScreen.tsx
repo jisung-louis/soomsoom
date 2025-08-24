@@ -14,6 +14,7 @@ import BrokenHeartIcon from '../../../assets/icons/common/broken_Heart.svg';
 import HeartIcon from '../../../assets/icons/common/Heart.svg';
 import ToastView from '../../../components/common/toast/ToastView';
 import SubpageHeader from '../../../components/common/top-navigation/SubpageHeader';
+import SaveButton from '../../../assets/icons/common/edit.svg';
 
 type RecordScreenNavigationProp = StackNavigationProp<RecordStackParamList, 'EmotionRecordScreen'>;
 
@@ -59,7 +60,7 @@ const EmotionRecordScreen = () => {
         {/* 상단 네비게이션 */}
         <SubpageHeader 
           onBack={handleBack}
-          right={<TouchableOpacity onPress={handleSave}><Text style={styles.saveText}>저장</Text></TouchableOpacity>}
+          right={<TouchableOpacity onPress={handleSave}><SaveButton width={36} height={36} /></TouchableOpacity>}
         />
         <View style={styles.contentContainer}>
           {/* 날짜/감정 */}

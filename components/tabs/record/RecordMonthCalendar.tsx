@@ -39,7 +39,7 @@ const getMonthGrid = (date: dayjs.Dayjs) => {
   return grid;
 };
 
-export const RecordMonthCalendar = ({ date, recordedItems }: RecordMonthCalendarProps) => {
+const RecordMonthCalendar = ({ date, recordedItems }: RecordMonthCalendarProps) => {
   const grid = getMonthGrid(date);
   return (
     <View style={styles.container}>
@@ -165,3 +165,5 @@ const styles = StyleSheet.create({
     height: 41,
   },
 });
+
+export default RecordMonthCalendar;

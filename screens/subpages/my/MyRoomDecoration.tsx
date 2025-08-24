@@ -2,6 +2,9 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image, FlatList } from 'react-native';
 import InPossessionIcon from '../../../assets/icons/my/room-decoration/in_possession.svg';
 import AccessoryIcon from '../../../assets/icons/my/room-decoration/accessory.svg';
+import CollectionIcon from '../../../assets/icons/my/room-decoration/collection.svg';
+import HatIcon from '../../../assets/icons/my/room-decoration/hat.svg';
+import BackgroundIcon from '../../../assets/icons/my/room-decoration/background.svg';
 import FurnitureIcon from '../../../assets/icons/my/room-decoration/furniture.svg';
 import OrnamentIcon from '../../../assets/icons/my/room-decoration/ornament.svg';
 import WallPaperIcon from '../../../assets/icons/my/room-decoration/wallpaper.svg';
@@ -22,20 +25,24 @@ const tabMenu = [
     title: '보유중',
   },
   {
+    icon: CollectionIcon,
+    title: '컬렉션',
+  },
+  {
     icon: AccessoryIcon,
     title: '악세사리',
   },
   {
+    icon: HatIcon,
+    title: '모자',
+  },
+  {
+    icon: BackgroundIcon,
+    title: '배경',
+  },
+  {
     icon: FurnitureIcon,
-    title: '가전 ・ 가구',
-  },
-  {
-    icon: OrnamentIcon,
-    title: '장식품',
-  },
-  {
-    icon: WallPaperIcon,
-    title: '벽지 ・ 바닥',
+    title: '가구 ・ 장식품',
   },
 ];
 
@@ -86,14 +93,30 @@ const MyRoomDecoration = ({
 
     return (
         <View style={styles.container}>
-            <View style={styles.tabMenuContainer}>
-                {tabMenu.map((item, index) => (
-                    <TouchableOpacity style={styles.tabMenu} key={index} onPress={() => handleTabPress(index)}>
-                        <item.icon width={44} height={44} style={selectedTab === index ? styles.tabMenuIcon : styles.tabMenuIconUnselected} />
-                        <Text style={selectedTab === index ? styles.tabMenuTitle : styles.tabMenuTitleUnselected}>{item.title}</Text>
+            <FlatList
+                style={styles.tabMenuContainer}
+                data={tabMenu}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.tabMenuContentContainer}
+                renderItem={({ item, index }) => (
+                    <TouchableOpacity 
+                        style={styles.tabMenu} 
+                        key={index} 
+                        onPress={() => handleTabPress(index)}
+                    >
+                        <item.icon 
+                            width={44} 
+                            height={44} 
+                            style={selectedTab === index ? styles.tabMenuIcon : styles.tabMenuIconUnselected} 
+                        />
+                        <Text style={selectedTab === index ? styles.tabMenuTitle : styles.tabMenuTitleUnselected}>
+                            {item.title}
+                        </Text>
                     </TouchableOpacity>
-                ))}
-            </View>
+                )}
+                keyExtractor={(item, index) => `tab-${index}`}
+            />
             <FlatList 
             style={styles.itemListContainer}
             data={paddedData} 
@@ -139,15 +162,16 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   tabMenuContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    padding: 20,
     paddingTop: 30,
+    padding: 20,
+    flex: 1,
+  },
+  tabMenuContentContainer: {
+    gap: 20,
   },
   tabMenu: {
     alignItems: 'center',
     gap: 6,
-    // flex: 1,
   },
   tabMenuTitle: {
     ...typography.body4,
@@ -181,9 +205,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.grayScale50,
   },
   itemListContainer: {
-    flex: 1,
     padding: 20,
     gap: 10,
+    flex: 1,
   },
   row: {
     justifyContent: 'space-between',

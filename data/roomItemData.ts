@@ -4,12 +4,14 @@ export type RoomItem = {
   type: string;
   title: string;
   image: any;
+  lottieJson: any;
   price?: number;
   positionType: 'face' | 'head' | 'picture' | 'furniture' | 'wall' | 'floor';
   position: {
     x: number;
     y: number;
   };
+  description?: string[];
 };
 
 // 고양이 기준 배치 영역 정의 (상대 위치)
@@ -67,17 +69,20 @@ export const roomItemList: RoomItem[] = [
   {
     id: 1,
     type: '악세사리',
-    title: '선글라스',
-    image: require('../assets/animations/sunglass_motion.json'),
-    price: 300,
+    title: '모스키토 선글라스',
+    image: null,
+    lottieJson: require('../assets/animations/sunglass_motion.json'),
+    price: 900,
     positionType: 'face',
     position: { x: 0, y: 0 }, // 동적으로 계산됨
+    description: ['요즘 힙스터들 사이에서 유행이라던데...','어딘가 다소 힙해진 느낌이냥?'],
   },
   {
     id: 2,
     type: '가전 ・ 가구',
     title: '가전1',
     image: null,
+    lottieJson: null,
     price: 300,
     positionType: 'furniture',
     position: { x: 0, y: 0 }, // 동적으로 계산됨
@@ -87,6 +92,7 @@ export const roomItemList: RoomItem[] = [
     type: '장식품',
     title: '장식품1',
     image: null,
+    lottieJson: null,
     price: 300,
     positionType: 'picture',
     position: { x: 0, y: 0 }, // 동적으로 계산됨
@@ -96,6 +102,7 @@ export const roomItemList: RoomItem[] = [
     type: '벽지 ・ 바닥',
     title: '벽지1',
     image: null,
+    lottieJson: null,
     price: 300,
     positionType: 'wall',
     position: { x: 0, y: 0 }, // 동적으로 계산됨
@@ -105,6 +112,7 @@ export const roomItemList: RoomItem[] = [
     type: '악세사리',
     title: '악세사리2',
     image: null,
+    lottieJson: null,
     price: 300,
     positionType: 'face',
     position: { x: 0, y: 0 }, // 동적으로 계산됨
@@ -114,6 +122,7 @@ export const roomItemList: RoomItem[] = [
     type: '가전 ・ 가구',
     title: '가전2',
     image: null,
+    lottieJson: null,
     price: 300,
     positionType: 'furniture',
     position: { x: 0, y: 0 }, // 동적으로 계산됨
@@ -123,6 +132,7 @@ export const roomItemList: RoomItem[] = [
     type: '장식품',
     title: '장식품2',
     image: null,
+    lottieJson: null,
     positionType: 'picture',
     position: { x: 0, y: 0 }, // 동적으로 계산됨
   },
@@ -131,6 +141,7 @@ export const roomItemList: RoomItem[] = [
     type: '벽지 ・ 바닥',
     title: '바닥1',
     image: null,
+    lottieJson: null,
     positionType: 'floor',
     position: { x: 0, y: 0 }, // 동적으로 계산됨
   },
@@ -139,6 +150,7 @@ export const roomItemList: RoomItem[] = [
     type: '악세사리',
     title: '악세사리3',
     image: null,
+    lottieJson: null,
     price: 300,
     positionType: 'face',
     position: { x: 0, y: 0 }, // 동적으로 계산됨
@@ -148,6 +160,7 @@ export const roomItemList: RoomItem[] = [
     type: '악세사리',
     title: '모자1',
     image: null,
+    lottieJson: null,
     price: 300,
     positionType: 'head',
     position: { x: 0, y: 0 }, // 동적으로 계산됨

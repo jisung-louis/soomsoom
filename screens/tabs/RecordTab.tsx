@@ -7,17 +7,13 @@ import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootTabParamList } from '../../navigations/AppNavigator';
 import { RecordStackParamList } from '../../navigations/tabs/RecordStackNavigator';
-import { RecordCalenderHeader } from '../../components/tabs/record/RecordCalenderHeader';
 import { SceneMap, TabView } from 'react-native-tab-view';
 import { colors } from '../../constants/colors';
-import { RecordWeekCalendar } from '../../components/tabs/record/RecordWeekCalender';
-import { RecordMonthCalendar } from '../../components/tabs/record/RecordMonthCalendar';
-import { RecordList } from '../../components/tabs/record/RecordList';
 import { useToast } from '../../hooks/useToast';
-import BrokenHeartIcon from '../../assets/icons/common/broken_Heart.svg';
 import dayjs from 'dayjs';
 import { TabMenu } from '../../components/common/tabmenu/TabMenu';
-import { Surface } from '../../components/common/surface/Surface';
+import RecordDiaryTab from '../../components/tabs/record/RecordDiaryTab';
+import RecordReportTab from '../../components/tabs/record/RecordReportTab';
 
 type RecordTabNavigationProp = CompositeNavigationProp<
   BottomTabNavigationProp<RootTabParamList, 'record'>,
@@ -182,36 +178,20 @@ const RecordTab = () => {
   ];
 
   const renderDiaryTab = () => (
-    <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
-      <RecordCalenderHeader
-        year={currentDate.year()}
-        month={currentDate.month() + 1}
-        onPrev={handlePrev}
-        onNext={handleNext}
-        viewType={viewType}
-        onChangeViewType={handleViewTypeChange}
-        style={styles.calenderHeader}
-      />
-      {viewType === 'week' && (
-        <RecordWeekCalendar
-          date={currentDate}
-          recordedItems={recordedItems}
-          onDayPress={handleDayPress}
-        />
-      )}
-      {viewType === 'month' && (
-        <RecordMonthCalendar date={currentDate} recordedItems={recordedItems} />
-      )}
-      <Surface/>
-      <RecordList date={currentDate} recordedItems={recordedItems} navigation={navigation} />
-    </ScrollView>
+    <RecordDiaryTab
+      currentDate={currentDate}
+      viewType={viewType}
+      recordedItems={recordedItems}
+      onPrev={handlePrev}
+      onNext={handleNext}
+      onViewTypeChange={handleViewTypeChange}
+      onDayPress={handleDayPress}
+      navigation={navigation}
+      styles={styles}
+    />
   );
 
-  const renderReportTab = () => (
-    <View style={styles.reportContainer}>
-      <Text style={styles.reportMessage}>마음 리포트 화면 준비 중이에요 🛠️</Text>
-    </View>
-  );
+  const renderReportTab = () => <RecordReportTab />;
 
   const [index, setIndex] = useState(0);
   const [routes] = useState([
@@ -257,17 +237,6 @@ const styles = StyleSheet.create({
   },
   calenderHeader: {
     marginTop: 30,
-  },
-  reportContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-  },
-  reportMessage: {
-    fontSize: 18,
-    color: colors.grayScale500,
-    textAlign: 'center',
   },
 });
 

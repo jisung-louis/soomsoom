@@ -46,7 +46,7 @@ type PlacedItem = {
   x: number;
   y: number;
   title: string;
-  image: any;
+  lottieJson: any;
   type: string;
 };
 
@@ -118,7 +118,7 @@ const MyTab = () => {
         x: position.x,
         y: position.y,
         title: itemData.title,
-        image: itemData.image,
+        lottieJson: itemData.lottieJson,
         type: itemData.type,
       };
     }).filter(Boolean) as PlacedItem[];
@@ -179,11 +179,11 @@ const MyTab = () => {
               }
             ]}
           >
-            {item.image === null ? (
+            {item.lottieJson === null ? (
               <View style={styles.placedItemPlaceholder} />
             ) : (
               <LottieView
-                source={item.image}
+                source={item.lottieJson}
                 autoPlay
                 loop
                 style={styles.placedItemImage}

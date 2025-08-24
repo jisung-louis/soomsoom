@@ -7,7 +7,7 @@ interface RecordEmptyStateWithButtonProps {
   onButtonPress: () => void;
 }
 
-export const RecordEmptyStateWithButton: React.FC<RecordEmptyStateWithButtonProps> = ({
+const RecordEmptyStateWithButton: React.FC<RecordEmptyStateWithButtonProps> = ({
   onButtonPress
 }) => {
   return (
@@ -33,3 +33,5 @@ const styles = StyleSheet.create({
     marginTop: 30,
   },
 }); 
+
+export default RecordEmptyStateWithButton;

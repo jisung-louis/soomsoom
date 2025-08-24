@@ -23,7 +23,7 @@ interface RecordWeekCalendarProps {
 
 const daysOfWeek = ['일', '월', '화', '수', '목', '금', '토'];
 
-export const RecordWeekCalendar: React.FC<RecordWeekCalendarProps> = ({ date, recordedItems, onDayPress }) => {
+const RecordWeekCalendar: React.FC<RecordWeekCalendarProps> = ({ date, recordedItems, onDayPress }) => {
   const startOfWeek = date.startOf('week');
   const weekDates = Array.from({ length: 7 }, (_, i) => startOfWeek.add(i, 'day'));
 
@@ -134,3 +134,5 @@ const styles = StyleSheet.create({
     height: 41,
   },
 });
+
+export default RecordWeekCalendar;

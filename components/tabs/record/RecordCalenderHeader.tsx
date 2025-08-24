@@ -16,7 +16,7 @@ interface CalenderHeaderProps {
   style?: any;
 }
 
-export const RecordCalenderHeader: React.FC<CalenderHeaderProps> = ({
+const RecordCalenderHeader: React.FC<CalenderHeaderProps> = ({
   year,
   month,
   onPrev,
@@ -80,3 +80,5 @@ const styles = StyleSheet.create({
   toggle: {
   },
 }); 
+
+export default RecordCalenderHeader;

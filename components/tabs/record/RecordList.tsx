@@ -5,7 +5,7 @@ import { characterIconMap, characterTitleMap } from '../../../utils/iconMap';
 import { syongsyongTypography, typography } from '../../../constants/typography';
 import { colors } from '../../../constants/colors';
 import EmptyMonth from '../../../assets/images/record/month_empty.svg';
-import { RecordEmptyStateWithButton } from './RecordEmptyStateWithButton';
+import RecordEmptyStateWithButton from './RecordEmptyStateWithButton';
 
 type RecordedItem = {
   date: string;
@@ -19,7 +19,7 @@ interface RecordListProps {
     navigate: (screen: 'EmotionSelectScreen', params: { date: string }) => void;
   };
 }
-export const RecordList: React.FC<RecordListProps> = ({ date, recordedItems, navigation }) => {
+const RecordList: React.FC<RecordListProps> = ({ date, recordedItems, navigation }) => {
   const currentMonth = date.month(); // 커서가 위치한 달
   const nowMonth = dayjs().month(); // 현재 달
   const hasThisMonthRecords = recordedItems.some(
@@ -112,3 +112,5 @@ const styles = StyleSheet.create({
   },
 
 });
+
+export default RecordList;

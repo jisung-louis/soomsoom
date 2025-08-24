@@ -6,12 +6,25 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import TopNavigation from '../../components/common/top-navigation/TopNavigation';
 import LottieView from 'lottie-react-native';
 import { HomeStackParamList } from '../../navigations/tabs/HomeStackNavigator';
+import { Button } from '../../components/common/buttons/Button';
+import { CustomAlert, AlertButton } from '../../components/common/alert';
 
 type HomeTabNavigationProp = StackNavigationProp<HomeStackParamList, 'HomeTab'>;
 
 const HomeTab = () => {
   const [catLayout, setCatLayout] = useState<LayoutRectangle>({x: 0, y: 0, width: 0, height: 0});
   const navigation = useNavigation<HomeTabNavigationProp>();
+  const [showAlert1, setShowAlert1] = useState(false);
+  const [showAlert2, setShowAlert2] = useState(false);
+
+  const alert1Buttons: AlertButton[] = [
+    { text: '확인', onPress: () => setShowAlert1(false) },
+  ];
+
+  const alert2Buttons: AlertButton[] = [
+    { text: '나갈게요!', onPress: () => setShowAlert2(false) },
+    { text: '머물게요!', onPress: () => setShowAlert2(false) },
+  ];
 
   const handleShopPress = () => {
     navigation.navigate('ShopScreen');
@@ -27,6 +40,7 @@ const HomeTab = () => {
     console.log('메시지 버튼 클릭');
   };
   
+
   return (
       <ImageBackground 
         source={require('../../assets/images/background.png')}
@@ -61,7 +75,34 @@ const HomeTab = () => {
               setCatLayout(event.nativeEvent.layout);
             }}
           />
+
+          <Button
+            title="ALERT (only yes) 버튼"
+            onPress={() => setShowAlert1(true)}
+            variant="active"
+            size="medium"
+          />
+          <Button
+            title="ALERT (yes or no) 버튼"
+            onPress={() => setShowAlert2(true)}
+            variant="active"
+            size="medium"
+          />
         </SafeAreaView>
+        
+        <CustomAlert
+          visible={showAlert1}
+          message="구매가 완료되었어요!"
+          buttons={alert1Buttons}
+          onClose={() => setShowAlert1(false)}
+        />
+        <CustomAlert
+          visible={showAlert2}
+          message="다음에 아이템을 구매할까요?"
+          subMessage="보유하지 않은 아이템은 저장할 수 없어요!"
+          buttons={alert2Buttons}
+          onClose={() => setShowAlert2(false)}
+        />
       </ImageBackground>
   );
 };

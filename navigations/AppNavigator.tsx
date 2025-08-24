@@ -53,7 +53,7 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
   // 바텀 네비게이션을 숨겨야 하는 화면들 정의
   const HIDDEN_BOTTOM_NAV_SCREENS: Record<string, string[]> = {
     record: ['EmotionSelectScreen', 'EmotionRecordScreen', 'EmotionRecordHelpScreen'],
-    home: ['ShopScreen'],
+    home: ['ShopScreen', 'ShopItemDetailScreen'],
     play: ['PlayFavoriteScreen', 'PlayHistoryScreen', 'PlayDetailScreen', 'PlayTeacherDetailScreen', 'PlayBreathScreen', 'PlayMeditationScreen', 'PlayResultScreen'],
     alarm: ['AlarmAddScreen', ],
     my: [],

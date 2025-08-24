@@ -6,7 +6,7 @@ import { typography } from '../../../constants/typography';
 import CheckIcon from '../../../assets/icons/common/stroke_check.svg';
 import HeartIcon from '../../../assets/icons/common/Heart.svg';
 
-interface ButtonProps extends TouchableOpacityProps {
+export interface ButtonProps extends TouchableOpacityProps {
   title: string;
   icon?: 'check' | 'heart';
   variant?: 'default' | 'active' | 'secondary' | 'white';
