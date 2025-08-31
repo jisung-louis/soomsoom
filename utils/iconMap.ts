@@ -12,6 +12,13 @@ import DepressedIconDefault from '../assets/icons/charactors/default/depressed.s
 import SosoIconDefault from '../assets/icons/charactors/default/soso.svg';
 import HappyIconDefault from '../assets/icons/charactors/default/happy.svg';
 
+import AngryIconStroke from '../assets/icons/charactors/active/stroked/angry.svg';
+import GoodIconStroke from '../assets/icons/charactors/active/stroked/good.svg';
+import SadIconStroke from '../assets/icons/charactors/active/stroked/sad.svg';
+import DepressedIconStroke from '../assets/icons/charactors/active/stroked/depressed.svg';
+import SosoIconStroke from '../assets/icons/charactors/active/stroked/soso.svg';
+import HappyIconStroke from '../assets/icons/charactors/active/stroked/happy.svg';
+
 export const characterIconMap = {
   active: {
     angry: AngryIconActive,
@@ -29,6 +36,14 @@ export const characterIconMap = {
     soso: SosoIconDefault,
     happy: HappyIconDefault,
   },
+  stroke: {
+    angry: AngryIconStroke,
+    good: GoodIconStroke,
+    sad: SadIconStroke,
+    depressed: DepressedIconStroke,
+    soso: SosoIconStroke,
+    happy: HappyIconStroke,
+  },
 };
 
 
@@ -43,6 +58,14 @@ export const characterTitleMap = {
     happy: '행복해요!',
   },
   default: {
+    angry: '화나요!',
+    sad: '슬퍼요!',
+    depressed: '우울해요!',
+    soso: '그저 그래요!',
+    good: '좋아요!',
+    happy: '행복해요!',
+  },
+  stroke: {
     angry: '화나요!',
     sad: '슬퍼요!',
     depressed: '우울해요!',

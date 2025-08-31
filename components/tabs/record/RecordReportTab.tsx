@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, TouchableWithoutFeedback } from 'react-native';
 import { colors } from '../../../constants/colors';
 import { syongsyongTypography, typography } from '../../../constants/typography';
 import ArrowLeftIcon from '../../../assets/icons/common/arrow_back.svg';
@@ -8,11 +8,26 @@ import { Surface } from '../../common/surface/Surface';
 import InfoIcon from '../../../assets/icons/common/info.svg';
 import { radius } from '../../../constants/radius';
 import { emotionService } from '../../../services/emotionService';
-import { EmotionRankingData } from '../../../types/emotion';
+import { EmotionRankingData, EmotionType } from '../../../types/emotion';
 import LoadingSpinner from '../../common/loading/LoadingSpinner';
 import ErrorMessage from '../../common/error/ErrorMessage';
 import dayjs from 'dayjs';
+import weekOfYear from 'dayjs/plugin/weekOfYear';
+
+dayjs.extend(weekOfYear);
 import KingIcon from '../../../assets/icons/record/report/king.svg';
+import DonutChart from '../../common/charts/DonutChart';
+import { getRankColor } from '../../../utils/emotionColorUtils';
+import { characterIconMap } from '../../../utils/iconMap';
+import { Button } from '../../common/buttons/Button';
+import BubbleTalk from '../../common/bubbletalk/BubbleTalk';
+import BarChart from '../../common/charts/BarChart';
+import { emotionReportMockData } from '../../../data/emotionReportMockData';
+import EmptyCatIcon from '../../../assets/icons/record/report/cat_write2.svg';
+import EmptyMonthIcon from '../../../assets/icons/record/report/cat_quiet.svg';
+import { ButtonSmall } from '../../common/buttons/ButtonSmall';
+
+const windowWidth = Dimensions.get('window').width;
 
 const barWidth = 109;
 const barHeight = {
@@ -27,10 +42,19 @@ const RecordReportTab = () => {
   const [error, setError] = useState<string | null>(null);
   const [currentYear, setCurrentYear] = useState(dayjs().year());
   const [currentMonth, setCurrentMonth] = useState(dayjs().month() + 1);
+  const [currentWeek, setCurrentWeek] = useState(dayjs().week());
+  const [selectedSegment, setSelectedSegment] = useState<{
+    item: EmotionRankingData;
+    index: number;
+    position: { x: number; y: number };
+  } | null>(null);
+  const [scrollOffset, setScrollOffset] = useState(0);  // 스크롤 오프셋 추가
 
   // 페이지 진입 시 및 월 변경 시 데이터 로드
   useEffect(() => {
     loadEmotionData();
+    // 월 변경 시 주차를 해당 월의 첫째 주로 리셋
+    resetWeekToFirstWeekOfMonth();
   }, [currentYear, currentMonth]);
 
   const loadEmotionData = async () => {
@@ -54,15 +78,23 @@ const RecordReportTab = () => {
       const prevMonth = dayjs().year(currentYear).month(currentMonth - 2);
       setCurrentYear(prevMonth.year());
       setCurrentMonth(prevMonth.month() + 1);
+      
+      // 해당 월의 첫째 주로 currentWeek 변경
+      const firstWeekOfMonth = prevMonth.startOf('month').week();
+      setCurrentWeek(firstWeekOfMonth);
     } else {
       const nextMonth = dayjs().year(currentYear).month(currentMonth);
       setCurrentYear(nextMonth.year());
       setCurrentMonth(nextMonth.month() + 1);
+      
+      // 해당 월의 첫째 주로 currentWeek 변경
+      const firstWeekOfMonth = nextMonth.startOf('month').week();
+      setCurrentWeek(firstWeekOfMonth);
     }
   };
 
   // 현재 월이 미래인지 확인
-  const isCurrentMonthFuture = dayjs().year(currentYear).month(currentMonth - 1).isAfter(dayjs(), 'month');
+  const isCurrentMonthFuture = dayjs().year(currentYear).month(currentMonth).isAfter(dayjs(), 'month');
 
   // 상위 3개 감정을 시상대 순서로 정렬 (2등, 1등, 3등)
   const podiumEmotions = [
@@ -81,8 +113,63 @@ const RecordReportTab = () => {
     return <ErrorMessage message={error} onRetry={loadEmotionData} />;
   }
 
-  return (
-    <ScrollView style={styles.container}>
+  const handleSegmentPress = (item: EmotionRankingData, index: number, meta: { 
+    midAngle: number; 
+    svg: { x: number; y: number }; 
+    screen: { x: number; y: number };
+    centerSvg: { x: number; y: number };
+    centerScreen: { x: number; y: number };
+    touchPosition?: { x: number; y: number };
+  }) => {
+    console.log(item, index, meta);
+    
+    // 사용자가 터치한 정확한 위치에 BubbleTalk 표시
+    setSelectedSegment({
+      item,
+      index,
+      position: {
+        x: meta.touchPosition?.x || meta.centerScreen.x,  // 터치 좌표 우선, 없으면 중심 좌표
+        y: meta.touchPosition?.y || meta.centerScreen.y   // 터치 좌표 우선, 없으면 중심 좌표
+      }
+    });
+  };
+
+  // BubbleTalk 닫기
+  const closeBubbleTalk = () => {
+    setSelectedSegment(null);
+  };
+
+  const handleWeekChange = (direction: 'prev' | 'next') => {
+    if (direction === 'prev') {
+      // 이전 주가 현재 월의 첫 주보다 작아지지 않도록 제한
+      const firstWeekOfMonth = dayjs().year(currentYear).month(currentMonth - 1).startOf('month').week();
+      if (currentWeek > firstWeekOfMonth) {
+        setCurrentWeek(currentWeek - 1);
+      }
+    } else {
+      // 다음 주가 현재 월의 마지막 주보다 커지지 않도록 제한
+      const lastWeekOfMonth = dayjs().year(currentYear).month(currentMonth - 1).endOf('month').week();
+      if (currentWeek < lastWeekOfMonth) {
+        setCurrentWeek(currentWeek + 1);
+      }
+    }
+  };
+
+  // 월 변경 시 주차를 해당 월의 첫째 주로 리셋
+  const resetWeekToFirstWeekOfMonth = () => {
+    const firstWeekOfMonth = dayjs().year(currentYear).month(currentMonth - 1).startOf('month').week();
+    setCurrentWeek(firstWeekOfMonth);
+  };
+
+  return emotionRankingData.length > 0 ? (
+    <ScrollView 
+      style={styles.container}
+      onScroll={(event) => {
+        const offsetY = event.nativeEvent.contentOffset.y;
+        setScrollOffset(offsetY);
+      }}
+      scrollEventThrottle={16}  // 60fps로 스크롤 이벤트 제한
+    >
       {/* 월 단위 이동 컴포넌트 */}
       <View style={styles.yearMonthContainer}>
         <TouchableOpacity 
@@ -115,8 +202,6 @@ const RecordReportTab = () => {
           />
         </TouchableOpacity>
       </View>
-
-      {/* 폭죽 이펙트 컴포넌트 */}
       {/* TODO: 폭죽 이펙트 추가 */}
 
       {/* 월별 감정 순위 컴포넌트 */}
@@ -131,12 +216,11 @@ const RecordReportTab = () => {
           </View>
           <View style={{flexDirection: 'row', alignItems: 'center', gap: 4}}>
             <InfoIcon width={24} height={24} color={colors.grayScale800} />
-            <Text style={styles.emotionReportInfoText}>감정 순위가 궁금한가요?</Text>
+            <Text style={styles.emotionReportInfoText}>기록한 감정이 많은 순으로 보여줘요!</Text>
           </View>
         </View>
 
         <View style={styles.emotionRankContentContainer}>
-          {emotionRankingData.length > 0 ? (
             <View style={styles.emotionRankContentContainer}>
               <View style={styles.barGraphContainer}>
                 {podiumEmotions.map((emotion, index) => {
@@ -185,13 +269,7 @@ const RecordReportTab = () => {
                 )})}
               </View>
             </View>
-          ) : (
-            <View style={styles.emptyStateContainer}>
-              <Text style={styles.emptyStateText}>
-                {isCurrentMonthFuture ? '아직 기록이 없어요' : '이번 달 기록이 없어요'}
-              </Text>
-            </View>
-          )}
+          
         </View>
       </View>
 
@@ -203,27 +281,166 @@ const RecordReportTab = () => {
           <Text style={styles.emotionReportTitle}>감정분포</Text>
           <View style={{flexDirection: 'row', alignItems: 'center', gap: 4}}>
             <InfoIcon width={24} height={24} color={colors.grayScale800} />
-            <Text style={styles.emotionReportInfoText}>그래프 클릭 시 자세히 확인할 수 있어요!</Text>
+            <Text style={styles.emotionReportInfoText}>차트 클릭 시 자세히 확인할 수 있어요!(미구현)</Text>
           </View>
         </View>
-        {/* TODO: 파이 차트 또는 도넛 차트 추가 */}
         <View style={styles.emotionDistributionContentContainer}>
-          <Text>파이차트</Text>
-          <Text>감정 표</Text>
+          <View style={styles.donutChartWrapper}>
+            {emotionRankingData.length > 0 ? (
+              <>
+              <DonutChart data={emotionRankingData} onSegmentPress={handleSegmentPress} />
+              
+              {/* 선택된 세그먼트에 BubbleTalk 표시 */}
+              {/* {selectedSegment && (
+                <BubbleTalk
+                  text={`${selectedSegment.item.title}: ${selectedSegment.item.count}회 (${selectedSegment.item.percentage}%)`}
+                  trianglePosition="bottom"
+                  style={{
+                    position: 'absolute',
+                    // 스크롤 오프셋을 고려한 정확한 위치 계산
+                    top: selectedSegment.position.y - scrollOffset,  // 스크롤 오프셋 제거
+                    left: selectedSegment.position.x - 90, // 터치 위치 왼쪽으로 (BubbleTalk 너비의 절반)
+                    zIndex: 1000,
+                  }}
+                />
+              )} */}
+              
+              {/* 터치 외부 클릭 감지를 위한 투명 오버레이 */}
+              {selectedSegment && (
+                <TouchableWithoutFeedback onPress={closeBubbleTalk}>
+                  <View style={styles.overlay} />
+                </TouchableWithoutFeedback>
+              )}
+              
+              <View style={styles.percentageContainer}>
+                <View style={styles.barPercentageContainer}>
+                  {emotionRankingData.map((item, index) => (
+                    <View 
+                      key={item.emotion} 
+                      style={[styles.barPercentage, {backgroundColor: getRankColor(index), 
+                      width: (item.percentage / 100) * (windowWidth - 40)} ]} 
+                    />
+                  ))}
+                </View>
+                  <View style={[styles.ratioPercentageContainer, {gap: Math.max(7,((windowWidth - 40) - (emotionRankingData.length * 50)) / (emotionRankingData.length - 1))}]}>
+                  {emotionRankingData.map((item, index) => {
+                    const IconStroke = characterIconMap.stroke[item.emotion];
+                    return (
+                      <View key={item.emotion} style={styles.ratioPercentage}>
+                        <View style={[styles.ratioEmotionBlock, {backgroundColor: getRankColor(index)}]}>
+                          <IconStroke width={40} height={40}/>
+                        </View>
+                        <View style={styles.ratioEmotionBlockTextContainer}>
+                          <Text style={styles.ratioEmotionBlockText}>{item.percentage}%</Text>
+                        </View>
+                      </View>
+                    );
+                  })}
+                </View>
+              </View>
+              </>
+            ) : (
+              <Text style={styles.emptyStateText}>표시할 데이터가 없어요</Text>
+            )}
+          </View>
         </View>
       </View>
 
-      <Surface/>
+      <Surface height={1} style={{marginHorizontal: 20}}/>
 
       {/* 요일별 감정 기록 컴포넌트 */}
       <View style={styles.emotionRecordContainer}>
-        <Text style={styles.emotionRecordTitle}>감정 기록</Text>
+        <View style={styles.emotionRecordHeaderContainer}>
+          <View style={styles.emotionRecordHeaderTitleContainer}>
+            <Text style={styles.emotionRecordTitle}>요일별 감정기록</Text>
+            <Text style={styles.emotionRecordWeeklyDate}>
+              {(() => {
+                // 현재 주차의 시작일과 종료일 계산
+                const startOfWeek = dayjs().year(currentYear).week(currentWeek).startOf('week');
+                const endOfWeek = dayjs().year(currentYear).week(currentWeek).endOf('week');
+                
+                // 월이 바뀌는 경우 현재 월에 해당하는 날짜만 표시
+                const startDate = startOfWeek.month() === currentMonth - 1 ? startOfWeek.date() : 1;
+                const endDate = endOfWeek.month() === currentMonth - 1 ? endOfWeek.date() : endOfWeek.daysInMonth();
+                
+                return `${startDate}일 - ${endDate}일 ${currentYear}.${currentMonth.toString().padStart(2, '0')}`;
+              })()}
+            </Text>
+          </View>
+          <View style={styles.emotionRecordWeeklyMoveContainer}>
+            <TouchableOpacity style={styles.emotionRecordWeeklyMoveButton} onPress={() => handleWeekChange('prev')}>
+              <ArrowLeftIcon width={24} height={24} color={colors.grayScale800} />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.emotionRecordWeeklyMoveButton} onPress={() => handleWeekChange('next')}>
+              <ArrowRightIcon width={24} height={24} color={colors.grayScale800} />
+            </TouchableOpacity>
+          </View>
+        </View>
         {/* TODO: 요일별 감정 기록 차트 추가 */}
+        <View style={styles.emotionRecordChartContainer}>
+          <BarChart currentYear={currentYear} currentMonth={currentMonth} currentWeek={currentWeek} emotionReportData={emotionReportMockData} />
+        </View>
       </View>
-
     </ScrollView>
+  ) : (
+    <View style={styles.container}>
+      {/* 월 단위 이동 컴포넌트 */}
+      <View style={styles.yearMonthContainer}>
+        <TouchableOpacity 
+          onPress={() => handleMonthChange('prev')}
+          style={styles.arrowButton}
+        >
+          <ArrowLeftIcon width={24} height={24} color={colors.grayScale800} />
+        </TouchableOpacity>
+        
+        <View style={styles.yearMonthTextContainer}>
+          <View style={styles.yearAndMonthTextContainer}>
+            <Text style={styles.dateNumber}>{currentYear}</Text>
+            <Text style={styles.dateText}>년</Text>
+          </View>
+          <View style={styles.yearAndMonthTextContainer}>
+            <Text style={styles.dateNumber}>{currentMonth}</Text>
+            <Text style={styles.dateText}>월</Text>
+          </View>
+        </View>
+        
+        <TouchableOpacity 
+          onPress={() => handleMonthChange('next')}
+          style={[styles.arrowButton, isCurrentMonthFuture && styles.disabledArrow]}
+          disabled={isCurrentMonthFuture}
+        >
+          <ArrowRightIcon 
+            width={24} 
+            height={24} 
+            color={isCurrentMonthFuture ? colors.grayScale300 : colors.grayScale800} 
+          />
+        </TouchableOpacity>
+      </View>
+      {isCurrentMonthFuture ? (
+      <View style={styles.emptyStateContainer}>
+        <View style={styles.emptyStateContentContainer}>
+          <EmptyCatIcon width={100} height={100} />
+          <Text style={styles.emptyStateText}>이 달의 첫 기록, 지금 남겨보세요!</Text>
+        </View>
+        <ButtonSmall
+          title="기록 시작하기"
+          onPress={() => {}}
+          variant="active"
+        />
+      </View>
+      ) : (
+        <View style={styles.emptyStateContainer}>
+        <View style={styles.emptyStateContentContainer}>
+          <EmptyMonthIcon width={100} height={100} />
+          <Text style={styles.emptyStateText}>이 달엔 조용했네요!</Text>
+        </View>
+      </View>
+      )}
+    </View>
   );
 };
+
+
 
 const styles = StyleSheet.create({
   container: {
@@ -363,14 +580,6 @@ const styles = StyleSheet.create({
     ...typography.body5,
     color: colors.grayScale400,
   },
-  emptyStateContainer: {
-    alignItems: 'center',
-    paddingVertical: 50,
-  },
-  emptyStateText: {
-    ...typography.body2,
-    color: colors.grayScale400,
-  },
   emotionDistributionContainer: {
     marginVertical: 30,
     paddingHorizontal: 20,
@@ -379,13 +588,128 @@ const styles = StyleSheet.create({
   emotionDistributionContentContainer: {
     gap: 40,
   },
+  donutChartWrapper: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  legendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  legendColor: {
+    width: 14,
+    height: 14,
+    borderRadius: 4,
+  },
+  legendTextContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    flex: 1,
+  },
+  legendTitle: {
+    ...typography.body4,
+    color: colors.grayScale800,
+  },
+  legendMeta: {
+    ...typography.body6,
+    color: colors.grayScale500,
+  },
   emotionRecordContainer: {
     marginVertical: 30,
     paddingHorizontal: 20,
+    gap: 30,
+  },
+  emotionRecordHeaderContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+  },
+  emotionRecordHeaderTitleContainer: {
+    gap: 8,
   },
   emotionRecordTitle: {
-    ...typography.body2,
-    color: colors.grayScale800,
+    ...syongsyongTypography.title5,
+    color: colors.grayScale900,
+  },
+  emotionRecordWeeklyDate: {
+    ...typography.body5,
+    color: colors.grayScale400,
+  },
+  emotionRecordWeeklyMoveContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: -6,
+  },
+  emotionRecordWeeklyMoveButton: {
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  percentageContainer: {  
+    gap: 20,
+    marginTop: 40,
+  },
+  barPercentageContainer: {
+    flexDirection: 'row',
+    gap: 2,
+  },
+  barPercentage: {
+    height: 16,
+    borderRadius: radius.max,
+  },
+  ratioPercentageContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  ratioPercentage: {
+    alignItems: 'center',
+    gap: 8,
+  },
+  ratioEmotionBlock: {
+    width: 50,
+    height: 50,
+    borderRadius: radius.r6,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  ratioEmotionBlockTextContainer: {
+    alignItems: 'center',
+  },
+  ratioEmotionBlockText: {
+    ...typography.body4,
+    color: colors.grayScale900,
+  },
+  bubbleTalkContainer: {
+    position: 'absolute',
+  },
+  overlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'transparent',
+  },
+  emotionRecordChartContainer: {
+  },
+  emptyStateContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 30,
+    flex: 1,
+  },
+  emptyStateContentContainer: {
+    alignItems: 'center',
+    gap: 20,
+  },
+  emptyStateText: {
+    ...syongsyongTypography.title6,
+    color: colors.grayScale900,
   },
 });
 

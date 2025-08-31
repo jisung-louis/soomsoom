@@ -14,6 +14,7 @@ import dayjs from 'dayjs';
 import { TabMenu } from '../../components/common/tabmenu/TabMenu';
 import RecordDiaryTab from '../../components/tabs/record/RecordDiaryTab';
 import RecordReportTab from '../../components/tabs/record/RecordReportTab';
+import RecordReportTabNotOpened from '../../components/tabs/record/RecordReportTabNotOpened';
 
 type RecordTabNavigationProp = CompositeNavigationProp<
   BottomTabNavigationProp<RootTabParamList, 'record'>,
@@ -191,7 +192,11 @@ const RecordTab = () => {
     />
   );
 
-  const renderReportTab = () => <RecordReportTab />;
+  const renderReportTab = () => (
+    <RecordReportTab />
+    //<RecordReportTabNotOpened />
+    // 만약 기록 날짜가 7일 미만일 경우 RecordReportTabNotOpened 컴포넌트 반환
+  );
 
   const [index, setIndex] = useState(0);
   const [routes] = useState([

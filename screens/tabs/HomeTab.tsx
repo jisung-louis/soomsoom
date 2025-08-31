@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet, ImageBackground, LayoutRectangle } from 'react-native';
+import { StyleSheet, ImageBackground, LayoutRectangle, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -8,6 +8,8 @@ import LottieView from 'lottie-react-native';
 import { HomeStackParamList } from '../../navigations/tabs/HomeStackNavigator';
 import { Button } from '../../components/common/buttons/Button';
 import { CustomAlert, AlertButton } from '../../components/common/alert';
+import BubbleTalk from '../../components/common/bubbletalk/BubbleTalk';
+import AngryIcon from '../../assets/icons/charactors/active/angry.svg';
 
 type HomeTabNavigationProp = StackNavigationProp<HomeStackParamList, 'HomeTab'>;
 
@@ -75,6 +77,7 @@ const HomeTab = () => {
               setCatLayout(event.nativeEvent.layout);
             }}
           />
+          <BubbleTalk icon={<AngryIcon width={32} height={32} />} text='fdsfdsafdsafd' trianglePosition='top' />
 
           <Button
             title="ALERT (only yes) 버튼"
