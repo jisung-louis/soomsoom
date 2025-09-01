@@ -1,15 +1,20 @@
-import React, { useState } from 'react';
-import { StyleSheet, ImageBackground, LayoutRectangle, View } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import { StyleSheet, ImageBackground, LayoutRectangle, View, Text, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import TopNavigation from '../../components/common/top-navigation/TopNavigation';
 import LottieView from 'lottie-react-native';
 import { HomeStackParamList } from '../../navigations/tabs/HomeStackNavigator';
 import { Button } from '../../components/common/buttons/Button';
 import { CustomAlert, AlertButton } from '../../components/common/alert';
-import BubbleTalk from '../../components/common/bubbletalk/BubbleTalk';
-import AngryIcon from '../../assets/icons/charactors/active/angry.svg';
+
+import { useOnboarding } from '../../contexts/OnboardingContext';
+import BubbleRecordIcon from '../../assets/icons/common/record_emotion.svg';
+import BubblePlayIcon from '../../assets/icons/common/play.svg';
+import { syongsyongTypography } from '../../constants/typography';
+import { useCurrencyStore } from '../../stores/currencyStore';
+import { useToast } from '../../contexts/ToastContext';
 
 type HomeTabNavigationProp = StackNavigationProp<HomeStackParamList, 'HomeTab'>;
 
@@ -18,15 +23,34 @@ const HomeTab = () => {
   const navigation = useNavigation<HomeTabNavigationProp>();
   const [showAlert1, setShowAlert1] = useState(false);
   const [showAlert2, setShowAlert2] = useState(false);
+  const [showInnerContainer, setShowInnerContainer] = useState(false);
+  const [bubbleTalkKey, setBubbleTalkKey] = useState(0);
 
-  const alert1Buttons: AlertButton[] = [
-    { text: '확인', onPress: () => setShowAlert1(false) },
-  ];
+  const { resetOnboarding } = useOnboarding();
+  const { giveTestReward } = useCurrencyStore();  
+  const { showToast } = useToast();
 
-  const alert2Buttons: AlertButton[] = [
-    { text: '나갈게요!', onPress: () => setShowAlert2(false) },
-    { text: '머물게요!', onPress: () => setShowAlert2(false) },
-  ];
+  useFocusEffect(
+    useCallback(() => {
+      console.log('🏠 HomeTab 완전 재마운트!');
+      setShowInnerContainer(false);
+      setBubbleTalkKey(prev => prev + 1);
+      // 애니메이션 재시작을 위한 지연
+      setTimeout(() => {
+      }, 100);
+      
+    }, [])
+  );
+
+  const handleTestReward = () => {
+    
+    giveTestReward();
+    showToast({
+      message: '+10 하트 획득했어요!',
+      theme: 'dark',
+      iconType: 'heart',
+    });
+  };
 
   const handleShopPress = () => {
     navigation.navigate('ShopScreen');
@@ -41,6 +65,16 @@ const HomeTab = () => {
     // 메시지 버튼 기능 구현
     console.log('메시지 버튼 클릭');
   };
+
+  const handleStoragePress = () => {
+    // 스토리지 버튼 기능 구현
+    console.log('스토리지 버튼 클릭');
+  };
+
+  const handleShowOnboarding = async () => {
+    await resetOnboarding();
+    console.log('온보딩이 재시작됩니다!');
+  };
   
 
   return (
@@ -53,6 +87,7 @@ const HomeTab = () => {
           <TopNavigation 
             shopButtonPress={handleShopPress}
             heartButtonPress={handleHeartPress}
+            storageButtonPress={handleStoragePress}
             messageButtonPress={handleMessagePress}
           />
           {/* 여기에 고양이, 텍스트 등 추가 */}
@@ -77,35 +112,51 @@ const HomeTab = () => {
               setCatLayout(event.nativeEvent.layout);
             }}
           />
-          <BubbleTalk icon={<AngryIcon width={32} height={32} />} text='fdsfdsafdsafd' trianglePosition='top' />
-
+          <LottieView
+            key={`bubbleTalk-${bubbleTalkKey}`}
+            source={require('../../assets/animations/bubble_talk.json')}
+            autoPlay
+            loop = {false}
+            style={[styles.bubbleTalk, {
+              top: catLayout.y - 125,
+              left: catLayout.x + 100,
+            }]}
+            onAnimationFinish={() => {
+              setShowInnerContainer(true);
+            }}
+          />
+          {showInnerContainer && (
+            <TouchableOpacity style={[styles.bubbleTalkInnerContainer, {
+            top: catLayout.y - 104,
+            left: catLayout.x + 164,
+          }]}
+          onPress={() => {
+            // TODO: 기록 화면으로 이동
+          }}
+          >
+            <BubbleRecordIcon width={48} height={48} />
+            <Text style={{...syongsyongTypography.title4}}>!</Text>
+          </TouchableOpacity>
+          )}
           <Button
-            title="ALERT (only yes) 버튼"
-            onPress={() => setShowAlert1(true)}
+            title="온보딩 show 버튼"
+            onPress={() => handleShowOnboarding()}
             variant="active"
             size="medium"
           />
           <Button
-            title="ALERT (yes or no) 버튼"
-            onPress={() => setShowAlert2(true)}
+            title="테스트 보상 주기"
+            onPress={() => handleTestReward()}
+            variant="active"
+            size="medium"
+          />
+          <Button
+            title="테스트 화면 이동"
+            onPress={() => navigation.navigate('TestScreen')}
             variant="active"
             size="medium"
           />
         </SafeAreaView>
-        
-        <CustomAlert
-          visible={showAlert1}
-          message="구매가 완료되었어요!"
-          buttons={alert1Buttons}
-          onClose={() => setShowAlert1(false)}
-        />
-        <CustomAlert
-          visible={showAlert2}
-          message="다음에 아이템을 구매할까요?"
-          subMessage="보유하지 않은 아이템은 저장할 수 없어요!"
-          buttons={alert2Buttons}
-          onClose={() => setShowAlert2(false)}
-        />
       </ImageBackground>
   );
 };
@@ -146,6 +197,19 @@ const styles = StyleSheet.create({
     height: 80,
     position: 'absolute',
     zIndex: 10000,
+  },
+  bubbleTalk: {
+    width: 140,
+    height: 120,
+    position: 'absolute',
+    zIndex: 10000,
+  },
+  bubbleTalkInnerContainer: {
+    position: 'absolute',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 100000,
   },
 });
 

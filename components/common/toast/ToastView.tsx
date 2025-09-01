@@ -6,6 +6,7 @@ import { colors } from '../../../constants/colors';
 import { radius } from '../../../constants/radius';
 import { typography } from '../../../constants/typography';
 // 토스트에서 사용할 아이콘들
+import HeartIcon from '../../../assets/icons/common/Heart.svg';
 import BrokenHeartIcon from '../../../assets/icons/common/broken_Heart.svg';
 import AlarmIcon from '../../../assets/icons/common/alarm.svg';
 import HelpIcon from '../../../assets/icons/common/help.svg';
@@ -17,6 +18,7 @@ export type ToastTheme = 'light' | 'dark';
 
 // 토스트에서 사용할 수 있는 아이콘 타입
 export type ToastIconType = 
+  | 'heart'
   | 'brokenHeart' 
   | 'alarm' 
   | 'help' 
@@ -45,6 +47,8 @@ const toastThemes = {
 // 아이콘 타입별 매핑
 const getToastIcon = (iconType: ToastIconType) => {
   switch (iconType) {
+    case 'heart':
+      return <HeartIcon width={24} height={24} />;
     case 'brokenHeart':
       return <BrokenHeartIcon width={24} height={24} />;
     case 'alarm':

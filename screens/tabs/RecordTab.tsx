@@ -192,8 +192,14 @@ const RecordTab = () => {
     />
   );
 
+  const onStartRecordPress = () => {
+    navigation.navigate('EmotionSelectScreen', { 
+      date: dayjs().format('YYYY-MM-DD') 
+    });
+  };
+
   const renderReportTab = () => (
-    <RecordReportTab />
+    <RecordReportTab onStartRecordPress={() => {onStartRecordPress();}} />
     //<RecordReportTabNotOpened />
     // 만약 기록 날짜가 7일 미만일 경우 RecordReportTabNotOpened 컴포넌트 반환
   );

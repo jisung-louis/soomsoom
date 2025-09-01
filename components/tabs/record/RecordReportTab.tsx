@@ -26,6 +26,7 @@ import { emotionReportMockData } from '../../../data/emotionReportMockData';
 import EmptyCatIcon from '../../../assets/icons/record/report/cat_write2.svg';
 import EmptyMonthIcon from '../../../assets/icons/record/report/cat_quiet.svg';
 import { ButtonSmall } from '../../common/buttons/ButtonSmall';
+import LottieView from 'lottie-react-native';
 
 const windowWidth = Dimensions.get('window').width;
 
@@ -36,7 +37,11 @@ const barHeight = {
   third: 100,
 };
 
-const RecordReportTab = () => {
+interface RecordReportTabProps {
+  onStartRecordPress: () => void;
+}
+
+const RecordReportTab = ({onStartRecordPress}: RecordReportTabProps) => {
   const [emotionRankingData, setEmotionRankingData] = useState<EmotionRankingData[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -49,12 +54,13 @@ const RecordReportTab = () => {
     position: { x: number; y: number };
   } | null>(null);
   const [scrollOffset, setScrollOffset] = useState(0);  // 스크롤 오프셋 추가
-
+  const [showParticle, setShowParticle] = useState(true);
   // 페이지 진입 시 및 월 변경 시 데이터 로드
   useEffect(() => {
     loadEmotionData();
     // 월 변경 시 주차를 해당 월의 첫째 주로 리셋
     resetWeekToFirstWeekOfMonth();
+    setShowParticle(true);
   }, [currentYear, currentMonth]);
 
   const loadEmotionData = async () => {
@@ -162,14 +168,7 @@ const RecordReportTab = () => {
   };
 
   return emotionRankingData.length > 0 ? (
-    <ScrollView 
-      style={styles.container}
-      onScroll={(event) => {
-        const offsetY = event.nativeEvent.contentOffset.y;
-        setScrollOffset(offsetY);
-      }}
-      scrollEventThrottle={16}  // 60fps로 스크롤 이벤트 제한
-    >
+    <ScrollView style={styles.container}>
       {/* 월 단위 이동 컴포넌트 */}
       <View style={styles.yearMonthContainer}>
         <TouchableOpacity 
@@ -202,183 +201,194 @@ const RecordReportTab = () => {
           />
         </TouchableOpacity>
       </View>
-      {/* TODO: 폭죽 이펙트 추가 */}
-
-      {/* 월별 감정 순위 컴포넌트 */}
-      <View style={styles.emotionRankContainer}>
-        <View style={styles.emotionReportTitleAndInfoContainer}>
-          <View>
-            <View style={{flexDirection: 'row', alignItems: 'center', gap: 5}}>
-              <Text style={styles.emotionReportTitle}>{currentMonth}</Text>
-              <Text style={styles.emotionReportTitle}>월달의</Text>
-            </View>
-            <Text style={styles.emotionReportTitle}>감정 순위에요!</Text>
-          </View>
-          <View style={{flexDirection: 'row', alignItems: 'center', gap: 4}}>
-            <InfoIcon width={24} height={24} color={colors.grayScale800} />
-            <Text style={styles.emotionReportInfoText}>기록한 감정이 많은 순으로 보여줘요!</Text>
-          </View>
-        </View>
-
-        <View style={styles.emotionRankContentContainer}>
-            <View style={styles.emotionRankContentContainer}>
-              <View style={styles.barGraphContainer}>
-                {podiumEmotions.map((emotion, index) => {
-                  // 시상대 순서: index 0=2등, 1=1등, 2=3등
-                  const actualRank = index === 0 ? 2 : index === 1 ? 1 : 3;
-                  const barStyle = actualRank === 1 ? styles.bar1st : 
-                                 actualRank === 2 ? styles.bar2nd : styles.bar3rd;
-                  
-                  return (
-                    <View key={emotion.emotion} style={[styles.rankContainer, index === 1 && {gap: 20}]}>
-                      <View style={styles.emotionContainer}>
-                        <View style={styles.emotionIconAndTitleContainer}>
-                          {index === 1 && (
-                            <KingIcon width={40} height={40} style={{marginBottom: 2}} />
-                          )}
-                          <emotion.icon width={64} height={64} />
-                          <Text style={styles.emotionTitle}>{emotion.title}</Text>
-                        </View>
-                        <Text style={styles.countText}>{emotion.count}번</Text>
-                      </View>
-                      <View style={[barStyle, styles.barCommonStyle]}>
-                        <Text style={[styles.rankText, actualRank === 1 && { color: colors.white }]}>{actualRank}</Text>
-                      </View>
-                    </View>
-                  );
-                })}
+      <View style={styles.RecordReportContentContainer}>
+      {showParticle && (
+        <LottieView
+          source={require('../../../assets/animations/particle.json')}
+          autoPlay
+          loop={false}
+          style={styles.particle}
+          onAnimationFinish={() => {
+            setShowParticle(false);
+          }}
+        />
+        )}
+        {/* 월별 감정 순위 컴포넌트 */}
+        <View style={styles.emotionRankContainer}>
+          <View style={styles.emotionReportTitleAndInfoContainer}>
+            <View>
+              <View style={{flexDirection: 'row', alignItems: 'center', gap: 5}}>
+                <Text style={styles.emotionReportTitle}>{currentMonth}</Text>
+                <Text style={styles.emotionReportTitle}>월달의</Text>
               </View>
-              
-              <View style={styles.emotionRestListContainer}>
-                {emotionRankingData.map((emotion, index) => {
-                  if (index === 0 || index === 1 || index === 2) {
-                    return null;
-                  }
-                  return (
-                  <View key={emotion.emotion} style={styles.emotionListItem}>
-                    <View style={styles.emotionItemContainer}>
-                      <View style={styles.emotionItemLeft}>
-                        <emotion.icon width={40} height={40} />
-                        <Text style={styles.emotionItemTitle}>{emotion.title}</Text>
-                      </View>
-                      <View style={styles.emotionItemRight}>
-                        <Text style={styles.emotionCount}>{emotion.count}번</Text>
-                      </View>
-                    </View>
-                  </View>
-                )})}
-              </View>
+              <Text style={styles.emotionReportTitle}>감정 순위에요!</Text>
             </View>
-          
-        </View>
-      </View>
-
-      <Surface/>
-
-      {/* 월별 감정 분포 컴포넌트 */}
-      <View style={styles.emotionDistributionContainer}>
-        <View style={[styles.emotionReportTitleAndInfoContainer, {gap: 4}]}>
-          <Text style={styles.emotionReportTitle}>감정분포</Text>
-          <View style={{flexDirection: 'row', alignItems: 'center', gap: 4}}>
-            <InfoIcon width={24} height={24} color={colors.grayScale800} />
-            <Text style={styles.emotionReportInfoText}>차트 클릭 시 자세히 확인할 수 있어요!(미구현)</Text>
+            <View style={{flexDirection: 'row', alignItems: 'center', gap: 4}}>
+              <InfoIcon width={24} height={24} color={colors.grayScale800} />
+              <Text style={styles.emotionReportInfoText}>기록한 감정이 많은 순으로 보여줘요!</Text>
+            </View>
           </View>
-        </View>
-        <View style={styles.emotionDistributionContentContainer}>
-          <View style={styles.donutChartWrapper}>
-            {emotionRankingData.length > 0 ? (
-              <>
-              <DonutChart data={emotionRankingData} onSegmentPress={handleSegmentPress} />
-              
-              {/* 선택된 세그먼트에 BubbleTalk 표시 */}
-              {/* {selectedSegment && (
-                <BubbleTalk
-                  text={`${selectedSegment.item.title}: ${selectedSegment.item.count}회 (${selectedSegment.item.percentage}%)`}
-                  trianglePosition="bottom"
-                  style={{
-                    position: 'absolute',
-                    // 스크롤 오프셋을 고려한 정확한 위치 계산
-                    top: selectedSegment.position.y - scrollOffset,  // 스크롤 오프셋 제거
-                    left: selectedSegment.position.x - 90, // 터치 위치 왼쪽으로 (BubbleTalk 너비의 절반)
-                    zIndex: 1000,
-                  }}
-                />
-              )} */}
-              
-              {/* 터치 외부 클릭 감지를 위한 투명 오버레이 */}
-              {selectedSegment && (
-                <TouchableWithoutFeedback onPress={closeBubbleTalk}>
-                  <View style={styles.overlay} />
-                </TouchableWithoutFeedback>
-              )}
-              
-              <View style={styles.percentageContainer}>
-                <View style={styles.barPercentageContainer}>
-                  {emotionRankingData.map((item, index) => (
-                    <View 
-                      key={item.emotion} 
-                      style={[styles.barPercentage, {backgroundColor: getRankColor(index), 
-                      width: (item.percentage / 100) * (windowWidth - 40)} ]} 
-                    />
-                  ))}
-                </View>
-                  <View style={[styles.ratioPercentageContainer, {gap: Math.max(7,((windowWidth - 40) - (emotionRankingData.length * 50)) / (emotionRankingData.length - 1))}]}>
-                  {emotionRankingData.map((item, index) => {
-                    const IconStroke = characterIconMap.stroke[item.emotion];
+
+          <View style={styles.emotionRankContentContainer}>
+              <View style={styles.emotionRankContentContainer}>
+                <View style={styles.barGraphContainer}>
+                  {podiumEmotions.map((emotion, index) => {
+                    // 시상대 순서: index 0=2등, 1=1등, 2=3등
+                    const actualRank = index === 0 ? 2 : index === 1 ? 1 : 3;
+                    const barStyle = actualRank === 1 ? styles.bar1st : 
+                                  actualRank === 2 ? styles.bar2nd : styles.bar3rd;
+                    
                     return (
-                      <View key={item.emotion} style={styles.ratioPercentage}>
-                        <View style={[styles.ratioEmotionBlock, {backgroundColor: getRankColor(index)}]}>
-                          <IconStroke width={40} height={40}/>
+                      <View key={emotion.emotion} style={[styles.rankContainer, index === 1 && {gap: 20}]}>
+                        <View style={styles.emotionContainer}>
+                          <View style={styles.emotionIconAndTitleContainer}>
+                            {index === 1 && (
+                              <KingIcon width={40} height={40} style={{marginBottom: 2}} />
+                            )}
+                            <emotion.icon width={64} height={64} />
+                            <Text style={styles.emotionTitle}>{emotion.title}</Text>
+                          </View>
+                          <Text style={styles.countText}>{emotion.count}번</Text>
                         </View>
-                        <View style={styles.ratioEmotionBlockTextContainer}>
-                          <Text style={styles.ratioEmotionBlockText}>{item.percentage}%</Text>
+                        <View style={[barStyle, styles.barCommonStyle]}>
+                          <Text style={[styles.rankText, actualRank === 1 && { color: colors.white }]}>{actualRank}</Text>
                         </View>
                       </View>
                     );
                   })}
                 </View>
+                
+                <View style={styles.emotionRestListContainer}>
+                  {emotionRankingData.map((emotion, index) => {
+                    if (index === 0 || index === 1 || index === 2) {
+                      return null;
+                    }
+                    return (
+                    <View key={emotion.emotion} style={styles.emotionListItem}>
+                      <View style={styles.emotionItemContainer}>
+                        <View style={styles.emotionItemLeft}>
+                          <emotion.icon width={40} height={40} />
+                          <Text style={styles.emotionItemTitle}>{emotion.title}</Text>
+                        </View>
+                        <View style={styles.emotionItemRight}>
+                          <Text style={styles.emotionCount}>{emotion.count}번</Text>
+                        </View>
+                      </View>
+                    </View>
+                  )})}
+                </View>
               </View>
-              </>
-            ) : (
-              <Text style={styles.emptyStateText}>표시할 데이터가 없어요</Text>
-            )}
+            
           </View>
         </View>
-      </View>
 
-      <Surface height={1} style={{marginHorizontal: 20}}/>
+        <Surface/>
 
-      {/* 요일별 감정 기록 컴포넌트 */}
-      <View style={styles.emotionRecordContainer}>
-        <View style={styles.emotionRecordHeaderContainer}>
-          <View style={styles.emotionRecordHeaderTitleContainer}>
-            <Text style={styles.emotionRecordTitle}>요일별 감정기록</Text>
-            <Text style={styles.emotionRecordWeeklyDate}>
-              {(() => {
-                // 현재 주차의 시작일과 종료일 계산
-                const startOfWeek = dayjs().year(currentYear).week(currentWeek).startOf('week');
-                const endOfWeek = dayjs().year(currentYear).week(currentWeek).endOf('week');
-                
-                // 월이 바뀌는 경우 현재 월에 해당하는 날짜만 표시
-                const startDate = startOfWeek.month() === currentMonth - 1 ? startOfWeek.date() : 1;
-                const endDate = endOfWeek.month() === currentMonth - 1 ? endOfWeek.date() : endOfWeek.daysInMonth();
-                
-                return `${startDate}일 - ${endDate}일 ${currentYear}.${currentMonth.toString().padStart(2, '0')}`;
-              })()}
-            </Text>
+        {/* 월별 감정 분포 컴포넌트 */}
+        <View style={styles.emotionDistributionContainer}>
+          <View style={[styles.emotionReportTitleAndInfoContainer, {gap: 4}]}>
+            <Text style={styles.emotionReportTitle}>감정분포</Text>
+            <View style={{flexDirection: 'row', alignItems: 'center', gap: 4}}>
+              <InfoIcon width={24} height={24} color={colors.grayScale800} />
+              <Text style={styles.emotionReportInfoText}>차트 클릭 시 자세히 확인할 수 있어요!(미구현)</Text>
+            </View>
           </View>
-          <View style={styles.emotionRecordWeeklyMoveContainer}>
-            <TouchableOpacity style={styles.emotionRecordWeeklyMoveButton} onPress={() => handleWeekChange('prev')}>
-              <ArrowLeftIcon width={24} height={24} color={colors.grayScale800} />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.emotionRecordWeeklyMoveButton} onPress={() => handleWeekChange('next')}>
-              <ArrowRightIcon width={24} height={24} color={colors.grayScale800} />
-            </TouchableOpacity>
+          <View style={styles.emotionDistributionContentContainer}>
+            <View style={styles.donutChartWrapper}>
+              {emotionRankingData.length > 0 ? (
+                <>
+                <DonutChart data={emotionRankingData} onSegmentPress={handleSegmentPress} />
+                
+                {/* 선택된 세그먼트에 BubbleTalk 표시 */}
+                {/* {selectedSegment && (
+                  <BubbleTalk
+                    text={`${selectedSegment.item.title}: ${selectedSegment.item.count}회 (${selectedSegment.item.percentage}%)`}
+                    trianglePosition="bottom"
+                    style={{
+                      position: 'absolute',
+                      // 스크롤 오프셋을 고려한 정확한 위치 계산
+                      top: selectedSegment.position.y - scrollOffset,  // 스크롤 오프셋 제거
+                      left: selectedSegment.position.x - 90, // 터치 위치 왼쪽으로 (BubbleTalk 너비의 절반)
+                      zIndex: 1000,
+                    }}
+                  />
+                )} */}
+                
+                {/* 터치 외부 클릭 감지를 위한 투명 오버레이 */}
+                {selectedSegment && (
+                  <TouchableWithoutFeedback onPress={closeBubbleTalk}>
+                    <View style={styles.overlay} />
+                  </TouchableWithoutFeedback>
+                )}
+                
+                <View style={styles.percentageContainer}>
+                  <View style={styles.barPercentageContainer}>
+                    {emotionRankingData.map((item, index) => (
+                      <View 
+                        key={item.emotion} 
+                        style={[styles.barPercentage, {backgroundColor: getRankColor(index), 
+                        width: (item.percentage / 100) * (windowWidth - 40)} ]} 
+                      />
+                    ))}
+                  </View>
+                    <View style={[styles.ratioPercentageContainer, {gap: Math.max(7,((windowWidth - 40) - (emotionRankingData.length * 50)) / (emotionRankingData.length - 1))}]}>
+                    {emotionRankingData.map((item, index) => {
+                      const IconStroke = characterIconMap.stroke[item.emotion];
+                      return (
+                        <View key={item.emotion} style={styles.ratioPercentage}>
+                          <View style={[styles.ratioEmotionBlock, {backgroundColor: getRankColor(index)}]}>
+                            <IconStroke width={40} height={40}/>
+                          </View>
+                          <View style={styles.ratioEmotionBlockTextContainer}>
+                            <Text style={styles.ratioEmotionBlockText}>{item.percentage}%</Text>
+                          </View>
+                        </View>
+                      );
+                    })}
+                  </View>
+                </View>
+                </>
+              ) : (
+                <Text style={styles.emptyStateText}>표시할 데이터가 없어요</Text>
+              )}
+            </View>
           </View>
         </View>
-        {/* TODO: 요일별 감정 기록 차트 추가 */}
-        <View style={styles.emotionRecordChartContainer}>
-          <BarChart currentYear={currentYear} currentMonth={currentMonth} currentWeek={currentWeek} emotionReportData={emotionReportMockData} />
+
+        <Surface height={1} style={{marginHorizontal: 20}}/>
+
+        {/* 요일별 감정 기록 컴포넌트 */}
+        <View style={styles.emotionRecordContainer}>
+          <View style={styles.emotionRecordHeaderContainer}>
+            <View style={styles.emotionRecordHeaderTitleContainer}>
+              <Text style={styles.emotionRecordTitle}>요일별 감정기록</Text>
+              <Text style={styles.emotionRecordWeeklyDate}>
+                {(() => {
+                  // 현재 주차의 시작일과 종료일 계산
+                  const startOfWeek = dayjs().year(currentYear).week(currentWeek).startOf('week');
+                  const endOfWeek = dayjs().year(currentYear).week(currentWeek).endOf('week');
+                  
+                  // 월이 바뀌는 경우 현재 월에 해당하는 날짜만 표시
+                  const startDate = startOfWeek.month() === currentMonth - 1 ? startOfWeek.date() : 1;
+                  const endDate = endOfWeek.month() === currentMonth - 1 ? endOfWeek.date() : endOfWeek.daysInMonth();
+                  
+                  return `${startDate}일 - ${endDate}일 ${currentYear}.${currentMonth.toString().padStart(2, '0')}`;
+                })()}
+              </Text>
+            </View>
+            <View style={styles.emotionRecordWeeklyMoveContainer}>
+              <TouchableOpacity style={styles.emotionRecordWeeklyMoveButton} onPress={() => handleWeekChange('prev')}>
+                <ArrowLeftIcon width={24} height={24} color={colors.grayScale800} />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.emotionRecordWeeklyMoveButton} onPress={() => handleWeekChange('next')}>
+                <ArrowRightIcon width={24} height={24} color={colors.grayScale800} />
+              </TouchableOpacity>
+            </View>
+          </View>
+          {/* TODO: 요일별 감정 기록 차트 추가 */}
+          <View style={styles.emotionRecordChartContainer}>
+            <BarChart currentYear={currentYear} currentMonth={currentMonth} currentWeek={currentWeek} emotionReportData={emotionReportMockData} />
+          </View>
         </View>
       </View>
     </ScrollView>
@@ -424,7 +434,7 @@ const RecordReportTab = () => {
         </View>
         <ButtonSmall
           title="기록 시작하기"
-          onPress={() => {}}
+          onPress={() => {onStartRecordPress();}}
           variant="active"
         />
       </View>
@@ -446,6 +456,19 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     marginBottom: 100,
+  },
+  RecordReportContentContainer: {
+    position: 'relative',
+  },
+  particle: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 100000,
+    width: '100%',
+    height:418,
   },
   yearMonthContainer: {
     flexDirection: 'row',

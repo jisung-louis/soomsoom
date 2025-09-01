@@ -12,10 +12,14 @@ import { enableScreens } from 'react-native-screens';
 import { scheduleDiaryNotification } from './utils/notificationUtils';
 import { loadFonts } from './utils/fontLoader';
 import { View, Text } from 'react-native';
+import { SplashScreen, OnboardingScreen } from './components/onboarding';
+import { OnboardingProvider, useOnboarding } from './contexts/OnboardingContext';
 
-export default function App() {
+const AppContent = () => {
   enableScreens(true);
   const [fontsLoaded, setFontsLoaded] = useState(false);
+  const [showSplash, setShowSplash] = useState(true);
+  const { hasSeenOnboarding, setHasSeenOnboarding } = useOnboarding();
   
   // 폰트 로딩
   useEffect(() => {
@@ -31,6 +35,16 @@ export default function App() {
     
     loadAppFonts();
   }, []);
+
+  const completeOnboarding = async () => {
+    try {
+      await AsyncStorage.setItem('hasSeenOnboarding', 'true');
+      setHasSeenOnboarding(true);
+    } catch (error) {
+      console.error('온보딩 완료 상태 저장 실패:', error);
+      setHasSeenOnboarding(true);
+    }
+  };
 
   // 앱 시작 시 알림 설정 초기화
   useEffect(() => {
@@ -100,7 +114,11 @@ export default function App() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <PortalProvider>
         <ToastProvider>
-          {fontsLoaded ? (
+          {showSplash ? (
+            <SplashScreen onComplete={() => setShowSplash(false)} />
+          ) : !hasSeenOnboarding ? (
+            <OnboardingScreen onComplete={completeOnboarding} />
+          ) : fontsLoaded ? (
             <>
               <AppNavigator />
               <StatusBar style="auto" />
@@ -114,5 +132,13 @@ export default function App() {
         </ToastProvider>
       </PortalProvider>
     </GestureHandlerRootView>
+  );
+};
+
+export default function App() {
+  return (
+    <OnboardingProvider>
+      <AppContent />
+    </OnboardingProvider>
   );
 }
