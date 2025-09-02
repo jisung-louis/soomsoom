@@ -14,7 +14,8 @@ import { radius } from '../../../constants/radius';
 import EmotionIcon from '../../../assets/icons/common/emotion.svg';
 import Badge from '../../../components/common/badge/Badge';
 import CheckIcon from '../../../assets/icons/common/stroke_check copy.svg';
-import { roomItemList, RoomItem, IN_POSSESSION_ITEMS } from '../../../data/roomItemData';
+import { roomItemList, RoomItem } from '../../../data/roomItemData';
+import { useRoomStore } from '../../../stores/roomStore';
 
 const ITEM_IMAGE_WIDTH = 105;
 const ITEM_IMAGE_HEIGHT = 105;
@@ -51,7 +52,7 @@ type ItemList = {
   type?: string;
   title?: string;
   image?: string;
-  price?: number;
+  price?: number | null;
   __isPlaceholder?: boolean;
 };
 
@@ -64,7 +65,7 @@ function padToThreeColumns(data: ItemList[]) {
       id: 0,
       image: '',
       title: '',
-      price: 0,
+      price: null,
     }));
     return [...data, ...placeholders];
   }
@@ -80,12 +81,12 @@ const MyRoomDecoration = ({
   selectedItems: number[],
   onItemSelection: (itemId: number) => void
 }) => {
-    const InPossessionItemData: ItemList[] = roomItemList.filter(item => IN_POSSESSION_ITEMS.includes(item.id));
+    const { ownedItems, isOwned } = useRoomStore();
+    const InPossessionItemData: ItemList[] = roomItemList.filter(item => ownedItems.includes(item.id));
     const filteredData = selectedTab === 0
       ? InPossessionItemData
       : roomItemList.filter(item => item.type === tabMenu[selectedTab].title);
     const paddedData = padToThreeColumns(filteredData);
-    const isOwned = (id: number) => IN_POSSESSION_ITEMS.includes(id);
 
     const handleItemPress = (id: number) => {
         onItemSelection(id);
@@ -164,10 +165,11 @@ const styles = StyleSheet.create({
   tabMenuContainer: {
     paddingTop: 30,
     padding: 20,
-    flex: 1,
+    height: 118,
   },
   tabMenuContentContainer: {
     gap: 20,
+    height: 68,
   },
   tabMenu: {
     alignItems: 'center',
@@ -207,7 +209,7 @@ const styles = StyleSheet.create({
   itemListContainer: {
     padding: 20,
     gap: 10,
-    flex: 1,
+    height: 312,
   },
   row: {
     justifyContent: 'space-between',

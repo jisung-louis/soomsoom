@@ -126,7 +126,7 @@ export const emotionService = {
     const key = `${year}-${month}`;
     
     // 임시로 지연 시간 추가 (실제 API 호출 시뮬레이션)
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise(resolve => setTimeout(resolve, 0));
     
     if (mockEmotionData[key]) {
       return mockEmotionData[key];

@@ -1,5 +1,5 @@
 import React from 'react';
-import { TouchableOpacity, TouchableOpacityProps, StyleSheet, Text, View, StyleProp, ViewStyle } from 'react-native';
+import { TouchableOpacity, TouchableOpacityProps, StyleSheet, Text, View, StyleProp, ViewStyle, ActivityIndicator } from 'react-native';
 import { colors } from '../../../constants/colors';
 import { radius } from '../../../constants/radius';
 import { typography } from '../../../constants/typography';
@@ -12,16 +12,38 @@ export interface ButtonProps extends TouchableOpacityProps {
   variant?: 'default' | 'active' | 'secondary' | 'white';
   size?: 'medium' | 'large';
   style?: StyleProp<ViewStyle>;
+  loading?: boolean;
 }
 
 export const Button: React.FC<ButtonProps> = (props) => {
-  const { title, icon, variant = 'default', size = 'medium', style, ...rest } = props;
+  const { title, icon, variant = 'default', size = 'medium', style, loading = false, disabled, ...rest } = props;
+
+  // Spinner color follows text color per variant
+  const spinnerColor = variant === 'active'
+    ? colors.white
+    : variant === 'white'
+    ? colors.grayScale900
+    : variant === 'secondary'
+    ? colors.primary400
+    : colors.grayScale400;
+
+  const isDisabled = !!disabled || loading;
+
+  const renderLeft = () => {
+    if (loading) return <ActivityIndicator size="small" color={spinnerColor} style={{ marginRight: 8 }} />;
+    if (icon === 'check') return <CheckIcon width={24} height={24} />;
+    if (icon === 'heart') return <HeartIcon width={24} height={24} />;
+    return null;
+  };
 
   return (
-    <TouchableOpacity style={[styles.button, styles[variant], styles[size], style]} {...rest}>
-      {icon === 'check' && <CheckIcon width={24} height={24} />}
-      {icon === 'heart' && <HeartIcon width={24} height={24} />}
-      <Text style={[styles.title, styles[variant]]}>{title}</Text>
+    <TouchableOpacity
+      style={[styles.button, styles[variant], styles[size], style, isDisabled && { opacity: 0.8 }]}
+      disabled={isDisabled}
+      {...rest}
+    >
+      {renderLeft()}
+      <Text style={[styles.title, styles[variant], icon || loading ? { marginLeft: 6 } : null]}>{title}</Text>
     </TouchableOpacity>
   );
 };

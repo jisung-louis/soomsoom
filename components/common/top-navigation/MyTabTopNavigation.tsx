@@ -5,17 +5,17 @@ import SettingIcon from '../../../assets/icons/common/setting.svg';
 import HeartIcon from '../../../assets/icons/common/Heart.svg';
 import { colors } from '../../../constants/colors';
 import { typography } from '../../../constants/typography';
+import { useCurrencyStore } from '../../../stores/currencyStore';
 
 interface MyTabTopNavigationProps {
   isEditMode: boolean;
-  money: string;
   onEditModeToggle: () => void;
   onSettingPress: () => void;
   onHeartPress: () => void;
   style?: ViewStyle;
 }
 
-const MyTabTopNavigation = ({isEditMode, money, onEditModeToggle, onSettingPress, onHeartPress, style}: MyTabTopNavigationProps) => {
+const MyTabTopNavigation = ({isEditMode, onEditModeToggle, onSettingPress, onHeartPress, style}: MyTabTopNavigationProps) => {
   return (
     isEditMode ? (
       <View style={[styles.container, style]}>
@@ -24,7 +24,7 @@ const MyTabTopNavigation = ({isEditMode, money, onEditModeToggle, onSettingPress
         </TouchableOpacity>
         <TouchableOpacity style={styles.rightButton} onPress={() => {onHeartPress()}}>
           <HeartIcon width={40} height={40} />
-          <Text style={styles.moneyText}>{money}</Text>
+          <Text style={styles.moneyText}>{useCurrencyStore.getState().heartPoints}</Text>
         </TouchableOpacity>
       </View>
     ) : (

@@ -10,6 +10,7 @@ import InquiryBugScreen from "../../screens/subpages/my/setting/InquiryBugScreen
 import InformationScreen from "../../screens/subpages/my/setting/InformationScreen";
 import TermOfServiceScreen from "../../screens/subpages/my/setting/TermOfServiceScreen";
 import PrivacyPolicyScreen from "../../screens/subpages/my/setting/PrivacyPolicyScreen";
+import MyRoomDecorationPurchaseScreen from "../../screens/subpages/my/room-decoration/MyRoomDecorationPurchaseScreen";
 
 export type MyStackParamList = {
   MyTab: undefined;
@@ -22,7 +23,8 @@ export type MyStackParamList = {
   InformationScreen: undefined;
   TermOfServiceScreen: undefined;
   PrivacyPolicyScreen: undefined;
-};
+  MyRoomDecorationPurchaseScreen: { purchaseItems: number[] };
+  };
 
 const Stack = createStackNavigator<MyStackParamList>();
 
@@ -45,6 +47,7 @@ export default function MyStackNavigator() {
       <Stack.Screen name="InformationScreen" component={InformationScreen} />
       <Stack.Screen name="TermOfServiceScreen" component={TermOfServiceScreen} />
       <Stack.Screen name="PrivacyPolicyScreen" component={PrivacyPolicyScreen} />
+      <Stack.Screen name="MyRoomDecorationPurchaseScreen" component={MyRoomDecorationPurchaseScreen} />
     </Stack.Navigator>
   );
 };

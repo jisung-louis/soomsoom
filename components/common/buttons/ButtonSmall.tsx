@@ -9,11 +9,16 @@ interface ButtonProps extends TouchableOpacityProps {
   variant?: 'default' | 'active';
 }
 
+export const BUTTON_SIZE = {
+  width: 108,
+  height: 42,
+}
+
 export const ButtonSmall: React.FC<ButtonProps> = (props) => {
-  const { title, variant = 'default', ...rest } = props;
+  const { title, variant = 'default', style, ...rest } = props;
 
   return (
-    <TouchableOpacity style={[styles.button, styles[variant]]} {...rest}>
+    <TouchableOpacity style={[styles.button, styles[variant], style]} {...rest}>
       <Text style={[styles.title, styles[variant]]}>{title}</Text>
     </TouchableOpacity>
   );
@@ -26,8 +31,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     flexDirection: 'row',
     padding: 12,
-    width: 108,
-    height: 42,
+    width: BUTTON_SIZE.width,
+    height: BUTTON_SIZE.height,
   },
   title: {
     fontSize: typography.body4.fontSize,

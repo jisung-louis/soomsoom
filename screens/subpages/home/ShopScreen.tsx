@@ -11,7 +11,8 @@ import HeartPoint from '../../../components/common/heart-point/HeartPoint';
 import { TabMenu } from '../../../components/common/tabmenu/TabMenu';
 import { SceneMap, TabView } from 'react-native-tab-view';
 import { radius } from '../../../constants/radius';
-import { roomItemList, RoomItem, IN_POSSESSION_ITEMS } from '../../../data/roomItemData';
+import { roomItemList, RoomItem } from '../../../data/roomItemData';
+import { useRoomStore } from '../../../stores/roomStore';
 import CheckDisableIcon from '../../../assets/icons/common/check_disabled.svg';
 import CheckActiveIcon from '../../../assets/icons/common/check_active.svg';
 import ArrowDropDownIcon from '../../../assets/icons/common/arrow_dropdown.svg';
@@ -34,7 +35,7 @@ function padToThreeColumns(data: RoomItem[]) {
     image: null,
     lottieJson: null,
     price: 0,
-    positionType: 'face' as const,
+    positionType: 'eyewear' as const,
     position: { x: 0, y: 0 },
   }));
   return [...data, ...placeholders];
@@ -45,6 +46,7 @@ const ITEM_IMAGE_HEIGHT = 105;
 
 const ShopScreen = () => {
   const navigation = useNavigation<ShopScreenNavigationProp>();
+  const { ownedItems, isOwned } = useRoomStore();
   const layout = useWindowDimensions();
   const [excludeOwnedItems, setExcludeOwnedItems] = useState(false);
   const [outOfStockItems, setOutOfStockItems] = useState<number[]>([]);
@@ -60,9 +62,9 @@ const ShopScreen = () => {
   ]);
 
   const handleItemPress = (item: RoomItem) => {
-    const isOwned = IN_POSSESSION_ITEMS.includes(item.id);
+    const itemIsOwned = isOwned(item.id);
     navigation.navigate('ShopItemDetailScreen', { itemId: item.id });
-    if (isOwned) {
+    if (itemIsOwned) {
       // 이미 보유한 아이템
 
       console.log('이미 보유한 아이템:', item.title);
@@ -87,10 +89,7 @@ const ShopScreen = () => {
     return outOfStockItems.includes(itemId);
   };
 
-  // 보유 아이템 체크 함수
-  const isOwned = (itemId: number) => {
-    return IN_POSSESSION_ITEMS.includes(itemId);
-  };
+  // 보유 아이템 체크 함수는 스토어에서 가져옴
 
   // 테스트용: 모든 아이템을 품절로 만들거나 품절해제
   const handleMakeAllOutOfStock = () => {
@@ -105,7 +104,7 @@ const ShopScreen = () => {
   const renderItemTab = () => {
     // 보유중 제외 필터링 적용
     const filteredItems = excludeOwnedItems 
-      ? roomItemList.filter(item => !IN_POSSESSION_ITEMS.includes(item.id))
+      ? roomItemList.filter(item => !isOwned(item.id))
       : roomItemList;
 
     return (

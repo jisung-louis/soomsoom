@@ -56,7 +56,7 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
     home: ['ShopScreen', 'ShopItemDetailScreen'],
     play: ['PlayFavoriteScreen', 'PlayHistoryScreen', 'PlayDetailScreen', 'PlayTeacherDetailScreen', 'PlayBreathScreen', 'PlayMeditationScreen', 'PlayResultScreen'],
     alarm: ['AlarmAddScreen', ],
-    my: [],
+    my: ['MyRoomDecorationPurchaseScreen'],
   };
 
   // 현재 화면이 숨겨야 하는 화면인지 확인

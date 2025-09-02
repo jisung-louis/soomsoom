@@ -1,76 +1,89 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import UserRoom from '../../components/common/userroom/UserRoom';
+import { View, StyleSheet, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { colors } from '../../constants/colors';
-import { Button } from '../../components/common/buttons/Button';
 import { radius } from '../../constants/radius';
-import { ToggleButton } from '../../components/common/buttons/ToggleButton';
-import { syongsyongTypography, typography } from '../../constants/typography';
-import ArrowRight from '../../assets/icons/common/arrow_right.svg'; 
-import BadgeEmpty from '../../assets/icons/my/badge_empty.svg';
-import { MyStackParamList } from '../../navigations/tabs/MyStackNavigator';
+import { typography } from '../../constants/typography';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import LottieView from 'lottie-react-native';
-import CustomBottomSheet from '../../components/common/bottomsheet/CustomBottomSheet';
-import { BottomSheetModal } from '@gorhom/bottom-sheet';
-import MyRoomDecoration from '../subpages/my/MyRoomDecoration';
-import { ButtonSmall } from '../../components/common/buttons/ButtonSmall';
+import { MyStackParamList } from '../../navigations/tabs/MyStackNavigator';
+import { useRef } from 'react';
+import { BottomSheetModal, WINDOW_HEIGHT } from '@gorhom/bottom-sheet';
+import { ss, sv } from '../../utils/scale';
 import MyTabTopNavigation from '../../components/common/top-navigation/MyTabTopNavigation';
-import { roomItemList, RoomItem, IN_POSSESSION_ITEMS, getItemPosition } from '../../data/roomItemData';
-
-const screenWidth = Dimensions.get('window').width;
-const screenHeight = Dimensions.get('window').height;
-const cat = {
-  x: screenWidth * 0.28,
-  y: screenHeight * 0.22,
-  height: 200,
-  width: 200,
-}
-const BOTTOM_SHEET_HEIGHT = screenHeight - (cat.y + cat.height)
-const BOTTOM_SHEET_MIN_HEIGHT = 300
-const BOTTOM_SHEET_MAX_HEIGHT = screenHeight * 0.5
-
-// 아이템 배치 관련 상수
-const ITEM_SIZE = 80;
+import { useCurrencyStore } from '../../stores/currencyStore';
+import { syongsyongTypography } from '../../constants/typography';
+import { ToggleButton } from '../../components/common/buttons/ToggleButton';
+import ArrowRight from '../../assets/icons/common/arrow_right.svg';
+import BadgeEmpty from '../../assets/icons/my/badge_empty.svg';
+import { Button } from '../../components/common/buttons/Button';
+import CustomBottomSheet from '../../components/common/bottomsheet/CustomBottomSheet';
+import MyRoomDecoration from '../subpages/my/MyRoomDecoration';
+import { roomItemList } from '../../data/roomItemData';
+import { objectPosition } from '../../constants/roomLayout';
+import { useRoomStore } from '../../stores/roomStore';
+import CustomAlert from '../../components/common/alert/CustomAlert';
 
 const mockStatusData = [
-  { title: '기록', valueType: '회', value: 0 },
-  { title: '운동', valueType: '회', value: 0 },
-  { title: '시간', valueType: 'mm:ss', value: '00:00' },
+    { title: '기록', valueType: '회', value: 0 },
+    { title: '운동', valueType: '회', value: 0 },
+    { title: '시간', valueType: 'mm:ss', value: '00:00' },
 ];
 const statusCardContentItemWidth = 100 / mockStatusData.length;
 
-// 아이템 데이터 타입 (RoomItem에서 필요한 속성만 추출)
-type PlacedItem = {
-  id: number;
-  x: number;
-  y: number;
-  title: string;
-  lottieJson: any;
-  type: string;
-};
+const BOTTOM_SHEET_DEFAULT_HEIGHT = (objectPosition.shadow.y + ss(30) + 10) - sv(176);
+const BOTTOM_SHEET_HEIGHT = WINDOW_HEIGHT - BOTTOM_SHEET_DEFAULT_HEIGHT; // 고양이 그림자 바로 아래 +10 까지 바텀시트 올림 (Default) + 176(figma 기준) 상단마진
+const BOTTOM_SHEET_MIN_HEIGHT = 118 + 20 + 129 + 10 // 바텀시트 탭매뉴 높이(118) + 아이템리스트 컨테이너 패딩 높이(20) + 아이템 칼럼 높이(129) + 아이템 칼럼 하단 마진(10)
+const BOTTOM_SHEET_MAX_HEIGHT = 118 + 312 // 바텀시트 탭매뉴 높이(118) + 아이템리스트 컨테이너 높이(312)
 
 const MyTab = () => {
   const navigation = useNavigation<StackNavigationProp<MyStackParamList>>();
   const scrollViewRef = useRef<ScrollView>(null);
   const bottomSheetRef = useRef<BottomSheetModal>(null);
-  const catLottieRef = useRef<LottieView>(null); // 고양이 LottieView ref
+
+  // ===== Stores (selectors) =====
+  const heartPoints = useCurrencyStore(state => state.heartPoints);
+
+  const placedItems = useRoomStore(state => state.placedItems);
+  const isOwned = useRoomStore(state => state.isOwned);
+  const clearAllPlacedItems = useRoomStore(state => state.clearAllPlacedItems);
+  const placeItem = useRoomStore(state => state.placeItem);
+  const removeItem = useRoomStore(state => state.removeItem);
+  const updatePlacedItems = useRoomStore(state => state.updatePlacedItems);
 
   const [isEditMode, setIsEditMode] = useState(false); // 방 꾸미기 모드 
   const [selectedTab, setSelectedTab] = useState(0);
-  const [selectedItems, setSelectedItems] = useState<number[]>([]); // 선택된 아이템 ID들
-  const [placedItems, setPlacedItems] = useState<PlacedItem[]>([]); // 배치된 아이템들
+  const [editModeSelectedItems, setEditModeSelectedItems] = useState<number[]>([]); // 선택된 아이템 ID들
+  const [showSaveAlert, setShowSaveAlert] = useState(false); // 저장 알림 표시 여부
 
-  const handleTabPress = (index: number) => {
+  useEffect(() => {
+    setEditModeSelectedItems(
+      Object.values(placedItems).filter((id): id is number => id !== null && id !== undefined)
+    );
+  }, []);
+
+  // 선택된 아이템 중 미보유 아이템
+  const purchaseItems = useMemo(() => {
+    return editModeSelectedItems.filter(id => !isOwned(id));
+  }, [editModeSelectedItems, isOwned]);
+  // 선택된 아이템 중 미보유 아이템 개수 (구매 대상 수)
+  const purchaseCount = useMemo(() => {
+    if (purchaseItems.length === 0) return 0;
+    return purchaseItems.length;
+  }, [purchaseItems]);
+
+  // 버튼 제목은 로직과 분리: 숫자 기준으로 표현만 담당
+  const topButtonTitle = purchaseCount === 0 ? '저장' : `구매 (${purchaseCount})`;
+
+  const handleTabPress = useCallback((index: number) => {
     setSelectedTab(index);
-  };
+  }, []);
 
-  // 아이템 선택/해제 핸들러 (positionType당 하나만 선택 가능)
-  const handleItemSelection = (itemId: number) => {
+  const handleItemSelection = useCallback((itemId: number) => {
     const itemData = roomItemList.find(item => item.id === itemId);
     if (!itemData) return;
 
-    setSelectedItems(prev => {
+    setEditModeSelectedItems(prev => {
       // 같은 positionType의 기존 아이템 제거
       const filteredItems = prev.filter(id => {
         const existingItem = roomItemList.find(item => item.id === id);
@@ -79,13 +92,79 @@ const MyTab = () => {
 
       // 현재 아이템이 이미 선택되어 있다면 제거, 아니면 추가
       const isAlreadySelected = prev.includes(itemId);
-      if (isAlreadySelected) {
-        return filteredItems; // 제거만
-      } else {
-        return [...filteredItems, itemId]; // 기존 것 제거하고 새 것 추가
+      return isAlreadySelected ? filteredItems : [...filteredItems, itemId];
+    });
+  }, []);
+
+  const enterEditMode = () => {
+    setIsEditMode(true);
+    setEditModeSelectedItems(
+      Object.values(placedItems).filter((id): id is number => id !== null && id !== undefined)
+    );
+  };
+
+  const exitEditMode = () => {
+    setIsEditMode(false);
+    setEditModeSelectedItems([]);
+    setShowSaveAlert(false);
+  };
+
+  const saveOrPurchaseItems = () => {
+    // 구매 대상이 하나도 없으면 저장, 있으면 구매 플로우
+    if (purchaseCount === 0) { //저장
+        setShowSaveAlert(true);
+    } else { // 구매
+      // TODO: 구매 플로우 열기 (예: 결제 다이얼로그/상점 이동)
+      console.log('구매');
+      navigation.navigate('MyRoomDecorationPurchaseScreen', { purchaseItems: purchaseItems });
+      setIsEditMode(false);
+    }
+  };
+
+  const saveItems = () => {
+    // TODO: 저장 API 연동
+    // 1) 선택이 비어 있으면 전체 제거
+    if (editModeSelectedItems.length === 0) {
+      clearAllPlacedItems();
+      setShowSaveAlert(false);
+      console.log('저장 완료 (선택 아이템 없음)');
+      exitEditMode();
+      return;
+    }
+
+    // 2) positionType별 nextMap 구성
+    const nextMap: Record<string, number> = {};
+    editModeSelectedItems.forEach((itemId) => {
+      const itemData = roomItemList.find((it) => it.id === itemId);
+      if (itemData) nextMap[itemData.positionType as string] = itemId;
+    });
+
+    // 3) 현재 배치와 비교해 변경분만 추출 (제거는 null로 표시)
+    const updates: Record<string, number | null> = {};
+    const current = placedItems as Record<string, number | null | undefined>;
+
+    // 제거 대상 (현재에는 있는데 next엔 없는 키)
+    Object.keys(current || {}).forEach((pt) => {
+      if (!Object.prototype.hasOwnProperty.call(nextMap, pt)) {
+        updates[pt] = null;
       }
     });
+    // 업서트 대상 (값이 다르거나 새로 생긴 키)
+    Object.entries(nextMap).forEach(([pt, id]) => {
+      const curId = current?.[pt] ?? null;
+      if (curId !== id) updates[pt] = id;
+    });
+
+    // 4) 부분 갱신
+    if (Object.keys(updates).length > 0) {
+      updatePlacedItems(updates as any);
+    }
+
+    console.log('저장 완료 (부분 갱신)');
+    setShowSaveAlert(false);
+    exitEditMode();
   };
+
 
   useEffect(() => {
     if (isEditMode) {
@@ -96,163 +175,82 @@ const MyTab = () => {
     }
   }, [isEditMode]);
 
-  // 컴포넌트 마운트 시 고양이 애니메이션 시작
-  useEffect(() => {
-    // 고양이 애니메이션 시작
-    catLottieRef.current?.play();
-  }, []);
-
-  // selectedItems가 변경될 때마다 placedItems 업데이트
-  useEffect(() => {
-    // 선택된 아이템들을 고정 위치에 배치
-    const newPlacedItems: PlacedItem[] = selectedItems.map((itemId, index) => {
-      // 실제 아이템 데이터에서 정보 가져오기
-      const itemData = roomItemList.find(item => item.id === itemId);
-      if (!itemData) return null;
-      
-      // 아이템의 고정 위치를 동적으로 계산
-      const position = getItemPosition(cat.x, cat.y, itemData.positionType, index);
-      
-      return {
-        id: itemId,
-        x: position.x,
-        y: position.y,
-        title: itemData.title,
-        lottieJson: itemData.lottieJson,
-        type: itemData.type,
-      };
-    }).filter(Boolean) as PlacedItem[];
-    
-    setPlacedItems(newPlacedItems);
-    
-    // 새로운 아이템들이 배치되면 고양이 애니메이션 재시작
-    if (newPlacedItems.length > 0) {
-      // 고양이 애니메이션을 처음부터 재시작
-      catLottieRef.current?.reset();
-      catLottieRef.current?.play();
-    }
-  }, [selectedItems]);
-
   return (
-  <View style={styles.container}>
-    <MyTabTopNavigation
-      isEditMode={isEditMode}
-      money="1.5M"
-      onEditModeToggle={() => {setIsEditMode(!isEditMode)}}
-      onSettingPress={() => {navigation.navigate('MySettingScreen')}}
-      onHeartPress={() => {}}
-      style={styles.topNavigation}
-    />
-    <ScrollView 
-      ref={scrollViewRef}
-      style={styles.scrollView} 
-      showsVerticalScrollIndicator={false} 
-      contentContainerStyle={{ paddingBottom: 150}}
-      >
-        {/* 배경 이미지 */}
-        <View style={{ width:screenWidth, overflow: 'hidden', transform: [{ translateY: -140 }] }}>
-          <Image
-            source={require('../../assets/images/background.png')}
-            style={{ width: screenWidth, height: screenWidth * 2.0302 }}// 배경이미지 비율 : 1:2.0302 
-            resizeMode="cover"
-          />
-        </View>
-        <View style={styles.catAnimationContainer}>
-          <LottieView
-            ref={catLottieRef}
-            source={require('../../assets/animations/cat_basic_motion.json')}
-            autoPlay={false}
-            loop
-            style={{ width: '100%', height: '100%' }}
-          />
-        </View>
-        
-        {/* 배치된 아이템들 렌더링 */}
-        {placedItems.map((item) => (
-          <View
-            key={item.id}
-            style={[
-              styles.placedItem,
-              {
-                left: item.x,
-                top: item.y,
-              }
-            ]}
-          >
-            {item.lottieJson === null ? (
-              <View style={styles.placedItemPlaceholder} />
-            ) : (
-              <LottieView
-                source={item.lottieJson}
-                autoPlay
-                loop
-                style={styles.placedItemImage}
-              />
-            )}
-          </View>
-        ))}
-
-        {!isEditMode && (
-          <View style={styles.content}>
-            <Button 
-            title="방 꾸미기" 
-            variant='active' 
-            size='large' 
-            style={styles.button} 
-            onPress={() => {
-              setIsEditMode(true);
-            }}
+    <View style={styles.container}>
+        <MyTabTopNavigation
+            isEditMode={isEditMode}
+            onEditModeToggle={() => {exitEditMode()}}
+            onSettingPress={() => {navigation.navigate('MySettingScreen')}}
+            onHeartPress={() => {}}
+            style={styles.topNavigation}
             />
-            <View style={styles.cardContainer}>
-              <View style={styles.statusCardHeader}>
-                <View style={styles.statusCardHeaderLeft}>
-                  <Text style={styles.cardHeaderNameText}>야옹이님</Text>
-                  <Text style={styles.cardHeaderIdText}>ID : Timestamp</Text>
-                </View>
-                <ToggleButton
-                  defaultTitle=""
-                  activeTitle="연동하기"
-                  isActive={true}
-                  onPress={() => {}}
-                />
-              </View>
-              <View style={styles.statusCardContent}>
-                {mockStatusData.map((item, index) => (
-                  <View style={styles.statusCardContentItem} key={index}>
-                    <Text style={styles.statusCardContentItemTitle}>{item.title}</Text>
-                    <Text style={styles.statusCardContentItemValue}>{item.valueType === 'mm:ss' ? item.value : `${item.value}${item.valueType}`}</Text>
-                  </View>
-                ))}
-              </View>
-            </View>
+        <View style={styles.testContainer}>
+            <Text style={styles.test}>모드 : {isEditMode ? '방 꾸미기 모드' : '일반 모드'}</Text>
+            <Text style={styles.test}>선택된 아이템 : {editModeSelectedItems.join(',')}</Text>
+            <Text style={styles.test}>배치된 아이템 : {Object.values(placedItems).filter(id => id !== null).join(',')}</Text>
+        </View>
+        <UserRoom 
+            cropTop={176} 
+            scrollable={true}
+            scrollViewRef={scrollViewRef as React.RefObject<ScrollView>}
+            previewMode={isEditMode}
+            previewItemIds={isEditMode ? editModeSelectedItems : []}
+            >
+            <View style={{marginTop: sv(176)}}>{/* 176(figma 기준) 아래로 전체 컨텐츠 이동 */}
+                {!isEditMode && (
+                <View style={[styles.content, {marginTop: sv(438)}]}>
+                    <Button 
+                    title="방 꾸미기" 
+                    variant='active' 
+                    size='large' 
+                    style={styles.button} 
+                    onPress={() => {enterEditMode()}}
+                    />
+                    <View style={styles.cardContainer}>
+                        <View style={styles.statusCardHeader}>
+                            <View style={styles.statusCardHeaderLeft}>
+                            <Text style={styles.cardHeaderNameText}>야옹이님</Text>
+                            <Text style={styles.cardHeaderIdText}>ID : Timestamp</Text>
+                            </View>
+                            <ToggleButton
+                            defaultTitle=""
+                            activeTitle="연동하기"
+                            isActive={true}
+                            onPress={() => {}}
+                            />
+                        </View>
+                        <View style={styles.statusCardContent}>
+                            {mockStatusData.map((item, index) => (
+                            <View style={styles.statusCardContentItem} key={index}>
+                                <Text style={styles.statusCardContentItemTitle}>{item.title}</Text>
+                                <Text style={styles.statusCardContentItemValue}>{item.valueType === 'mm:ss' ? item.value : `${item.value}${item.valueType}`}</Text>
+                            </View>
+                            ))}
+                        </View>
+                    </View>
 
-            <View style={styles.cardContainer}>
-              <TouchableOpacity style={styles.achievementCardHeader} onPress={() => {navigation.navigate('MyAchievementScreen')}}>
-                <Text style={{...syongsyongTypography.title5}}>업적</Text>
-                <ArrowRight width={24} height={24} fill={colors.grayScale800} />
-              </TouchableOpacity>
-              <View style={styles.achievementCardNoContent}>{/*사용자의 뱃지 유무에 따라서 분기*/}
-                <BadgeEmpty width={100} height={100} />
-                <Text style={{...syongsyongTypography.title6}}>완료한 업적이 없어요!</Text>
-              </View>
+                    <View style={styles.cardContainer}>
+                        <TouchableOpacity style={styles.achievementCardHeader} onPress={() => {navigation.navigate('MyAchievementScreen')}}>
+                            <Text style={{...syongsyongTypography.title5}}>업적</Text>
+                            <ArrowRight width={24} height={24} fill={colors.grayScale800} />
+                        </TouchableOpacity>
+                        <View style={styles.achievementCardNoContent}>{/*사용자의 뱃지 유무에 따라서 분기*/}
+                            <BadgeEmpty width={100} height={100} />
+                            <Text style={{...syongsyongTypography.title6}}>완료한 업적이 없어요!</Text>
+                        </View>
+                    </View>
+                </View>
+                )}
             </View>
-          </View>
-        )}
-    </ScrollView>
-    {isEditMode && (
-      <View style={styles.saveButtonContainer}>
-        <ButtonSmall title='저장' variant='active' onPress={() => {
-          setIsEditMode(false);
-        }} />
-      </View>
-    )}
+        </UserRoom>
+        
     <CustomBottomSheet
       children={
         <View style={styles.bottomSheetContent}>
           <MyRoomDecoration 
             selectedTab={selectedTab} 
             handleTabPress={handleTabPress}
-            selectedItems={selectedItems}
+            selectedItems={editModeSelectedItems}
             onItemSelection={handleItemSelection}
           />
         </View>
@@ -262,38 +260,48 @@ const MyTab = () => {
       enablePanDownToClose={false}
       hasXButton={false}
       enableOverDrag={false}
+      hasTopButton = {isEditMode}
+      topButtonTitle={topButtonTitle}
+      onTopButtonPress={() => {saveOrPurchaseItems()}}
+      topButtonOffset={20}
     />
-  </View>
+    <CustomAlert
+      visible={showSaveAlert}
+      message="변경사항을 저장할까요?"
+      buttons={[
+        { text: '저장 안하기', onPress: () => { exitEditMode(); } },
+        { text: '저장하기', onPress: () => { saveItems(); } }
+      ]}
+      onClose={() => setShowSaveAlert(false)}
+    />
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  scrollView: {
-    flex: 1,
-    backgroundColor: colors.backgroundFill
-  },
-  catAnimationContainer: {
-    position: 'absolute',
-    top: cat.y,
-    left: cat.x,
-    width: cat.width,
-    height: cat.height,
-    backgroundColor: 'red',
+    backgroundColor: colors.grayScale200, //TODO:추후 UserRoom의 배경이미지의 하단 컬러로 변경
   },
   content: {
     flex: 1,
-    marginTop: -330,
     paddingHorizontal: 20,
-    width: '100%',
   },
-  saveButtonContainer: {
+  topNavigation: {
     position: 'absolute',
-    top: screenHeight - BOTTOM_SHEET_HEIGHT - (42 + 20), // 버튼 높이 42  + margin 20
+    top: 60,
+    zIndex: 100,
+  },
+  testContainer:{
+    position: 'absolute',
+    top: 100,
     right: 20,
-    zIndex: 1000000,
+    zIndex: 100,
+    backgroundColor: colors.white,
+  },
+  test:{
+    ...typography.body6,
+    color: colors.grayScale900,
   },
   button: {
     marginBottom: 10,
@@ -305,7 +313,6 @@ const styles = StyleSheet.create({
     padding: 20,
     gap: 20,
     borderRadius: radius.r12,
-
   },
   statusCardHeader: {
     flexDirection: 'row',
@@ -350,33 +357,12 @@ const styles = StyleSheet.create({
     ...typography.body1,
     color: colors.grayScale800,
   },
-  topNavigation: {
-    position: 'absolute',
-    top: 60,
-    zIndex: 100,
-  },
   bottomSheetContent: { 
     height: BOTTOM_SHEET_HEIGHT,
     minHeight: BOTTOM_SHEET_MIN_HEIGHT,
     maxHeight: BOTTOM_SHEET_MAX_HEIGHT,
   },
-  placedItem: {
-    position: 'absolute',
-    width: ITEM_SIZE,
-    height: ITEM_SIZE,
-    zIndex: 10, // 다른 요소들 위에 표시
-  },
-  placedItemImage: {
-    width: '100%',
-    height: '100%',
-  },
-  placedItemPlaceholder: {
-    width: '100%',
-    height: '100%',
-    backgroundColor: colors.white,
-    borderWidth: 1,
-    borderColor: colors.grayScale200,
-  },
 });
+
 
 export default MyTab;

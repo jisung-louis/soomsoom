@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, TouchableWithoutFeedback } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, TouchableWithoutFeedback, Animated, Easing } from 'react-native';
 import { colors } from '../../../constants/colors';
 import { syongsyongTypography, typography } from '../../../constants/typography';
 import ArrowLeftIcon from '../../../assets/icons/common/arrow_back.svg';
@@ -30,11 +30,36 @@ import LottieView from 'lottie-react-native';
 
 const windowWidth = Dimensions.get('window').width;
 
-const barWidth = 109;
+const barWidth =  (windowWidth - 40 - 8) / 3 ;
 const barHeight = {
   first: 140,
   second: 120,
   third: 100,
+};
+
+const maxBarHeight = barHeight.first;
+
+const PodiumBar = ({ height, backgroundColor, delayMs = 0, children }: { height: number; backgroundColor: string; delayMs?: number; children?: React.ReactNode }) => {
+  const animatedHeight = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    animatedHeight.setValue(0);
+    Animated.timing(animatedHeight, {
+      toValue: height,
+      duration: 700,
+      delay: delayMs,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: false,
+    }).start();
+  }, [height, delayMs]);
+
+  return (
+    <View style={[styles.barWrapper, { height: maxBarHeight }] }>
+      <Animated.View style={[styles.barCommonStyle, { height: animatedHeight, backgroundColor }]}>
+        {children}
+      </Animated.View>
+    </View>
+  );
 };
 
 interface RecordReportTabProps {
@@ -250,9 +275,12 @@ const RecordReportTab = ({onStartRecordPress}: RecordReportTabProps) => {
                           </View>
                           <Text style={styles.countText}>{emotion.count}번</Text>
                         </View>
-                        <View style={[barStyle, styles.barCommonStyle]}>
+                        <PodiumBar
+                          height={actualRank === 1 ? barHeight.first : actualRank === 2 ? barHeight.second : barHeight.third}
+                          backgroundColor={actualRank === 1 ? colors.primary300 : actualRank === 2 ? colors.primary200 : colors.primary50}
+                        >
                           <Text style={[styles.rankText, actualRank === 1 && { color: colors.white }]}>{actualRank}</Text>
-                        </View>
+                        </PodiumBar>
                       </View>
                     );
                   })}
@@ -466,7 +494,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    zIndex: 100000,
+    zIndex: -10,
     width: '100%',
     height:418,
   },
@@ -516,7 +544,7 @@ const styles = StyleSheet.create({
   },
   barGraphContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    gap: 4,
     alignItems: 'flex-end',
   },
   emotionRestListContainer: {
@@ -539,6 +567,10 @@ const styles = StyleSheet.create({
     borderRadius: radius.r8,
     padding: 16,
     alignItems: 'center',
+    justifyContent: 'flex-end',
+  },
+  barWrapper: {
+    width: barWidth,
     justifyContent: 'flex-end',
   },
   arrowButton: {

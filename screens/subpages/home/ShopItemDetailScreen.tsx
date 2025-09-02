@@ -1,18 +1,20 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ImageBackground, LayoutRectangle, Image } from 'react-native';
-import LottieView from 'lottie-react-native';
-import { getItemPosition, roomItemList } from '../../../data/roomItemData';
+import React, { useState, useCallback, useMemo } from 'react';
+import { View, Text, StyleSheet, Image } from 'react-native';
+import { roomItemList } from '../../../data/roomItemData';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { HomeStackParamList } from '../../../navigations/tabs/HomeStackNavigator';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
 import SubpageHeader from '../../../components/common/top-navigation/SubpageHeader';
 import HeartPoint from '../../../components/common/heart-point/HeartPoint';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors } from '../../../constants/colors';
 import { typography } from '../../../constants/typography';
 import { Button } from '../../../components/common/buttons/Button';
 import { CustomAlert } from '../../../components/common/alert';
+import { useCurrencyStore } from '../../../stores/currencyStore';
+import { useRoomStore } from '../../../stores/roomStore';
+import { usePurchase } from '../../../hooks/usePurchase';
+import UserRoom from '../../../components/common/userroom/UserRoom';
 
 type ShopItemDetailScreenRouteProp = RouteProp<HomeStackParamList, 'ShopItemDetailScreen'>;
 
@@ -20,124 +22,134 @@ const ShopItemDetailScreen = () => {
     const route = useRoute<ShopItemDetailScreenRouteProp>();
     const { itemId } = route.params;
     const navigation = useNavigation<StackNavigationProp<HomeStackParamList>>();
-    const [catLayout, setCatLayout] = useState<LayoutRectangle>({x: 0, y: 0, width: 0, height: 0});
+    const [catLayout, setCatLayout] = useState({x: 0, y: 0, width: 0, height: 0});
     const item = roomItemList.find(item => item.id === itemId);
     console.log('item', item);
-    const [isAlertVisible, setIsAlertVisible] = useState(false);
-    const [isLoading, setIsLoading] = useState(false);
-    const handleBack = () => {
-        navigation.goBack();
-    };
+    const heartPoints = useCurrencyStore(state => state.heartPoints);
+    const isOwnedSelector = useRoomStore(state => state.isOwned);
+    const alreadyOwned = useMemo(() => (item ? isOwnedSelector(item.id) : false), [item, isOwnedSelector]);
 
-    const handleBuy = () => {
-        if (isLoading) return;
-        setIsLoading(true);
+    const {
+        isPurchasing,
+        isSuccessAlertVisible,
+        isErrorAlertVisible,
+        errorTitle,
+        errorSubMessage,
+        purchaseSingleItem,
+        hideSuccessAlert,
+        hideErrorAlert,
+    } = usePurchase();
+
+    const handleBack = useCallback(() => {
+        if (navigation.canGoBack()) navigation.goBack();
+        else navigation.popToTop();
+    }, [navigation]);
+
+    const priceText = useMemo(() => {
+        const p = item?.price ?? 0;
+        return p.toLocaleString();
+    }, [item]);
+
+    const hasValidPrice = useMemo(() => typeof item?.price === 'number' && (item?.price ?? 0) >= 0, [item]);
+
+    const onBuy = useCallback(async () => {
+        if (!item) {
+            // usePurchase 훅의 showErrorAlert 사용
+            return;
+        }
+        if (alreadyOwned) {
+            return;
+        }
+        if (!hasValidPrice) {
+            return;
+        }
+
+        await purchaseSingleItem(itemId);
+    }, [alreadyOwned, hasValidPrice, item, itemId, purchaseSingleItem]);
+
+    const handleBuy = useCallback(() => {
+        if (isPurchasing) return;
         onBuy();
-    };
-    const onBuy = () => {
-        setIsAlertVisible(true);
-        // TODO: 구매 로직 추가
-        console.log('onBuy');
-        setIsLoading(false);
+    }, [isPurchasing, onBuy]);
+
+    const itemIdToPositionType = (itemId: number | null) => {
+      if (!itemId) return null;
+      const item = roomItemList.find(i => i.id === itemId);
+      return item?.positionType;
     };
   return (
-    <ImageBackground 
-        source={require('../../../assets/images/background.png')}
-        style={styles.background}
-        resizeMode="cover"
-      >
-        <SafeAreaView style={styles.safeArea} edges={['top']}>
-            <SubpageHeader onBack={handleBack} right={<HeartPoint money="1.5M" onPress={() => {}}/>}/>
-            <View style={styles.content}>
-                <View style={styles.itemImageContainer}>
-                    {item?.image === null ? (
-                        <View style={styles.itemImage} />
-                    ) : (
-                        <Image source={item?.image} style={styles.itemImage} />
-                    )}
-                </View>
-                <View style={styles.itemInfo}>
-                    <View style={styles.itemName}>
-                        <Text style={styles.itemNameText}>{item?.title}</Text>
-                    </View>
-                    <View style={styles.itemDescription}>
-                        <Text style={styles.itemDescriptionText}>{item?.description?.join('\n')}</Text>
-                    </View>
-                </View>
-            </View>
-            <LottieView
-                source={item?.lottieJson}
-                autoPlay
-                loop
-                style={[styles.sunglass, {
-                top: getItemPosition(catLayout.x, catLayout.y, 'face').y,
-                left: getItemPosition(catLayout.x, catLayout.y, 'face').x,
-                }]}
-            />
-            <LottieView
-                key="cat"
-                source={require('../../../assets/animations/cat.json')}
-                autoPlay
-                loop
-                style={[styles.cat, {
-                }]}
-                onLayout={(event) => {
-                setCatLayout(event.nativeEvent.layout);
-                }}
-            />
-            
-        </SafeAreaView>
-        <View style={styles.buttonContainer}>
-            <Button icon='heart' title={`${item?.price} 구매하기`} size='large' variant='active' style={{gap: 2}} onPress={handleBuy} />
+    <>
+    <UserRoom
+      previewItemIds={[itemId]}
+    >
+      <SubpageHeader 
+        onBack={handleBack} 
+        right={<HeartPoint money={heartPoints.toString()} onPress={() => {}}/>}
+      />
+      
+      <View style={styles.content}>
+        <View style={styles.itemImageContainer}>
+          {item?.image === null || itemIdToPositionType(itemId) === 'background' ? (
+            <View style={styles.itemImage} />
+          ) : (
+              <Image source={item?.image} style={styles.itemImage} />
+          )}
         </View>
-        <CustomAlert
-            visible={isAlertVisible}
-            message="구매가 완료되었어요!"
-            buttons={[{ text: '확인', onPress: () => setIsAlertVisible(false) }]}
+        <View style={styles.itemInfo}>
+          <View style={styles.itemName}>
+            <Text style={styles.itemNameText}>{item?.title}</Text>
+          </View>
+          <View style={styles.itemDescription}>
+            <Text style={styles.itemDescriptionText}>{item?.description?.join('\n')}</Text>
+          </View>
+        </View>
+      </View>
+      
+    </UserRoom>
+
+    <View style={styles.buttonContainer}>
+              <Button 
+          icon={alreadyOwned ? undefined : 'heart'}
+          title={alreadyOwned ? ' 보유중' : (hasValidPrice ? ` ${priceText} 구매하기` : ' 가격 정보 없음')}
+          size='large' 
+          variant={isPurchasing || alreadyOwned || !hasValidPrice ? 'default' : 'active'} 
+          style={{gap: 2, width: '100%'}} 
+          disabled={isPurchasing || alreadyOwned || !hasValidPrice}
+          loading={isPurchasing}
+          onPress={handleBuy} 
         />
-    </ImageBackground>
+    </View>
+    
+    <CustomAlert
+      visible={isSuccessAlertVisible}
+      message="구매가 완료되었어요!"
+      buttons={[{ text: '확인', onPress: hideSuccessAlert }]}
+      onClose={hideSuccessAlert}
+    />
+    <CustomAlert
+      visible={isErrorAlertVisible}
+      message={errorTitle || '구매에 실패했어요.'}
+      subMessage={errorSubMessage}
+      buttons={[{ text: '확인', onPress: hideErrorAlert }]}
+      onClose={hideErrorAlert}
+    />
+  
+  </>
   );
 };
 
 const styles = StyleSheet.create({
-  background: {
-    flex: 1,
-    width: '100%',
-    height: '100%',
-    justifyContent: 'flex-end',
-    alignItems: 'center',
-    position: 'relative',
-  },
-  safeArea: {
-    width: '100%',
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 10,
-  },
-  cat: {
-    width: 200,
-    height: 200,
-    position: 'absolute',
-    top: 349,
-    left: 106,
-    zIndex: 1000,
-  },
-  sunglass: {
-    width: 80,
-    height: 80,
-    position: 'absolute',
-    zIndex: 10000,
-  },
   content: {
     alignItems: 'center',
     justifyContent: 'center',
+    marginTop: 50,
   },
   itemImageContainer: {
     width: 80,
     height: 80,
     backgroundColor: 'white',
+    borderRadius: 8,
+    marginBottom: 16,
   },
   itemImage: {
     width: '100%',
@@ -149,8 +161,10 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   itemName: {
+    marginBottom: 8,
   },
   itemDescription: {
+    paddingHorizontal: 20,
   },
   itemNameText: {
     ...typography.heading9,
@@ -161,10 +175,17 @@ const styles = StyleSheet.create({
     color: colors.grayScale700,
     textAlign: 'center',
   },
+  previewItem: {
+    width: 80,
+    height: 80,
+    position: 'absolute',
+    zIndex: 10000,
+  },
   buttonContainer: {
     position: 'absolute',
     bottom: 40,
     paddingHorizontal: 20,
+    width: '100%',
     zIndex: 1000,
   },
 });
