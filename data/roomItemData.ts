@@ -1,18 +1,8 @@
 // 방 꾸미기 아이템 데이터
-export type RoomItem = {
-  id: number;
-  type: string;
-  title: string;
-  image: any;
-  lottieJson: any;
-  price?: number | null;
-  positionType: 'eyewear' | 'hat' | 'frame_1' | 'frame_2' | 'background' | 'floor' | 'shelf';
-  position: {
-    x: number;
-    y: number;
-  };
-  description?: string[];
-};
+import { RoomItem, RoomItemPositionType } from '../types/room';
+
+// 기존 RoomItem 타입을 재export (호환성 유지)
+export type { RoomItem, RoomItemPositionType };
 
 // 고양이 기준 배치 영역 정의 (상대 위치)
 export const getItemPosition = (catX: number, catY: number, positionType: string, index: number = 0) => {
@@ -32,14 +22,14 @@ export const getItemPosition = (catX: number, catY: number, positionType: string
             y: catY - 17,
         };
     
-    case 'frame_1':
+    case 'frame1':
       // 고양이 양옆에 액자 배치
       return {
         x: catX + 200,
         y: catY + 0,
       };
     
-    case 'frame_2':
+    case 'frame2':
       // 고양이 주변에 가구 배치
       return {
         x: catX + 100,
@@ -90,7 +80,7 @@ export const roomItemList: RoomItem[] = [
     image: require('../assets/icons/items/default-background/frame_default_1.png'),
     lottieJson: null,
     price: 300,
-    positionType: 'frame_1',
+    positionType: 'frame1',
     position: { x: 0, y: 0 }, // 동적으로 계산됨
   },
   {
@@ -100,7 +90,7 @@ export const roomItemList: RoomItem[] = [
     image: require('../assets/icons/items/default-background/frame_default_2.png'),
     lottieJson: null,
     price: 300,
-    positionType: 'frame_2',
+    positionType: 'frame2',
     position: { x: 0, y: 0 }, // 동적으로 계산됨
   },
   {

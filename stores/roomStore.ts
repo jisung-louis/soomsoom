@@ -1,21 +1,14 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { PlacedItems, RoomItemPositionType } from '../types/room';
 
 interface RoomState {
   // 소유 아이템 관리
   ownedItems: number[];
   
   // 홈화면 배치 아이템 관리 (카테고리별) - 각 카테고리마다 0~1개만 배치 가능
-  placedItems: {
-    background: number | null;
-    eyewear: number | null;
-    hat: number | null;
-    frame_1: number | null;
-    frame_2: number | null;
-    floor: number | null;
-    shelf: number | null;
-  };
+  placedItems: PlacedItems;
   
   // 현재 선택된 아이템들 (임시 선택용)
   selectedItems: number[];
@@ -26,14 +19,14 @@ interface RoomState {
   removeOwnedItem: (itemId: number) => void;
   
   // 배치 아이템 관리
-  placeItem: (itemId: number, category: string) => void;
-  removePlacedItem: (itemId: number, category: string) => void;
-  clearPlacedItems: (category: string) => void;
+  placeItem: (itemId: number, category: RoomItemPositionType) => void;
+  removePlacedItem: (itemId: number, category: RoomItemPositionType) => void;
+  clearPlacedItems: (category: RoomItemPositionType) => void;
   clearAllPlacedItems: () => void;
 
   // 부분 갱신/제거용 액션 추가
-  removeItem: (category: string) => void;
-  updatePlacedItems: (nextMap: Partial<Record<keyof RoomState['placedItems'], number | null>>) => void;
+  removeItem: (category: RoomItemPositionType) => void;
+  updatePlacedItems: (nextMap: Partial<PlacedItems>) => void;
   
   // 선택 관리
   setSelectedItems: (itemIds: number[]) => void;
@@ -41,7 +34,7 @@ interface RoomState {
   
   // 유틸리티
   isOwned: (itemId: number) => boolean;
-  isPlaced: (itemId: number, category: string) => boolean;
+  isPlaced: (itemId: number, category: RoomItemPositionType) => boolean;
 }
 
 export const useRoomStore = create<RoomState>()(
@@ -53,8 +46,8 @@ export const useRoomStore = create<RoomState>()(
         background: 6,
         eyewear: 12,
         hat: 20,
-        frame_1: 2,
-        frame_2: 3,
+        frame1: 2,    // frame_1 → frame1
+        frame2: 3,    // frame_2 → frame2
         floor: 4,
         shelf: 5,
       },

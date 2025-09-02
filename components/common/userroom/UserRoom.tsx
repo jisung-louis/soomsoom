@@ -124,8 +124,8 @@ const UserRoom = ({children, previewMode = false, previewItemIds = [], cropTop =
               {renderLottieItem(hatPreviewId ?? (previewMode ? null : placedItems.hat), objectPosition.hat, itemStyles.hat, 'hat')}
               {renderImageItem(floorPreviewId ?? (previewMode ? null : placedItems.floor), objectPosition.floor, itemStyles.floorContainer, itemStyles.floor, 'floor')}
               {renderImageItem(shelfPreviewId ?? (previewMode ? null : placedItems.shelf), objectPosition.shelf, itemStyles.shelfContainer, itemStyles.shelf, 'shelf')}
-              {renderImageItem(frame1PreviewId ?? (previewMode ? null : placedItems.frame_1), objectPosition.frame_1, itemStyles.frameContainer, itemStyles.frame, 'frame_1')}
-              {renderImageItem(frame2PreviewId ?? (previewMode ? null : placedItems.frame_2), objectPosition.frame_2, itemStyles.frameContainer, itemStyles.frame, 'frame_2')}
+              {renderImageItem(frame1PreviewId ?? (previewMode ? null : placedItems.frame1), objectPosition.frame_1, itemStyles.frameContainer, itemStyles.frame, 'frame_1')}
+              {renderImageItem(frame2PreviewId ?? (previewMode ? null : placedItems.frame2), objectPosition.frame_2, itemStyles.frameContainer, itemStyles.frame, 'frame_2')}
             </View>
           </ImageBackground>
         </ScrollView>
@@ -161,8 +161,8 @@ const UserRoom = ({children, previewMode = false, previewItemIds = [], cropTop =
           {renderLottieItem(hatPreviewId ?? placedItems.hat, objectPosition.hat, itemStyles.hat, 'hat')}
           {renderImageItem(floorPreviewId ?? placedItems.floor, objectPosition.floor, itemStyles.floorContainer, itemStyles.floor, 'floor')}
           {renderImageItem(shelfPreviewId ?? placedItems.shelf, objectPosition.shelf, itemStyles.shelfContainer, itemStyles.shelf, 'shelf')}
-          {renderImageItem(frame1PreviewId ?? placedItems.frame_1, objectPosition.frame_1, itemStyles.frameContainer, itemStyles.frame, 'frame_1')}
-          {renderImageItem(frame2PreviewId ?? placedItems.frame_2, objectPosition.frame_2, itemStyles.frameContainer, itemStyles.frame, 'frame_2')}
+          {renderImageItem(frame1PreviewId ?? placedItems.frame1, objectPosition.frame_1, itemStyles.frameContainer, itemStyles.frame, 'frame_1')}
+          {renderImageItem(frame2PreviewId ?? placedItems.frame2, objectPosition.frame_2, itemStyles.frameContainer, itemStyles.frame, 'frame_2')}
         </SafeAreaView>
       </ImageBackground>
     </View>

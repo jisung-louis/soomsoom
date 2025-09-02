@@ -6,6 +6,7 @@ import { colors } from '../../constants/colors';
 import GoogleIcon from '../../assets/images/onboarding/google_icon.svg';
 import AppleIcon from '../../assets/images/onboarding/apple_icon.svg';
 import { radius } from '../../constants/radius';
+import { sv } from '../../utils/scale';
 
 const { width } = Dimensions.get('window');
 
@@ -15,7 +16,7 @@ const Register = ({onComplete}: {onComplete: () => void}) => {
   }
   const onAppleLogin = () => {
     console.log('애플로 계속하기');
-    onComplete();
+    onComplete();//임시로 완료처리
   }
   return (
     <View style={styles.container}>
@@ -41,10 +42,10 @@ const Register = ({onComplete}: {onComplete: () => void}) => {
                 <Text style={[styles.socialLoginText, styles.appleLoginText]}>애플로 계속하기</Text>
             </TouchableOpacity>
         </View>
-        <View style={styles.termContainer}>
+        <TouchableOpacity style={styles.termContainer} onPress={() => {{/* TODO:하이퍼링크 이동 */}}}>
             <Text style={styles.termText}>숨숨에 가입함으로써 이용약관 및</Text>
             <Text style={styles.termText}>개인정보처리방침에 동의하게 됩니다.</Text>
-        </View>
+        </TouchableOpacity>
     </View>
   );
 };
@@ -52,9 +53,9 @@ const Register = ({onComplete}: {onComplete: () => void}) => {
 const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
-    justifyContent: 'center',
     gap: 100,
     width: '100%',
+    marginTop: sv(153),
   },
   titleContainer: {
     alignItems: 'center',

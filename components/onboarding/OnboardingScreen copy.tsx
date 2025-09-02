@@ -3,7 +3,6 @@ import { View, StyleSheet, ImageBackground } from 'react-native';
 import { useOnboarding } from '../../hooks/useOnboarding';
 import { OnboardingStep } from './OnboardingStep';
 import PlayResult from './PlayResult';
-import { colors } from '../../constants/colors';
 
 interface OnboardingScreenProps {
   onComplete: () => void;
@@ -40,6 +39,10 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }) => {
     }
   };
 
+  const handleSkip = () => {
+    onComplete();
+  };
+
   const handleCountdownComplete = () => {
     goToNextStep();
   };
@@ -48,24 +51,22 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }) => {
   if (currentStepData.id === 'countdown') {
     return (
       <ImageBackground
-        source={currentStepData.backgroundImage}
-        style={[
-          styles.backgroundImage, 
-          { backgroundColor: currentStepData.backgroundColor ? `colors.${currentStepData.backgroundColor}` : colors.white }
-        ]}
+        source={require('../../assets/images/onboarding/bg3.png')}
+        style={styles.backgroundImage}
         resizeMode="cover"
       >
         <OnboardingStep
           stepId={currentStepData.id}
-          title={currentStepData.title || []}
+          title={currentStepData.title}
           selectedFocusIds={onboardingData.selectedFocusIds}
           selectedTimeIds={onboardingData.selectedTimeIds}
           onFocusSelectionChange={updateFocusSelection}
           onTimeSelectionChange={updateTimeSelection}
           onCountdownComplete={handleCountdownComplete}
           onNext={handleNext}
+          onSkip={handleSkip}
+          showSkip={currentStepData.showSkip}
           showNext={currentStepData.showNext}
-          specialButtonText={currentStepData.specialButtonText}
           canProceed={canProceedToNext()}
         />
       </ImageBackground>
@@ -75,21 +76,22 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }) => {
   // 일반적인 온보딩 단계
   return (
     <ImageBackground
-      source={currentStepData.backgroundImage}
-      style={[styles.backgroundImage, { backgroundColor: currentStepData.backgroundColor ? currentStepData.backgroundColor : 'white' }]}
+      source={require('../../assets/images/onboarding/bg1.png')}
+      style={styles.backgroundImage}
       resizeMode="cover"
     >
       <OnboardingStep
         stepId={currentStepData.id}
-        title={currentStepData.title || []}
+        title={currentStepData.title}
         selectedFocusIds={onboardingData.selectedFocusIds}
         selectedTimeIds={onboardingData.selectedTimeIds}
         onFocusSelectionChange={updateFocusSelection}
         onTimeSelectionChange={updateTimeSelection}
         onCountdownComplete={handleCountdownComplete}
         onNext={handleNext}
+        onSkip={handleSkip}
+        showSkip={currentStepData.showSkip}
         showNext={currentStepData.showNext}
-        specialButtonText={currentStepData.specialButtonText}
         canProceed={canProceedToNext()}
       />
     </ImageBackground>

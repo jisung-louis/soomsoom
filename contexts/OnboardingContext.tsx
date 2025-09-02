@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface OnboardingContextType {
-  hasSeenOnboarding: boolean;
+  hasSeenOnboarding: boolean | null; // null: 로딩 중, true: 온보딩 완료, false: 온보딩 필요
   setHasSeenOnboarding: (value: boolean) => void;
   resetOnboarding: () => Promise<void>;
   checkOnboardingStatus: () => Promise<void>;
@@ -15,7 +15,7 @@ interface OnboardingProviderProps {
 }
 
 export const OnboardingProvider = ({ children }: OnboardingProviderProps) => {
-  const [hasSeenOnboarding, setHasSeenOnboarding] = useState(false);
+  const [hasSeenOnboarding, setHasSeenOnboarding] = useState<boolean | null>(null); // 초기값을 null로 설정
 
   const checkOnboardingStatus = async () => {
     try {

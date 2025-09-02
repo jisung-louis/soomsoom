@@ -116,6 +116,11 @@ const AppContent = () => {
         <ToastProvider>
           {showSplash ? (
             <SplashScreen onComplete={() => setShowSplash(false)} />
+          ) : hasSeenOnboarding === null ? (
+            // 온보딩 상태를 확인하는 중
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+              <Text>로딩 중...</Text>
+            </View>
           ) : !hasSeenOnboarding ? (
             <OnboardingScreen onComplete={completeOnboarding} />
           ) : fontsLoaded ? (
