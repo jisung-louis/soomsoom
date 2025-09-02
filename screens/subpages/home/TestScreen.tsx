@@ -14,6 +14,7 @@ import { usePlayStore } from '../../../stores/playStore';
 import { useAlarmStore } from '../../../stores/alarmStore';
 import { useRoomStore } from '../../../stores/roomStore';
 import { roomItemList } from '../../../data/roomItemData';
+import { contentData, teachersData } from '../../../data/playContentData';
 
 const TestScreen = () => {
   const navigation = useNavigation<StackNavigationProp<HomeStackParamList>>();
@@ -25,6 +26,18 @@ const TestScreen = () => {
   const itemIdToName = (itemId: number|null) => {
     if (itemId === null) return '없음';
     return roomItemList.find((item) => item.id === itemId)?.title;
+  };
+
+  {/* 컨텐츠 아이디 -> 컨텐츠 이름 */}
+  const contentIdToName = (contentId: number) => {
+    const content = contentData.find((item) => item.id === contentId);
+    return content ? content.title.join(' ') : `컨텐츠 ${contentId}`;
+  };
+
+  {/* 선생님 아이디 -> 선생님 이름 */}
+  const teacherIdToName = (teacherId: number) => {
+    const teacher = teachersData.find((item) => item.id === teacherId);
+    return teacher ? `${teacher.name} ${teacher.title}` : `선생님 ${teacherId}`;
   };
   return (
     <SafeAreaView style={styles.container}>
@@ -43,11 +56,21 @@ const TestScreen = () => {
           <Text style={styles.sectionTitle}>🎵(즐겨찾기, 팔로우) 유저 상태</Text>
           <View style={styles.infoCard}>
             <Text style={styles.infoLabel}>즐겨찾기 컨텐츠</Text>
-            <Text style={styles.infoValue}>{usePlayStore.getState().favoriteContents.map((content) => content.contentId).join(', ')||'없음'}</Text>
+            <Text style={styles.infoValue}>
+              {usePlayStore.getState().favoriteContents.length > 0 
+                ? usePlayStore.getState().favoriteContents.map((content) => contentIdToName(content.contentId)).join(', ')
+                : '없음'
+              }
+            </Text>
           </View>
           <View style={styles.infoCard}>
             <Text style={styles.infoLabel}>팔로우한 선생님</Text>
-            <Text style={styles.infoValue}>{usePlayStore.getState().followedTeachers.map((teacher) => teacher.teacherId.join(', '))||'없음'}</Text>
+            <Text style={styles.infoValue}>
+              {usePlayStore.getState().followedTeacherIds.length > 0 
+                ? usePlayStore.getState().followedTeacherIds.map((teacherId) => teacherIdToName(teacherId)).join(', ')
+                : '없음'
+              }
+            </Text>
           </View>
         </View>
 
@@ -79,11 +102,11 @@ const TestScreen = () => {
           </View>
           <View style={styles.infoCard}>
             <Text style={styles.infoLabel}>프레임1 아이템</Text>
-            <Text style={styles.infoValue}>{useRoomStore.getState().placedItems.frame_1 ? itemIdToName(useRoomStore.getState().placedItems.frame_1) : '없음'}</Text>
+            <Text style={styles.infoValue}>{useRoomStore.getState().placedItems.frame1 ? itemIdToName(useRoomStore.getState().placedItems.frame1) : '없음'}</Text>
           </View>
           <View style={styles.infoCard}>
             <Text style={styles.infoLabel}>프레임2 아이템</Text>
-            <Text style={styles.infoValue}>{useRoomStore.getState().placedItems.frame_2 ? itemIdToName(useRoomStore.getState().placedItems.frame_2) : '없음'}</Text>
+            <Text style={styles.infoValue}>{useRoomStore.getState().placedItems.frame2 ? itemIdToName(useRoomStore.getState().placedItems.frame2) : '없음'}</Text>
           </View>
           <View style={styles.infoCard}>
             <Text style={styles.infoLabel}>배경 아이템</Text>

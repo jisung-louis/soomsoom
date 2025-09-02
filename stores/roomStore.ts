@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { PlacedItems, RoomItemPositionType } from '../types/room';
+import { INITIAL_ROOM_STATE } from '../constants/initialStates';
 
 interface RoomState {
   // 소유 아이템 관리
@@ -23,9 +24,6 @@ interface RoomState {
   removePlacedItem: (itemId: number, category: RoomItemPositionType) => void;
   clearPlacedItems: (category: RoomItemPositionType) => void;
   clearAllPlacedItems: () => void;
-
-  // 부분 갱신/제거용 액션 추가
-  removeItem: (category: RoomItemPositionType) => void;
   updatePlacedItems: (nextMap: Partial<PlacedItems>) => void;
   
   // 선택 관리
@@ -40,18 +38,10 @@ interface RoomState {
 export const useRoomStore = create<RoomState>()(
   persist(
     (set, get) => ({
-      // 초기 상태
-      ownedItems: [1, 2, 3, 4, 5, 6, 12, 20], // 기존 IN_POSSESSION_ITEMS 데이터
-      placedItems: {
-        background: 6,
-        eyewear: 12,
-        hat: 20,
-        frame1: 2,    // frame_1 → frame1
-        frame2: 3,    // frame_2 → frame2
-        floor: 4,
-        shelf: 5,
-      },
-      selectedItems: [],
+      // 초기 상태 (상수에서 가져옴)
+      ownedItems: INITIAL_ROOM_STATE.ownedItems,
+      placedItems: INITIAL_ROOM_STATE.placedItems,
+      selectedItems: INITIAL_ROOM_STATE.selectedItems,
       
       // 소유 아이템 관리 액션
       addOwnedItem: (itemId: number) => {
@@ -69,24 +59,22 @@ export const useRoomStore = create<RoomState>()(
       },
       
       // 배치 아이템 관리 액션
-      placeItem: (itemId: number, category: string) => {
+      placeItem: (itemId: number, category: RoomItemPositionType) => {
         set((state) => ({
           placedItems: {
             ...state.placedItems,
-            [category]: state.placedItems[category as keyof typeof state.placedItems] === itemId
+            [category]: state.placedItems[category] === itemId
               ? null // 이미 배치된 아이템이면 제거
               : itemId // 새로운 아이템 배치
           }
         }));
       },
       
-      removePlacedItem: (itemId: number, category: string) => {
+      removePlacedItem: (itemId: number, category: RoomItemPositionType) => {
         set((state) => ({
           placedItems: {
             ...state.placedItems,
-            [category]: state.placedItems[category as keyof typeof state.placedItems] === itemId
-              ? null // 해당 아이템이 배치되어 있으면 제거
-              : state.placedItems[category as keyof typeof state.placedItems] // 아니면 그대로 유지
+            [category]: state.placedItems[category] === itemId ? null : state.placedItems[category]
           }
         }));
       },
@@ -98,14 +86,14 @@ export const useRoomStore = create<RoomState>()(
             background: null,
             eyewear: null,
             hat: null,
-            frame_1: null,
-            frame_2: null,
+            frame1: null,    // frame_1 → frame1
+            frame2: null,    // frame_2 → frame2
             floor: null,
             shelf: null,
           }
         }));
       },
-      clearPlacedItems: (category: string) => {
+      clearPlacedItems: (category: RoomItemPositionType) => {
         set((state) => ({
           placedItems: {
             ...state.placedItems,
@@ -114,16 +102,7 @@ export const useRoomStore = create<RoomState>()(
         }));
       },
 
-      removeItem: (category: string) => {
-        set((state) => ({
-          placedItems: {
-            ...state.placedItems,
-            [category]: null,
-          },
-        }));
-      },
-
-      updatePlacedItems: (nextMap: Partial<Record<keyof RoomState['placedItems'], number | null>>) => {
+      updatePlacedItems: (nextMap: Partial<PlacedItems>) => {
         set((state) => ({
           placedItems: {
             ...state.placedItems,
@@ -146,9 +125,9 @@ export const useRoomStore = create<RoomState>()(
         return get().ownedItems.includes(itemId);
       },
       
-      isPlaced: (itemId: number, category: string) => {
+      isPlaced: (itemId: number, category: RoomItemPositionType) => {
         const state = get();
-        return state.placedItems[category as keyof typeof state.placedItems] === itemId;
+        return state.placedItems[category] === itemId;
       },
     }),
     {

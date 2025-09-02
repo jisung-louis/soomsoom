@@ -40,11 +40,11 @@ export type FavoriteContentData = {
   contentId: number;
 };
 
-// 유저가 팔로우한 선생님 데이터 구조
-export type FollowedTeacherData = {
-  id: number;
-  teacherId: number[];
-};
+// 유저가 팔로우한 선생님 데이터 구조 (더 이상 사용하지 않음 - 단순한 number[]로 대체)
+// export type FollowedTeacherData = {
+//   id: number;
+//   teacherId: number[];
+// };
 
 // 컨텐츠 데이터
 export const contentData: ContentData[] = [

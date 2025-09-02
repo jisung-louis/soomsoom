@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { INITIAL_CURRENCY_STATE } from '../constants/initialStates';
 
 interface CurrencyState {
   // 하트 포인트 (기본 화폐)
@@ -21,8 +22,8 @@ interface CurrencyState {
 export const useCurrencyStore = create<CurrencyState>()(
   persist(
     (set, get) => ({
-      // 초기 상태
-      heartPoints: 100, // 시작 시 100포인트
+      // 초기 상태 (상수에서 가져옴)
+      heartPoints: INITIAL_CURRENCY_STATE.heartPoints,
       
       // 하트 포인트 관리
       addHeartPoints: (amount: number) => {

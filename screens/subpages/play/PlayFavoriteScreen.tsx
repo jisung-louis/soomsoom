@@ -30,7 +30,7 @@ const PlayFavoriteScreen = () => {
   // zustand store 사용
   const { 
     favoriteContents, 
-    followedTeachers, 
+    followedTeacherIds, 
     toggleFollowTeacher, 
     isFollowingTeacher,
     initializeFavorites,
@@ -49,25 +49,22 @@ const PlayFavoriteScreen = () => {
     favoriteContents.some((favorite) => favorite.contentId === content.id)
   );
 
-  // 팔로우한 선생님 데이터 필터링
-  const followedTeacherIds = followedTeachers.flatMap(followed => followed.teacherId as number[]);
+  // 팔로우한 선생님 데이터 필터링 (이제 단순한 number[] 구조)
   // local state for followed teachers and refreshing
   const [localFollowedTeachers, setLocalFollowedTeachers] = useState<TeacherData[]>([]);
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
-    const followedIds = followedTeachers.flatMap((t) => t.teacherId as number[]);
     const filtered = teachersData.filter((teacher) =>
-      followedIds.includes(teacher.id)
+      followedTeacherIds.includes(teacher.id)
     );
     setLocalFollowedTeachers(filtered);
-  }, []);
+  }, [followedTeacherIds]);
 
   const onRefresh = () => {
     setRefreshing(true);
-    const followedIds = followedTeachers.flatMap((t) => t.teacherId as number[]);
     const filtered = teachersData.filter((teacher) =>
-      followedIds.includes(teacher.id)
+      followedTeacherIds.includes(teacher.id)
     );
     setLocalFollowedTeachers(filtered);
     setRefreshing(false);

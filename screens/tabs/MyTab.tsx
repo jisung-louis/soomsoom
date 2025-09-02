@@ -48,7 +48,7 @@ const MyTab = () => {
   const isOwned = useRoomStore(state => state.isOwned);
   const clearAllPlacedItems = useRoomStore(state => state.clearAllPlacedItems);
   const placeItem = useRoomStore(state => state.placeItem);
-  const removeItem = useRoomStore(state => state.removeItem);
+  const clearPlacedItems = useRoomStore(state => state.clearPlacedItems);
   const updatePlacedItems = useRoomStore(state => state.updatePlacedItems);
 
   const [isEditMode, setIsEditMode] = useState(false); // 방 꾸미기 모드 
@@ -141,17 +141,16 @@ const MyTab = () => {
 
     // 3) 현재 배치와 비교해 변경분만 추출 (제거는 null로 표시)
     const updates: Record<string, number | null> = {};
-    const current = placedItems as Record<string, number | null | undefined>;
 
     // 제거 대상 (현재에는 있는데 next엔 없는 키)
-    Object.keys(current || {}).forEach((pt) => {
+    Object.keys(placedItems).forEach((pt) => {
       if (!Object.prototype.hasOwnProperty.call(nextMap, pt)) {
         updates[pt] = null;
       }
     });
     // 업서트 대상 (값이 다르거나 새로 생긴 키)
     Object.entries(nextMap).forEach(([pt, id]) => {
-      const curId = current?.[pt] ?? null;
+      const curId = placedItems[pt as keyof typeof placedItems] ?? null;
       if (curId !== id) updates[pt] = id;
     });
 

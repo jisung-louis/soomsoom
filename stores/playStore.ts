@@ -1,12 +1,15 @@
 import { create } from 'zustand';
-import { FavoriteContentData, FollowedTeacherData } from '../data/playContentData';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { FavoriteContentData } from '../data/playContentData';
+import { INITIAL_PLAY_STATE } from '../constants/initialStates';
 
 interface PlayState {
   // 즐겨찾기 컨텐츠 관리
   favoriteContents: FavoriteContentData[];
   
-  // 팔로우한 선생님 관리
-  followedTeachers: FollowedTeacherData[];
+  // 팔로우한 선생님 관리 (단순화된 구조)
+  followedTeacherIds: number[];
   
   // 액션들
   addToFavorites: (contentId: number) => void;
@@ -21,13 +24,15 @@ interface PlayState {
   
   // 초기화
   initializeFavorites: (favorites: FavoriteContentData[]) => void;
-  initializeFollowedTeachers: (followed: FollowedTeacherData[]) => void;
+  initializeFollowedTeachers: (teacherIds: number[]) => void;
 }
 
-export const usePlayStore = create<PlayState>((set, get) => ({
-  // 초기 상태
-  favoriteContents: [],
-  followedTeachers: [],
+export const usePlayStore = create<PlayState>()(
+  persist(
+    (set, get) => ({
+      // 초기 상태 (상수에서 가져옴)
+      favoriteContents: INITIAL_PLAY_STATE.favoriteContents,
+      followedTeacherIds: [],
   
   // 즐겨찾기 관련 액션
   addToFavorites: (contentId: number) => {
@@ -66,46 +71,19 @@ export const usePlayStore = create<PlayState>((set, get) => ({
     return get().favoriteContents.some(fav => fav.contentId === contentId);
   },
   
-  // 선생님 팔로우 관련 액션
+  // 선생님 팔로우 관련 액션 (단순화된 구조)
   followTeacher: (teacherId: number) => {
     set((state) => {
-      const exists = state.followedTeachers.some(followed => 
-        followed.teacherId.includes(teacherId)
-      );
-      
-      if (exists) return state;
-      
-      // 기존 유저 데이터가 있으면 추가, 없으면 새로 생성
-      const existingUser = state.followedTeachers.find(followed => followed.id === 1);
-      
-      if (existingUser) {
-        return {
-          followedTeachers: state.followedTeachers.map(followed =>
-            followed.id === 1
-              ? { ...followed, teacherId: [...followed.teacherId, teacherId] }
-              : followed
-          ),
-        };
-      } else {
-        const newFollowed: FollowedTeacherData = {
-          id: 1,
-          teacherId: [teacherId],
-        };
-        
-        return {
-          followedTeachers: [...state.followedTeachers, newFollowed],
-        };
-      }
+      if (state.followedTeacherIds.includes(teacherId)) return state;
+      return {
+        followedTeacherIds: [...state.followedTeacherIds, teacherId],
+      };
     });
   },
   
   unfollowTeacher: (teacherId: number) => {
     set((state) => ({
-      followedTeachers: state.followedTeachers.map(followed =>
-        followed.id === 1
-          ? { ...followed, teacherId: followed.teacherId.filter(id => id !== teacherId) }
-          : followed
-      ),
+      followedTeacherIds: state.followedTeacherIds.filter(id => id !== teacherId),
     }));
   },
   
@@ -120,9 +98,7 @@ export const usePlayStore = create<PlayState>((set, get) => ({
   },
   
   isFollowingTeacher: (teacherId: number) => {
-    return get().followedTeachers.some(followed => 
-      followed.teacherId.includes(teacherId)
-    );
+    return get().followedTeacherIds.includes(teacherId);
   },
   
   // 초기화 액션
@@ -130,7 +106,13 @@ export const usePlayStore = create<PlayState>((set, get) => ({
     set({ favoriteContents: favorites });
   },
   
-  initializeFollowedTeachers: (followed: FollowedTeacherData[]) => {
-    set({ followedTeachers: followed });
+  initializeFollowedTeachers: (teacherIds: number[]) => {
+    set({ followedTeacherIds: teacherIds });
   },
-})); 
+    }),
+    {
+      name: 'play-storage',
+      storage: createJSONStorage(() => AsyncStorage),
+    }
+  )
+); 
