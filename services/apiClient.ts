@@ -1,5 +1,5 @@
-import { API_CONFIG, ApiResponse, ApiError } from '../config/api';
-import { AppError, ErrorType, logError } from '../utils/errorHandler';
+import { API_CONFIG, ApiResponse, ApiError } from '../configs/api';
+import { AppError, ErrorType, errorHandler } from '../utils/errorHandler';
 
 /**
  * API 요청을 통합 관리하는 클라이언트
@@ -85,11 +85,11 @@ export class ApiClient {
       return data;
     } catch (error: any) {
       // 에러 로깅
-      logError(error, `API Request: ${endpoint}`);
+      errorHandler.handle(error, `API Request: ${endpoint}`);
       
       // 네트워크 에러나 타임아웃 에러 처리
       if (error.name === 'AbortError') {
-        throw new AppError('요청 시간이 초과되었습니다', ErrorType.NETWORK, 'TIMEOUT', true);
+        throw new AppError('요청 시간이 초과되었습니다', ErrorType.NETWORK, 'TIMEOUT', 'api-timeout');
       }
       
       // 이미 AppError인 경우 그대로 던지기
@@ -98,7 +98,7 @@ export class ApiClient {
       }
       
       // 기타 에러는 네트워크 에러로 처리
-      throw new AppError(error.message || '네트워크 오류가 발생했습니다', ErrorType.NETWORK, 'NETWORK_ERROR', true);
+      throw new AppError(error.message || '네트워크 오류가 발생했습니다', ErrorType.NETWORK, 'NETWORK_ERROR', 'api-network');
     } finally {
       clearTimeout(timer);
     }
@@ -143,7 +143,7 @@ export class ApiClient {
       errorType = ErrorType.API;
     }
 
-    throw new AppError(errorMessage, errorType, errorCode, response.status >= 500);
+    throw new AppError(errorMessage, errorType, errorCode, `api-response-${response.status}`);
   }
 }
 

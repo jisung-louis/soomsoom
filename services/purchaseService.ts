@@ -1,5 +1,5 @@
 import { apiClient } from './apiClient';
-import { API_CONFIG } from '../config/api';
+import { API_CONFIG } from '../configs/api';
 import { ApiPlacedItems, PlacedItems, mapPlacedItemsFromApi } from '../types/room';
 
 type PurchaseRequestBody = {

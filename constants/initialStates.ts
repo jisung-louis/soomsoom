@@ -1,41 +1,38 @@
 /**
- * 앱 전체의 초기 상태 상수 정의
+ * 앱 전체의 초기 상태 상수 정의 (프리셋)
  * 
  * 🎯 왜 이렇게 하나요?
  * - 하드코딩된 초기값들을 한 곳에서 관리
  * - 개발/프로덕션 환경별로 다른 초기값 설정 가능
  * - 스토어 간 일관성 있는 초기 상태 관리
+ * 
+ * ⚠️ 주의: 이 값들은 앱 첫 구동 시에만 사용되는 프리셋입니다.
+ * 실제 사용자 데이터는 서버와 동기화되며, 서버 데이터가 우선순위를 가집니다.
  */
 
-// 화폐 관련 초기 상태
+import { initialStates } from '../configs/environment';
+
+// 화폐 관련 초기 상태 (환경별 설정 사용)
 export const INITIAL_CURRENCY_STATE = {
-  heartPoints: 100, // 시작 시 100포인트
+  heartPoints: initialStates.currency.heartPoints, // 개발: 1000, 프로덕션: 100
 } as const;
 
-// 방 아이템 관련 초기 상태
+// 방 아이템 관련 초기 상태 (환경별 설정 사용)
 export const INITIAL_ROOM_STATE = {
-  ownedItems: [1, 2, 3, 4, 5, 6, 12, 20] as number[], // 기존 IN_POSSESSION_ITEMS 데이터
-  placedItems: {
-    background: 6,
-    eyewear: 12,
-    hat: 20,
-    frame1: 2,
-    frame2: 3,
-    floor: 4,
-    shelf: 5,
-  },
-  selectedItems: [] as number[],
+  ownedItems: initialStates.room.ownedItems, // 개발: 더 많은 아이템, 프로덕션: 기본 아이템
+  placedItems: initialStates.room.placedItems,
+  selectedItems: initialStates.room.selectedItems,
 };
 
-// 알람 관련 초기 상태
+// 알람 관련 초기 상태 (환경별 설정 사용)
 export const INITIAL_ALARM_STATE = {
-  alarmList: [] as any[], // 빈 배열로 시작
+  alarmList: initialStates.alarm.alarmList, // 빈 배열로 시작
 };
 
-// 플레이 관련 초기 상태
+// 플레이 관련 초기 상태 (환경별 설정 사용)
 export const INITIAL_PLAY_STATE = {
-  favoriteContents: [] as import('../data/playContentData').FavoriteContentData[],
-  followedTeacherIds: [] as number[],
+  favoriteContents: initialStates.play.favoriteContents,
+  followedTeacherIds: initialStates.play.followedTeacherIds,
 };
 
 // 온보딩 관련 초기 상태
@@ -43,26 +40,6 @@ export const INITIAL_ONBOARDING_STATE = {
   hasSeenOnboarding: null, // null: 로딩 중, true: 완료, false: 필요
 } as const;
 
-// 환경별 초기 상태 (개발/프로덕션)
-export const getInitialStates = (environment: 'development' | 'production' = 'development') => {
-  if (environment === 'development') {
-    return {
-      currency: {
-        ...INITIAL_CURRENCY_STATE,
-        heartPoints: 1000, // 개발 환경에서는 더 많은 포인트 제공
-      },
-      room: INITIAL_ROOM_STATE,
-      alarm: INITIAL_ALARM_STATE,
-      play: INITIAL_PLAY_STATE,
-      onboarding: INITIAL_ONBOARDING_STATE,
-    };
-  }
-  
-  return {
-    currency: INITIAL_CURRENCY_STATE,
-    room: INITIAL_ROOM_STATE,
-    alarm: INITIAL_ALARM_STATE,
-    play: INITIAL_PLAY_STATE,
-    onboarding: INITIAL_ONBOARDING_STATE,
-  };
-};
+// 환경별 초기 상태는 이제 configs/environment.ts에서 관리됩니다.
+// 각 스토어는 위의 INITIAL_*_STATE 상수들을 사용하여
+// 자동으로 환경에 맞는 초기값을 가져옵니다.
