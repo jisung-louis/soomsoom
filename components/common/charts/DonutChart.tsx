@@ -3,7 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import Svg, { G, Circle, Path } from 'react-native-svg';
 import { colors } from '../../../constants/colors';
 import { typography, syongsyongTypography } from '../../../constants/typography';
-import { EmotionRankingData } from '../../../types/emotion';
+import { EmotionRankingData } from '../../../types';
 import { getRankColor } from '../../../utils/emotionColorUtils';
 
 interface DonutChartProps {

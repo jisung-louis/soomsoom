@@ -158,7 +158,7 @@ export const OnboardingStep: React.FC<OnboardingStepProps> = ({
         
       case 'onboarding13'://playresult
         return (
-          <PlayResult/>
+          <PlayResult isOnboarding/>
         );
 
 

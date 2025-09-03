@@ -1,5 +1,34 @@
-import { EmotionRankingData, MonthlyEmotionStats, EmotionType } from '../types/emotion';
+import { EmotionRankingData, MonthlyEmotionStats, EmotionType } from '../types';
 import { characterIconMap, characterTitleMap } from '../utils/iconMap';
+import { apiClient } from './apiClient';
+import { API_CONFIG } from '../configs/api';
+import { AppError, ErrorType } from '../utils/errorHandler';
+
+/**
+ * 감정 기록 서비스 타입 정의
+ */
+export interface SaveEmotionRecordRequest {
+  date: string;
+  emotion: string;
+  content: string;
+  timestamp: string;
+}
+
+export interface SaveEmotionRecordResponse {
+  success: boolean;
+  recordId: string;
+  message: string;
+}
+
+export interface FirstRecordCheckResponse {
+  isFirstRecord: boolean;
+  totalRecords: number;
+}
+
+export interface UserRecordCountResponse {
+  count: number;
+  lastRecordDate?: string;
+}
 
 // 임시 데이터 (백엔드 연동 전까지 사용)
 const mockEmotionData: Record<string, MonthlyEmotionStats> = {
@@ -122,7 +151,7 @@ const mockEmotionData: Record<string, MonthlyEmotionStats> = {
 export const emotionService = {
   // 월별 감정 통계 조회
   getMonthlyEmotionStats: async (year: number, month: number): Promise<MonthlyEmotionStats> => {
-    // TODO: 백엔드 연동 시 실제 API 호출로 변경
+    // TODO: 백엔드 연동 시 실제 API 호출로 변경 (docs/TODO.md 참조)
     const key = `${year}-${month}`;
     
     // 임시로 지연 시간 추가 (실제 API 호출 시뮬레이션)
@@ -155,10 +184,110 @@ export const emotionService = {
     return stats.ranking;
   },
 
+  // 감정 기록 저장
+  saveEmotionRecord: async (emotionRecordData: SaveEmotionRecordRequest): Promise<SaveEmotionRecordResponse> => {
+    try {
+      // TODO: 백엔드 연동 시 실제 API 호출로 변경 (docs/TODO.md 참조)
+      // const response = await apiClient.post<SaveEmotionRecordResponse>(API_CONFIG.ENDPOINTS.EMOTION_RECORD, emotionRecordData);
+      // return response;
+      
+      // 임시로 로컬 저장 (실제 서비스에서는 제거)
+      console.log('[감정 기록 저장]', emotionRecordData);
+      await new Promise(resolve => setTimeout(resolve, 500)); // API 호출 시뮬레이션
+      
+      // 임시 응답 반환
+      return {
+        success: true,
+        recordId: `temp_${Date.now()}`,
+        message: '기록이 저장되었습니다.'
+      };
+      
+    } catch (error) {
+      console.error('[감정 기록 저장 실패]', error);
+      
+      // 에러 타입별 처리
+      if (error instanceof AppError) {
+        throw error;
+      }
+      
+      // 네트워크 에러나 기타 에러
+      throw new AppError(
+        '감정 기록 저장에 실패했습니다.',
+        ErrorType.NETWORK,
+        'SAVE_EMOTION_RECORD_FAILED',
+        'emotion-service'
+      );
+    }
+  },
+
+  // 첫 기록일 체크 (서버 기준)
+  isFirstRecord: async (date: string): Promise<boolean> => {
+    try {
+      // TODO: 백엔드 연동 시 실제 API 호출로 변경 (docs/TODO.md 참조)
+      // const response = await apiClient.get<FirstRecordCheckResponse>(`${API_CONFIG.ENDPOINTS.EMOTION_FIRST_CHECK}/${date}`);
+      // return response.isFirstRecord;
+      
+      // 임시 구현: 사용자의 전체 기록 개수를 확인하여 첫 기록일 판단
+      // 실제로는 서버에서 해당 사용자의 기록 개수를 조회해야 함
+      const userRecordCount = await emotionService.getUserRecordCount();
+      const isFirstRecord = userRecordCount === 0;
+      
+      console.log(`[첫 기록일 체크] 사용자 기록 개수: ${userRecordCount}, 첫 기록일: ${isFirstRecord}`);
+      return isFirstRecord;
+      
+    } catch (error) {
+      console.error('[첫 기록일 체크 실패]', error);
+      
+      // 에러 타입별 처리
+      if (error instanceof AppError) {
+        throw error;
+      }
+      
+      // 네트워크 에러나 기타 에러 - 첫 기록일이 아닌 것으로 처리
+      throw new AppError(
+        '첫 기록일 체크에 실패했습니다.',
+        ErrorType.NETWORK,
+        'FIRST_RECORD_CHECK_FAILED',
+        'emotion-service'
+      );
+    }
+  },
+
+  // 사용자 기록 개수 조회 (임시 구현)
+  getUserRecordCount: async (): Promise<number> => {
+    try {
+      // TODO: 백엔드 연동 시 실제 API 호출로 변경 (docs/TODO.md 참조)
+      // const response = await apiClient.get<UserRecordCountResponse>(API_CONFIG.ENDPOINTS.EMOTION_COUNT);
+      // return response.count;
+      
+      // 임시 구현: 로컬 저장소에서 기록 개수 시뮬레이션
+      // 실제로는 서버에서 사용자의 전체 기록 개수를 조회해야 함
+      const mockRecordCount = Math.floor(Math.random() * 10); // 0~9개 기록
+      console.log(`[사용자 기록 개수 조회] 임시 개수: ${mockRecordCount}`);
+      return mockRecordCount;
+      
+    } catch (error) {
+      console.error('[사용자 기록 개수 조회 실패]', error);
+      
+      // 에러 타입별 처리
+      if (error instanceof AppError) {
+        throw error;
+      }
+      
+      // 네트워크 에러나 기타 에러 - 0개로 처리
+      throw new AppError(
+        '사용자 기록 개수 조회에 실패했습니다.',
+        ErrorType.NETWORK,
+        'GET_USER_RECORD_COUNT_FAILED',
+        'emotion-service'
+      );
+    }
+  },
+
   // 실제 백엔드 연동 시 사용할 함수들
   // getMonthlyEmotionStatsFromAPI: async (year: number, month: number) => {
   //   try {
-  //     const response = await api.get(`/emotions/stats/${year}/${month}`);
+  //     const response = await apiClient.get(`${API_CONFIG.ENDPOINTS.EMOTIONS}/stats/${year}/${month}`);
   //     return response.data;
   //   } catch (error) {
   //     throw new Error('감정 통계 조회 실패');

@@ -17,6 +17,7 @@ import { useAlarmStore } from '../../../stores/alarmStore';
 import BottomSheet from '@gorhom/bottom-sheet';
 import CustomBottomSheet from '../../../components/common/bottomsheet/CustomBottomSheet';
 import { CustomAlert, AlertButton } from '../../../components/common/alert';
+import { convert24To12Hour, convert12To24Hour } from '../../../utils/timeUtils';
 
 type BottomSheetType = 'repeat' | 'mission' | 'sound' | null;
 
@@ -45,9 +46,7 @@ const AlarmAddScreen = () => {
   
   // 24시간 형식을 12시간 형식으로 변환하는 함수
   const convertTo12HourFormat = (time24: string) => {
-    const [hour24, minute] = time24.split(':').map(Number);
-    const period = hour24 >= 12 ? '오후' : '오전';
-    const hour12 = hour24 > 12 ? hour24 - 12 : hour24 === 0 ? 12 : hour24;
+    const { hour12, minute, period } = convert24To12Hour(time24);
     
     return {
       period,
@@ -81,18 +80,7 @@ const AlarmAddScreen = () => {
   });
   const [isVibrationOn, setIsVibrationOn] = useState(existingAlarm?.isVibrationOn ?? true);
 
-  // 12시간 형식을 24시간 형식으로 변환하는 함수
-  const convertTo24HourFormat = (time12: { period: string; hour: string; minute: string }): string => {
-    let hour24 = parseInt(time12.hour);
-    
-    if (time12.period === '오후' && hour24 !== 12) {
-      hour24 += 12;
-    } else if (time12.period === '오전' && hour24 === 12) {
-      hour24 = 0;
-    }
-    
-    return `${hour24.toString().padStart(2, '0')}:${time12.minute.padStart(2, '0')}`;
-  };
+  // 12→24 변환은 공통 유틸 사용 (중복 제거)
 
   // Alert 버튼들 설정
   const validationAlertButtons: AlertButton[] = [
@@ -192,7 +180,7 @@ const AlarmAddScreen = () => {
     
     try {
       // 시간 형식 변환
-      const timeString = convertTo24HourFormat(selectedTime);
+      const timeString = convert12To24Hour(`${selectedTime.period} ${selectedTime.hour}:${selectedTime.minute}`);
       
       const alarmData = {
         time: timeString,

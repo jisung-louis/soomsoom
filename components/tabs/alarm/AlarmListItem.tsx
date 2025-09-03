@@ -5,6 +5,7 @@ import { typography } from '../../../constants/typography';
 import DeleteIcon from '../../../assets/icons/common/delete.svg';
 import RightArrowIcon from '../../../assets/icons/common/arrow_right.svg';
 import { getDayDisplayText } from '../../../utils/dayDisplayUtils';
+import { format24To12HourString } from '../../../utils/timeUtils';
 
 interface AlarmItem {
   id: number;
@@ -13,14 +14,13 @@ interface AlarmItem {
   day: string[];
 }
 
-// 24시간 형식을 12시간 형식으로 변환
+// 24시간 형식을 12시간 형식으로 변환 (유틸리티 함수 사용)
 const formatTimeTo12Hour = (time24: string) => {
-  const [hours, minutes] = time24.split(':').map(Number);
-  const period = hours >= 12 ? '오후' : '오전';
-  const hour12 = hours === 0 ? 12 : hours > 12 ? hours - 12 : hours;
+  const formattedTime = format24To12HourString(time24);
+  const [period, time] = formattedTime.split(' ');
   return {
     period,
-    time: `${hour12.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`
+    time
   };
 };
 

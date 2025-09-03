@@ -39,6 +39,8 @@ export const API_CONFIG = {
     EMOTIONS: '/api/emotions',
     EMOTION_RECORD: '/api/emotions/record',
     EMOTION_HISTORY: '/api/emotions/history',
+    EMOTION_FIRST_CHECK: '/api/emotions/first-check',
+    EMOTION_COUNT: '/api/emotions/count',
     
     // 알람 관련
     ALARMS: '/api/alarms',

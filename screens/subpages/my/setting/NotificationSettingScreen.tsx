@@ -13,6 +13,7 @@ import NotificationTimePicker from '../../../../components/tabs/my/setting/Notif
 import { Button } from '../../../../components/common/buttons/Button';
 import { cancelAlarmNotifications, requestNotificationPermissions } from '../../../../services/alarmNotificationService';
 import { scheduleDiaryNotification } from '../../../../utils/notificationUtils';
+import { parseNotificationTime } from '../../../../utils/timeUtils';
 
 interface TimeData {
   period: string;
@@ -110,14 +111,12 @@ const NotificationSettingScreen = () => {
             const newsNotification = await AsyncStorage.getItem('newsNotificationEnabled');
             const diaryNotificationTime = await AsyncStorage.getItem('diaryNotificationTime');
 
-            const timeData = diaryNotificationTime?.split(' ');
-            const period = timeData?.[0] || '오후';
-            const [hour, minute] = timeData?.[1]?.split(':') || ['8', '30'];
+            const { period, hour, minute } = parseNotificationTime(diaryNotificationTime || '오후 8:30');
 
             setIsDiaryNotificationEnabled(diaryNotification === 'true');
             setIsGreetingNotificationEnabled(greetingNotification === 'true');
             setIsNewsNotificationEnabled(newsNotification === 'true');
-            setNotificationTime({period, hour, minute});
+            setNotificationTime({period, hour: hour.toString(), minute: minute.toString()});
             
         } catch (error) {
             console.error('알림 설정 불러오기 실패:', error);
@@ -168,11 +167,11 @@ const NotificationSettingScreen = () => {
             
             if (value) {
                 console.log('숨숨 인사 알림 활성화');
-                // TODO: 백엔드 API 호출
+                // TODO: 백엔드 API 호출 (docs/TODO.md 참조)
                 // await updateNotificationSettings({ greeting: true });
             } else {
                 console.log('숨숨 인사 알림 비활성화');
-                // TODO: 백엔드 API 호출
+                // TODO: 백엔드 API 호출 (docs/TODO.md 참조)
                 // await updateNotificationSettings({ greeting: false });
             }
         } catch (error) {
@@ -188,11 +187,11 @@ const NotificationSettingScreen = () => {
             
             if (value) {
                 console.log('숨숨 소식 알림 활성화');
-                // TODO: 백엔드 API 호출
+                // TODO: 백엔드 API 호출 (docs/TODO.md 참조)
                 // await updateNotificationSettings({ news: true });
             } else {
                 console.log('숨숨 소식 알림 비활성화');
-                // TODO: 백엔드 API 호출
+                // TODO: 백엔드 API 호출 (docs/TODO.md 참조)
                 // await updateNotificationSettings({ news: false });
             }
         } catch (error) {

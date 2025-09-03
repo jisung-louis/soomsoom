@@ -8,7 +8,7 @@ import { Surface } from '../../common/surface/Surface';
 import InfoIcon from '../../../assets/icons/common/info.svg';
 import { radius } from '../../../constants/radius';
 import { emotionService } from '../../../services/emotionService';
-import { EmotionRankingData, EmotionType } from '../../../types/emotion';
+import { EmotionRankingData, EmotionType } from '../../../types';
 import LoadingSpinner from '../../common/loading/LoadingSpinner';
 import ErrorMessage from '../../common/error/ErrorMessage';
 import dayjs from 'dayjs';

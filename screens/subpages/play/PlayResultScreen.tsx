@@ -12,14 +12,32 @@ import ShadowSVG from '../../../assets/icons/charactors/shadow.svg'
 import DefaultCharacter from '../../../assets/icons/charactors/default_character.svg'
 import CheckIcon from '../../../assets/icons/common/check_active.svg'
 import { Button } from '../../../components/common/buttons/Button';
+import PlayResult from '../../../components/onboarding/PlayResult';
+
+const MOCK_ACTIVITY_DESCRIPTION = [
+        '뇌에 맑은 산소가 가득 차올랐고...',
+        '마음은 하루를 준비할 평온함을 얻고...',
+        '무엇인가 집중할 준비가 되었어요!',
+    ]
 
 const PlayResultScreen = () => {
     const navigation = useNavigation<StackNavigationProp<PlayStackParamList>>();
     const handleBack = () => {
         navigation.goBack();
     };
-    const playExit = () => {
-        navigation.dispatch(StackActions.pop(3));
+    const handleActivityEnd = () => {
+        // TODO: 액티비티 종료 후 하트 보상 받기
+        // TODO: 얼마의 하트를 줘야하는지 백엔드에서 조회 후 보상 받기
+        // TODO: 하트 보상 받기 후 홈으로 이동
+        exit();
+    }
+    const exit = () => {
+        //navigation.dispatch(StackActions.pop(3));//바꿔야됨
+        // navigation.reset({
+        //     index: 0,
+        //     routes: [{ name: 'PlayTab' }],
+        // });
+        navigation.popToTop();
     };
 
     return (
@@ -28,9 +46,10 @@ const PlayResultScreen = () => {
                 <TopNavigation
                     isShopButtonVisible={false}
                     isHeartButtonVisible={true}
-                    isMessageButtonVisible={false}
+                    isStorageButtonVisible={false}
+                    isMessageButtonVisible={true}
                 />
-                <View style={styles.contentContainer}>
+                {/* <View style={styles.contentContainer}>
                     <View style={styles.characterWrapper}>
                         <ShadowSVG style={styles.shadow} />
                         <DefaultCharacter style={styles.character} />
@@ -54,13 +73,15 @@ const PlayResultScreen = () => {
                             </View>
                         </View>
                     </View>
-                </View>
+                </View> */}{/* PlayResult.tsx 컴포넌트로 분리 및 공통관리 */}
+                <PlayResult style={styles.playResult} activityDescription={MOCK_ACTIVITY_DESCRIPTION} />
                 <Button
-                    title="확인"
+                    icon="heart"
+                    title="하트 보상받기"
                     size="large"
                     variant="active"
                     style={styles.button}
-                    onPress={playExit}
+                    onPress={handleActivityEnd}
                 />
             </SafeAreaView>
         </View>
@@ -74,6 +95,10 @@ const styles = StyleSheet.create({
     },
     container: {
         flex: 1,
+    },
+    playResult: {
+        flex: 1,
+        alignItems: 'center',
     },
     contentContainer: {
         flex: 1,

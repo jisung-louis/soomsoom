@@ -20,7 +20,17 @@ interface TopNavigationProps {
   messageButtonPress?: () => void;
 }
 
-const TopNavigation = ({style, isShopButtonVisible = true, isHeartButtonVisible = true, isStorageButtonVisible = true, isMessageButtonVisible = true, shopButtonPress, heartButtonPress, storageButtonPress, messageButtonPress}: TopNavigationProps) => {
+const TopNavigation = ({
+  style, 
+  isShopButtonVisible = true, 
+  isHeartButtonVisible = true, 
+  isStorageButtonVisible = true, 
+  isMessageButtonVisible = true, 
+  shopButtonPress, 
+  heartButtonPress, 
+  storageButtonPress, 
+  messageButtonPress
+}: TopNavigationProps) => {
   const { heartPoints } = useCurrencyStore();
   return (
       <View style={[styles.container, style]}>

@@ -1,21 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { syongsyongTypography, typography } from '../../../constants/typography';
-import { colors } from '../../../constants/colors';
 import { RouteProp, useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { PlayStackParamList } from '../../../navigations/tabs/PlayStackNavigator';
 import SubpageHeader from '../../../components/common/top-navigation/SubpageHeader';
-import LottieView from 'lottie-react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
-
-import Count5 from '../../../assets/icons/play/playBreath/count_5.svg';
-import Count4 from '../../../assets/icons/play/playBreath/count_4.svg';
-import Count3 from '../../../assets/icons/play/playBreath/count_3.svg';
-import Count2 from '../../../assets/icons/play/playBreath/count_2.svg';
-import Count1 from '../../../assets/icons/play/playBreath/count_1.svg';
-import Count0 from '../../../assets/icons/play/playBreath/count_0.svg';
+import { colors } from '../../../constants/colors';
+import {
+  PlayBreathStep0,
+  PlayBreathStep1,
+  PlayBreathStep2,
+  PlayBreathStep3,
+  PlayBreathStep4,
+} from '../../../components/tabs/play/PlayBreathSteps';
 
 const PlayBreathScreen = ({route}: {route: RouteProp<PlayStackParamList, 'PlayBreathScreen'>}) => {
   const navigation = useNavigation<StackNavigationProp<PlayStackParamList>>();
@@ -42,120 +40,73 @@ const PlayBreathScreen = ({route}: {route: RouteProp<PlayStackParamList, 'PlayBr
     }
   }, [step]);
 
-  // Step components (can be moved to separate files later)
-  const Step0 = () => (
-    <View style={{alignItems: 'center',}}>
-      {/* Step 0: 물고기 내려옴 */}
-      <LottieView
-        source={require('../../../assets/animations/fish_down.json')}
-        autoPlay={step === 0}
-        loop={false}
-        style={[styles.fish, {
-          width: '100%',
-          height: windowHeight * 0.5,
-          maxHeight: 400,
-          top: -SAFE_AREA_HEIGHT_AND_SUBPAGE_HEADER_HEIGHT}
-        ]}
-        onAnimationFinish={() => {
-          console.log('fish down animation finished');
-          setStep(1);
-        }}
-      />
-      <Text style={{...syongsyongTypography.title4, marginTop: (windowHeight * 0.55) - SAFE_AREA_HEIGHT_AND_SUBPAGE_HEADER_HEIGHT}}>가장 편안한 자세를 찾아보세요!</Text>
-    </View>
-  );
-  const Step1 = () => (
-    <View style={{alignItems: 'center'}}>
-      {/* Step 1: 화면 터치 텍스트 용수철 등장 */}
-      <Step0 />
-      <Animated.View style={[animatedStyle, {marginTop: 6}]}>
-        <Text style={{...syongsyongTypography.title5, color: colors.primary300, textShadowColor: colors.primary300}}>화면을 터치해주세요!</Text>
-      </Animated.View>
-    </View>
-  );
-  const Step2 = () => (
-    <View style={{alignItems: 'center'}}>
-      {/* Step 2: 물고기 올라감 */}
-      <LottieView
-        source={require('../../../assets/animations/fish_up.json')}
-        autoPlay={step === 2}
-        loop={false}
-        style={[styles.fish, {
-          width: '100%',
-          height: windowHeight * 0.5,
-          maxHeight: 400,
-          top: -SAFE_AREA_HEIGHT_AND_SUBPAGE_HEADER_HEIGHT}
-        ]}
-        onAnimationFinish={() => {
-          console.log('fish up animation finished');
-          setStep(3);
-        }}
-      />
-      <Text style={{...syongsyongTypography.title4, marginTop: (windowHeight * 0.55) - SAFE_AREA_HEIGHT_AND_SUBPAGE_HEADER_HEIGHT}}>가장 편안한 자세를 찾아보세요!</Text>
-      <Text style={{...syongsyongTypography.title5, color: colors.primary300, textShadowColor: colors.primary300, marginTop: 6}}>화면을 터치해주세요!</Text>
-    </View>
-  );
-  const Step3 = () => {
-    {/* Step 3: 자 이제 준비하세요! 텍스트 */}
-    // Step3Hold에서 2초 대기 후 자동으로 다음 단계로 넘어가기
-    useEffect(() => {
-      const timer = setTimeout(() => {
-        setStep(4);
-      }, 2000);
-      return () => clearTimeout(timer); // 컴포넌트 언마운트 시 타이머 정리
-    }, []);
-    return (
-    <View style={{alignItems: 'center'}}>
-      <Text style={{...syongsyongTypography.title4, marginTop: (windowHeight * 0.55) - SAFE_AREA_HEIGHT_AND_SUBPAGE_HEADER_HEIGHT}}>자 이제 준비하세요!</Text>
-    </View>
-  );};
+  // Step 컴포넌트 핸들러들
+  const handleStep0Finish = () => {
+    console.log('fish down animation finished');
+    setStep(1);
+  };
 
-  const Step4 = () => {
-    const [count, setCount] = useState(5);
-    useEffect(() => {
-      const timer = setTimeout(() => {
-        if (count > 0) {
-          setCount(count - 1);
-        } else {
-          navigation.navigate('PlayResultScreen')
-        }
-      }, 1000);
-      return () => clearTimeout(timer); // 컴포넌트 언마운트 시 타이머 정리
-    }, [count]);
-    return (
-    <View style={{alignItems: 'center', height: '90%', justifyContent: 'center'}}>
-      {/* Step 4: 카운트다운 */}
-      {count === 5 && <Count5 />}
-      {count === 4 && <Count4 />}
-      {count === 3 && <Count3 />}
-      {count === 2 && <Count2 />}
-      {count === 1 && <Count1 />}
-      {count === 0 && <Count0 />}
-    </View>
-  );};
+  const handleStep2Finish = () => {
+    console.log('fish up animation finished');
+    setStep(3);
+  };
+
+  const handleStep3Next = () => {
+    //setStep(4); //카운트다운은 기획에서 제외됨
+    navigation.navigate('PlayBreathContentScreen', { content: content });
+  };
 
   // Render step component based on step state
-  let StepComponent = null;
-  switch (step) {
-    case 0:
-      StepComponent = <Step0 />;
-      break;
-    case 1:
-      StepComponent = <Step1 />;
-      break;
-    case 2:
-      StepComponent = <Step2 />;
-      break;
-    case 3:
-      StepComponent = <Step3 />;
-      break;
-    case 4:
-      StepComponent = <Step4 />;
-      break;
-    default:
-      StepComponent = <Step0 />;
-      break;
-  }
+  const renderStepComponent = () => {
+    const commonProps = {
+      windowHeight,
+      safeAreaHeight: SAFE_AREA_HEIGHT_AND_SUBPAGE_HEADER_HEIGHT,
+    };
+
+    switch (step) {
+      case 0:
+        return (
+          <PlayBreathStep0
+            {...commonProps}
+            onAnimationFinish={handleStep0Finish}
+            isActive={step === 0}
+          />
+        );
+      case 1:
+        return (
+          <PlayBreathStep1
+            {...commonProps}
+            animatedStyle={animatedStyle}
+            onAnimationFinish={handleStep0Finish}
+          />
+        );
+      case 2:
+        return (
+          <PlayBreathStep2
+            {...commonProps}
+            onAnimationFinish={handleStep2Finish}
+            isActive={step === 2}
+          />
+        );
+      case 3:
+        return (
+          <PlayBreathStep3
+            {...commonProps}
+            onNext={handleStep3Next}
+          />
+        );
+      // case 4:
+      //   return <PlayBreathStep4 navigation={navigation} />;
+      default:
+        return (
+          <PlayBreathStep0
+            {...commonProps}
+            onAnimationFinish={handleStep0Finish}
+            isActive={step === 0}
+          />
+        );
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -175,7 +126,7 @@ const PlayBreathScreen = ({route}: {route: RouteProp<PlayStackParamList, 'PlayBr
         </View> */}
         {/* Render step-specific component */}
         <View>
-          {StepComponent}
+          {renderStepComponent()}
           <Text style={{alignSelf: 'center', marginTop: 50}}>[DEBUG] step: {step}</Text>
         </View>
       </TouchableOpacity>
@@ -190,15 +141,6 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     flex: 1,
-  },
-  headerContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  fish: {
-    position: 'absolute', 
-    pointerEvents: 'none',
   },
 });
 

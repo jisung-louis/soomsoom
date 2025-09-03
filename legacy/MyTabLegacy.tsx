@@ -52,6 +52,7 @@ type PlacedItem = {
   type: string;
 };
 
+  // @deprecated
 const MyTab = () => {
   const navigation = useNavigation<StackNavigationProp<MyStackParamList>>();
   const scrollViewRef = useRef<ScrollView>(null);
@@ -378,5 +379,3 @@ const styles = StyleSheet.create({
     borderColor: colors.grayScale200,
   },
 });
-
-export default MyTab;

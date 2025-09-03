@@ -1,4 +1,4 @@
-import { EmotionType } from '../types/emotion';
+import { EmotionType } from '../types';
 import { colors } from '../constants/colors';
 
 /**

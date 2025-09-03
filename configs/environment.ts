@@ -114,6 +114,13 @@ export const initialStates = {
   // 알람 관련 초기 상태 (프리셋)
   alarm: {
     alarmList: [] as any[],
+    selectedAlarmList: [] as any[],
+    selectedAlarmListId: [] as any[],
+  },
+
+  // 온보딩 관련 초기 상태 (프리셋)
+  onboarding: {
+    hasSeenOnboarding: isDevelopment ? false : null, // 개발: false, 실제: null
   },
 } as const;
 
@@ -184,12 +191,17 @@ export const errorHandler = {
  */
 export const printEnvironmentInfo = () => {
   if (isDevelopment) {
-    console.log('🚀 환경 정보:');
-    console.log(`- 환경: ${isDevelopment ? '개발' : '프로덕션'}`);
-    console.log(`- API URL: ${environmentConfig.api.baseUrl}`);
-    console.log(`- 디버깅: ${environmentConfig.debug.enabled ? '활성화' : '비활성화'}`);
-    console.log(`- 초기 하트: ${initialStates.currency.heartPoints}`);
-    console.log(`- 소유 아이템 수: ${initialStates.room.ownedItems.length}`);
+    console.log('--------------------------------');
+    console.log('| 🚀 환경 정보:');
+    console.log(`| - 환경: ${isDevelopment ? '개발' : '프로덕션'}`);
+    console.log(`| - API URL: ${environmentConfig.api.baseUrl}`);
+    console.log(`| - 디버깅: ${environmentConfig.debug.enabled ? '활성화' : '비활성화'}`);
+    console.log(`| - 초기 하트: ${initialStates.currency.heartPoints}`);
+    console.log(`| - 소유 아이템 수: ${initialStates.room.ownedItems.length}`);
+    console.log(`| - 배치 아이템 수: ${Object.values(initialStates.room.placedItems).length}`);
+    console.log(`| - 온보딩 상태: ${initialStates.onboarding.hasSeenOnboarding}`);
+    console.log(`| - 알람 상태: ${initialStates.alarm.alarmList.length}`);
+    console.log('--------------------------------');
   }
 };
 

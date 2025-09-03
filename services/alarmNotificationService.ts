@@ -1,4 +1,5 @@
 import * as Notifications from 'expo-notifications';
+import { parseAlarmTime } from '../utils/timeUtils';
 
 // 알림 권한 요청
 export const requestNotificationPermissions = async (): Promise<boolean> => {
@@ -44,7 +45,7 @@ export const scheduleOneTimeAlarm = async (alarmData: {
   body?: string;
 }): Promise<boolean> => {
   try {
-    const [hours, minutes] = alarmData.time.split(':').map(Number);
+    const { hours, minutes } = parseAlarmTime(alarmData.time);
     
     // 다음 알람 시간 계산
     const now = new Date();
@@ -62,8 +63,7 @@ export const scheduleOneTimeAlarm = async (alarmData: {
       content: {
         title: alarmData.title || "알람",
         body: alarmData.body || `알람 시간입니다 (${alarmData.time})`,
-        //sound: alarmData.soundName === '기본' ? 'default' : `${alarmData.soundName}.wav`,
-        sound: 'default_alarm_audio.wav',
+        sound: alarmData.soundName === '기본' ? 'default' : `${alarmData.soundName}.wav`,
         data: {
           alarmId: alarmData.id,
           time: alarmData.time,
@@ -94,7 +94,7 @@ export const scheduleWeeklyAlarm = async (alarmData: {
   body?: string;
 }): Promise<boolean> => {
   try {
-    const [hours, minutes] = alarmData.time.split(':').map(Number);
+    const { hours, minutes } = parseAlarmTime(alarmData.time);
     const repeatDays = alarmData.repeatDays;
 
     console.log(`반복 알람 설정 시작: ${alarmData.time}, 요일: ${repeatDays.join(', ')}`);
