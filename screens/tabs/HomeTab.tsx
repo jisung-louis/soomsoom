@@ -65,6 +65,7 @@ const HomeTab = () => {
   const handleMessagePress = () => {
     // 메시지 버튼 기능 구현
     console.log('메시지 버튼 클릭');
+    navigation.navigate('MailboxScreen');
   };
 
   const handleStoragePress = () => {

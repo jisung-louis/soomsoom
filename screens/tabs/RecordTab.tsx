@@ -250,38 +250,9 @@ const RecordTab = () => {
     }
   }, [reportCurrentYear, reportCurrentMonth]);
 
-  const renderDiaryTab = () => (
-    <RecordDiaryTab
-      currentDate={currentDate}
-      viewType={viewType}
-      recordedItems={recordedItems}
-      onPrev={handlePrev}
-      onNext={handleNext}
-      onViewTypeChange={handleViewTypeChange}
-      onDayPress={handleDayPress}
-      navigation={navigation}
-      styles={styles}
-      containsToday={weekIncludesToday}
-      todayYear={dayjs().year()}
-      todayMonth={dayjs().month() + 1}
-    />
-  );
-
   const onStartRecordPress = useCallback(() => {
     navigation.navigate('EmotionSelectScreen', { date: dayjs().format('YYYY-MM-DD') });
   }, [navigation]);
-
-  const renderReportTab = () => (
-    <RecordReportTab 
-      onStartRecordPress={onStartRecordPress}
-      monthlyStatsData={monthlyStatsData}
-      reportCurrentYear={reportCurrentYear}
-      reportCurrentMonth={reportCurrentMonth}
-      onReportMonthChange={handleReportMonthChange}
-    />
-    // <RecordReportTabNotOpened />
-    // 만약 기록 날짜가 7일 미만일 경우 RecordReportTabNotOpened 컴포넌트 반환
-  );
 
   const [index, setIndex] = useState(0);
   const [routes] = useState([
@@ -289,10 +260,39 @@ const RecordTab = () => {
     { key: 'report', title: '마음 리포트' },
   ]);
 
-  const renderScene = SceneMap({
-    diary: renderDiaryTab,
-    report: renderReportTab,
-  });
+  const renderScene = ({ route }: { route: { key: string } }) => {
+    switch (route.key) {
+      case 'diary':
+        return (
+          <RecordDiaryTab
+            currentDate={currentDate}
+            viewType={viewType}
+            recordedItems={recordedItems}
+            onPrev={handlePrev}
+            onNext={handleNext}
+            onViewTypeChange={handleViewTypeChange}
+            onDayPress={handleDayPress}
+            navigation={navigation}
+            styles={styles}
+            containsToday={weekIncludesToday}
+            todayYear={dayjs().year()}
+            todayMonth={dayjs().month() + 1}
+          />
+        );
+      case 'report':
+        return (
+          <RecordReportTab
+            onStartRecordPress={onStartRecordPress}
+            monthlyStatsData={monthlyStatsData}
+            reportCurrentYear={reportCurrentYear}
+            reportCurrentMonth={reportCurrentMonth}
+            onReportMonthChange={handleReportMonthChange}
+          />
+        );
+      default:
+        return null;
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>

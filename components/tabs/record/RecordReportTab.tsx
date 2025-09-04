@@ -19,6 +19,7 @@ import KingIcon from '../../../assets/icons/record/report/king.svg';
 import DonutChart from '../../common/charts/DonutChart';
 import { getRankColor } from '../../../utils/emotionColorUtils';
 import { characterIconMap } from '../../../utils/iconMap';
+import { getEmotionTitle, sortEmotionsByCountAndPriority } from '../../../utils/emotionConstants';
 import { Button } from '../../common/buttons/Button';
 import BubbleTalk from '../../common/bubbletalk/BubbleTalk';
 import BarChart from '../../common/charts/BarChart';
@@ -26,6 +27,7 @@ import EmptyCatIcon from '../../../assets/icons/record/report/cat_write2.svg';
 import EmptyMonthIcon from '../../../assets/icons/record/report/cat_quiet.svg';
 import { ButtonSmall } from '../../common/buttons/ButtonSmall';
 import LottieView from 'lottie-react-native';
+import { ss, sv } from '../../../utils/scale';
 
 const windowWidth = Dimensions.get('window').width;
 
@@ -142,15 +144,21 @@ const RecordReportTab = ({
     const monthKey = `${reportCurrentYear}-${reportCurrentMonth}`;
     const monthData = monthlyDataCache[monthKey] || [];
     
-    // 현재 주차의 시작일과 종료일 계산
+    // 현재 주차의 시작일과 종료일 계산 (연말/연초 경계 안전하게 처리)
     const startOfWeek = dayjs().year(reportCurrentYear).week(currentWeek).startOf('week');
     const endOfWeek = dayjs().year(reportCurrentYear).week(currentWeek).endOf('week');
+    
+    // 연말/연초 경계 체크: 주차가 다른 해에 속하는 경우 올바른 해로 조정
+    const adjustedStartOfWeek = startOfWeek.year() !== reportCurrentYear ? 
+      dayjs().year(reportCurrentYear).month(reportCurrentMonth - 1).startOf('month') : startOfWeek;
+    const adjustedEndOfWeek = endOfWeek.year() !== reportCurrentYear ? 
+      dayjs().year(reportCurrentYear).month(reportCurrentMonth - 1).endOf('month') : endOfWeek;
     
     // 해당 주차에 속하는 데이터만 필터링
     return monthData.filter(item => {
       const itemDate = dayjs(item.recordDate);
-      return (itemDate.isSame(startOfWeek, 'day') || itemDate.isAfter(startOfWeek, 'day')) && 
-             (itemDate.isSame(endOfWeek, 'day') || itemDate.isBefore(endOfWeek, 'day'));
+      return (itemDate.isSame(adjustedStartOfWeek, 'day') || itemDate.isAfter(adjustedStartOfWeek, 'day')) && 
+             (itemDate.isSame(adjustedEndOfWeek, 'day') || itemDate.isBefore(adjustedEndOfWeek, 'day'));
     });
   }, [reportCurrentYear, reportCurrentMonth, currentWeek, monthlyDataCache]);
 
@@ -166,18 +174,6 @@ const RecordReportTab = ({
     loadMonthlyData();
   }, [reportCurrentYear, reportCurrentMonth, resetWeekToFirstWeekOfMonth, loadMonthlyData]);
 
-  // 감정 타입을 제목으로 변환하는 헬퍼 함수
-  const getEmotionTitle = (emotion: EmotionType): string => {
-    const emotionTitles: Record<EmotionType, string> = {
-      happy: '행복해요!',
-      good: '좋아요!',
-      soso: '그냥 그래요!',
-      depressed: '우울해요!',
-      sad: '슬퍼요!',
-      angry: '화나요!',
-    };
-    return emotionTitles[emotion];
-  };
 
   // monthlyStatsData를 ranking 형식으로 변환
   const emotionRankingData = useMemo(() => {
@@ -209,7 +205,7 @@ const RecordReportTab = ({
         percentage: stat.percentage,
         icon: getSafeIcon(stat.emotion),
       }))
-      .sort((a, b) => b.count - a.count); // count 기준 내림차순 정렬
+      .sort(sortEmotionsByCountAndPriority);
   }, [monthlyStatsData]);
 
   // API 데이터를 BarChart 형식으로 변환하는 함수
@@ -445,20 +441,31 @@ const RecordReportTab = ({
                       />
                     ))}
                   </View>
-                    <View style={[styles.ratioPercentageContainer, {gap: Math.max(7,((windowWidth - 40) - (emotionRankingData.length * 50)) / (emotionRankingData.length - 1))}]}>
+                  <View style={styles.ratioPercentageContainer}>
                     {emotionRankingData.map((item, index) => {
                       const IconStroke = characterIconMap.stroke[item.emotion as keyof typeof characterIconMap.stroke];
                       return (
                         <View key={item.emotion} style={styles.ratioPercentage}>
-                                                      <View style={[styles.ratioEmotionBlock, {backgroundColor: getRankColor(index)}]}>
-                             <item.icon width={40} height={40}/>
-                            </View>
+                          <View style={[styles.ratioEmotionBlock, {backgroundColor: getRankColor(index)}]}>
+                             <IconStroke width={40} height={40}/>
+                          </View>
                           <View style={styles.ratioEmotionBlockTextContainer}>
                             <Text style={styles.ratioEmotionBlockText}>{item.percentage}%</Text>
                           </View>
                         </View>
                       );
                     })}
+                    {/* 데이터가 6개 미만일 때 placeholder 추가 */}
+                    {Array.from({ length: Math.max(0, 6 - emotionRankingData.length) }).map((_, index) => (
+                      <View key={`placeholder-${index}`} style={styles.ratioPercentage}>
+                        <View style={styles.ratioEmotionBlock}>
+                          {/* 빈 placeholder */}
+                        </View>
+                        {/* <View style={styles.ratioEmotionBlockTextContainer}>
+                          <Text style={[styles.ratioEmotionBlockText, styles.ratioEmotionBlockTextPlaceholder]}>-</Text>
+                        </View> */}
+                      </View>
+                    ))}
                   </View>
                 </View>
                 </>
@@ -809,11 +816,9 @@ const styles = StyleSheet.create({
   },
   ratioPercentageContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
   },
   ratioPercentage: {
-    alignItems: 'center',
     gap: 8,
   },
   ratioEmotionBlock: {

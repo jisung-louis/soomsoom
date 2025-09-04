@@ -13,7 +13,7 @@ import FollowInstructorList from '../../../components/tabs/play/PlayFavoriteScre
 import { TabView, SceneMap } from 'react-native-tab-view';
 import { contentData } from '../../../data/playContentData';
 import { usePlayStore } from '../../../stores/playStore';
-import { getFollowedInstructors, FollowedInstructorSummary } from '../../../services/instructorService';
+import { getFollowedInstructors, toggleFollowInstructor as toggleFollowInstructorAPI, FollowedInstructorSummary } from '../../../services/instructorService';
 import { useToast } from '../../../contexts/ToastContext';
 
 const PlayFavoriteScreen = () => {
@@ -59,6 +59,7 @@ const PlayFavoriteScreen = () => {
 
   const fetchFollowed = async () => {
     try {
+      // 서비스 레이어에서 __DEV__ 분기 처리
       const res = await getFollowedInstructors({ page: 1, size: 12, sort: 'createdAt,desc' });
       setLocalFollowedInstructors(res.content);
     } catch (e) {
@@ -118,11 +119,25 @@ const PlayFavoriteScreen = () => {
                 followInstructorData={[{
                   id: item.instructorId,
                   name: item.name,
-                  title: '',
-                  profileImage: item.profileImageUrl ? { uri: item.profileImageUrl } : require('../../../assets/images/play/playFavoriteScreen/default_image_1.png')
+                  profileImage: item.profileImageUrl ? __DEV__ ? item.profileImageUrl as any : { uri: item.profileImageUrl } : require('../../../assets/images/play/playFavoriteScreen/default_image_1.png')
                 }]}
                 followedIds={followedInstructorIds}
-                onToggleFollow={toggleFollowInstructor}
+                onToggleFollow={async (instructorId: number) => {
+                  try {
+                    // 서비스 레이어에서 API 호출과 store 동기화를 모두 처리
+                    await toggleFollowInstructorAPI(instructorId);
+                    
+                    // 목록 새로고침
+                    await fetchFollowed();
+                  } catch (error) {
+                    console.error('팔로우 상태 변경 실패:', error);
+                    showToast({
+                      message: '팔로우 상태 변경에 실패했어요.',
+                      theme: 'dark',
+                      iconType: 'brokenHeart',
+                    });
+                  }
+                }}
               />
             )}
             refreshing={refreshing}

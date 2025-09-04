@@ -21,7 +21,7 @@ const AuthorInfo: React.FC<AuthorInfoProps> = ({ instructorId, guide, onPressIns
       <View style={styles.instructorContainer}>
         <TouchableOpacity onPress={onPressInstructor}>
           <Text style={styles.contentInfo}>
-            저자 : {instructor?.name} {instructor?.title}
+            저자 : {instructor?.name}
           </Text>
         </TouchableOpacity>
         <Text style={styles.contentInfo}>|</Text>

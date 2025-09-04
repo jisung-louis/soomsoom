@@ -20,7 +20,6 @@ export type ContentData = {
 export type InstructorData = {
   id: number;
   name: string;
-  title: string;
   profileImage: any;
   bio: string;
 };
@@ -106,29 +105,25 @@ export const contentData: ContentData[] = [
 export const instructorsData: InstructorData[] = [
   {
     id: 0,
-    name: 'DEFAULT',
-    title: 'INSTRUCTOR',
+    name: 'DEFAULT NAME',
     profileImage: require('../assets/images/play/playFavoriteScreen/default_image_1.png'),
     bio: 'DEFAULT BIO',
   },
   {
     id: 1,
-    name: '은경',
-    title: '선생님',
+    name: '은경 선생님',
     profileImage: require('../assets/images/play/playFavoriteScreen/default_image_1.png'),
     bio: '거대한 바다도 또 한방울의 물이 모여 이루어지듯, 한 사람 한 사람의 의식이 모여 커다란 세상을 이룹니다. 세상 모든 존재들은 하나하나 따로 떨어져 낱개로 있는 것처럼 보이지만 열려있는 의식의 차원에서 보면 서로 밀접하게 연결되어 있습니다.',
   },
   {
     id: 2,
-    name: '정목',
-    title: '스님',
+    name: '정목 스님',
     profileImage: require('../assets/images/play/playFavoriteScreen/default_image_1.png'),
     bio: '안녕하세요! 저는 정목입니다. 저는 명상을 좋아합니다.',
   },
   {
     id: 3,
-    name: '광현',
-    title: '선생님',
+    name: '광현 선생님',
     profileImage: require('../assets/images/play/playFavoriteScreen/default_image_1.png'),
     bio: '안녕하세요! 저는 광현입니다. 저는 명상을 좋아합니다.',
   },

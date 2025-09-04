@@ -8,7 +8,6 @@ import { ToggleButton } from '../../../common/buttons/ToggleButton';
 type FollowInstructorData = {
   id: number;
   name: string;
-  title: string;
   profileImage: any;
 }
 
@@ -25,8 +24,8 @@ const FollowInstructorList = ({ followInstructorData, followedIds, onToggleFollo
         followInstructorData.map((item) => (
           <View key={item.id} style={styles.cardContainer}>
             <View style={styles.card}>
-              <Image source={item.profileImage} style={styles.profileImage} />
-              <Text style={styles.name}>{item.name} {item.title}</Text>
+              <Image source={item.profileImage} style={item.profileImage ? styles.profileImage : styles.defaultProfileImage} />
+              <Text style={styles.name}>{item.name}</Text>
             </View>
             <ToggleButton
               defaultTitle="팔로우"
@@ -67,5 +66,12 @@ const styles = StyleSheet.create({
     width: IMAGE_SIZE,
     height: IMAGE_SIZE,
     borderRadius: IMAGE_SIZE / 2,
+    backgroundColor: colors.grayScale100,
+  },
+  defaultProfileImage: {
+    width: IMAGE_SIZE,
+    height: IMAGE_SIZE,
+    borderRadius: IMAGE_SIZE / 2,
+    backgroundColor: colors.grayScale200,
   },
 });

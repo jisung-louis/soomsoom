@@ -37,7 +37,7 @@ const TestScreen = () => {
   {/* 강사 아이디 -> 강사 이름 */}
   const instructorIdToName = (instructorId: number) => {
     const instructor = instructorsData.find((item) => item.id === instructorId);
-    return instructor ? `${instructor.name} ${instructor.title}` : `강사 ${instructorId}`;
+    return instructor ? `${instructor.name}` : `강사 ${instructorId}`;
   };
   return (
     <SafeAreaView style={styles.container}>

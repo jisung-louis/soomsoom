@@ -12,6 +12,16 @@ export const mockDiaryData: Array<{
   modifiedAt: string;
   deletedAt: null;
 }> = [
+  // 2025년 4월 데이터
+  { diaryId: 1, userId: 1, emotion: 'happy', memo: '오늘은 정말 좋은 하루였어요!', recordDate: '2025-04-01', createdAt: '2025-04-01T09:00:00', modifiedAt: '2025-04-01T09:00:00', deletedAt: null },
+  { diaryId: 2, userId: 1, emotion: 'happy', memo: '조금 우울한 하루였습니다.', recordDate: '2025-04-02', createdAt: '2025-04-02T09:00:00', modifiedAt: '2025-04-02T09:00:00', deletedAt: null },
+  { diaryId: 3, userId: 1, emotion: 'good', memo: '괜찮은 하루였습니다.', recordDate: '2025-04-03', createdAt: '2025-04-03T09:00:00', modifiedAt: '2025-04-03T09:00:00', deletedAt: null },
+
+  // 2025년 5월 데이터
+  { diaryId: 1, userId: 1, emotion: 'happy', memo: '오늘은 정말 좋은 하루였어요!', recordDate: '2025-05-01', createdAt: '2025-05-01T09:00:00', modifiedAt: '2025-05-01T09:00:00', deletedAt: null },
+  { diaryId: 2, userId: 1, emotion: 'happy', memo: '조금 우울한 하루였습니다.', recordDate: '2025-05-02', createdAt: '2025-05-02T09:00:00', modifiedAt: '2025-05-02T09:00:00', deletedAt: null },
+  //{ diaryId: 3, userId: 1, emotion: 'good', memo: '괜찮은 하루였습니다.', recordDate: '2025-05-03', createdAt: '2025-05-03T09:00:00', modifiedAt: '2025-05-03T09:00:00', deletedAt: null },
+
   // 2025년 6월 데이터
   { diaryId: 1, userId: 1, emotion: 'happy', memo: '오늘은 정말 좋은 하루였어요!', recordDate: '2025-06-01', createdAt: '2025-06-01T09:00:00', modifiedAt: '2025-06-01T09:00:00', deletedAt: null },
   { diaryId: 2, userId: 1, emotion: 'sad', memo: '조금 우울한 하루였습니다.', recordDate: '2025-06-02', createdAt: '2025-06-02T09:00:00', modifiedAt: '2025-06-02T09:00:00', deletedAt: null },
