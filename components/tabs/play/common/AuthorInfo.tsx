@@ -2,26 +2,26 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ViewStyle } from 'react-native';
 import PersonIcon from '../../../../assets/icons/common/Person.svg';
 import { colors } from '../../../../constants/colors';
-import { teachersData } from '../../../../data/playContentData';
+import { instructorsData } from '../../../../data/playContentData';
 import { typography } from '../../../../constants/typography';
 
 interface AuthorInfoProps {
-  teacherId: number;
+  instructorId: number;
   guide: string;
-  onPressTeacher?: () => void;
+  onPressInstructor?: () => void;
   style?: ViewStyle;
 }
 
-const AuthorInfo: React.FC<AuthorInfoProps> = ({ teacherId, guide, onPressTeacher, style }) => {
-  const teacher = teachersData.find(t => t.id === teacherId);
+const AuthorInfo: React.FC<AuthorInfoProps> = ({ instructorId, guide, onPressInstructor, style }) => {
+  const instructor = instructorsData.find(i => i.id === instructorId);
 
   return (
-    <View style={[styles.teacherAndAudioContainer, style]}>
+    <View style={[styles.instructorAndAudioContainer, style]}>
       <PersonIcon width={24} height={24} color={colors.grayScale600} />
-      <View style={styles.teacherContainer}>
-        <TouchableOpacity onPress={onPressTeacher}>
+      <View style={styles.instructorContainer}>
+        <TouchableOpacity onPress={onPressInstructor}>
           <Text style={styles.contentInfo}>
-            저자 : {teacher?.name} {teacher?.title}
+            저자 : {instructor?.name} {instructor?.title}
           </Text>
         </TouchableOpacity>
         <Text style={styles.contentInfo}>|</Text>
@@ -34,12 +34,12 @@ const AuthorInfo: React.FC<AuthorInfoProps> = ({ teacherId, guide, onPressTeache
 };
 
 const styles = StyleSheet.create({
-  teacherAndAudioContainer: {
+  instructorAndAudioContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
   },
-  teacherContainer: {
+  instructorContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,

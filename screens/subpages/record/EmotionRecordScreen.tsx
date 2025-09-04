@@ -123,6 +123,7 @@ const EmotionRecordScreen = () => {
                 multiline
                 value={content}
                 onChangeText={setContent}
+                cursorColor={colors.primary300}//안드로이드만 커서 컬러 변경 가능하다고 함
               />
             </KeyboardAvoidingView>
           </View>

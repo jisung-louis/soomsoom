@@ -54,7 +54,7 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
   const HIDDEN_BOTTOM_NAV_SCREENS: Record<string, string[]> = {
     record: ['EmotionSelectScreen', 'EmotionRecordScreen', 'EmotionRecordHelpScreen'],
     home: ['ShopScreen', 'ShopItemDetailScreen'],
-    play: ['PlayFavoriteScreen', 'PlayHistoryScreen', 'PlayDetailScreen', 'PlayTeacherDetailScreen', 'PlayBreathScreen', 'PlayMeditationScreen', 'PlayResultScreen', 'PlayBreathContentScreen'],
+    play: ['PlayFavoriteScreen', 'PlayHistoryScreen', 'PlayDetailScreen', 'PlayInstructorDetailScreen', 'PlayBreathScreen', 'PlayMeditationScreen', 'PlayResultScreen', 'PlayBreathContentScreen'],
     alarm: ['AlarmAddScreen', ],
     my: ['MyRoomDecorationPurchaseScreen'],
   };

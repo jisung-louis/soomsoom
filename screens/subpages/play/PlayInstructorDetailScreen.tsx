@@ -8,7 +8,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import SubpageHeader from '../../../components/common/top-navigation/SubpageHeader';
 import { colors } from '../../../constants/colors';
 import { typography } from '../../../constants/typography';
-import { contentData, teachersData } from '../../../data/playContentData';
+import { contentData, instructorsData } from '../../../data/playContentData';
 import { radius } from '../../../constants/radius';
 import { Button } from '../../../components/common/buttons/Button';
 import { Surface } from '../../../components/common/surface/Surface';
@@ -16,17 +16,17 @@ import ProgramList from '../../../components/tabs/play/common/ProgramList';
 import { usePlayStore } from '../../../stores/playStore';
 import { useToast } from '../../../contexts/ToastContext';
 
-const PlayTeacherDetailScreen: React.FC = () => {
+const PlayInstructorDetailScreen: React.FC = () => {
     const navigation = useNavigation<StackNavigationProp<PlayStackParamList>>();
-    const route = useRoute<RouteProp<PlayStackParamList, 'PlayTeacherDetailScreen'>>();
-    const { teacherId } = route.params;
-    const { toggleFollowTeacher, isFollowingTeacher } = usePlayStore();
+    const route = useRoute<RouteProp<PlayStackParamList, 'PlayInstructorDetailScreen'>>();
+    const { instructorId } = route.params;
+    const { toggleFollowInstructor, isFollowingInstructor } = usePlayStore();
     const { showToast } = useToast();
     const handleBack = () => {
       navigation.goBack();
     };
 
-    const representativeContentData = contentData.filter((item) => item.teacherId === teacherId);
+    const representativeContentData = contentData.filter((item) => item.instructorId === instructorId);
   
 
   return (
@@ -35,22 +35,23 @@ const PlayTeacherDetailScreen: React.FC = () => {
       <SubpageHeader onBack={handleBack} />
       <View style={styles.contentContainer}>
         <View style={styles.contentHeader}>
-            <Image source={teachersData.find(teacher => teacher.id === teacherId)?.profileImage} style={styles.contentHeaderTitleImage} />
-            <Text style={styles.contentHeaderTitle}>{teachersData.find(teacher => teacher.id === teacherId)?.name} {teachersData.find(teacher => teacher.id === teacherId)?.title}</Text>
+            <Image source={instructorsData.find(instructor => instructor.id === instructorId)?.profileImage} style={styles.contentHeaderTitleImage} />
+            <Text style={styles.contentHeaderTitle}>{instructorsData.find(instructor => instructor.id === instructorId)?.name} {instructorsData.find(instructor => instructor.id === instructorId)?.title}</Text>
         </View>
-        <Text style={styles.bio}>{teachersData.find(teacher => teacher.id === teacherId)?.bio}</Text>
+        <Text style={styles.bio}>{instructorsData.find(instructor => instructor.id === instructorId)?.bio}</Text>
       </View>
       <View style={styles.buttonContainer}>
         <Button 
-            title={isFollowingTeacher(teacherId) ? '팔로잉' : '팔로우'}
-            icon={isFollowingTeacher(teacherId) ? 'check' : undefined}
-            variant={isFollowingTeacher(teacherId) ? 'secondary' : 'active'}  
+            title={isFollowingInstructor(instructorId) ? '팔로잉' : '팔로우'}
+            icon={isFollowingInstructor(instructorId) ? 'check' : undefined}
+            variant={isFollowingInstructor(instructorId) ? 'secondary' : 'active'}  
             size='large'
             onPress={() => {
-                toggleFollowTeacher(teacherId);
+                const wasFollowing = isFollowingInstructor(instructorId);
+                toggleFollowInstructor(instructorId);
                 showToast({
-                    message: isFollowingTeacher(teacherId) ? '선생님 팔로우를 취소했어요' : '새로운 영상이 올라오면, 먼저 알려드릴게요!',
-                    iconType: isFollowingTeacher(teacherId) ? 'brokenHeart' : 'alarm',
+                    message: wasFollowing ? '선생님 팔로우를 취소했어요' : '새로운 영상이 올라오면, 먼저 알려드릴게요!',
+                    iconType: wasFollowing ? 'brokenHeart' : 'alarm',
                     theme: 'dark',
                 });
             }}
@@ -61,7 +62,8 @@ const PlayTeacherDetailScreen: React.FC = () => {
         <Text style={styles.representativeContentTitle}>대표 프로그램</Text>
         <View style={styles.representativeContentList}>
           <View style={styles.representativeContentItem}>
-            <ProgramList ProgramData={representativeContentData} />
+            {/* TODO: 강사 별 대표 프로그램 조회 API 로직 추가 (지금은 목업 데이터 사용) */}
+            <ProgramList programData={representativeContentData} />
           </View>
         </View>
       </View>
@@ -125,4 +127,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default PlayTeacherDetailScreen;
+export default PlayInstructorDetailScreen;

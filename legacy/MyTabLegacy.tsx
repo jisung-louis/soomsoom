@@ -1,24 +1,24 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
-import { colors } from '../../constants/colors';
-import { Button } from '../../components/common/buttons/Button';
-import { radius } from '../../constants/radius';
-import { ToggleButton } from '../../components/common/buttons/ToggleButton';
-import { syongsyongTypography, typography } from '../../constants/typography';
-import ArrowRight from '../../assets/icons/common/arrow_right.svg'; 
-import BadgeEmpty from '../../assets/icons/my/badge_empty.svg';
-import { MyStackParamList } from '../../navigations/tabs/MyStackNavigator';
+import { colors } from '../constants/colors';
+import { Button } from '../components/common/buttons/Button';
+import { radius } from '../constants/radius';
+import { ToggleButton } from '../components/common/buttons/ToggleButton';
+import { syongsyongTypography, typography } from '../constants/typography';
+import ArrowRight from '../assets/icons/common/arrow_right.svg'; 
+import BadgeEmpty from '../assets/icons/my/badge_empty.svg';
+import { MyStackParamList } from '../navigations/tabs/MyStackNavigator';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import LottieView from 'lottie-react-native';
-import CustomBottomSheet from '../../components/common/bottomsheet/CustomBottomSheet';
+import CustomBottomSheet from '../components/common/bottomsheet/CustomBottomSheet';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
-import MyRoomDecoration from '../subpages/my/MyRoomDecoration';
-import { ButtonSmall } from '../../components/common/buttons/ButtonSmall';
-import MyTabTopNavigation from '../../components/common/top-navigation/MyTabTopNavigation';
-import { roomItemList, getItemPosition } from '../../data/roomItemData';
-import { useRoomStore } from '../../stores/roomStore';
-import { useCurrencyStore } from '../../stores/currencyStore';
+import MyRoomDecoration from '../screens/subpages/my/MyRoomDecoration';
+import { ButtonSmall } from '../components/common/buttons/ButtonSmall';
+import MyTabTopNavigation from '../components/common/top-navigation/MyTabTopNavigation';
+import { roomItemList, getItemPosition } from '../data/roomItemData';
+import { useRoomStore } from '../stores/roomStore';
+import { useCurrencyStore } from '../stores/currencyStore';
 
 const screenWidth = Dimensions.get('window').width;
 const screenHeight = Dimensions.get('window').height;
@@ -108,7 +108,7 @@ const MyTab = () => {
   // selectedItems가 변경될 때마다 placedItems 업데이트
   useEffect(() => {
     // 선택된 아이템들을 고정 위치에 배치
-    const newPlacedItems: PlacedItem[] = selectedItems.map((itemId, index) => {
+    const newPlacedItems: PlacedItem[] = selectedItems.map((itemId: number, index: number) => {
       // 실제 아이템 데이터에서 정보 가져오기
       const itemData = roomItemList.find(item => item.id === itemId);
       if (!itemData) return null;
@@ -170,7 +170,7 @@ const MyTab = () => {
         </View>
         
         {/* 배치된 아이템들 렌더링 */}
-        {placedItems.map((item) => (
+        {placedItems.map((item: any) => (
           <View
             key={item.id}
             style={[
@@ -219,7 +219,7 @@ const MyTab = () => {
                 />
               </View>
               <View style={styles.statusCardContent}>
-                {mockStatusData.map((item, index) => (
+                {mockStatusData.map((item: any, index: number) => (
                   <View style={styles.statusCardContentItem} key={index}>
                     <Text style={styles.statusCardContentItemTitle}>{item.title}</Text>
                     <Text style={styles.statusCardContentItemValue}>{item.valueType === 'mm:ss' ? item.value : `${item.value}${item.valueType}`}</Text>

@@ -5,24 +5,24 @@ import { colors } from '../../../../constants/colors';
 import { radius } from '../../../../constants/radius';
 import { ToggleButton } from '../../../common/buttons/ToggleButton';
 
-type FollowTeacherData = {
+type FollowInstructorData = {
   id: number;
   name: string;
   title: string;
   profileImage: any;
 }
 
-type FollowTeacherListProps = {
-  followTeacherData: FollowTeacherData[];
+type FollowInstructorListProps = {
+  followInstructorData: FollowInstructorData[];
   followedIds: number[];
   onToggleFollow: (id: number) => void;
 };
 
-const FollowTeacherList = ({ followTeacherData, followedIds, onToggleFollow }: FollowTeacherListProps) => {
+const FollowInstructorList = ({ followInstructorData, followedIds, onToggleFollow }: FollowInstructorListProps) => {
   return (
     <View style={styles.listContainer}>
       {
-        followTeacherData.map((item) => (
+        followInstructorData.map((item) => (
           <View key={item.id} style={styles.cardContainer}>
             <View style={styles.card}>
               <Image source={item.profileImage} style={styles.profileImage} />
@@ -42,7 +42,7 @@ const FollowTeacherList = ({ followTeacherData, followedIds, onToggleFollow }: F
   );
 };
 
-export default FollowTeacherList;
+export default FollowInstructorList;
 
 const IMAGE_SIZE = 56; // 프로필 이미지 사이즈
 const styles = StyleSheet.create({

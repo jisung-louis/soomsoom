@@ -5,7 +5,8 @@ import { RouteProp, useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { PlayStackParamList } from '../../../navigations/tabs/PlayStackNavigator';
 import SubpageHeader from '../../../components/common/top-navigation/SubpageHeader';
-import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
+import { useSpringUpAnimation } from '../../../hooks/useSpringUpAnimation';
 import { colors } from '../../../constants/colors';
 import {
   PlayBreathStep0,
@@ -26,19 +27,18 @@ const PlayBreathScreen = ({route}: {route: RouteProp<PlayStackParamList, 'PlayBr
     navigation.goBack();
   };
 
-  const offset = useSharedValue(40); // 약간 더 튀어오르게
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [
-      { translateY: withSpring(offset.value, { damping: 10, stiffness: 250 }) }
-    ],
-  }));
+  // 스프링업 애니메이션 훅 사용
+  const { animatedStyle, triggerAnimation } = useSpringUpAnimation({
+    initialOffset: 40,
+    springConfig: { damping: 10, stiffness: 250 }
+  });
   
   useEffect(() => {
     if (step === 1) {
       console.log('bounce start');
-      offset.value = 0; // 이제 이 시점에 애니메이션 실행
+      triggerAnimation(); // 이제 이 시점에 애니메이션 실행
     }
-  }, [step]);
+  }, [step, triggerAnimation]);
 
   // Step 컴포넌트 핸들러들
   const handleStep0Finish = () => {

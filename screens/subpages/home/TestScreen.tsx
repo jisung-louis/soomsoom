@@ -14,7 +14,7 @@ import { usePlayStore } from '../../../stores/playStore';
 import { useAlarmStore } from '../../../stores/alarmStore';
 import { useRoomStore } from '../../../stores/roomStore';
 import { roomItemList } from '../../../data/roomItemData';
-import { contentData, teachersData } from '../../../data/playContentData';
+import { contentData, instructorsData } from '../../../data/playContentData';
 
 const TestScreen = () => {
   const navigation = useNavigation<StackNavigationProp<HomeStackParamList>>();
@@ -34,10 +34,10 @@ const TestScreen = () => {
     return content ? content.title.join(' ') : `컨텐츠 ${contentId}`;
   };
 
-  {/* 선생님 아이디 -> 선생님 이름 */}
-  const teacherIdToName = (teacherId: number) => {
-    const teacher = teachersData.find((item) => item.id === teacherId);
-    return teacher ? `${teacher.name} ${teacher.title}` : `선생님 ${teacherId}`;
+  {/* 강사 아이디 -> 강사 이름 */}
+  const instructorIdToName = (instructorId: number) => {
+    const instructor = instructorsData.find((item) => item.id === instructorId);
+    return instructor ? `${instructor.name} ${instructor.title}` : `강사 ${instructorId}`;
   };
   return (
     <SafeAreaView style={styles.container}>
@@ -66,8 +66,8 @@ const TestScreen = () => {
           <View style={styles.infoCard}>
             <Text style={styles.infoLabel}>팔로우한 선생님</Text>
             <Text style={styles.infoValue}>
-              {usePlayStore.getState().followedTeacherIds.length > 0 
-                ? usePlayStore.getState().followedTeacherIds.map((teacherId) => teacherIdToName(teacherId)).join(', ')
+              {usePlayStore.getState().followedInstructorIds.length > 0 
+                ? usePlayStore.getState().followedInstructorIds.map((instructorId) => instructorIdToName(instructorId)).join(', ')
                 : '없음'
               }
             </Text>

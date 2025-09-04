@@ -170,7 +170,7 @@ export const createRewardActions = () => {
 /**
  * 즐겨찾기 관련 통합 액션
  * - 컨텐츠 즐겨찾기 토글
- * - 선생님 팔로우 토글
+ * - 강사 팔로우 토글
  */
 export const createFavoriteActions = () => {
   const toggleContentFavorite = (contentId: number) => {
@@ -178,9 +178,9 @@ export const createFavoriteActions = () => {
     toggleFavorite(contentId);
   };
 
-  const toggleTeacherFollow = (teacherId: number) => {
-    const { toggleFollowTeacher } = usePlayStore.getState();
-    toggleFollowTeacher(teacherId);
+  const toggleInstructorFollow = (instructorId: number) => {
+    const { toggleFollowInstructor } = usePlayStore.getState();
+    toggleFollowInstructor(instructorId);
   };
 
   const isFavorite = (contentId: number) => {
@@ -188,16 +188,16 @@ export const createFavoriteActions = () => {
     return checkIsFavorite(contentId);
   };
 
-  const isFollowingTeacher = (teacherId: number) => {
-    const { isFollowingTeacher: checkIsFollowingTeacher } = usePlayStore.getState();
-    return checkIsFollowingTeacher(teacherId);
+  const isFollowingInstructor = (instructorId: number) => {
+    const { isFollowingInstructor: checkIsFollowingInstructor } = usePlayStore.getState();
+    return checkIsFollowingInstructor(instructorId);
   };
 
   return {
     toggleContentFavorite,
-    toggleTeacherFollow,
+    toggleInstructorFollow,
     isFavorite,
-    isFollowingTeacher,
+    isFollowingInstructor,
   };
 };
 
@@ -224,7 +224,7 @@ export const createStoreResetActions = () => {
   const resetPlayStore = () => {
     usePlayStore.setState({
       favoriteContents: INITIAL_PLAY_STATE.favoriteContents,
-      followedTeacherIds: INITIAL_PLAY_STATE.followedTeacherIds,
+      followedInstructorIds: INITIAL_PLAY_STATE.followedInstructorIds,
     });
   };
 

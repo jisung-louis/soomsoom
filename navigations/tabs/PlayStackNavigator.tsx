@@ -5,8 +5,8 @@ import PlayFavoriteScreen from '../../screens/subpages/play/PlayFavoriteScreen';
 import PlayHistoryScreen from '../../screens/subpages/play/PlayHistoryScreen';
 import PlayDetailScreen from '../../screens/subpages/play/PlayDetailScreen';
 import { ContentData } from '../../data/playContentData';
-import { TeacherData } from '../../data/playContentData';
-import PlayTeacherDetailScreen from '../../screens/subpages/play/PlayTeacherDetailScreen';
+import { InstructorData } from '../../data/playContentData';
+import PlayInstructorDetailScreen from '../../screens/subpages/play/PlayInstructorDetailScreen';
 import PlayBreathScreen from '../../screens/subpages/play/PlayBreathScreen';
 import PlayMeditationScreen from '../../screens/subpages/play/PlayMeditationScreen';
 import PlayResultScreen from '../../screens/subpages/play/PlayResultScreen';
@@ -17,7 +17,7 @@ export type PlayStackParamList = {
   PlayFavoriteScreen: undefined;
   PlayHistoryScreen: undefined;
   PlayDetailScreen: { content: ContentData };
-  PlayTeacherDetailScreen: { teacherId: number };
+  PlayInstructorDetailScreen: { instructorId: number };
   PlayBreathScreen: { content: ContentData };
   PlayBreathContentScreen: { content: ContentData };
   PlayMeditationScreen: { content: ContentData };
@@ -38,7 +38,7 @@ export default function PlayStackNavigator() {
       <Stack.Screen name="PlayFavoriteScreen" component={PlayFavoriteScreen} />
       <Stack.Screen name="PlayHistoryScreen" component={PlayHistoryScreen} />
       <Stack.Screen name="PlayDetailScreen" component={PlayDetailScreen}  />
-      <Stack.Screen name="PlayTeacherDetailScreen" component={PlayTeacherDetailScreen} />
+      <Stack.Screen name="PlayInstructorDetailScreen" component={PlayInstructorDetailScreen} />
       <Stack.Screen name="PlayBreathScreen" component={PlayBreathScreen} />
       <Stack.Screen name="PlayMeditationScreen" component={PlayMeditationScreen} options={{ gestureEnabled: false }} />
       <Stack.Screen name="PlayBreathContentScreen" component={PlayBreathContentScreen} />

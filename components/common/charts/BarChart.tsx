@@ -139,15 +139,15 @@ const BarChart = ({ currentYear, currentMonth, currentWeek, emotionReportData }:
   const currentWeekOpacities = getCurrentWeekOpacities();
 
   // 디버깅: 투명도 정보 출력
-  console.log('Current week opacities:', currentWeekOpacities);
-  console.log('Current month:', currentMonth);
-  console.log('Week dates with icon types:', getCurrentWeekDates().map((date, index) => ({
-    date: date.format('MM/DD'),
-    month: date.month() + 1,
-    isCurrentMonth: date.month() === currentMonth - 1,
-    iconType: date.month() === currentMonth - 1 ? 'active' : 'default',
-    emotion: currentWeekEmotions[index]
-  })));
+  // console.log('Current week opacities:', currentWeekOpacities);
+  // console.log('Current month:', currentMonth);
+  // console.log('Week dates with icon types:', getCurrentWeekDates().map((date, index) => ({
+  //   date: date.format('MM/DD'),
+  //   month: date.month() + 1,
+  //   isCurrentMonth: date.month() === currentMonth - 1,
+  //   iconType: date.month() === currentMonth - 1 ? 'active' : 'default',
+  //   emotion: currentWeekEmotions[index]
+  // })));
 
   return (
     <View style={styles.container}>
@@ -258,7 +258,7 @@ const styles = StyleSheet.create({
   },
   emptyBar: {
     width: 30,
-    height: 180,
+    height: 0,
     backgroundColor: colors.grayScale100,
     borderRadius: radius.r8,
   },

@@ -32,7 +32,7 @@ export const INITIAL_ALARM_STATE = {
 // 플레이 관련 초기 상태 (환경별 설정 사용)
 export const INITIAL_PLAY_STATE = {
   favoriteContents: initialStates.play.favoriteContents,
-  followedTeacherIds: initialStates.play.followedTeacherIds,
+  followedInstructorIds: initialStates.play.followedInstructorIds,
 };
 
 // 온보딩 관련 초기 상태

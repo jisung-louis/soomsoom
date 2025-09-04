@@ -7,7 +7,7 @@ import { Button } from '../common/buttons/Button';
 import { CheckboxList } from '../common/checkbox';
 import { focusOptions, timeOptions, CheckboxOption } from '../../data/onboardingData';
 import { OnboardingCountdown } from './OnboardingCountdown';
-import PlayResult from './PlayResult';
+import PlayResult from '../tabs/play/PlayResultScreen/PlayResult';
 import Register from './Register';
 import { ss, sv } from '../../utils/scale';
 import LottieView from 'lottie-react-native';

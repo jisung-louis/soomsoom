@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { syongsyongTypography, typography } from '../../../constants/typography';
@@ -12,7 +12,9 @@ import ShadowSVG from '../../../assets/icons/charactors/shadow.svg'
 import DefaultCharacter from '../../../assets/icons/charactors/default_character.svg'
 import CheckIcon from '../../../assets/icons/common/check_active.svg'
 import { Button } from '../../../components/common/buttons/Button';
-import PlayResult from '../../../components/onboarding/PlayResult';
+import PlayResult from '../../../components/tabs/play/PlayResultScreen/PlayResult';
+import Animated from 'react-native-reanimated';
+import { useSpringUpAnimation } from '../../../hooks/useSpringUpAnimation';
 
 const MOCK_ACTIVITY_DESCRIPTION = [
         '뇌에 맑은 산소가 가득 차올랐고...',
@@ -39,6 +41,19 @@ const PlayResultScreen = () => {
         // });
         navigation.popToTop();
     };
+
+    // 슬라이드업 애니메이션 훅 사용
+    const { animatedStyle: buttonAnimatedStyle, triggerAnimation } = useSpringUpAnimation({
+        initialOffset: 200,
+        springConfig: { damping: 10, stiffness: 250 }
+    });
+  
+    const handleResultAnimationsEnd = useCallback(() => {
+        setTimeout(() => {
+            // 아래에서 올라오면서 튕기는 효과
+            triggerAnimation();
+        }, 500);
+    }, [triggerAnimation]);
 
     return (
         <View style={styles.background}>
@@ -74,15 +89,21 @@ const PlayResultScreen = () => {
                         </View>
                     </View>
                 </View> */}{/* PlayResult.tsx 컴포넌트로 분리 및 공통관리 */}
-                <PlayResult style={styles.playResult} activityDescription={MOCK_ACTIVITY_DESCRIPTION} />
-                <Button
-                    icon="heart"
-                    title="하트 보상받기"
-                    size="large"
-                    variant="active"
-                    style={styles.button}
-                    onPress={handleActivityEnd}
+                <PlayResult 
+                    style={styles.playResult} 
+                    activityDescription={MOCK_ACTIVITY_DESCRIPTION}
+                    onAnimationsEnd={handleResultAnimationsEnd}
                 />
+                <Animated.View style={[styles.buttonContainer, buttonAnimatedStyle]}>
+                    <Button
+                        icon="heart"
+                        title="하트 보상받기"
+                        size="large"
+                        variant="active"
+                        style={styles.button}
+                        onPress={handleActivityEnd}
+                    />
+                </Animated.View>
             </SafeAreaView>
         </View>
     );
@@ -152,9 +173,12 @@ const styles = StyleSheet.create({
         ...typography.body2,
         color: colors.grayScale900,
     },
+    buttonContainer: {
+        alignItems: 'center',
+        marginBottom: 20,
+    },
     button: {
         alignSelf: 'center',
-        marginBottom: 20,
     },
 });
 

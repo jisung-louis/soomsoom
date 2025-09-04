@@ -9,10 +9,12 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { PlayStackParamList } from '../../../navigations/tabs/PlayStackNavigator';
 import { TabMenu } from '../../../components/common/tabmenu/TabMenu';
 import ProgramList from '../../../components/tabs/play/common/ProgramList';
-import FollowTeacherList from '../../../components/tabs/play/PlayFavoriteScreen/FollowTeacherList';
+import FollowInstructorList from '../../../components/tabs/play/PlayFavoriteScreen/FollowInstructorList';
 import { TabView, SceneMap } from 'react-native-tab-view';
-import { TeacherData, contentData, teachersData } from '../../../data/playContentData';
+import { contentData } from '../../../data/playContentData';
 import { usePlayStore } from '../../../stores/playStore';
+import { getFollowedInstructors, FollowedInstructorSummary } from '../../../services/instructorService';
+import { useToast } from '../../../contexts/ToastContext';
 
 const PlayFavoriteScreen = () => {
   const navigation = useNavigation<StackNavigationProp<PlayStackParamList>>();
@@ -30,18 +32,20 @@ const PlayFavoriteScreen = () => {
   // zustand store 사용
   const { 
     favoriteContents, 
-    followedTeacherIds, 
-    toggleFollowTeacher, 
-    isFollowingTeacher,
+    followedInstructorIds, 
+    toggleFollowInstructor, 
+    isFollowingInstructor,
     initializeFavorites,
-    initializeFollowedTeachers 
+    initializeFollowedInstructors 
   } = usePlayStore();
+
+  const { showToast } = useToast();
 
   // 초기 데이터 로드 (실제로는 앱 시작 시 한 번만 호출)
   useEffect(() => {
     // TODO: 백엔드에서 초기 데이터를 가져와서 초기화
     // initializeFavorites(initialFavorites);
-    // initializeFollowedTeachers(initialFollowedTeachers);
+    // initializeFollowedInstructors(initialFollowedInstructors);
   }, []);
 
   // 즐겨찾기 데이터 필터링
@@ -49,24 +53,30 @@ const PlayFavoriteScreen = () => {
     favoriteContents.some((favorite) => favorite.contentId === content.id)
   );
 
-  // 팔로우한 선생님 데이터 필터링 (이제 단순한 number[] 구조)
-  // local state for followed teachers and refreshing
-  const [localFollowedTeachers, setLocalFollowedTeachers] = useState<TeacherData[]>([]);
+  // 팔로우한 강사 목록: 서버 데이터 사용
+  const [localFollowedInstructors, setLocalFollowedInstructors] = useState<FollowedInstructorSummary[]>([]);
   const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => {
-    const filtered = teachersData.filter((teacher) =>
-      followedTeacherIds.includes(teacher.id)
-    );
-    setLocalFollowedTeachers(filtered);
-  }, [followedTeacherIds]);
+  const fetchFollowed = async () => {
+    try {
+      const res = await getFollowedInstructors({ page: 1, size: 12, sort: 'createdAt,desc' });
+      setLocalFollowedInstructors(res.content);
+    } catch (e) {
+      showToast({
+        message: '네트워크 연결을 확인한 뒤 다시 시도해주세요.',
+        iconType: 'alarm',
+        theme: 'dark',
+      });
+    }
+  };
 
-  const onRefresh = () => {
+  useEffect(() => {
+    fetchFollowed();
+  }, []);
+
+  const onRefresh = async () => {
     setRefreshing(true);
-    const filtered = teachersData.filter((teacher) =>
-      followedTeacherIds.includes(teacher.id)
-    );
-    setLocalFollowedTeachers(filtered);
+    await fetchFollowed();
     setRefreshing(false);
   };
 
@@ -82,7 +92,7 @@ const PlayFavoriteScreen = () => {
             data={filteredFavoriteContent}
             keyExtractor={(item) => item.id.toString()}
             renderItem={({ item }) => (
-              <ProgramList ProgramData={[item]} />
+              <ProgramList programData={[item]} />
             )}
           />
         )}
@@ -92,7 +102,7 @@ const PlayFavoriteScreen = () => {
   const renderFollowTab = () => {
     return (
       <View style={styles.contentContainer}>
-        {localFollowedTeachers.length === 0 ? (
+        {localFollowedInstructors.length === 0 ? (
           <View style={styles.emptyContainer}>
             <Image
               source={require('../../../assets/images/play/playFavoriteScreen/empty_follow_image.png')}
@@ -101,13 +111,18 @@ const PlayFavoriteScreen = () => {
           </View>
         ) : (
           <FlatList
-            data={localFollowedTeachers}
-            keyExtractor={(item) => item.id.toString()}
+            data={localFollowedInstructors}
+            keyExtractor={(item) => item.instructorId.toString()}
             renderItem={({ item }) => (
-              <FollowTeacherList
-                followTeacherData={[item]}
-                followedIds={followedTeacherIds}
-                onToggleFollow={toggleFollowTeacher}
+              <FollowInstructorList
+                followInstructorData={[{
+                  id: item.instructorId,
+                  name: item.name,
+                  title: '',
+                  profileImage: item.profileImageUrl ? { uri: item.profileImageUrl } : require('../../../assets/images/play/playFavoriteScreen/default_image_1.png')
+                }]}
+                followedIds={followedInstructorIds}
+                onToggleFollow={toggleFollowInstructor}
               />
             )}
             refreshing={refreshing}

@@ -76,9 +76,9 @@ const PlayBar = ({style, content, handleToggleFavorite, isFavorite, onEnd}: Play
             </TouchableOpacity>
           </View>
           <AuthorInfo
-            teacherId={content.teacherId}
+            instructorId={content.instructorId}
             guide={content.guide}
-            onPressTeacher={() => {}}
+            onPressInstructor={() => {}}
           />
         </View>
         {/* 진행 바 */}

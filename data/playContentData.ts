@@ -10,14 +10,14 @@ export type ContentData = {
   image: any;
   time: string;
   type: PlayContentType;
-  teacherId: number;
+  instructorId: number;
   guide: string;
   audio?: any;
   description: string[];
 };
 
-// 선생님 데이터 구조
-export type TeacherData = {
+// 강사 데이터 구조
+export type InstructorData = {
   id: number;
   name: string;
   title: string;
@@ -40,10 +40,10 @@ export type FavoriteContentData = {
   contentId: number;
 };
 
-// 유저가 팔로우한 선생님 데이터 구조 (더 이상 사용하지 않음 - 단순한 number[]로 대체)
-// export type FollowedTeacherData = {
+// 유저가 팔로우한 강사 데이터 구조 (더 이상 사용하지 않음 - 단순한 number[]로 대체)
+// export type FollowedInstructorData = {
 //   id: number;
-//   teacherId: number[];
+//   instructorId: number[];
 // };
 
 // 컨텐츠 데이터
@@ -54,7 +54,7 @@ export const contentData: ContentData[] = [
     image: require('../assets/images/play/playFavoriteScreen/default_image_1.png'),
     time: '5min',
     type: 'meditation',
-    teacherId: 1,
+    instructorId: 1,
     guide: '안내자1',
     audio: require('../assets/audios/test_audio.mp3'),
     description: ['숨을 쉬는 데에도 모양이 있대요!', '네 박자 리듬에 맞춰 들숨과 날숨, 멈춤을 반복하다', '보면 어느새 마음이 편안해지는 나만의 5분 여유가', '생길 거 예요!'],
@@ -65,7 +65,7 @@ export const contentData: ContentData[] = [
     image: require('../assets/images/play/playFavoriteScreen/default_image_2.png'),
     time: '5min',
     type: 'meditation',
-    teacherId: 2,
+    instructorId: 2,
     guide: '안내자2',
     audio: require('../assets/audios/test_audio.mp3'),
     description: ['잠을 못 이루는 밤 컨텐츠의 설명 부분입니다.', '잠을 못 이루는 밤 컨텐츠의 설명 부분입니다.', '잠을 못 이루는 밤 컨텐츠의 설명 부분입니다.'],
@@ -76,7 +76,7 @@ export const contentData: ContentData[] = [
     image: require('../assets/images/play/playFavoriteScreen/default_image_1.png'),
     time: '5min',
     type: 'breath',
-    teacherId: 0,
+    instructorId: 0,
     guide: 'DEFAULT GUIDE',
     description: ['잠 못 드는 밤, 이완 호흡 컨텐츠의 설명 부분입니다.'],
   },
@@ -86,7 +86,7 @@ export const contentData: ContentData[] = [
     image: require('../assets/images/play/playFavoriteScreen/default_image_1.png'),
     time: '5min',
     type: 'breath',
-    teacherId: 0,
+    instructorId: 0,
     guide: 'DEFAULT GUIDE',
     description: ['답답함을 뻥! 풀어주는 한숨 컨텐츠의 설명 부분입니다.'],
   },
@@ -96,18 +96,18 @@ export const contentData: ContentData[] = [
     image: require('../assets/images/play/playFavoriteScreen/default_image_1.png'),
     time: '5min',
     type: 'breath',
-    teacherId: 0,
+    instructorId: 0,
     guide: 'DEFAULT GUIDE',
     description: ['생각이 많을 때, 교호 호흡 컨텐츠의 설명 부분입니다.'],
   },
 ];
 
-// 선생님 데이터
-export const teachersData: TeacherData[] = [
+// 강사 데이터
+export const instructorsData: InstructorData[] = [
   {
     id: 0,
     name: 'DEFAULT',
-    title: 'TEACHER',
+    title: 'INSTRUCTOR',
     profileImage: require('../assets/images/play/playFavoriteScreen/default_image_1.png'),
     bio: 'DEFAULT BIO',
   },

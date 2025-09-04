@@ -7,12 +7,20 @@ import ArrowLeftIcon from '../../../assets/icons/common/arrow_back.svg';
 import ArrowRightIcon from '../../../assets/icons/common/arrow_right.svg';
 
 interface CalenderHeaderProps {
-  year: number;
-  month: number;
+  year: number;            // 기본 표시는 주의 시작일(일요일) 기준 연도
+  month: number;           // 기본 표시는 주의 시작일(일요일) 기준 월
   onPrev: () => void;
   onNext: () => void;
   viewType: 'week' | 'month';
   onChangeViewType: (type: 'week' | 'month') => void;
+  /**
+   * 해당 주에 '오늘'이 포함되어 있다면 true.
+   * true이고 todayYear/todayMonth가 넘어오면, 표시를 '오늘' 기준으로 교체한다.
+   */
+  containsToday?: boolean;
+  /** 오늘 기준 연/월 (containsToday===true 일 때 사용할 값) */
+  todayYear?: number;
+  todayMonth?: number;
   style?: any;
 }
 
@@ -24,7 +32,12 @@ const RecordCalenderHeader: React.FC<CalenderHeaderProps> = ({
   viewType,
   onChangeViewType,
   style,
+  containsToday,
+  todayYear,
+  todayMonth,
 }) => {
+  const displayYear = containsToday && typeof todayYear === 'number' ? todayYear : year;
+  const displayMonth = containsToday && typeof todayMonth === 'number' ? todayMonth : month;
   return (
     <View style={[styles.container, style]}>
       <View style={styles.left}>
@@ -32,9 +45,9 @@ const RecordCalenderHeader: React.FC<CalenderHeaderProps> = ({
           <ArrowLeftIcon width={24} height={24} color={colors.grayScale800} />
         </Pressable>
         <View style={styles.monthTextContainer}>
-          <Text style={styles.monthNumberText}>{`${year}`}</Text>
+          <Text style={styles.monthNumberText}>{`${displayYear}`}</Text>
           <Text style={styles.monthText}>년 </Text>
-          <Text style={styles.monthNumberText}>{`${month}`}</Text>
+          <Text style={styles.monthNumberText}>{`${displayMonth}`}</Text>
           <Text style={styles.monthText}>월</Text>
         </View>
         <Pressable onPress={onNext} style={styles.arrowBtn} accessibilityLabel="다음 달">

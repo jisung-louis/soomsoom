@@ -8,8 +8,8 @@ interface PlayState {
   // 즐겨찾기 컨텐츠 관리
   favoriteContents: FavoriteContentData[];
   
-  // 팔로우한 선생님 관리 (단순화된 구조)
-  followedTeacherIds: number[];
+  // 팔로우한 강사 관리 (단순화된 구조)
+  followedInstructorIds: number[];
   
   // 액션들
   addToFavorites: (contentId: number) => void;
@@ -17,14 +17,14 @@ interface PlayState {
   toggleFavorite: (contentId: number) => void;
   isFavorite: (contentId: number) => boolean;
   
-  followTeacher: (teacherId: number) => void;
-  unfollowTeacher: (teacherId: number) => void;
-  toggleFollowTeacher: (teacherId: number) => void;
-  isFollowingTeacher: (teacherId: number) => boolean;
+  followInstructor: (instructorId: number) => void;
+  unfollowInstructor: (instructorId: number) => void;
+  toggleFollowInstructor: (instructorId: number) => void;
+  isFollowingInstructor: (instructorId: number) => boolean;
   
   // 초기화
   initializeFavorites: (favorites: FavoriteContentData[]) => void;
-  initializeFollowedTeachers: (teacherIds: number[]) => void;
+  initializeFollowedInstructors: (instructorIds: number[]) => void;
 }
 
 export const usePlayStore = create<PlayState>()(
@@ -32,7 +32,7 @@ export const usePlayStore = create<PlayState>()(
     (set, get) => ({
       // 초기 상태 (상수에서 가져옴)
       favoriteContents: INITIAL_PLAY_STATE.favoriteContents,
-      followedTeacherIds: [],
+      followedInstructorIds: [],
   
   // 즐겨찾기 관련 액션
   addToFavorites: (contentId: number) => {
@@ -71,34 +71,34 @@ export const usePlayStore = create<PlayState>()(
     return get().favoriteContents.some(fav => fav.contentId === contentId);
   },
   
-  // 선생님 팔로우 관련 액션 (단순화된 구조)
-  followTeacher: (teacherId: number) => {
+  // 강사 팔로우 관련 액션 (단순화된 구조)
+  followInstructor: (instructorId: number) => {
     set((state) => {
-      if (state.followedTeacherIds.includes(teacherId)) return state;
+      if (state.followedInstructorIds.includes(instructorId)) return state;
       return {
-        followedTeacherIds: [...state.followedTeacherIds, teacherId],
+        followedInstructorIds: [...state.followedInstructorIds, instructorId],
       };
     });
   },
   
-  unfollowTeacher: (teacherId: number) => {
+  unfollowInstructor: (instructorId: number) => {
     set((state) => ({
-      followedTeacherIds: state.followedTeacherIds.filter(id => id !== teacherId),
+      followedInstructorIds: state.followedInstructorIds.filter(id => id !== instructorId),
     }));
   },
   
-  toggleFollowTeacher: (teacherId: number) => {
-    const { isFollowingTeacher, followTeacher, unfollowTeacher } = get();
+  toggleFollowInstructor: (instructorId: number) => {
+    const { isFollowingInstructor, followInstructor, unfollowInstructor } = get();
     
-    if (isFollowingTeacher(teacherId)) {
-      unfollowTeacher(teacherId);
+    if (isFollowingInstructor(instructorId)) {
+      unfollowInstructor(instructorId);
     } else {
-      followTeacher(teacherId);
+      followInstructor(instructorId);
     }
   },
   
-  isFollowingTeacher: (teacherId: number) => {
-    return get().followedTeacherIds.includes(teacherId);
+  isFollowingInstructor: (instructorId: number) => {
+    return get().followedInstructorIds.includes(instructorId);
   },
   
   // 초기화 액션
@@ -106,8 +106,8 @@ export const usePlayStore = create<PlayState>()(
     set({ favoriteContents: favorites });
   },
   
-  initializeFollowedTeachers: (teacherIds: number[]) => {
-    set({ followedTeacherIds: teacherIds });
+  initializeFollowedInstructors: (instructorIds: number[]) => {
+    set({ followedInstructorIds: instructorIds });
   },
     }),
     {

@@ -1,6 +1,8 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import dayjs from 'dayjs';
-import { emotionService, SaveEmotionRecordRequest } from '../services/emotionService';
+import { emotionStatsService } from '../services/emotionStatsService';
+import { emotionDiaryService } from '../services/emotionDiaryService';
+import { EmotionType } from '../types';
 import { formatDateForServer } from '../utils/timeUtils';
 import { AppError, ErrorType } from '../utils/errorHandler';
 
@@ -87,21 +89,20 @@ export const useEmotionRecord = (date: string, emotion: string) => {
     setIsSaving(true);
 
     try {
-      // 감정 기록 데이터 구성 (서버 기준 날짜 형식 사용)
-      const emotionRecordData: SaveEmotionRecordRequest = {
-        date: formatDateForServer(date), // Asia/Seoul 타임존 기준
-        emotion,
-        content: content.trim(),
-        timestamp: new Date().toISOString(),
+      // 감정 일기 데이터 구성 (신규 실제 API 스펙)
+      const payload = {
+        date: formatDateForServer(date), // Asia/Seoul 타임존 기준 yyyy-MM-dd
+        emotion: emotion as EmotionType,
+        memo: content.trim(),
       };
 
-      console.log('[감정 기록 저장]', emotionRecordData);
+      console.log('[감정 일기 등록]', payload);
 
-      // 백엔드에 저장 요청
-      await emotionService.saveEmotionRecord(emotionRecordData);
+      // 백엔드에 저장 요청 (신규 서비스)
+      await emotionDiaryService.createEmotionDiary(payload);
 
       // 첫 기록일 체크 (서버 기준 날짜 사용)
-      const isFirstRecord = await emotionService.isFirstRecord(formatDateForServer(date));
+      const isFirstRecord = await emotionDiaryService.isFirstRecord(formatDateForServer(date));
 
       return {
         success: true,
@@ -147,7 +148,7 @@ export const useEmotionRecord = (date: string, emotion: string) => {
    * useMemo로 최적화하여 date가 변경될 때만 재계산
    */
   const formattedDate = useMemo(() => {
-    return dayjs(date).format('MM.DD');
+    return dayjs(date).format('YY.MM.DD');
   }, [date]);
 
   return {

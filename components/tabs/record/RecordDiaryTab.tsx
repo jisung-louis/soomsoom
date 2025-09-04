@@ -16,6 +16,9 @@ type RecordDiaryTabProps = {
   onDayPress: (date: any) => void;
   navigation: any;
   styles: any;
+  containsToday?: boolean;
+  todayYear?: number;
+  todayMonth?: number;
 };
 
 const RecordDiaryTab = ({
@@ -27,7 +30,10 @@ const RecordDiaryTab = ({
   onViewTypeChange,
   onDayPress,
   navigation,
-  styles
+  styles,
+  containsToday,
+  todayYear,
+  todayMonth
 }: RecordDiaryTabProps) => {
   return (
     <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
@@ -39,6 +45,9 @@ const RecordDiaryTab = ({
         viewType={viewType}
         onChangeViewType={onViewTypeChange}
         style={styles.calenderHeader}
+        containsToday={containsToday}
+        todayYear={todayYear}
+        todayMonth={todayMonth}
       />
       {viewType === 'week' && (
         <RecordWeekCalendar

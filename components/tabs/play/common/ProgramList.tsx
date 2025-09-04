@@ -11,19 +11,19 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { PlayStackParamList } from '../../../../navigations/tabs/PlayStackNavigator';
 import { ContentData } from '../../../../data/playContentData';
     
-type ProgramData = {
+type programData = {
   id: number;
   title: string[];
   image: any;
   time: string;
 }
 
-const ProgramList = ({ ProgramData }: { ProgramData: ProgramData[] }) => {
+const ProgramList = ({ programData }: { programData: programData[] }) => {
   const navigation = useNavigation<StackNavigationProp<PlayStackParamList>>();
   return(
     <View style={styles.container}>
       {
-        ProgramData.map((item) => (
+        programData.map((item) => (
           <TouchableOpacity key={item.id} style={styles.cardContainer} onPress={() => {navigation.navigate('PlayDetailScreen', { content: item as ContentData })}}> 
             <View style={styles.card}>
               <Image source={item.image} style={styles.image} resizeMode='contain' />

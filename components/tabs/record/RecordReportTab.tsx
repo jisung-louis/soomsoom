@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, TouchableWithoutFeedback, Animated, Easing } from 'react-native';
 import { colors } from '../../../constants/colors';
 import { syongsyongTypography, typography } from '../../../constants/typography';
@@ -7,7 +7,7 @@ import ArrowRightIcon from '../../../assets/icons/common/arrow_right.svg';
 import { Surface } from '../../common/surface/Surface';
 import InfoIcon from '../../../assets/icons/common/info.svg';
 import { radius } from '../../../constants/radius';
-import { emotionService } from '../../../services/emotionService';
+import { emotionStatsService, MonthlyStatsItem, DailyDiaryItem } from '../../../services/emotionStatsService';
 import { EmotionRankingData, EmotionType } from '../../../types';
 import LoadingSpinner from '../../common/loading/LoadingSpinner';
 import ErrorMessage from '../../common/error/ErrorMessage';
@@ -22,7 +22,6 @@ import { characterIconMap } from '../../../utils/iconMap';
 import { Button } from '../../common/buttons/Button';
 import BubbleTalk from '../../common/bubbletalk/BubbleTalk';
 import BarChart from '../../common/charts/BarChart';
-import { emotionReportMockData } from '../../../data/emotionReportMockData';
 import EmptyCatIcon from '../../../assets/icons/record/report/cat_write2.svg';
 import EmptyMonthIcon from '../../../assets/icons/record/report/cat_quiet.svg';
 import { ButtonSmall } from '../../common/buttons/ButtonSmall';
@@ -64,15 +63,21 @@ const PodiumBar = ({ height, backgroundColor, delayMs = 0, children }: { height:
 
 interface RecordReportTabProps {
   onStartRecordPress: () => void;
+  monthlyStatsData: MonthlyStatsItem[];
+  reportCurrentYear: number;
+  reportCurrentMonth: number;
+  onReportMonthChange: (direction: 'prev' | 'next') => void;
 }
 
-const RecordReportTab = ({onStartRecordPress}: RecordReportTabProps) => {
-  const [emotionRankingData, setEmotionRankingData] = useState<EmotionRankingData[]>([]);
+const RecordReportTab = ({
+  onStartRecordPress,
+  monthlyStatsData,
+  reportCurrentYear,
+  reportCurrentMonth,
+  onReportMonthChange
+}: RecordReportTabProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [currentYear, setCurrentYear] = useState(dayjs().year());
-  const [currentMonth, setCurrentMonth] = useState(dayjs().month() + 1);
-  const [currentWeek, setCurrentWeek] = useState(dayjs().week());
   const [selectedSegment, setSelectedSegment] = useState<{
     item: EmotionRankingData;
     index: number;
@@ -80,52 +85,154 @@ const RecordReportTab = ({onStartRecordPress}: RecordReportTabProps) => {
   } | null>(null);
   const [scrollOffset, setScrollOffset] = useState(0);  // 스크롤 오프셋 추가
   const [showParticle, setShowParticle] = useState(true);
-  // 페이지 진입 시 및 월 변경 시 데이터 로드
+  
+  // 주차 관련 상태 (내부에서 관리)
+  const [currentWeek, setCurrentWeek] = useState(dayjs().week());
+  const [monthlyDataCache, setMonthlyDataCache] = useState<Record<string, DailyDiaryItem[]>>({});
+  
+  // 파티클 애니메이션 표시
   useEffect(() => {
-    loadEmotionData();
-    // 월 변경 시 주차를 해당 월의 첫째 주로 리셋
-    resetWeekToFirstWeekOfMonth();
     setShowParticle(true);
-  }, [currentYear, currentMonth]);
+  }, [monthlyStatsData]);
 
-  const loadEmotionData = async () => {
-    setIsLoading(true);
-    setError(null);
-    
-    try {
-      const data = await emotionService.getMonthlyEmotionRanking(currentYear, currentMonth);
-      setEmotionRankingData(data);
-    } catch (error) {
-      console.error('감정 데이터 로드 실패:', error);
-      setError('감정 데이터를 불러오는데 실패했습니다.');
-    } finally {
-      setIsLoading(false);
+  // 주차 변경 핸들러 (내부에서 처리)
+  const handleWeekChange = useCallback((direction: 'prev' | 'next') => {
+    if (direction === 'prev') {
+      const firstWeekOfMonth = dayjs().year(reportCurrentYear).month(reportCurrentMonth - 1).startOf('month').week();
+      if (currentWeek > firstWeekOfMonth) {
+        setCurrentWeek(currentWeek - 1);
+      }
+    } else {
+      const lastWeekOfMonth = dayjs().year(reportCurrentYear).month(reportCurrentMonth - 1).endOf('month').week();
+      if (currentWeek < lastWeekOfMonth) {
+        setCurrentWeek(currentWeek + 1);
+      }
     }
+  }, [reportCurrentYear, reportCurrentMonth, currentWeek]);
+
+  // 월별 모든 주차 데이터 미리 로딩
+  const loadMonthlyData = useCallback(async () => {
+    try {
+      const monthKey = `${reportCurrentYear}-${reportCurrentMonth}`;
+      
+      // 이미 캐시된 데이터가 있으면 스킵
+      if (monthlyDataCache[monthKey]) {
+        return;
+      }
+
+      // emotionStatsService가 __DEV__ 분기를 처리하므로 여기서는 분기하지 않음
+      const startOfMonth = dayjs().year(reportCurrentYear).month(reportCurrentMonth - 1).startOf('month');
+      const endOfMonth = dayjs().year(reportCurrentYear).month(reportCurrentMonth - 1).endOf('month');
+      const dailyData = await emotionStatsService.getDailyEmotionDiaries({
+        from: startOfMonth.format('YYYY-MM-DD'),
+        to: endOfMonth.format('YYYY-MM-DD'),
+      });
+      
+      setMonthlyDataCache(prev => ({
+        ...prev,
+        [monthKey]: dailyData
+      }));
+    } catch (error) {
+      console.error('월별 감정 기록 로드 실패:', error);
+    }
+  }, [reportCurrentYear, reportCurrentMonth, monthlyDataCache]);
+
+  // 현재 주차의 데이터를 캐시에서 가져오기
+  const getCurrentWeekData = useCallback((): DailyDiaryItem[] => {
+    const monthKey = `${reportCurrentYear}-${reportCurrentMonth}`;
+    const monthData = monthlyDataCache[monthKey] || [];
+    
+    // 현재 주차의 시작일과 종료일 계산
+    const startOfWeek = dayjs().year(reportCurrentYear).week(currentWeek).startOf('week');
+    const endOfWeek = dayjs().year(reportCurrentYear).week(currentWeek).endOf('week');
+    
+    // 해당 주차에 속하는 데이터만 필터링
+    return monthData.filter(item => {
+      const itemDate = dayjs(item.recordDate);
+      return (itemDate.isSame(startOfWeek, 'day') || itemDate.isAfter(startOfWeek, 'day')) && 
+             (itemDate.isSame(endOfWeek, 'day') || itemDate.isBefore(endOfWeek, 'day'));
+    });
+  }, [reportCurrentYear, reportCurrentMonth, currentWeek, monthlyDataCache]);
+
+  // 월 변경 시 주차를 해당 월의 첫째 주로 리셋
+  const resetWeekToFirstWeekOfMonth = useCallback(() => {
+    const firstWeekOfMonth = dayjs().year(reportCurrentYear).month(reportCurrentMonth - 1).startOf('month').week();
+    setCurrentWeek(firstWeekOfMonth);
+  }, [reportCurrentYear, reportCurrentMonth]);
+
+  // 월이 변경될 때 주차를 첫째 주로 리셋하고 월별 데이터 로딩
+  useEffect(() => {
+    resetWeekToFirstWeekOfMonth();
+    loadMonthlyData();
+  }, [reportCurrentYear, reportCurrentMonth, resetWeekToFirstWeekOfMonth, loadMonthlyData]);
+
+  // 감정 타입을 제목으로 변환하는 헬퍼 함수
+  const getEmotionTitle = (emotion: EmotionType): string => {
+    const emotionTitles: Record<EmotionType, string> = {
+      happy: '행복해요!',
+      good: '좋아요!',
+      soso: '그냥 그래요!',
+      depressed: '우울해요!',
+      sad: '슬퍼요!',
+      angry: '화나요!',
+    };
+    return emotionTitles[emotion];
   };
 
-  // 월 변경 핸들러
-  const handleMonthChange = (direction: 'prev' | 'next') => {
-    if (direction === 'prev') {
-      const prevMonth = dayjs().year(currentYear).month(currentMonth - 2);
-      setCurrentYear(prevMonth.year());
-      setCurrentMonth(prevMonth.month() + 1);
-      
-      // 해당 월의 첫째 주로 currentWeek 변경
-      const firstWeekOfMonth = prevMonth.startOf('month').week();
-      setCurrentWeek(firstWeekOfMonth);
-    } else {
-      const nextMonth = dayjs().year(currentYear).month(currentMonth);
-      setCurrentYear(nextMonth.year());
-      setCurrentMonth(nextMonth.month() + 1);
-      
-      // 해당 월의 첫째 주로 currentWeek 변경
-      const firstWeekOfMonth = nextMonth.startOf('month').week();
-      setCurrentWeek(firstWeekOfMonth);
+  // monthlyStatsData를 ranking 형식으로 변환
+  const emotionRankingData = useMemo(() => {
+    // monthlyStatsData가 비어있거나 유효하지 않으면 빈 배열 반환
+    if (!monthlyStatsData || !Array.isArray(monthlyStatsData) || monthlyStatsData.length === 0) {
+      return [];
     }
+
+    // 안전한 아이콘 가져오기 함수
+    const getSafeIcon = (emotion: EmotionType) => {
+      try {
+        const icon = characterIconMap.active[emotion as keyof typeof characterIconMap.active];
+        if (icon && typeof icon === 'function') {
+          return icon;
+        }
+        // 아이콘이 없거나 유효하지 않으면 happy 아이콘 사용
+        return characterIconMap.active.happy;
+      } catch (error) {
+        console.warn('Error getting icon for emotion:', emotion, error);
+        return characterIconMap.active.happy;
+      }
+    };
+
+    return monthlyStatsData
+      .map(stat => ({
+        emotion: stat.emotion,
+        title: getEmotionTitle(stat.emotion),
+        count: stat.count,
+        percentage: stat.percentage,
+        icon: getSafeIcon(stat.emotion),
+      }))
+      .sort((a, b) => b.count - a.count); // count 기준 내림차순 정렬
+  }, [monthlyStatsData]);
+
+  // API 데이터를 BarChart 형식으로 변환하는 함수
+  const convertDailyDataToBarChartFormat = (dailyData: DailyDiaryItem[]): Record<string, Record<string, string>> => {
+    const result: Record<string, Record<string, string>> = {};
+    
+    dailyData.forEach(item => {
+      const date = dayjs(item.recordDate);
+      const yearMonth = date.format('YYYY-MM');
+      const day = date.format('D');
+      
+      if (!result[yearMonth]) {
+        result[yearMonth] = {};
+      }
+      
+      result[yearMonth][day] = item.emotion;
+    });
+    
+    return result;
   };
 
   // 현재 월이 미래인지 확인
-  const isCurrentMonthFuture = dayjs().year(currentYear).month(currentMonth).isAfter(dayjs(), 'month');
+  const isCurrentMonthFuture = dayjs().year(reportCurrentYear).month(reportCurrentMonth).isAfter(dayjs(), 'month');
 
   // 상위 3개 감정을 시상대 순서로 정렬 (2등, 1등, 3등)
   const podiumEmotions = [
@@ -141,7 +248,7 @@ const RecordReportTab = ({onStartRecordPress}: RecordReportTabProps) => {
 
   // 에러 발생
   if (error) {
-    return <ErrorMessage message={error} onRetry={loadEmotionData} />;
+    return <ErrorMessage message={error} onRetry={() => {}} />;
   }
 
   const handleSegmentPress = (item: EmotionRankingData, index: number, meta: { 
@@ -170,34 +277,13 @@ const RecordReportTab = ({onStartRecordPress}: RecordReportTabProps) => {
     setSelectedSegment(null);
   };
 
-  const handleWeekChange = (direction: 'prev' | 'next') => {
-    if (direction === 'prev') {
-      // 이전 주가 현재 월의 첫 주보다 작아지지 않도록 제한
-      const firstWeekOfMonth = dayjs().year(currentYear).month(currentMonth - 1).startOf('month').week();
-      if (currentWeek > firstWeekOfMonth) {
-        setCurrentWeek(currentWeek - 1);
-      }
-    } else {
-      // 다음 주가 현재 월의 마지막 주보다 커지지 않도록 제한
-      const lastWeekOfMonth = dayjs().year(currentYear).month(currentMonth - 1).endOf('month').week();
-      if (currentWeek < lastWeekOfMonth) {
-        setCurrentWeek(currentWeek + 1);
-      }
-    }
-  };
-
-  // 월 변경 시 주차를 해당 월의 첫째 주로 리셋
-  const resetWeekToFirstWeekOfMonth = () => {
-    const firstWeekOfMonth = dayjs().year(currentYear).month(currentMonth - 1).startOf('month').week();
-    setCurrentWeek(firstWeekOfMonth);
-  };
 
   return emotionRankingData.length > 0 ? (
     <ScrollView style={styles.container}>
       {/* 월 단위 이동 컴포넌트 */}
       <View style={styles.yearMonthContainer}>
         <TouchableOpacity 
-          onPress={() => handleMonthChange('prev')}
+          onPress={() => onReportMonthChange('prev')}
           style={styles.arrowButton}
         >
           <ArrowLeftIcon width={24} height={24} color={colors.grayScale800} />
@@ -205,17 +291,17 @@ const RecordReportTab = ({onStartRecordPress}: RecordReportTabProps) => {
         
         <View style={styles.yearMonthTextContainer}>
           <View style={styles.yearAndMonthTextContainer}>
-            <Text style={styles.dateNumber}>{currentYear}</Text>
+            <Text style={styles.dateNumber}>{reportCurrentYear}</Text>
             <Text style={styles.dateText}>년</Text>
           </View>
           <View style={styles.yearAndMonthTextContainer}>
-            <Text style={styles.dateNumber}>{currentMonth}</Text>
+            <Text style={styles.dateNumber}>{reportCurrentMonth}</Text>
             <Text style={styles.dateText}>월</Text>
           </View>
         </View>
         
         <TouchableOpacity 
-          onPress={() => handleMonthChange('next')}
+          onPress={() => onReportMonthChange('next')}
           style={[styles.arrowButton, isCurrentMonthFuture && styles.disabledArrow]}
           disabled={isCurrentMonthFuture}
         >
@@ -243,7 +329,7 @@ const RecordReportTab = ({onStartRecordPress}: RecordReportTabProps) => {
           <View style={styles.emotionReportTitleAndInfoContainer}>
             <View>
               <View style={{flexDirection: 'row', alignItems: 'center', gap: 5}}>
-                <Text style={styles.emotionReportTitle}>{currentMonth}</Text>
+                <Text style={styles.emotionReportTitle}>{reportCurrentMonth}</Text>
                 <Text style={styles.emotionReportTitle}>월달의</Text>
               </View>
               <Text style={styles.emotionReportTitle}>감정 순위에요!</Text>
@@ -361,12 +447,12 @@ const RecordReportTab = ({onStartRecordPress}: RecordReportTabProps) => {
                   </View>
                     <View style={[styles.ratioPercentageContainer, {gap: Math.max(7,((windowWidth - 40) - (emotionRankingData.length * 50)) / (emotionRankingData.length - 1))}]}>
                     {emotionRankingData.map((item, index) => {
-                      const IconStroke = characterIconMap.stroke[item.emotion];
+                      const IconStroke = characterIconMap.stroke[item.emotion as keyof typeof characterIconMap.stroke];
                       return (
                         <View key={item.emotion} style={styles.ratioPercentage}>
-                          <View style={[styles.ratioEmotionBlock, {backgroundColor: getRankColor(index)}]}>
-                            <IconStroke width={40} height={40}/>
-                          </View>
+                                                      <View style={[styles.ratioEmotionBlock, {backgroundColor: getRankColor(index)}]}>
+                             <item.icon width={40} height={40}/>
+                            </View>
                           <View style={styles.ratioEmotionBlockTextContainer}>
                             <Text style={styles.ratioEmotionBlockText}>{item.percentage}%</Text>
                           </View>
@@ -393,14 +479,14 @@ const RecordReportTab = ({onStartRecordPress}: RecordReportTabProps) => {
               <Text style={styles.emotionRecordWeeklyDate}>
                 {(() => {
                   // 현재 주차의 시작일과 종료일 계산
-                  const startOfWeek = dayjs().year(currentYear).week(currentWeek).startOf('week');
-                  const endOfWeek = dayjs().year(currentYear).week(currentWeek).endOf('week');
+                  const startOfWeek = dayjs().year(reportCurrentYear).week(currentWeek).startOf('week');
+                  const endOfWeek = dayjs().year(reportCurrentYear).week(currentWeek).endOf('week');
                   
                   // 월이 바뀌는 경우 현재 월에 해당하는 날짜만 표시
-                  const startDate = startOfWeek.month() === currentMonth - 1 ? startOfWeek.date() : 1;
-                  const endDate = endOfWeek.month() === currentMonth - 1 ? endOfWeek.date() : endOfWeek.daysInMonth();
+                  const startDate = startOfWeek.month() === reportCurrentMonth - 1 ? startOfWeek.date() : 1;
+                  const endDate = endOfWeek.month() === reportCurrentMonth - 1 ? endOfWeek.date() : endOfWeek.daysInMonth();
                   
-                  return `${startDate}일 - ${endDate}일 ${currentYear}.${currentMonth.toString().padStart(2, '0')}`;
+                  return `${startDate}일 - ${endDate}일 ${reportCurrentYear}.${reportCurrentMonth.toString().padStart(2, '0')}`;
                 })()}
               </Text>
             </View>
@@ -413,9 +499,14 @@ const RecordReportTab = ({onStartRecordPress}: RecordReportTabProps) => {
               </TouchableOpacity>
             </View>
           </View>
-          {/* TODO: 요일별 감정 기록 차트 추가 */}
+          {/* 요일별 감정 기록 차트 */}
           <View style={styles.emotionRecordChartContainer}>
-            <BarChart currentYear={currentYear} currentMonth={currentMonth} currentWeek={currentWeek} emotionReportData={emotionReportMockData} />
+            <BarChart 
+              currentYear={reportCurrentYear} 
+              currentMonth={reportCurrentMonth} 
+              currentWeek={currentWeek} 
+              emotionReportData={convertDailyDataToBarChartFormat(getCurrentWeekData())} 
+            />
           </View>
         </View>
       </View>
@@ -425,7 +516,7 @@ const RecordReportTab = ({onStartRecordPress}: RecordReportTabProps) => {
       {/* 월 단위 이동 컴포넌트 */}
       <View style={styles.yearMonthContainer}>
         <TouchableOpacity 
-          onPress={() => handleMonthChange('prev')}
+          onPress={() => onReportMonthChange('prev')}
           style={styles.arrowButton}
         >
           <ArrowLeftIcon width={24} height={24} color={colors.grayScale800} />
@@ -433,17 +524,17 @@ const RecordReportTab = ({onStartRecordPress}: RecordReportTabProps) => {
         
         <View style={styles.yearMonthTextContainer}>
           <View style={styles.yearAndMonthTextContainer}>
-            <Text style={styles.dateNumber}>{currentYear}</Text>
+            <Text style={styles.dateNumber}>{reportCurrentYear}</Text>
             <Text style={styles.dateText}>년</Text>
           </View>
           <View style={styles.yearAndMonthTextContainer}>
-            <Text style={styles.dateNumber}>{currentMonth}</Text>
+            <Text style={styles.dateNumber}>{reportCurrentMonth}</Text>
             <Text style={styles.dateText}>월</Text>
           </View>
         </View>
         
         <TouchableOpacity 
-          onPress={() => handleMonthChange('next')}
+          onPress={() => onReportMonthChange('next')}
           style={[styles.arrowButton, isCurrentMonthFuture && styles.disabledArrow]}
           disabled={isCurrentMonthFuture}
         >

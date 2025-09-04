@@ -61,7 +61,7 @@ export const API_CONFIG = {
     // 명상 관련
     MEDITATION_CONTENTS: '/api/meditation/contents',
     MEDITATION_FAVORITE: '/api/meditation/favorite',
-    MEDITATION_TEACHERS: '/api/meditation/teachers',
+    MEDITATION_INSTRUCTORS: '/api/meditation/instructors',
     MEDITATION_FOLLOW: '/api/meditation/follow',
   }
 } as const;

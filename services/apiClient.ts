@@ -80,6 +80,11 @@ export class ApiClient {
         await this.handleErrorResponse(response, endpoint);
       }
 
+      // 204 No Content 처리
+      if (response.status === 204) {
+        return undefined as unknown as T;
+      }
+
       // JSON 응답 파싱
       const data = await response.json();
       return data;

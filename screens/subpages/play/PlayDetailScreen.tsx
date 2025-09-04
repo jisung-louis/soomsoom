@@ -12,7 +12,7 @@ import FavoriteIcon from '../../../assets/icons/common/star.svg';
 import { typography } from '../../../constants/typography';
 import PersonIcon from '../../../assets/icons/common/Person.svg';
 import AudioIcon from '../../../assets/icons/common/Vol.svg';
-import { teachersData } from '../../../data/playContentData';
+import { instructorsData } from '../../../data/playContentData';
 import ToastView from '../../../components/common/toast/ToastView';
 import { Button } from '../../../components/common/buttons/Button';
 import { usePlayStore } from '../../../stores/playStore';
@@ -53,11 +53,11 @@ const PlayDetailScreen: React.FC = () => {
             </View>
             <View style={styles.contentInfoContainer}>
               <AuthorInfo
-                teacherId={content.teacherId}
+                instructorId={content.instructorId}
                 guide={content.guide}
-                onPressTeacher={() => {navigation.navigate('PlayTeacherDetailScreen', { teacherId: content.teacherId })}}
+                onPressInstructor={() => {navigation.navigate('PlayInstructorDetailScreen', { instructorId: content.instructorId })}}
               />
-              <View style={styles.teacherAndAudioContainer}>
+              <View style={styles.instructorAndAudioContainer}>
                 <AudioIcon width={24} height={24} color={colors.grayScale600} />
                 <TouchableOpacity onPress={() => {}}>
                   <Text style={styles.contentInfo}>{content.type} • {content.time}</Text>
@@ -129,12 +129,12 @@ const styles = StyleSheet.create({
     ...typography.body5,
     color: colors.grayScale400,
   },
-  teacherAndAudioContainer: {
+  instructorAndAudioContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
   },
-  teacherContainer: {
+  instructorContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
