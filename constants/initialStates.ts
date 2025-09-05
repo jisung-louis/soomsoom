@@ -31,7 +31,7 @@ export const INITIAL_ALARM_STATE = {
 
 // 플레이 관련 초기 상태 (환경별 설정 사용)
 export const INITIAL_PLAY_STATE = {
-  favoriteContents: initialStates.play.favoriteContents,
+  favoriteActivities: initialStates.play.favoriteActivities,
   followedInstructorIds: initialStates.play.followedInstructorIds,
 };
 

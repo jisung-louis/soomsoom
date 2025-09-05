@@ -9,34 +9,27 @@ import TimeIcon from '../../../../assets/icons/common/time.svg';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { PlayStackParamList } from '../../../../navigations/tabs/PlayStackNavigator';
-import { ContentData } from '../../../../data/playContentData';
-    
-type programData = {
-  id: number;
-  title: string[];
-  image: any;
-  time: string;
-}
+import { Activity } from '../../../../services/contentService';
 
-const ProgramList = ({ programData }: { programData: programData[] }) => {
+const ProgramList = ({ programData }: { programData: Activity[] }) => {
   const navigation = useNavigation<StackNavigationProp<PlayStackParamList>>();
   return(
     <View style={styles.container}>
       {
         programData.map((item) => (
-          <TouchableOpacity key={item.id} style={styles.cardContainer} onPress={() => {navigation.navigate('PlayDetailScreen', { content: item as ContentData })}}> 
+          <TouchableOpacity key={item.id} style={styles.cardContainer} onPress={() => {navigation.navigate('PlayDetailScreen', { content: item })}}> 
             <View style={styles.card}>
-              <Image source={item.image} style={styles.image} resizeMode='contain' />
+              <Image source={item.thumbnailImageUrl || require('../../../../assets/images/play/playFavoriteScreen/default_image_1.png')} style={styles.image} resizeMode='contain' />
               <View style={styles.cardContent}>
                 <View style={styles.textHeader}>
-                  <Badge title='호흡' />
+                  <Badge title={item.type === 'BREATHING' ? '호흡' : '명상'} />
                   <MoreIcon color={colors.grayScale300} />
                 </View>
                 <View style={styles.cardTitleContainer}>
-                  <Text style={styles.title}>{item.title.join('\n')}</Text>
+                  <Text style={styles.title}>{item.title}</Text>
                   <View style={styles.timeRow}>
                     <TimeIcon color={colors.grayScale700} width={16} height={16} />
-                    <Text style={styles.time}>{item.time}</Text>
+                    <Text style={styles.time}>{Math.floor(item.durationInSeconds / 60)}min</Text>
                   </View>
                 </View>
               </View>

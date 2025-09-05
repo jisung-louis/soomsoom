@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity } from 'react-native';
 import PlayTitle from './common/PlayTitle';
 import DefaultImage from '../../../assets/images/play/playRecommendedContentList/default_image.svg';
@@ -7,17 +7,28 @@ import MoreIcon from '../../../assets/icons/common/more.svg';
 import TimeIcon from '../../../assets/icons/common/time.svg';
 import { colors } from '../../../constants/colors';
 import { typography } from '../../../constants/typography';
-import { mockContentData } from '../../../data/playContentData';
+import { Activity } from '../../../services/contentService';
+import { getActivitiesByType } from '../../../services/contentService';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { PlayStackParamList } from '../../../navigations/tabs/PlayStackNavigator';
-import { ContentData } from '../../../data/playContentData';
 
 const PlayRecommendedContentList = () => {
   const navigation = useNavigation<StackNavigationProp<PlayStackParamList>>();
+  const [meditationData, setMeditationData] = useState<Activity[]>([]);
   
-  // meditation 타입만 필터링
-  const meditationData = mockContentData.filter(item => item.type === 'meditation');
+  useEffect(() => {
+    const loadMeditationData = async () => {
+      try {
+        const response = await getActivitiesByType('MEDITATION');
+        setMeditationData(response.content);
+      } catch (error) {
+        console.error('명상 데이터 로드 실패:', error);
+      }
+    };
+    
+    loadMeditationData();
+  }, []);
   
   return (
   <View style={styles.section}>
@@ -29,20 +40,20 @@ const PlayRecommendedContentList = () => {
         showsHorizontalScrollIndicator={false}
         keyExtractor={(_, index) => index.toString()}
         renderItem={({ item }) => (
-          <TouchableOpacity onPress={() => {navigation.navigate('PlayDetailScreen', { content: item as ContentData })}}>
+          <TouchableOpacity onPress={() => {navigation.navigate('PlayDetailScreen', { content: item as Activity })}}>
             <View style={styles.card}>
-              <DefaultImage width="100%" height={150} preserveAspectRatio="xMidYMid slice" style={styles.image} />
+              <Image source={item.thumbnailImageUrl || require('../../../assets/images/play/playFavoriteScreen/default_image_1.png')} style={styles.image} />
               <View style={styles.cardContentContainer}>
                 <View style={styles.cardContent}>
                   <View style={styles.textHeader}>
-                    <Badge title={item.type === 'breath' ? '호흡' : '명상'} />
+                    <Badge title={item.type === 'BREATHING' ? '호흡' : '명상'} />
                     <MoreIcon color={colors.grayScale300} />
                   </View>
                   <View style={styles.cardTitleContainer}>
-                    <Text style={styles.cardTitle}>{item.title.join('\n')}</Text>
+                    <Text style={styles.cardTitle}>{item.title}</Text>
                     <View style={styles.timeRow}>
                       <TimeIcon color={colors.grayScale700} width={16} height={16} />
-                      <Text style={styles.time}>{item.time}</Text>
+                      <Text style={styles.time}>{Math.floor(item.durationInSeconds / 60)}min</Text>
                     </View>
                   </View>
                 </View>
@@ -79,6 +90,8 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   image: {
+    width: '100%',
+    height: 150,
   },
   cardContentContainer: {
     height: 159,

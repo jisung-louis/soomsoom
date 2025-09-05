@@ -59,10 +59,15 @@ export const API_CONFIG = {
     ROOM_REMOVE: '/api/room/remove',
     
     // 명상 관련
-    MEDITATION_CONTENTS: '/api/meditation/contents',
     MEDITATION_FAVORITE: '/api/meditation/favorite',
     MEDITATION_INSTRUCTORS: '/api/meditation/instructors',
     MEDITATION_FOLLOW: '/api/meditation/follow',
+    
+    // 액티비티 관련
+    ACTIVITIES: '/activities',
+    ACTIVITY_DETAIL: '/activities/{activityId}',
+    ACTIVITY_FAVORITE: '/activities/{activityId}/favorite',
+    USER_FAVORITES: '/users/me/favorites',
   }
 } as const;
 

@@ -4,7 +4,7 @@ import Slider from '@react-native-community/slider';
 import { colors } from '../../../../constants/colors';
 import { radius } from '../../../../constants/radius';
 import { typography } from '../../../../constants/typography';
-import { ContentData } from '../../../../data/playContentData';
+import { Activity } from '../../../../services/contentService';
 import FavoriteIcon from '../../../../assets/icons/common/star.svg';
 import AuthorInfo from '../common/AuthorInfo';
 import { useAudioPlayer } from '../../../../hooks/useAudioPlayer';
@@ -15,7 +15,7 @@ import { useNavigation } from '@react-navigation/native';
 
 type PlayBarProps = {
   style: ViewStyle;
-  content: ContentData;
+  content: Activity;
   handleToggleFavorite: () => void;
   isFavorite: boolean;
   onEnd: () => void;
@@ -35,7 +35,7 @@ const PlayBar = ({style, content, handleToggleFavorite, isFavorite, onEnd}: Play
     play, pause, seekTo, rewind, forward,
     setPlaybackRate, playbackRate,
   } = useAudioPlayer({ 
-    source: content.audio,
+    source: content.audioUrl,
     repeat: isRepeat,
     onEnd: () => {
       console.log('🌀 onEnd triggered');
@@ -66,18 +66,18 @@ const PlayBar = ({style, content, handleToggleFavorite, isFavorite, onEnd}: Play
       <View style={styles.contentContainer}>
         <View style={styles.infoContainer}>
           <View style={styles.titleContainer}>
-            <Text style={styles.title}>{content.title.join(' ')}</Text>
+            <Text style={styles.title}>{content.title}</Text>
             <TouchableOpacity onPress={handleToggleFavorite}>
               <FavoriteIcon 
                 width={32} 
                 height={32} 
-                color={isFavorite ? colors.primary500 : colors.grayScale500} 
+                color={isFavorite ? colors.primary300 : colors.grayScale500} 
               />
             </TouchableOpacity>
           </View>
           <AuthorInfo
-            instructorId={content.instructorId}
-            guide={content.guide}
+            instructorName={content.author.name}
+            guide={content.narrator.name}
             onPressInstructor={() => {}}
           />
         </View>

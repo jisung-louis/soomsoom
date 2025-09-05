@@ -4,8 +4,8 @@ import PlayTab from '../../screens/tabs/PlayTab';
 import PlayFavoriteScreen from '../../screens/subpages/play/PlayFavoriteScreen';
 import PlayHistoryScreen from '../../screens/subpages/play/PlayHistoryScreen';
 import PlayDetailScreen from '../../screens/subpages/play/PlayDetailScreen';
-import { ContentData } from '../../data/playContentData';
-import { InstructorData } from '../../data/playContentData';
+import { Activity } from '../../services/contentService';
+import { Instructor } from '../../services/instructorService';
 import PlayInstructorDetailScreen from '../../screens/subpages/play/PlayInstructorDetailScreen';
 import PlayBreathScreen from '../../screens/subpages/play/PlayBreathScreen';
 import PlayMeditationScreen from '../../screens/subpages/play/PlayMeditationScreen';
@@ -16,11 +16,11 @@ export type PlayStackParamList = {
   PlayTab: undefined;
   PlayFavoriteScreen: undefined;
   PlayHistoryScreen: undefined;
-  PlayDetailScreen: { content: ContentData };
+  PlayDetailScreen: { content: Activity };
   PlayInstructorDetailScreen: { instructorId: number };
-  PlayBreathScreen: { content: ContentData };
-  PlayBreathContentScreen: { content: ContentData };
-  PlayMeditationScreen: { content: ContentData };
+  PlayBreathScreen: { content: Activity };
+  PlayBreathContentScreen: { content: Activity };
+  PlayMeditationScreen: { content: Activity };
   PlayResultScreen: undefined;
 };
 

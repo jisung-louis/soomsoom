@@ -173,31 +173,33 @@ export const createRewardActions = () => {
  * - 강사 팔로우 토글
  */
 export const createFavoriteActions = () => {
-  const toggleContentFavorite = (contentId: number) => {
-    const { toggleFavorite } = usePlayStore.getState();
-    toggleFavorite(contentId);
+  const toggleActivityFavorite = (activityId: number) => {
+    const { favoriteActivity, unfavoriteActivity } = usePlayStore.getState();
+    const { favoriteActivities } = usePlayStore.getState();
+    const isFavorited = favoriteActivities.some(fav => fav.activityId === activityId);
+    
+    if (isFavorited) {
+      unfavoriteActivity(activityId);
+    } else {
+      favoriteActivity(activityId);
+    }
   };
 
-  const toggleInstructorFollow = (instructorId: number) => {
-    const { toggleFollowInstructor } = usePlayStore.getState();
-    toggleFollowInstructor(instructorId);
+  const toggleInstructorFollow = async (instructorId: number) => {
+    // 이 함수는 더 이상 사용하지 않음 - toggleFollowInstructor 서비스 함수를 사용하세요
+    // 서비스 레이어에서 API 호출과 store 동기화를 모두 처리합니다
+    throw new Error('toggleInstructorFollow는 더 이상 사용되지 않습니다. toggleFollowInstructor 서비스 함수를 사용하세요.');
   };
 
-  const isFavorite = (contentId: number) => {
-    const { isFavorite: checkIsFavorite } = usePlayStore.getState();
-    return checkIsFavorite(contentId);
-  };
-
-  const isFollowingInstructor = (instructorId: number) => {
-    const { isFollowingInstructor: checkIsFollowingInstructor } = usePlayStore.getState();
-    return checkIsFollowingInstructor(instructorId);
+  const isFavorite = (activityId: number) => {
+    const { favoriteActivities } = usePlayStore.getState();
+    return favoriteActivities.some(fav => fav.activityId === activityId);
   };
 
   return {
-    toggleContentFavorite,
+    toggleActivityFavorite,
     toggleInstructorFollow,
     isFavorite,
-    isFollowingInstructor,
   };
 };
 
@@ -223,8 +225,8 @@ export const createStoreResetActions = () => {
 
   const resetPlayStore = () => {
     usePlayStore.setState({
-      favoriteContents: INITIAL_PLAY_STATE.favoriteContents,
-      followedInstructorIds: INITIAL_PLAY_STATE.followedInstructorIds,
+      favoriteActivities: INITIAL_PLAY_STATE.favoriteActivities,
+      followedInstructors: [],
     });
   };
 

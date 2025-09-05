@@ -14,9 +14,10 @@ import { Surface } from '../../../components/common/surface/Surface';
 import ProgramList from '../../../components/tabs/play/common/ProgramList';
 import { usePlayStore } from '../../../stores/playStore';
 import { useToast } from '../../../contexts/ToastContext';
-import { getInstructorDetail, getInstructorActivities, toggleFollowInstructor, Instructor, InstructorActivity } from '../../../services/instructorService';
+import { getInstructorDetail, getInstructorActivities, toggleFollowInstructor, Instructor } from '../../../services/instructorService';
 import LoadingSpinner from '../../../components/common/loading/LoadingSpinner';
 import ErrorMessage from '../../../components/common/error/ErrorMessage';
+import { getActivityDetail, Activity } from '../../../services/contentService';
 
 const PlayInstructorDetailScreen: React.FC = () => {
     const navigation = useNavigation<StackNavigationProp<PlayStackParamList>>();
@@ -24,10 +25,11 @@ const PlayInstructorDetailScreen: React.FC = () => {
     const { instructorId } = route.params;
     // Store는 사용하지 않고 Service Layer만 사용
     const { showToast } = useToast();
+    const { followedInstructors } = usePlayStore();
 
     // 상태 관리
     const [instructor, setInstructor] = useState<Instructor | null>(null);
-    const [activities, setActivities] = useState<InstructorActivity[]>([]);
+    const [representativeContentData, setRepresentativeContentData] = useState<Activity[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -48,10 +50,17 @@ const PlayInstructorDetailScreen: React.FC = () => {
             getInstructorActivities(instructorId, { page: 1, size: 10 })
           ]);
 
-          // Service Layer에서 isFollowing 상태를 자동으로 설정
+          // UI에서 실제 팔로우 상태를 확인하여 설정
+          const isFollowing = followedInstructors.some(inst => inst.instructorId === instructorId);
+          setInstructor({ ...instructorData, isFollowing });
 
-          setInstructor(instructorData);
-          setActivities(activitiesData.content);
+          // 각 액티비티의 상세 정보를 가져와서 representativeContentData 설정
+          const activityDetails = await Promise.all(
+            activitiesData.content.map(activity => 
+              getActivityDetail(activity.activityId)
+            )
+          );
+          setRepresentativeContentData(activityDetails);
         } catch (err) {
           console.error('강사 데이터 로드 실패:', err);
           setError('강사 정보를 불러오는데 실패했습니다.');
@@ -68,17 +77,16 @@ const PlayInstructorDetailScreen: React.FC = () => {
       loadInstructorData();
     }, [instructorId, showToast]);
 
-    // API 데이터를 ProgramList 형식으로 변환
-    const representativeContentData = activities.map(activity => ({
-      id: activity.activityId,
-      title: [activity.title], // API에서는 이미 문자열이므로 배열로 감싸기
-      image: __DEV__ ? activity.thumbnailImageUrl as any : { uri: activity.thumbnailImageUrl },
-      time: `${Math.floor(activity.durationInSeconds / 60)}min`,
-      type: activity.type,
-      instructorId: instructorId,
-      isFavorited: activity.isFavorited,
-    }));
-  
+    // 팔로우 상태 변경 시 instructor 상태 업데이트
+    useEffect(() => {
+      if (instructor) {
+        const isFollowing = followedInstructors.some(inst => inst.instructorId === instructorId);
+        if (instructor.isFollowing !== isFollowing) {
+          setInstructor(prev => prev ? { ...prev, isFollowing } : null);
+        }
+      }
+    }, [followedInstructors, instructorId]);
+
 
   // 로딩 중
   if (isLoading) {
@@ -117,8 +125,8 @@ const PlayInstructorDetailScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={{flexGrow: 1, paddingBottom: 100}}>
       <SubpageHeader onBack={handleBack} />
+      <ScrollView contentContainerStyle={{flexGrow: 1, paddingBottom: 100}}>
       <View style={styles.contentContainer}>
         <View style={styles.contentHeader}>
             {instructor.profileImageUrl ? (
@@ -144,10 +152,14 @@ const PlayInstructorDetailScreen: React.FC = () => {
                   const wasFollowing = instructor.isFollowing;
                   
                   // 서비스 레이어에서 API 호출과 store 동기화를 모두 처리
-                  const response = await toggleFollowInstructor(instructorId);
+                  const { followInstructor, unfollowInstructor } = usePlayStore.getState();
+                  await toggleFollowInstructor(instructorId, {
+                    followInstructor,
+                    unfollowInstructor,
+                    isFollowingInstructor: (id) => followedInstructors.some(inst => inst.instructorId === id)
+                  });
                   
-                  // UI 상태 업데이트
-                  setInstructor(prev => prev ? { ...prev, isFollowing: response.isFollowing } : null);
+                  // 팔로우 상태는 useEffect에서 자동으로 업데이트됨
                   
                   showToast({
                     message: wasFollowing ? '선생님 팔로우를 취소했어요' : '새로운 영상이 올라오면, 먼저 알려드릴게요!',

@@ -9,16 +9,37 @@ import { PlayStackParamList } from '../../../navigations/tabs/PlayStackNavigator
 import SubpageHeader from '../../../components/common/top-navigation/SubpageHeader';
 import PlayBar from '../../../components/tabs/play/PlayMeditationScreen/PlayBar';
 import { usePlayStore } from '../../../stores/playStore';
+import { toggleFavoriteActivity } from '../../../services/contentService';
+import { useToast } from '../../../contexts/ToastContext';
 
 const PlayMeditationScreen = ({route}: {route: RouteProp<PlayStackParamList, 'PlayMeditationScreen'>}) => {
   const {content} = route.params;
   const navigation = useNavigation<StackNavigationProp<PlayStackParamList>>();
+  const { favoriteActivities } = usePlayStore();
+  const { showToast } = useToast();
+  
   const handleBack = () => {
     navigation.goBack();
   };
-  const { toggleFavorite, isFavorite } = usePlayStore();
-  const handleToggleFavorite = () => {
-    toggleFavorite(content.id);
+  
+  const isFavorite = favoriteActivities.some(fav => fav.activityId === content.id);
+  
+  const handleToggleFavorite = async () => {
+    try {
+      const { favoriteActivity, unfavoriteActivity, favoriteActivities } = usePlayStore.getState();
+      await toggleFavoriteActivity(content.id, {
+        favoriteActivity,
+        unfavoriteActivity,
+        isFavorite: (activityId: number) => favoriteActivities.some(fav => fav.activityId === activityId)
+      });
+    } catch (error) {
+      console.error('즐겨찾기 토글 실패:', error);
+      showToast({
+        message: '즐겨찾기 상태 변경에 실패했어요.',
+        theme: 'dark',
+        iconType: 'brokenHeart',
+      });
+    }
   };
   return (
     <ImageBackground 
@@ -35,7 +56,7 @@ const PlayMeditationScreen = ({route}: {route: RouteProp<PlayStackParamList, 'Pl
           style={styles.playBar} 
           content={content} 
           handleToggleFavorite={handleToggleFavorite} 
-          isFavorite={isFavorite(content.id)}
+          isFavorite={isFavorite}
           onEnd={() => {
               navigation.navigate('PlayResultScreen');
           }}

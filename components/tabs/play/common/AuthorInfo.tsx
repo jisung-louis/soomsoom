@@ -2,26 +2,23 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ViewStyle } from 'react-native';
 import PersonIcon from '../../../../assets/icons/common/Person.svg';
 import { colors } from '../../../../constants/colors';
-import { mockInstructorsData } from '../../../../data/playContentData';
 import { typography } from '../../../../constants/typography';
 
 interface AuthorInfoProps {
-  instructorId: number;
+  instructorName: string;
   guide: string;
   onPressInstructor?: () => void;
   style?: ViewStyle;
 }
 
-const AuthorInfo: React.FC<AuthorInfoProps> = ({ instructorId, guide, onPressInstructor, style }) => {
-  const instructor = mockInstructorsData.find(i => i.id === instructorId);
-
+const AuthorInfo: React.FC<AuthorInfoProps> = ({ instructorName, guide, onPressInstructor, style }) => {
   return (
     <View style={[styles.instructorAndAudioContainer, style]}>
       <PersonIcon width={24} height={24} color={colors.grayScale600} />
       <View style={styles.instructorContainer}>
         <TouchableOpacity onPress={onPressInstructor}>
           <Text style={styles.contentInfo}>
-            저자 : {instructor?.name}
+            저자 : {instructorName}
           </Text>
         </TouchableOpacity>
         <Text style={styles.contentInfo}>|</Text>

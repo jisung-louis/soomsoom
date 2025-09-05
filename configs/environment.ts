@@ -107,7 +107,7 @@ export const initialStates = {
 
   // 플레이 관련 초기 상태 (프리셋)
   play: {
-    favoriteContents: [] as any[],
+    favoriteActivities: [] as any[],
     followedInstructorIds: [] as number[],
   },
 

@@ -1,21 +1,32 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity } from 'react-native';
 import { typography } from '../../../constants/typography';
 import { radius } from '../../../constants/radius';
 import { colors } from '../../../constants/colors';
 import TimeIcon from '../../../assets/icons/common/time.svg';
 import PlayTitle from './common/PlayTitle';
-import { mockContentData } from '../../../data/playContentData';
-import { ContentData } from '../../../data/playContentData';
+import { Activity } from '../../../services/contentService';
+import { getActivitiesByType } from '../../../services/contentService';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { PlayStackParamList } from '../../../navigations/tabs/PlayStackNavigator';
 
 const PlayShortMeditationList = () => {
   const navigation = useNavigation<StackNavigationProp<PlayStackParamList>>();
+  const [breathData, setBreathData] = useState<Activity[]>([]);
   
-  // breath 타입만 필터링
-  const breathData = mockContentData.filter(item => item.type === 'breath');
+  useEffect(() => {
+    const loadBreathData = async () => {
+      try {
+        const response = await getActivitiesByType('BREATHING');
+        setBreathData(response.content);
+      } catch (error) {
+        console.error('호흡 데이터 로드 실패:', error);
+      }
+    };
+    
+    loadBreathData();
+  }, []);
   
   return (
   <View style={styles.section}>
@@ -27,14 +38,14 @@ const PlayShortMeditationList = () => {
       keyExtractor={item => item.id.toString()}
       contentContainerStyle={{gap: 10}}
       renderItem={({ item }) => (
-        <TouchableOpacity onPress={() => {navigation.navigate('PlayDetailScreen', { content: item as ContentData })}}>
+        <TouchableOpacity onPress={() => {navigation.navigate('PlayDetailScreen', { content: item as Activity })}}>
           <View style={styles.card}>
-            <Text style={styles.cardTitle}>{item.title.join('\n')}</Text>
+            <Text style={styles.cardTitle}>{item.title}</Text>
             <View style={styles.timeContainer}>
               <TimeIcon color={colors.grayScale700} width={16} height={16} />
-              <Text style={styles.time}>{item.time}</Text>
+              <Text style={styles.time}>{Math.floor(item.durationInSeconds / 60)}min</Text>
             </View>
-            <Image source={item.image} style={styles.icon} />
+            <Image source={item.thumbnailImageUrl || require('../../../assets/images/play/playFavoriteScreen/default_image_1.png')} style={styles.icon} />
           </View>
         </TouchableOpacity>
       )}

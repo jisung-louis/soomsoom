@@ -15,6 +15,7 @@ import { useAlarmStore } from '../../../stores/alarmStore';
 import { useRoomStore } from '../../../stores/roomStore';
 import { roomItemList } from '../../../data/roomItemData';
 import { mockContentData, mockInstructorsData } from '../../../data/playContentData';
+import { Activity } from '../../../services/contentService';
 
 const TestScreen = () => {
   const navigation = useNavigation<StackNavigationProp<HomeStackParamList>>();
@@ -28,17 +29,18 @@ const TestScreen = () => {
     return roomItemList.find((item) => item.id === itemId)?.title;
   };
 
-  {/* 컨텐츠 아이디 -> 컨텐츠 이름 */}
-  const contentIdToName = (contentId: number) => {
-    const content = mockContentData.find((item) => item.id === contentId);
-    return content ? content.title.join(' ') : `컨텐츠 ${contentId}`;
+  {/* 액티비티 아이디 -> 액티비티 이름 */}
+  const activityIdToName = (activityId: number) => {
+    const activity = mockContentData.find((item) => item.id === activityId);
+    return activity ? activity.title : `액티비티 ${activityId}`;
   };
 
   {/* 강사 아이디 -> 강사 이름 */}
   const instructorIdToName = (instructorId: number) => {
-    const instructor = mockInstructorsData.find((item) => item.id === instructorId);
+    const instructor = mockInstructorsData.find((item) => item.instructorId === instructorId);
     return instructor ? `${instructor.name}` : `강사 ${instructorId}`;
   };
+
   return (
     <SafeAreaView style={styles.container}>
       <SubpageHeader onBack={handleBack} />
@@ -55,10 +57,10 @@ const TestScreen = () => {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>🎵(즐겨찾기, 팔로우) 유저 상태</Text>
           <View style={styles.infoCard}>
-            <Text style={styles.infoLabel}>즐겨찾기 컨텐츠</Text>
+            <Text style={styles.infoLabel}>즐겨찾기 액티비티</Text>
             <Text style={styles.infoValue}>
-              {usePlayStore.getState().favoriteContents.length > 0 
-                ? usePlayStore.getState().favoriteContents.map((content) => contentIdToName(content.contentId)).join(', ')
+              {usePlayStore.getState().favoriteActivities.length > 0 
+                ? usePlayStore.getState().favoriteActivities.map((activity) => activityIdToName(activity.activityId)).join(', ')
                 : '없음'
               }
             </Text>
@@ -67,7 +69,7 @@ const TestScreen = () => {
             <Text style={styles.infoLabel}>팔로우한 선생님</Text>
             <Text style={styles.infoValue}>
               {usePlayStore.getState().followedInstructors.length > 0 
-                ? usePlayStore.getState().followedInstructors.map((instructor) => instructor.name).join(', ')
+                ? usePlayStore.getState().followedInstructors.map((instructor) => instructorIdToName(instructor.instructorId)).join(', ')
                 : '없음'
               }
             </Text>

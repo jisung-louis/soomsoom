@@ -17,55 +17,74 @@ import ToastView from '../../../components/common/toast/ToastView';
 import { Button } from '../../../components/common/buttons/Button';
 import { usePlayStore } from '../../../stores/playStore';
 import AuthorInfo from '../../../components/tabs/play/common/AuthorInfo';
+import { toggleFavoriteActivity } from '../../../services/contentService';
+import { useToast } from '../../../contexts/ToastContext';
 
 const PlayDetailScreen: React.FC = () => {
   const navigation = useNavigation<StackNavigationProp<PlayStackParamList>>();
   const route = useRoute<RouteProp<PlayStackParamList, 'PlayDetailScreen'>>();
   const { content } = route.params;
-  const { toggleFavorite, isFavorite } = usePlayStore();
-  
+  const { favoriteActivities } = usePlayStore();
+  const { showToast } = useToast();
+
   const handleBack = () => {
     navigation.goBack();
   };
   
-  const handleToggleFavorite = () => {
-    toggleFavorite(content.id);
+  const isFavorite = favoriteActivities.some(fav => fav.activityId === content.id);
+  
+  const handleToggleFavorite = async () => {
+    try {
+      const { favoriteActivity, unfavoriteActivity, favoriteActivities } = usePlayStore.getState();
+      await toggleFavoriteActivity(content.id, {
+        favoriteActivity,
+        unfavoriteActivity,
+        isFavorite: (activityId: number) => favoriteActivities.some(fav => fav.activityId === activityId)
+      });
+    } catch (error) {
+      console.error('즐겨찾기 토글 실패:', error);
+      showToast({
+        message: '즐겨찾기 상태 변경에 실패했어요.',
+        theme: 'dark',
+        iconType: 'brokenHeart',
+      });
+    }
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={{flexGrow: 1, paddingBottom: 100}}>
       <SubpageHeader onBack={handleBack} />
+      <ScrollView contentContainerStyle={{flexGrow: 1, paddingBottom: 100}}>
         <View style={styles.imageContainer}>
-          <Image source={content.image} style={styles.image} />
+          <Image source={content.thumbnailImageUrl || require('../../../assets/images/play/playFavoriteScreen/default_image_1.png')} style={styles.image} />
         </View>
         <View style={styles.contentContainer}>
           <View style={styles.contentHeader}>
             <View style={styles.contentHeaderTitleContainer}>
-              <Text style={styles.contentHeaderTitle}>{content.title.join(' ')}</Text>
+              <Text style={styles.contentHeaderTitle}>{content.title}</Text>
               <TouchableOpacity onPress={handleToggleFavorite}>
                 <FavoriteIcon 
                   width={32} 
                   height={32} 
-                  color={isFavorite(content.id) ? colors.primary500 : colors.grayScale500} 
+                  color={isFavorite ? colors.primary300 : colors.grayScale500} 
                 />
               </TouchableOpacity>
             </View>
             <View style={styles.contentInfoContainer}>
               <AuthorInfo
-                instructorId={content.instructorId}
-                guide={content.guide}
-                onPressInstructor={() => {navigation.navigate('PlayInstructorDetailScreen', { instructorId: content.instructorId })}}
+                instructorName={content.author.name}
+                guide={content.narrator.name}
+                onPressInstructor={() => {navigation.navigate('PlayInstructorDetailScreen', { instructorId: content.author.id })}}
               />
               <View style={styles.instructorAndAudioContainer}>
                 <AudioIcon width={24} height={24} color={colors.grayScale600} />
                 <TouchableOpacity onPress={() => {}}>
-                  <Text style={styles.contentInfo}>{content.type} • {content.time}</Text>
+                  <Text style={styles.contentInfo}>{content.type} • {Math.floor(content.durationInSeconds / 60)}min</Text>
                 </TouchableOpacity>
               </View>
             </View>
           </View>
-          <Text style={styles.contentDescription}>{content.description.join('\n')}</Text>
+          <Text style={styles.contentDescription}>{content.descriptions.join('\n')}</Text>
         </View>
         <View style={styles.toastContainer}>
           <ToastView
@@ -79,7 +98,7 @@ const PlayDetailScreen: React.FC = () => {
             title='마음운동 시작하기'
             variant='active'
             size='large'
-            onPress={() => {content.type === 'breath' ? navigation.navigate('PlayBreathScreen', {content: content}) : navigation.navigate('PlayMeditationScreen', {content: content})}}
+            onPress={() => {content.type === 'BREATHING' ? navigation.navigate('PlayBreathScreen', {content: content}) : navigation.navigate('PlayMeditationScreen', {content: content})}}
             style={styles.button}
           />
         </View>
