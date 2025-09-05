@@ -5,7 +5,7 @@ import { radius } from '../../../constants/radius';
 import { colors } from '../../../constants/colors';
 import TimeIcon from '../../../assets/icons/common/time.svg';
 import PlayTitle from './common/PlayTitle';
-import { contentData } from '../../../data/playContentData';
+import { mockContentData } from '../../../data/playContentData';
 import { ContentData } from '../../../data/playContentData';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -15,7 +15,7 @@ const PlayShortMeditationList = () => {
   const navigation = useNavigation<StackNavigationProp<PlayStackParamList>>();
   
   // breath 타입만 필터링
-  const breathData = contentData.filter(item => item.type === 'breath');
+  const breathData = mockContentData.filter(item => item.type === 'breath');
   
   return (
   <View style={styles.section}>

@@ -17,11 +17,6 @@
   - 목표: `GET /api/emotions/stats/{year}/{month}` 연동
   - 담당자: 백엔드 팀
 
-- [ ] **첫 기록일 체크 API** (`services/emotionService.ts:185`)
-  - 현재: 랜덤 시뮬레이션
-  - 목표: `GET /api/emotions/history/first-check/{date}` 연동
-  - 담당자: 백엔드 팀
-
 #### **알림 설정 API**
 - [ ] **알림 설정 업데이트 API** (`screens/subpages/my/setting/NotificationSettingScreen.tsx:170,174,190,194`)
   - 현재: 로컬 저장소만 사용
@@ -44,11 +39,6 @@
 - [ ] **이용약관 하이퍼링크** (`components/onboarding/Register.tsx:45`)
   - 현재: 빈 함수
   - 목표: 이용약관 페이지로 이동 구현
-  - 담당자: 프론트엔드 팀
-
-- [ ] **명상/호흡 결과페이지 ResultDescription 애니메이션화** (`PlayResult.tsx`)
-  - 현재: 정적 뷰
-  - 목표: fade in 애니메이션 추가 후 하단 버튼도 용수철 애니메이션 추가
   - 담당자: 프론트엔드 팀
 
 - [ ] **명상/호흡 결과페이지 ResultDescription 텍스트 백엔드와 매핑** (`PlayResult.tsx`)

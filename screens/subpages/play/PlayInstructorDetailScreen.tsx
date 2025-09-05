@@ -14,7 +14,7 @@ import { Surface } from '../../../components/common/surface/Surface';
 import ProgramList from '../../../components/tabs/play/common/ProgramList';
 import { usePlayStore } from '../../../stores/playStore';
 import { useToast } from '../../../contexts/ToastContext';
-import { getInstructorDetail, getInstructorActivities, toggleFollowInstructor as toggleFollowInstructorAPI, Instructor, InstructorActivity } from '../../../services/instructorService';
+import { getInstructorDetail, getInstructorActivities, toggleFollowInstructor, Instructor, InstructorActivity } from '../../../services/instructorService';
 import LoadingSpinner from '../../../components/common/loading/LoadingSpinner';
 import ErrorMessage from '../../../components/common/error/ErrorMessage';
 
@@ -22,7 +22,7 @@ const PlayInstructorDetailScreen: React.FC = () => {
     const navigation = useNavigation<StackNavigationProp<PlayStackParamList>>();
     const route = useRoute<RouteProp<PlayStackParamList, 'PlayInstructorDetailScreen'>>();
     const { instructorId } = route.params;
-    const { toggleFollowInstructor, isFollowingInstructor } = usePlayStore();
+    // Store는 사용하지 않고 Service Layer만 사용
     const { showToast } = useToast();
 
     // 상태 관리
@@ -48,10 +48,7 @@ const PlayInstructorDetailScreen: React.FC = () => {
             getInstructorActivities(instructorId, { page: 1, size: 10 })
           ]);
 
-          // 개발 환경에서 isFollowing 상태 업데이트
-          if (__DEV__) {
-            instructorData.isFollowing = isFollowingInstructor(instructorId);
-          }
+          // Service Layer에서 isFollowing 상태를 자동으로 설정
 
           setInstructor(instructorData);
           setActivities(activitiesData.content);
@@ -69,7 +66,7 @@ const PlayInstructorDetailScreen: React.FC = () => {
       };
 
       loadInstructorData();
-    }, [instructorId, showToast, isFollowingInstructor]);
+    }, [instructorId, showToast]);
 
     // API 데이터를 ProgramList 형식으로 변환
     const representativeContentData = activities.map(activity => ({
@@ -147,7 +144,7 @@ const PlayInstructorDetailScreen: React.FC = () => {
                   const wasFollowing = instructor.isFollowing;
                   
                   // 서비스 레이어에서 API 호출과 store 동기화를 모두 처리
-                  const response = await toggleFollowInstructorAPI(instructorId);
+                  const response = await toggleFollowInstructor(instructorId);
                   
                   // UI 상태 업데이트
                   setInstructor(prev => prev ? { ...prev, isFollowing: response.isFollowing } : null);

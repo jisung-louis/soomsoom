@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, useWindowDimensions, Image, FlatList, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, useWindowDimensions, Image, FlatList, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -20,6 +20,7 @@ import EmotionIcon from '../../../assets/icons/common/emotion.svg';
 
 import BannerItemImage from '../../../assets/images/home/shop/banner_item.svg';
 import BannerChargeImage from '../../../assets/images/home/shop/banner_charge.svg';
+import { useCurrencyStore } from '../../../stores/currencyStore';
 
 type ShopScreenNavigationProp = StackNavigationProp<HomeStackParamList, 'ShopScreen'>;
 
@@ -50,7 +51,7 @@ const ShopScreen = () => {
   const layout = useWindowDimensions();
   const [excludeOwnedItems, setExcludeOwnedItems] = useState(false);
   const [outOfStockItems, setOutOfStockItems] = useState<number[]>([]);
-
+  const { heartPoints } = useCurrencyStore();
   const handleBack = () => {
     navigation.goBack();
   };
@@ -128,10 +129,10 @@ const ShopScreen = () => {
               <Text style={{...typography.body5, color: colors.grayScale900}}>품절해제(Test)</Text>
             )}
           </TouchableOpacity>
-          <View style={styles.dropdownSort}>
+          <TouchableOpacity style={styles.dropdownSort} onPress={() => {Alert.alert('추천순 나열','구현중입니다')}}>
             <Text style={styles.dropdownSortText}>추천순</Text>
             <ArrowDropDownIcon />
-          </View>
+          </TouchableOpacity>
         </View>
         
         <FlatList 
@@ -198,7 +199,7 @@ const ShopScreen = () => {
 
     return (
     <SafeAreaView style={styles.container}>
-      <SubpageHeader onBack={handleBack} right={<HeartPoint money="1.5M" onPress={() => {}}/>}/>
+      <SubpageHeader onBack={handleBack} right={<HeartPoint money={heartPoints.toString()} onPress={() => {}}/>}/>
       <TabView
         navigationState={{ index, routes }}
         renderScene={renderScene}

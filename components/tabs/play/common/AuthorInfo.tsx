@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ViewStyle } from 'react-native';
 import PersonIcon from '../../../../assets/icons/common/Person.svg';
 import { colors } from '../../../../constants/colors';
-import { instructorsData } from '../../../../data/playContentData';
+import { mockInstructorsData } from '../../../../data/playContentData';
 import { typography } from '../../../../constants/typography';
 
 interface AuthorInfoProps {
@@ -13,7 +13,7 @@ interface AuthorInfoProps {
 }
 
 const AuthorInfo: React.FC<AuthorInfoProps> = ({ instructorId, guide, onPressInstructor, style }) => {
-  const instructor = instructorsData.find(i => i.id === instructorId);
+  const instructor = mockInstructorsData.find(i => i.id === instructorId);
 
   return (
     <View style={[styles.instructorAndAudioContainer, style]}>

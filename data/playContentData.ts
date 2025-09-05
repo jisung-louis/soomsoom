@@ -45,8 +45,8 @@ export type FavoriteContentData = {
 //   instructorId: number[];
 // };
 
-// 컨텐츠 데이터
-export const contentData: ContentData[] = [
+// 컨텐츠 데이터 (Mock)
+export const mockContentData: ContentData[] = [
   {
     id: 1,
     title: ['오롯이 날 위한 휴식,', '5분 명상'],
@@ -101,8 +101,8 @@ export const contentData: ContentData[] = [
   },
 ];
 
-// 강사 데이터
-export const instructorsData: InstructorData[] = [
+// 강사 데이터 (Mock)
+export const mockInstructorsData: InstructorData[] = [
   {
     id: 0,
     name: 'DEFAULT NAME',

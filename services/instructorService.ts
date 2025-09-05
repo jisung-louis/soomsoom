@@ -1,6 +1,6 @@
 import { apiClient } from './apiClient';
 import { AppError, ErrorType, createNetworkError } from '../utils/errorHandler';
-import { instructorsData, contentData } from '../data/playContentData';
+import { mockInstructorsData, mockContentData } from '../data/playContentData';
 import { usePlayStore } from '../stores/playStore';
 
 // 타입 정의
@@ -134,7 +134,7 @@ export const getInstructorDetail = async (
   try {
     if (__DEV__) {
       // 개발 환경: mock 데이터 사용
-      const mockInstructor = instructorsData.find(inst => inst.id === instructorId);
+      const mockInstructor = mockInstructorsData.find(inst => inst.id === instructorId);
       if (!mockInstructor) {
         throw new Error('강사를 찾을 수 없습니다.');
       }
@@ -144,7 +144,7 @@ export const getInstructorDetail = async (
         name: mockInstructor.name,
         bio: mockInstructor.bio,
         profileImageUrl: mockInstructor.profileImage,
-        isFollowing: false, // 기본값, 실제로는 store에서 확인
+        isFollowing: isFollowingInstructor(mockInstructor.id), // Store에서 실제 팔로우 상태 확인
         createdAt: new Date().toISOString(),
         modifiedAt: new Date().toISOString(),
         deletedAt: null,
@@ -172,27 +172,20 @@ export const getFollowedInstructors = async (
 ): Promise<FollowedInstructorsResponse> => {
   try {
     if (__DEV__) {
-      // 개발 환경: 로컬 store의 팔로우한 강사 ID로 mock 데이터 생성
-      const { followedInstructorIds } = usePlayStore.getState();
-      
-      const mockFollowedInstructors = followedInstructorIds.map(id => {
-        const instructor = instructorsData.find(inst => inst.id === id);
-        return {
-          instructorId: id,
-          name: instructor?.name || 'Unknown',
-          profileImageUrl: instructor?.profileImage || null,
-        };
-      });
-
-      return {
-        content: mockFollowedInstructors,
+      // 개발 환경: Store에서 직접 팔로우 상태를 관리하므로 빈 응답 반환
+      // UI는 Store의 followedInstructors를 직접 참조하면 됨
+      const response: FollowedInstructorsResponse = {
+        content: [],
         page: {
           size: params?.size || 12,
           number: params?.page || 1,
-          totalElements: mockFollowedInstructors.length,
+          totalElements: 0,
           totalPages: 1,
         },
       };
+      
+      return response;
+      
     } else {
       // 프로덕션 환경: 실제 API 호출
       const queryParams = new URLSearchParams();
@@ -205,6 +198,11 @@ export const getFollowedInstructors = async (
       const url = query ? `/users/me/following?${query}` : '/users/me/following';
 
       const response = await apiClient.get<FollowedInstructorsResponse>(url);
+      
+      // Store에 데이터 동기화
+      const { setFollowedInstructors } = usePlayStore.getState();
+      setFollowedInstructors(response.content);
+      
       return response;
     }
   } catch (error) {
@@ -226,7 +224,7 @@ export const getInstructorActivities = async (
   try {
     if (__DEV__) {
       // 개발 환경: mock 데이터 사용
-      const mockActivities = contentData.filter(content => content.instructorId === instructorId);
+      const mockActivities = mockContentData.filter(content => content.instructorId === instructorId);
       
       const activities = mockActivities.map(content => ({
         activityId: content.id,
@@ -276,35 +274,49 @@ export const getInstructorActivities = async (
  * POST /instructors/{instructorId}/follow
  * 서비스 레이어에서 API 호출과 store 동기화를 모두 처리
  */
+/**
+ * 특정 강사를 팔로우하고 있는지 확인
+ */
+export const isFollowingInstructor = (instructorId: number): boolean => {
+  const { followedInstructors } = usePlayStore.getState();
+  return followedInstructors.some(inst => inst.instructorId === instructorId);
+};
+
 export const toggleFollowInstructor = async (
   instructorId: number
 ): Promise<FollowInstructorResponse> => {
   try {
     if (__DEV__) {
-      // 개발 환경: 로컬 store만 업데이트
-      const { toggleFollowInstructor: toggleStore } = usePlayStore.getState();
-      const { isFollowingInstructor } = usePlayStore.getState();
-      
+      // 개발 환경: Store에서 직접 처리
+      const { followInstructor, unfollowInstructor } = usePlayStore.getState();
       const wasFollowing = isFollowingInstructor(instructorId);
-      toggleStore(instructorId);
+      
+      // 팔로우 상태 토글
+      if (wasFollowing) {
+        unfollowInstructor(instructorId);
+      } else {
+        followInstructor(instructorId);
+      }
       
       return {
         followeeId: instructorId,
         isFollowing: !wasFollowing,
       };
     } else {
-      // 프로덕션 환경: API 호출 후 store 동기화
+      // 프로덕션 환경: API 호출 후 Store 동기화
       const response = await apiClient.post<FollowInstructorResponse>(
         `/instructors/${instructorId}/follow`
       );
       
-      // API 응답으로 store 동기화
-      const { toggleFollowInstructor: toggleStore } = usePlayStore.getState();
-      const { isFollowingInstructor } = usePlayStore.getState();
-      
+      // API 응답으로 Store 동기화
+      const { followInstructor, unfollowInstructor } = usePlayStore.getState();
       const wasFollowing = isFollowingInstructor(instructorId);
       if (wasFollowing !== response.isFollowing) {
-        toggleStore(instructorId);
+        if (response.isFollowing) {
+          followInstructor(instructorId);
+        } else {
+          unfollowInstructor(instructorId);
+        }
       }
       
       return response;

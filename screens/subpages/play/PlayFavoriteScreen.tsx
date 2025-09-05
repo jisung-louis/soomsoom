@@ -11,10 +11,13 @@ import { TabMenu } from '../../../components/common/tabmenu/TabMenu';
 import ProgramList from '../../../components/tabs/play/common/ProgramList';
 import FollowInstructorList from '../../../components/tabs/play/PlayFavoriteScreen/FollowInstructorList';
 import { TabView, SceneMap } from 'react-native-tab-view';
-import { contentData } from '../../../data/playContentData';
+import { mockContentData } from '../../../data/playContentData';
 import { usePlayStore } from '../../../stores/playStore';
-import { getFollowedInstructors, toggleFollowInstructor as toggleFollowInstructorAPI, FollowedInstructorSummary } from '../../../services/instructorService';
+import { getFollowedInstructors, toggleFollowInstructor, isFollowingInstructor, FollowedInstructorSummary } from '../../../services/instructorService';
 import { useToast } from '../../../contexts/ToastContext';
+
+const normalizeImageSource = (url?: string | null) =>
+  url ? { uri: url } : require('../../../assets/images/play/playFavoriteScreen/default_image_1.png');
 
 const PlayFavoriteScreen = () => {
   const navigation = useNavigation<StackNavigationProp<PlayStackParamList>>();
@@ -32,36 +35,24 @@ const PlayFavoriteScreen = () => {
   // zustand store 사용
   const { 
     favoriteContents, 
-    followedInstructorIds, 
-    toggleFollowInstructor, 
-    isFollowingInstructor,
-    initializeFavorites,
-    initializeFollowedInstructors 
+    followedInstructors
   } = usePlayStore();
 
   const { showToast } = useToast();
 
-  // 초기 데이터 로드 (실제로는 앱 시작 시 한 번만 호출)
-  useEffect(() => {
-    // TODO: 백엔드에서 초기 데이터를 가져와서 초기화
-    // initializeFavorites(initialFavorites);
-    // initializeFollowedInstructors(initialFollowedInstructors);
-  }, []);
 
   // 즐겨찾기 데이터 필터링
-  const filteredFavoriteContent = contentData.filter((content) => 
+  const filteredFavoriteContent = mockContentData.filter((content) => 
     favoriteContents.some((favorite) => favorite.contentId === content.id)
   );
 
-  // 팔로우한 강사 목록: 서버 데이터 사용
-  const [localFollowedInstructors, setLocalFollowedInstructors] = useState<FollowedInstructorSummary[]>([]);
+  // 새로고침 상태 관리
   const [refreshing, setRefreshing] = useState(false);
 
   const fetchFollowed = async () => {
     try {
-      // 서비스 레이어에서 __DEV__ 분기 처리
-      const res = await getFollowedInstructors({ page: 1, size: 12, sort: 'createdAt,desc' });
-      setLocalFollowedInstructors(res.content);
+      // Service Layer에서 환경 분기 처리
+      await getFollowedInstructors({ page: 1, size: 12, sort: 'createdAt,desc' });
     } catch (e) {
       showToast({
         message: '네트워크 연결을 확인한 뒤 다시 시도해주세요.',
@@ -103,7 +94,7 @@ const PlayFavoriteScreen = () => {
   const renderFollowTab = () => {
     return (
       <View style={styles.contentContainer}>
-        {localFollowedInstructors.length === 0 ? (
+        {followedInstructors.length === 0 ? (
           <View style={styles.emptyContainer}>
             <Image
               source={require('../../../assets/images/play/playFavoriteScreen/empty_follow_image.png')}
@@ -112,23 +103,20 @@ const PlayFavoriteScreen = () => {
           </View>
         ) : (
           <FlatList
-            data={localFollowedInstructors}
+            data={followedInstructors}
             keyExtractor={(item) => item.instructorId.toString()}
             renderItem={({ item }) => (
               <FollowInstructorList
                 followInstructorData={[{
                   id: item.instructorId,
                   name: item.name,
-                  profileImage: item.profileImageUrl ? __DEV__ ? item.profileImageUrl as any : { uri: item.profileImageUrl } : require('../../../assets/images/play/playFavoriteScreen/default_image_1.png')
+                  profileImage: normalizeImageSource(item.profileImageUrl),
+                  isFollowing: isFollowingInstructor(item.instructorId)
                 }]}
-                followedIds={followedInstructorIds}
                 onToggleFollow={async (instructorId: number) => {
                   try {
                     // 서비스 레이어에서 API 호출과 store 동기화를 모두 처리
-                    await toggleFollowInstructorAPI(instructorId);
-                    
-                    // 목록 새로고침
-                    await fetchFollowed();
+                    await toggleFollowInstructor(instructorId);
                   } catch (error) {
                     console.error('팔로우 상태 변경 실패:', error);
                     showToast({

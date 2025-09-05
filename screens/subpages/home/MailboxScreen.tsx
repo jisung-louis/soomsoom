@@ -1,5 +1,8 @@
-import React from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl } from 'react-native';
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
+import 'dayjs/locale/ko';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -8,14 +11,18 @@ import SubpageHeader from '../../../components/common/top-navigation/SubpageHead
 import { typography, syongsyongTypography } from '../../../constants/typography';
 import { colors } from '../../../constants/colors';
 import MessageIcon from '../../../assets/icons/navigation/topNavigation/message.svg';
+import EmptyIcon from '../../../assets/images/home/mailbox/mailbox_empty.svg';
+import { radius } from '../../../constants/radius';
+dayjs.extend(relativeTime);
+dayjs.locale('ko');
 
-type MailData = {
+export type MailData = {
   id: number;
   type: 'news'; //추후 추가(유저끼리의 쪽지, 친구추가 알림 등)
   title: string;
   content: string;
-  sendDate: string; //yyyy-MM-dd
-  sendTime: string; //HH:mm
+  imageUrl?: string;
+  sendDate: string; //yyyy-MM-ddTHH:mm:ss.SSSSSS
   isRead: boolean; //읽었는지 여부
   isDeleted: boolean; //삭제된 것인지 여부
 };
@@ -26,8 +33,8 @@ const mockMailData: MailData[] = [
     type: 'news',
     title: '업데이트 진행 소식!',
     content: '메일함',
-    sendDate: '2025-01-01',
-    sendTime: '12:00',
+    imageUrl: undefined,
+    sendDate: '2025-08-10T18:35:55.741664',
     isRead: false,
     isDeleted: false,
   },
@@ -36,8 +43,8 @@ const mockMailData: MailData[] = [
     type: 'news',
     title: '일주일간 진행되는 감정기록 이벤트!',
     content: '안녕하세요 집사님들! 이번에 출시를 앞두고 저희를사랑 추첨하여 소정의선물을 드립니다. 추첨에는 개인정보가 활용되지 않습니다.숨숨을 많이 사랑해주세요! 감사합니다!',
-    sendDate: '2025-01-02',
-    sendTime: '15:00',
+    imageUrl: undefined,
+    sendDate: '2025-09-05T15:00:00.000000',
     isRead: false,
     isDeleted: false,
   },
@@ -54,19 +61,32 @@ const isMailboxEmpty = () => {
   }
 };
 
-const typeMap = {
+export const typeMap = {
   news: '새로운 소식',
 };
 
+const sortMailData = (mailData: MailData[]) => {
+  return mailData.sort((a, b) => {
+    return dayjs(b.sendDate).diff(dayjs(a.sendDate));
+  });
+};
 
 const MailboxScreen = () => {
   const navigation = useNavigation<StackNavigationProp<HomeStackParamList>>();
+  const [refreshing, setRefreshing] = useState(false);
   const handleBack = () => {
     navigation.goBack();
   };
   const handleMailboxItemPress = (item: MailData) => {
-    console.log(item.title, item.content);
+    navigation.navigate('MailboxDetailScreen', { content: item });
   };
+  const handleRefresh = () => {
+    console.log('MailboxScreen Refresh');
+    setRefreshing(true);
+    setRefreshing(false);
+  };
+  
+
     return (
     <SafeAreaView style={styles.container}>
       <SubpageHeader onBack={handleBack} />
@@ -74,17 +94,24 @@ const MailboxScreen = () => {
         <Text style={styles.title}>우편함</Text>
         {!isMailboxEmpty() ? (
           <FlatList
-            data={mockMailData}
+            data={sortMailData(mockMailData)}
             keyExtractor={(item) => item.id.toString()}
             style={styles.mailboxList}
             contentContainerStyle={styles.mailboxListContentContainer}
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
             renderItem={({ item }) => (
               <TouchableOpacity key={item.id} style={styles.mailboxItem} onPress={() => handleMailboxItemPress(item)}>
                 <View style={styles.mailboxItemHeaderContainer}>
                   <MessageIcon width={32} height={32} />
                   <View style={styles.mailboxItemRightContainer}>
-                    <Text style={styles.mailboxItemType}>{typeMap[item.type]}</Text>
-                    <Text style={styles.mailboxItemDate}>{item.sendDate}</Text>
+                    <Text style={styles.mailboxItemType}>{typeMap[item.type as keyof typeof typeMap]}</Text>
+                    <View style={styles.mailboxItemDateAndReadBadgeContainer}>
+                      <Text style={styles.mailboxItemDate}>{dayjs(item.sendDate).fromNow()}</Text>
+                      {!item.isRead && (
+                        <View style={styles.mailboxItemReadBadge}/>
+                      )}
+                    </View>
                   </View>
                 </View>
                 <View style={styles.mailboxItemTitleContainer}>
@@ -95,7 +122,11 @@ const MailboxScreen = () => {
           />
         ) : (
           <View style={styles.mailboxEmptyContainer}>
-            <Text style={styles.emptyText}>우편함이 비어있습니다.</Text>
+            <EmptyIcon width={100} height={100} />
+            <View style={styles.emptyTextContainer}>
+              <Text style={styles.emptyText}>우편함이 텅 비었어요!</Text>
+              <Text style={styles.emptyText}>소식을 기다려주세요!</Text>
+            </View>
           </View>
         )}
 
@@ -136,16 +167,26 @@ const styles = StyleSheet.create({
   mailboxItemRightContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    width: '100%',
     justifyContent: 'space-between',
+    flex: 1,
   },
   mailboxItemType: {
     ...typography.body5,
     color: colors.grayScale500,
   },
+  mailboxItemDateAndReadBadgeContainer: {
+    flexDirection: 'row',
+    gap: 2,
+  },
   mailboxItemDate: {
     ...typography.body5,
     color: colors.grayScale500,
+  },
+  mailboxItemReadBadge: {
+    width: 8,
+    height: 8,
+    borderRadius: radius.max,
+    backgroundColor: '#F15F5F',
   },
   mailboxItemTitleContainer: {
     paddingLeft: 38,
@@ -158,10 +199,13 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    gap: 20,
+  },
+  emptyTextContainer: {
+    alignItems: 'center',
   },
   emptyText: {
-    ...typography.body5,
-    color: colors.grayScale500,
+    ...syongsyongTypography.title6,
   },
 });
 

@@ -12,7 +12,7 @@ import FavoriteIcon from '../../../assets/icons/common/star.svg';
 import { typography } from '../../../constants/typography';
 import PersonIcon from '../../../assets/icons/common/Person.svg';
 import AudioIcon from '../../../assets/icons/common/Vol.svg';
-import { instructorsData } from '../../../data/playContentData';
+import { mockInstructorsData } from '../../../data/playContentData';
 import ToastView from '../../../components/common/toast/ToastView';
 import { Button } from '../../../components/common/buttons/Button';
 import { usePlayStore } from '../../../stores/playStore';

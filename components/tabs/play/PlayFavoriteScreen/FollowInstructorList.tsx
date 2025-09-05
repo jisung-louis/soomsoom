@@ -9,15 +9,15 @@ type FollowInstructorData = {
   id: number;
   name: string;
   profileImage: any;
+  isFollowing: boolean;
 }
 
 type FollowInstructorListProps = {
   followInstructorData: FollowInstructorData[];
-  followedIds: number[];
   onToggleFollow: (id: number) => void;
 };
 
-const FollowInstructorList = ({ followInstructorData, followedIds, onToggleFollow }: FollowInstructorListProps) => {
+const FollowInstructorList = ({ followInstructorData, onToggleFollow }: FollowInstructorListProps) => {
   return (
     <View style={styles.listContainer}>
       {
@@ -30,7 +30,7 @@ const FollowInstructorList = ({ followInstructorData, followedIds, onToggleFollo
             <ToggleButton
               defaultTitle="팔로우"
               activeTitle="팔로잉"
-              isActive={followedIds.includes(item.id)}
+              isActive={item.isFollowing}
               checkIcon={true}
               onPress={() => onToggleFollow(item.id)}
             />

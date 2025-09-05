@@ -7,7 +7,7 @@ import MoreIcon from '../../../assets/icons/common/more.svg';
 import TimeIcon from '../../../assets/icons/common/time.svg';
 import { colors } from '../../../constants/colors';
 import { typography } from '../../../constants/typography';
-import { contentData } from '../../../data/playContentData';
+import { mockContentData } from '../../../data/playContentData';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { PlayStackParamList } from '../../../navigations/tabs/PlayStackNavigator';
@@ -17,7 +17,7 @@ const PlayRecommendedContentList = () => {
   const navigation = useNavigation<StackNavigationProp<PlayStackParamList>>();
   
   // meditation 타입만 필터링
-  const meditationData = contentData.filter(item => item.type === 'meditation');
+  const meditationData = mockContentData.filter(item => item.type === 'meditation');
   
   return (
   <View style={styles.section}>
