@@ -134,7 +134,7 @@ const HomeTab = () => {
           style={{width: '100%'}}
         />
         <ButtonSmall
-          title={"사용자 상태 정보"}
+          title={"테스트 화면"}
           onPress={() => navigation.navigate('TestScreen')}
           variant="active"
           style={{width: '100%'}}

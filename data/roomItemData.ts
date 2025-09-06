@@ -24,7 +24,7 @@ export const roomItemList: RoomItem[] = [
     image: require('../assets/icons/items/default-background/frame_default_1.png'),
     lottieJson: null,
     price: 300,
-    positionType: 'frame1',
+    positionType: 'frame',
     position: { x: 0, y: 0 }, // 동적으로 계산됨
   },
   {
@@ -34,7 +34,7 @@ export const roomItemList: RoomItem[] = [
     image: require('../assets/icons/items/default-background/frame_default_2.png'),
     lottieJson: null,
     price: 300,
-    positionType: 'frame2',
+    positionType: 'frame',
     position: { x: 0, y: 0 }, // 동적으로 계산됨
   },
   {
@@ -245,6 +245,16 @@ export const roomItemList: RoomItem[] = [
     lottieJson: null,
     price: 0,
     positionType: 'background',
+    position: { x: 0, y: 0 }, // 동적으로 계산됨
+  },
+  {
+    id: 25,
+    type: '장식품',
+    title: '테스트 액자',
+    image: require('../assets/images/backgrounds/default.png'),
+    lottieJson: null,
+    price: 0,
+    positionType: 'frame',
     position: { x: 0, y: 0 }, // 동적으로 계산됨
   },
 ];

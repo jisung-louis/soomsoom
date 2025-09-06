@@ -14,6 +14,9 @@ interface RoomState {
   // 현재 선택된 아이템들 (임시 선택용)
   selectedItems: number[];
   
+  // frame 교체 대상 인덱스 (0 또는 1)
+  frameReplacementIndex: number;
+  
   // 액션들
   // 소유 아이템 관리
   addOwnedItem: (itemId: number) => void;
@@ -42,6 +45,7 @@ export const useRoomStore = create<RoomState>()(
       ownedItems: INITIAL_ROOM_STATE.ownedItems,
       placedItems: INITIAL_ROOM_STATE.placedItems,
       selectedItems: INITIAL_ROOM_STATE.selectedItems,
+      frameReplacementIndex: 0,
       
       // 소유 아이템 관리 액션
       addOwnedItem: (itemId: number) => {
@@ -60,23 +64,99 @@ export const useRoomStore = create<RoomState>()(
       
       // 배치 아이템 관리 액션
       placeItem: (itemId: number, category: RoomItemPositionType) => {
-        set((state) => ({
-          placedItems: {
-            ...state.placedItems,
-            [category]: state.placedItems[category] === itemId
-              ? null // 이미 배치된 아이템이면 제거
-              : itemId // 새로운 아이템 배치
+        if (category === 'frame') {
+          // frame의 경우 배열 처리
+          const currentFrames = get().placedItems.frame;
+          const [slot0, slot1] = currentFrames;
+          const currentReplacementIndex = get().frameReplacementIndex;
+          
+          // 이미 배치된 아이템이면 제거
+          if (slot0 === itemId) {
+            set((state) => ({
+              placedItems: {
+                ...state.placedItems,
+                frame: [null, slot1]
+              }
+            }));
+            return;
           }
-        }));
+          if (slot1 === itemId) {
+            set((state) => ({
+              placedItems: {
+                ...state.placedItems,
+                frame: [slot0, null]
+              }
+            }));
+            return;
+          }
+          
+          // 새로운 아이템 배치
+          if (slot0 === null) {
+            // slot0이 비어있으면 slot0에 배치
+            set((state) => ({
+              placedItems: {
+                ...state.placedItems,
+                frame: [itemId, slot1]
+              }
+            }));
+          } else if (slot1 === null) {
+            // slot1이 비어있으면 slot1에 배치
+            set((state) => ({
+              placedItems: {
+                ...state.placedItems,
+                frame: [slot0, itemId]
+              }
+            }));
+          } else {
+            // 둘 다 차있으면 교체 로직 (0->1->0->1 순환)
+            const newFrames = [...currentFrames];
+            newFrames[currentReplacementIndex] = itemId;
+            
+            set((state) => ({
+              placedItems: {
+                ...state.placedItems,
+                frame: newFrames as [number | null, number | null]
+              },
+              frameReplacementIndex: currentReplacementIndex === 0 ? 1 : 0 // 다음 교체 대상 변경
+            }));
+          }
+        } else {
+          // 다른 카테고리는 기존 로직
+          set((state) => ({
+            placedItems: {
+              ...state.placedItems,
+              [category]: state.placedItems[category] === itemId
+                ? null // 이미 배치된 아이템이면 제거
+                : itemId // 새로운 아이템 배치
+            }
+          }));
+        }
       },
       
       removePlacedItem: (itemId: number, category: RoomItemPositionType) => {
-        set((state) => ({
-          placedItems: {
-            ...state.placedItems,
-            [category]: state.placedItems[category] === itemId ? null : state.placedItems[category]
-          }
-        }));
+        if (category === 'frame') {
+          // frame의 경우 배열에서 해당 아이템 제거
+          const currentFrames = get().placedItems.frame;
+          const [slot0, slot1] = currentFrames;
+          
+          set((state) => ({
+            placedItems: {
+              ...state.placedItems,
+              frame: [
+                slot0 === itemId ? null : slot0,
+                slot1 === itemId ? null : slot1
+              ]
+            }
+          }));
+        } else {
+          // 다른 카테고리는 기존 로직
+          set((state) => ({
+            placedItems: {
+              ...state.placedItems,
+              [category]: state.placedItems[category] === itemId ? null : state.placedItems[category]
+            }
+          }));
+        }
       },
 
       clearAllPlacedItems: () => {
@@ -86,20 +166,32 @@ export const useRoomStore = create<RoomState>()(
             background: null,
             eyewear: null,
             hat: null,
-            frame1: null,    // frame_1 → frame1
-            frame2: null,    // frame_2 → frame2
+            frame: [null, null],  // frame 배열 초기화
             floor: null,
             shelf: null,
-          }
+          },
+          frameReplacementIndex: 0, // 교체 인덱스도 초기화
         }));
       },
       clearPlacedItems: (category: RoomItemPositionType) => {
-        set((state) => ({
-          placedItems: {
-            ...state.placedItems,
-            [category]: null
-          }
-        }));
+        if (category === 'frame') {
+          // frame의 경우 배열 초기화
+          set((state) => ({
+            placedItems: {
+              ...state.placedItems,
+              frame: [null, null]
+            },
+            frameReplacementIndex: 0, // 교체 인덱스도 초기화
+          }));
+        } else {
+          // 다른 카테고리는 기존 로직
+          set((state) => ({
+            placedItems: {
+              ...state.placedItems,
+              [category]: null
+            }
+          }));
+        }
       },
 
       updatePlacedItems: (nextMap: Partial<PlacedItems>) => {
@@ -127,7 +219,13 @@ export const useRoomStore = create<RoomState>()(
       
       isPlaced: (itemId: number, category: RoomItemPositionType) => {
         const state = get();
-        return state.placedItems[category] === itemId;
+        if (category === 'frame') {
+          // frame의 경우 배열에서 확인
+          return state.placedItems.frame.includes(itemId);
+        } else {
+          // 다른 카테고리는 기존 로직
+          return state.placedItems[category] === itemId;
+        }
       },
     }),
     {

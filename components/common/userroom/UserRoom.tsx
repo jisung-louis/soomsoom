@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, { useEffect, useMemo, useRef, useCallback } from 'react';
 import { View, Text, ImageBackground, StyleSheet, Image, ScrollView } from 'react-native';
 import LottieView from 'lottie-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -23,21 +23,45 @@ const UserRoom = ({children, previewMode = false, previewItemIds = [], cropTop =
   // 프리뷰 아이템을 positionType별로 매핑
   const previewByCategory = useMemo(() => {
     const map: Record<string, number | null> = {};
+    const frameItems: number[] = [];
+    
     previewItemIds.forEach((id) => {
       const item = roomItemList.find(i => i.id === id);
       if (item?.positionType) {
-        map[item.positionType] = id;
+        if (item.positionType === 'frame') {
+          frameItems.push(id);
+        } else {
+          map[item.positionType] = id;
+        }
       }
     });
-    return map;
+    
+    return { 
+      background: map.background ?? null,
+      eyewear: map.eyewear ?? null,
+      hat: map.hat ?? null,
+      floor: map.floor ?? null,
+      shelf: map.shelf ?? null,
+      frameItems 
+    };
+  }, [previewItemIds]);
+
+  // Lottie 애니메이션이 필요한 아이템들만 필터링
+  const lottieItemIds = useMemo(() => {
+    return previewItemIds.filter(id => {
+      const item = roomItemList.find(i => i.id === id);
+      return item?.lottieJson;
+    });
   }, [previewItemIds]);
 
   useEffect(() => {
-    // 애니메이션 아이템이 변경되면 모든 애니메이션 리셋 후 재생
-    replayKey.current = replayKey.current === 0 ? 1 : 0;
-  }, [previewItemIds]);
+    // Lottie 애니메이션 아이템이 변경될 때만 애니메이션 리셋 후 재생
+    if (lottieItemIds.length > 0) {
+      replayKey.current = replayKey.current === 0 ? 1 : 0;
+    }
+  }, [lottieItemIds]);
 
-  const renderLottieItem = (itemId: number | null, position: { x: number; y: number }, style: any, key: string) => {
+  const renderLottieItem = useCallback((itemId: number | null, position: { x: number; y: number }, style: any, key: string) => {
     if (!itemId) return null;
     const item = roomItemList.find(i => i.id === itemId);
     if (!item?.lottieJson) return null;
@@ -53,15 +77,14 @@ const UserRoom = ({children, previewMode = false, previewItemIds = [], cropTop =
         }]}
       />
     );
-  };
+  }, [replayKey.current]);
 
-  const renderImageItem = (itemId: number | null, position: { x: number; y: number }, containerStyle: any, imageStyle: any, key: string) => {
+  const renderImageItem = useCallback((itemId: number | null, position: { x: number; y: number }, containerStyle: any, imageStyle: any, key: string) => {
     if (!itemId) return null;
     const item = roomItemList.find(i => i.id === itemId);
     if (!item?.image) return null;
     return (
       <View 
-        key={`${key}-${itemId}-${replayKey.current}`}
         style={[containerStyle, {
           top: position.y,
           left: position.x,
@@ -69,15 +92,26 @@ const UserRoom = ({children, previewMode = false, previewItemIds = [], cropTop =
         <Image source={item.image} style={imageStyle} />
       </View>
     );
-  };
+  }, [replayKey.current]);
 
-  const backgroundPreviewId = previewByCategory['background'] ?? null;
-  const eyewearPreviewId = previewByCategory['eyewear'] ?? null;
-  const hatPreviewId = previewByCategory['hat'] ?? null;
-  const floorPreviewId = previewByCategory['floor'] ?? null;
-  const shelfPreviewId = previewByCategory['shelf'] ?? null;
-  const frame1PreviewId = previewByCategory['frame1'] ?? null;
-  const frame2PreviewId = previewByCategory['frame2'] ?? null;
+  const backgroundPreviewId = previewByCategory.background;
+  const eyewearPreviewId = previewByCategory.eyewear;
+  const hatPreviewId = previewByCategory.hat;
+  const floorPreviewId = previewByCategory.floor;
+  const shelfPreviewId = previewByCategory.shelf;
+  
+  // frame 프리뷰 아이템 처리
+  const framePreviewIds = (() => {
+    const frameItems = previewByCategory.frameItems || [];
+    // frame 배열이 있는 경우, 2개 슬롯에 맞춰 배치
+    return [
+      frameItems[0] ?? null,
+      frameItems[1] ?? null
+    ];
+  })();
+  
+  // frame 배열 안전하게 접근
+  const frameItems = placedItems.frame || [null, null];
 
   const backgroundImage = (backgroundPreviewId
     ? roomItemList.find(i => i.id === backgroundPreviewId)?.image
@@ -124,8 +158,8 @@ const UserRoom = ({children, previewMode = false, previewItemIds = [], cropTop =
               {renderLottieItem(hatPreviewId ?? (previewMode ? null : placedItems.hat), objectPosition.hat, itemStyles.hat, 'hat')}
               {renderImageItem(floorPreviewId ?? (previewMode ? null : placedItems.floor), objectPosition.floor, itemStyles.floorContainer, itemStyles.floor, 'floor')}
               {renderImageItem(shelfPreviewId ?? (previewMode ? null : placedItems.shelf), objectPosition.shelf, itemStyles.shelfContainer, itemStyles.shelf, 'shelf')}
-              {renderImageItem(frame1PreviewId ?? (previewMode ? null : placedItems.frame1), objectPosition.frame1, itemStyles.frameContainer, itemStyles.frame, 'frame1')}
-              {renderImageItem(frame2PreviewId ?? (previewMode ? null : placedItems.frame2), objectPosition.frame2, itemStyles.frameContainer, itemStyles.frame, 'frame2')}
+              {renderImageItem(framePreviewIds[0] ?? (previewMode ? null : frameItems[0]), objectPosition.frame0, itemStyles.frameContainer, itemStyles.frame, 'frame0')}
+              {renderImageItem(framePreviewIds[1] ?? (previewMode ? null : frameItems[1]), objectPosition.frame1, itemStyles.frameContainer, itemStyles.frame, 'frame1')}
             </View>
           </ImageBackground>
         </ScrollView>
@@ -161,8 +195,8 @@ const UserRoom = ({children, previewMode = false, previewItemIds = [], cropTop =
           {renderLottieItem(hatPreviewId ?? placedItems.hat, objectPosition.hat, itemStyles.hat, 'hat')}
           {renderImageItem(floorPreviewId ?? placedItems.floor, objectPosition.floor, itemStyles.floorContainer, itemStyles.floor, 'floor')}
           {renderImageItem(shelfPreviewId ?? placedItems.shelf, objectPosition.shelf, itemStyles.shelfContainer, itemStyles.shelf, 'shelf')}
-          {renderImageItem(frame1PreviewId ?? placedItems.frame1, objectPosition.frame1, itemStyles.frameContainer, itemStyles.frame, 'frame1')}
-          {renderImageItem(frame2PreviewId ?? placedItems.frame2, objectPosition.frame2, itemStyles.frameContainer, itemStyles.frame, 'frame2')}
+          {renderImageItem(framePreviewIds[0] ?? frameItems[0], objectPosition.frame0, itemStyles.frameContainer, itemStyles.frame, 'frame0')}
+          {renderImageItem(framePreviewIds[1] ?? frameItems[1], objectPosition.frame1, itemStyles.frameContainer, itemStyles.frame, 'frame1')}
         </SafeAreaView>
       </ImageBackground>
     </View>

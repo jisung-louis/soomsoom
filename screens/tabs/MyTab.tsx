@@ -57,9 +57,19 @@ const MyTab = () => {
   const [showSaveAlert, setShowSaveAlert] = useState(false); // 저장 알림 표시 여부
 
   useEffect(() => {
-    setEditModeSelectedItems(
-      Object.values(placedItems).filter((id): id is number => id !== null && id !== undefined)
-    );
+    const items: number[] = [];
+    Object.entries(placedItems).forEach(([key, value]) => {
+      if (key === 'frame' && Array.isArray(value)) {
+        // frame 배열의 경우 각 요소를 개별적으로 처리
+        value.forEach(item => {
+          if (item !== null) items.push(item);
+        });
+      } else if (value !== null && value !== undefined) {
+        // 다른 카테고리는 기존 로직
+        items.push(value as number);
+      }
+    });
+    setEditModeSelectedItems(items);
   }, []);
 
   // 선택된 아이템 중 미보유 아이템
@@ -84,23 +94,60 @@ const MyTab = () => {
     if (!itemData) return;
 
     setEditModeSelectedItems(prev => {
-      // 같은 positionType의 기존 아이템 제거
-      const filteredItems = prev.filter(id => {
-        const existingItem = roomItemList.find(item => item.id === id);
-        return existingItem?.positionType !== itemData.positionType;
-      });
+      // frame의 경우 특별 처리 (2개까지 선택 가능)
+      if (itemData.positionType === 'frame') {
+        const isAlreadySelected = prev.includes(itemId);
+        
+        if (isAlreadySelected) {
+          // 이미 선택된 경우 제거
+          return prev.filter(id => id !== itemId);
+        } else {
+          // 선택되지 않은 경우 추가 (최대 2개 제한)
+          const currentFrameItems = prev.filter(id => {
+            const existingItem = roomItemList.find(item => item.id === id);
+            return existingItem?.positionType === 'frame';
+          });
+          
+          if (currentFrameItems.length < 2) {
+            return [...prev, itemId];
+          } else {
+            // 이미 2개가 선택된 경우 첫 번째 것을 제거하고 새 것으로 교체
+            const otherItems = prev.filter(id => {
+              const existingItem = roomItemList.find(item => item.id === id);
+              return existingItem?.positionType !== 'frame';
+            });
+            return [...otherItems, currentFrameItems[1], itemId];
+          }
+        }
+      } else {
+        // 다른 카테고리의 경우 기존 로직 (1개만 선택 가능)
+        const filteredItems = prev.filter(id => {
+          const existingItem = roomItemList.find(item => item.id === id);
+          return existingItem?.positionType !== itemData.positionType;
+        });
 
-      // 현재 아이템이 이미 선택되어 있다면 제거, 아니면 추가
-      const isAlreadySelected = prev.includes(itemId);
-      return isAlreadySelected ? filteredItems : [...filteredItems, itemId];
+        // 현재 아이템이 이미 선택되어 있다면 제거, 아니면 추가
+        const isAlreadySelected = prev.includes(itemId);
+        return isAlreadySelected ? filteredItems : [...filteredItems, itemId];
+      }
     });
   }, []);
 
   const enterEditMode = () => {
     setIsEditMode(true);
-    setEditModeSelectedItems(
-      Object.values(placedItems).filter((id): id is number => id !== null && id !== undefined)
-    );
+    const items: number[] = [];
+    Object.entries(placedItems).forEach(([key, value]) => {
+      if (key === 'frame' && Array.isArray(value)) {
+        // frame 배열의 경우 각 요소를 개별적으로 처리
+        value.forEach(item => {
+          if (item !== null) items.push(item);
+        });
+      } else if (value !== null && value !== undefined) {
+        // 다른 카테고리는 기존 로직
+        items.push(value as number);
+      }
+    });
+    setEditModeSelectedItems(items);
   };
 
   const exitEditMode = () => {
@@ -133,25 +180,50 @@ const MyTab = () => {
     }
 
     // 2) positionType별 nextMap 구성
-    const nextMap: Record<string, number> = {};
+    const nextMap: Record<string, number | number[]> = {};
+    const frameItems: number[] = [];
+    
     editModeSelectedItems.forEach((itemId) => {
       const itemData = roomItemList.find((it) => it.id === itemId);
-      if (itemData) nextMap[itemData.positionType as string] = itemId;
+      if (itemData) {
+        if (itemData.positionType === 'frame') {
+          frameItems.push(itemId);
+        } else {
+          nextMap[itemData.positionType as string] = itemId;
+        }
+      }
     });
+    
+    // frame 배열 처리
+    if (frameItems.length > 0) {
+      nextMap.frame = frameItems;
+    }
 
     // 3) 현재 배치와 비교해 변경분만 추출 (제거는 null로 표시)
-    const updates: Record<string, number | null> = {};
+    const updates: Record<string, number | [number | null, number | null] | null> = {};
 
     // 제거 대상 (현재에는 있는데 next엔 없는 키)
     Object.keys(placedItems).forEach((pt) => {
       if (!Object.prototype.hasOwnProperty.call(nextMap, pt)) {
-        updates[pt] = null;
+        updates[pt] = pt === 'frame' ? [null, null] as [number | null, number | null] : null;
       }
     });
+    
     // 업서트 대상 (값이 다르거나 새로 생긴 키)
-    Object.entries(nextMap).forEach(([pt, id]) => {
-      const curId = placedItems[pt as keyof typeof placedItems] ?? null;
-      if (curId !== id) updates[pt] = id;
+    Object.entries(nextMap).forEach(([pt, value]) => {
+      const currentValue = placedItems[pt as keyof typeof placedItems];
+      if (pt === 'frame') {
+        const currentFrame = Array.isArray(currentValue) ? currentValue : [null, null];
+        const newFrame = Array.isArray(value) ? value : [null, null];
+        // 배열 비교
+        if (JSON.stringify(currentFrame) !== JSON.stringify(newFrame)) {
+          updates[pt] = newFrame as [number | null, number | null];
+        }
+      } else {
+        if (currentValue !== value) {
+          updates[pt] = value as number;
+        }
+      }
     });
 
     // 4) 부분 갱신
@@ -187,7 +259,21 @@ const MyTab = () => {
           <View style={styles.testContainer}>
               <Text style={styles.test}>모드 : {isEditMode ? '방 꾸미기 모드' : '일반 모드'}</Text>
               <Text style={styles.test}>선택된 아이템 : {editModeSelectedItems.join(',')}</Text>
-              <Text style={styles.test}>배치된 아이템 : {Object.values(placedItems).filter(id => id !== null).join(',')}</Text>
+              <Text style={styles.test}>배치된 아이템 : {(() => {
+                const items: number[] = [];
+                Object.entries(placedItems).forEach(([key, value]) => {
+                  if (key === 'frame' && Array.isArray(value)) {
+                    // frame 배열의 경우 각 요소를 개별적으로 처리
+                    value.forEach(item => {
+                      if (item !== null) items.push(item);
+                    });
+                  } else if (value !== null && value !== undefined) {
+                    // 다른 카테고리는 기존 로직
+                    items.push(value as number);
+                  }
+                });
+                return items.join(',');
+              })()}</Text>
           </View>
         )}
         <UserRoom 

@@ -130,6 +130,7 @@ const TestScreen = () => {
       <SubpageHeader onBack={handleBack} />
       <ScrollView style={styles.scrollContainer} contentContainerStyle={styles.contentContainer}>
         {/* Zustand 상태 테스트 */}
+        <Text style={styles.testTitle}>ZUSTAND STATE TEST</Text>
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>💰(하트포인트) 돈 상태</Text>
           <View style={styles.infoCard}>
@@ -187,12 +188,9 @@ const TestScreen = () => {
             <Text style={styles.infoValue}>{useRoomStore.getState().placedItems.hat ? itemIdToName(useRoomStore.getState().placedItems.hat) : '없음'}</Text>
           </View>
           <View style={styles.infoCard}>
-            <Text style={styles.infoLabel}>프레임1 아이템</Text>
-            <Text style={styles.infoValue}>{useRoomStore.getState().placedItems.frame1 ? itemIdToName(useRoomStore.getState().placedItems.frame1) : '없음'}</Text>
-          </View>
-          <View style={styles.infoCard}>
-            <Text style={styles.infoLabel}>프레임2 아이템</Text>
-            <Text style={styles.infoValue}>{useRoomStore.getState().placedItems.frame2 ? itemIdToName(useRoomStore.getState().placedItems.frame2) : '없음'}</Text>
+            <Text style={styles.infoLabel}>프레임 아이템</Text>
+            <Text style={styles.infoValue}>{useRoomStore.getState().placedItems.frame ? itemIdToName(useRoomStore.getState().placedItems.frame[0]) : '없음'}</Text>
+            <Text style={styles.infoValue}>{useRoomStore.getState().placedItems.frame ? itemIdToName(useRoomStore.getState().placedItems.frame[1]) : '없음'}</Text>
           </View>
           <View style={styles.infoCard}>
             <Text style={styles.infoLabel}>배경 아이템</Text>
@@ -207,9 +205,9 @@ const TestScreen = () => {
             <Text style={styles.infoValue}>{useRoomStore.getState().placedItems.shelf ? itemIdToName(useRoomStore.getState().placedItems.shelf) : '없음'}</Text>
           </View>
         </View>
-        <Surface />
+        <Surface style={{marginHorizontal: -20}}/>
         <View style={styles.lottieTestContainer}>
-          <Text style={styles.lottieTestTitle}>LOTTIE MOTION ANIMATIONS</Text>
+          <Text style={styles.testTitle}>LOTTIE MOTION ANIMATIONS</Text>
           <View style={{flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center'}}>
             {lottieData.map((data) => (
               <View 
@@ -227,20 +225,21 @@ const TestScreen = () => {
             ))}
           </View>
         </View>
-        <Surface />
+        <Surface style={{marginHorizontal: -20}}/>
         <View style={styles.buttonTestContainer}>
+          <Text style={styles.testTitle}>BUTTON TEST</Text>
           <Button
             ref={buttonRef}
             title="테스트 버튼"
             icon="check"
             showIconMotion
             onPress={() => {}}
-            variant="active"
+            variant="secondary"
             size="large"
             style={{width: '100%'}}
           />
           <ButtonSmall
-            title="하트 움직이기"
+            title="아이콘 움직이기"
             onPress={() => {buttonRef.current?.triggerShake()}}
             variant="active"
           />
@@ -295,9 +294,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginVertical: 24,
   },
-  lottieTestTitle: {
+  testTitle: {
     ...typography.heading7,
     color: colors.grayScale900,
+    alignSelf: 'center',
+    marginBottom: 20,
+    borderWidth: 0.5,
+    borderColor: colors.grayScale300,
+    borderRadius: radius.r8,
+    paddingVertical: 5,
+    paddingHorizontal: 10,
   },
   lottieContainer: {
     alignItems: 'center',
