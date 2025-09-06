@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image, FlatList } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image, FlatList, ImageSourcePropType } from 'react-native';
 import InPossessionIcon from '../../../assets/icons/my/room-decoration/in_possession.svg';
 import AccessoryIcon from '../../../assets/icons/my/room-decoration/accessory.svg';
 import CollectionIcon from '../../../assets/icons/my/room-decoration/collection.svg';
 import HatIcon from '../../../assets/icons/my/room-decoration/hat.svg';
 import BackgroundIcon from '../../../assets/icons/my/room-decoration/background.svg';
 import FurnitureIcon from '../../../assets/icons/my/room-decoration/furniture.svg';
+import RugIcon from '../../../assets/icons/my/room-decoration/rug.svg';
+import ShelfIcon from '../../../assets/icons/my/room-decoration/shelf.svg';
 import OrnamentIcon from '../../../assets/icons/my/room-decoration/ornament.svg';
 import WallPaperIcon from '../../../assets/icons/my/room-decoration/wallpaper.svg';
 import { typography } from '../../../constants/typography';
@@ -14,13 +16,21 @@ import { radius } from '../../../constants/radius';
 import EmotionIcon from '../../../assets/icons/common/emotion.svg';
 import Badge from '../../../components/common/badge/Badge';
 import CheckIcon from '../../../assets/icons/common/stroke_check copy.svg';
-import { roomItemList, RoomItem } from '../../../data/roomItemData';
+import { roomItemList } from '../../../data/roomItemData';
 import { useRoomStore } from '../../../stores/roomStore';
+import { normalizeImageSource } from '../../../utils/textUtils';
+import { SvgProps } from 'react-native-svg';
+import { RoomItemCategory } from '../../../types/room';
 
 const ITEM_IMAGE_WIDTH = 105;
 const ITEM_IMAGE_HEIGHT = 105;
 
-const tabMenu = [
+interface TabMenu {
+  icon: React.FC<SvgProps>;
+  title: RoomItemCategory;
+}
+
+const tabMenu: TabMenu[] = [
   {
     icon: InPossessionIcon,
     title: '보유중',
@@ -42,16 +52,24 @@ const tabMenu = [
     title: '배경',
   },
   {
-    icon: FurnitureIcon,
-    title: '가구 ・ 장식품',
+    icon: RugIcon,
+    title: '러그',
+  },
+  {
+    icon: ShelfIcon,
+    title: '선반',
+  },
+  {
+    icon: OrnamentIcon,
+    title: '장식품',
   },
 ];
 
 type ItemList = {
   id: number;
-  type?: string;
+  type?: RoomItemCategory;
   title?: string;
-  image?: string;
+  image?: ImageSourcePropType;
   price?: number | null;
   __isPlaceholder?: boolean;
 };
@@ -63,7 +81,7 @@ function padToThreeColumns(data: ItemList[]) {
     const placeholders = Array(3 - remainder).fill(null).map((_, idx) => ({
       __isPlaceholder: true,
       id: 0,
-      image: '',
+      image: undefined,
       title: '',
       price: null,
     }));
@@ -139,7 +157,9 @@ const MyRoomDecoration = ({
                             <CheckIcon width={56} height={56} color={colors.white} />
                         </View>
                     )}
-                      <Image source={{ uri: item.image }} style={styles.itemImage} />
+                    <View style={styles.itemImageContainer}>
+                      <Image source={normalizeImageSource(item.image)} style={styles.itemImage} resizeMode='contain'/>
+                    </View>
                       <View style={styles.itemInfo}>
                         <Text style={styles.itemTitle}>{item.title}</Text>
                         {!isOwned(item.id) && (
@@ -164,12 +184,13 @@ const styles = StyleSheet.create({
   },
   tabMenuContainer: {
     paddingTop: 30,
-    padding: 20,
+    paddingHorizontal: 20,
     height: 118,
   },
   tabMenuContentContainer: {
     gap: 20,
     height: 68,
+    paddingRight: 20,
   },
   tabMenu: {
     alignItems: 'center',
@@ -200,11 +221,17 @@ const styles = StyleSheet.create({
     left: 8,
     zIndex: 10,
   },
-  itemImage: {
+  itemImageContainer: {
     width: ITEM_IMAGE_WIDTH,
     height: ITEM_IMAGE_HEIGHT,
     borderRadius: radius.r8,
     backgroundColor: colors.grayScale50,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  itemImage: {
+    width: 80,
+    height: 80,
   },
   itemListContainer: {
     padding: 20,

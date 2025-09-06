@@ -10,6 +10,7 @@ import AuthorInfo from '../common/AuthorInfo';
 import { useAudioPlayer } from '../../../../hooks/useAudioPlayer';
 import { playIcons, PlayIcon } from '../../../../constants/icons';
 import { useNavigation } from '@react-navigation/native';
+import FavoriteButton from '../../../../components/common/buttons/FavoriteButton';
 
 // type 정의는 그대로 유지
 
@@ -18,10 +19,11 @@ type PlayBarProps = {
   content: Activity;
   handleToggleFavorite: () => void;
   isFavorite: boolean;
+  isFavoriteLoading: boolean;
   onEnd: () => void;
 };
 
-const PlayBar = ({style, content, handleToggleFavorite, isFavorite, onEnd}: PlayBarProps) => {
+const PlayBar = ({style, content, handleToggleFavorite, isFavorite, isFavoriteLoading, onEnd}: PlayBarProps) => {
   // 오디오 플레이어 훅 사용
   const [isRepeat, setIsRepeat] = React.useState(false);
   const isRepeatRef = React.useRef(isRepeat);
@@ -67,13 +69,7 @@ const PlayBar = ({style, content, handleToggleFavorite, isFavorite, onEnd}: Play
         <View style={styles.infoContainer}>
           <View style={styles.titleContainer}>
             <Text style={styles.title}>{content.title}</Text>
-            <TouchableOpacity onPress={handleToggleFavorite}>
-              <FavoriteIcon 
-                width={32} 
-                height={32} 
-                color={isFavorite ? colors.primary300 : colors.grayScale500} 
-              />
-            </TouchableOpacity>
+            <FavoriteButton onPress={handleToggleFavorite} isFavorite={isFavorite} isLoading={isFavoriteLoading} />
           </View>
           <AuthorInfo
             instructorName={content.author.name}

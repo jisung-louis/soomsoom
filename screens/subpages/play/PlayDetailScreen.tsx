@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, View, Text, ScrollView, Image, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import SubpageHeader from '../../../components/common/top-navigation/SubpageHeader';
@@ -19,13 +19,15 @@ import { usePlayStore } from '../../../stores/playStore';
 import AuthorInfo from '../../../components/tabs/play/common/AuthorInfo';
 import { toggleFavoriteActivity } from '../../../services/contentService';
 import { useToast } from '../../../contexts/ToastContext';
-
+import FavoriteButton from '../../../components/common/buttons/FavoriteButton';
+  
 const PlayDetailScreen: React.FC = () => {
   const navigation = useNavigation<StackNavigationProp<PlayStackParamList>>();
   const route = useRoute<RouteProp<PlayStackParamList, 'PlayDetailScreen'>>();
   const { content } = route.params;
   const { favoriteActivities } = usePlayStore();
   const { showToast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleBack = () => {
     navigation.goBack();
@@ -34,6 +36,7 @@ const PlayDetailScreen: React.FC = () => {
   const isFavorite = favoriteActivities.some(fav => fav.activityId === content.id);
   
   const handleToggleFavorite = async () => {
+    setIsLoading(true);
     try {
       const { favoriteActivity, unfavoriteActivity, favoriteActivities } = usePlayStore.getState();
       await toggleFavoriteActivity(content.id, {
@@ -48,6 +51,8 @@ const PlayDetailScreen: React.FC = () => {
         theme: 'dark',
         iconType: 'brokenHeart',
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -62,13 +67,14 @@ const PlayDetailScreen: React.FC = () => {
           <View style={styles.contentHeader}>
             <View style={styles.contentHeaderTitleContainer}>
               <Text style={styles.contentHeaderTitle}>{content.title}</Text>
-              <TouchableOpacity onPress={handleToggleFavorite}>
+              {/* <TouchableOpacity onPress={handleToggleFavorite}>
                 <FavoriteIcon 
                   width={32} 
                   height={32} 
                   color={isFavorite ? colors.primary300 : colors.grayScale500} 
                 />
-              </TouchableOpacity>
+              </TouchableOpacity> */}
+              <FavoriteButton onPress={handleToggleFavorite} isFavorite={isFavorite} isLoading={isLoading} />
             </View>
             <View style={styles.contentInfoContainer}>
               <AuthorInfo

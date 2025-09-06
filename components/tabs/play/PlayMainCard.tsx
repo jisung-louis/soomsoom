@@ -7,7 +7,7 @@ import { colors } from '../../../constants/colors';
 import { Button } from '../../common/buttons/Button';
 import PlayTitle from './common/PlayTitle';
 
-const PlayMainCard = ({ style }: { style?: StyleProp<ViewStyle> }) => (
+const PlayMainCard = ({ style, onPress }: { style?: StyleProp<ViewStyle>, onPress?: () => void }) => (
   <View style={[styles.mainCardContainer, style]}>
     <PlayTitle title='playMainCard' showArrow={false} />
     <View style={styles.card}>
@@ -26,7 +26,7 @@ const PlayMainCard = ({ style }: { style?: StyleProp<ViewStyle> }) => (
               <Badge title='명상' variant='default' />
               <Text style={styles.title}>나를 돌아보는, {"\n"}순간 건포도 명상</Text>
             </View>
-            <Button title='명상 하러가기' variant='white' style={{alignSelf: 'center', width: '100%', height: 48}}/>
+            <Button title='명상 하러가기' variant='white' style={{alignSelf: 'center', width: '100%', height: 48}} onPress={onPress}/>
           </View>
         </LinearGradient>
       </ImageBackground>

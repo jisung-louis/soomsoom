@@ -61,7 +61,7 @@ export interface GetFollowedInstructorsParams {
 export interface InstructorActivity {
   activityId: number;
   title: string;
-  type: 'BREATHING' | 'MEDITATION' | 'EXERCISE' | 'MUSIC'; // 실제 타입에 맞게 조정
+  type: 'BREATHING' | 'MEDITATION' | 'SLEEP' | 'REST'; // 실제 타입에 맞게 조정
   thumbnailImageUrl: string | null;
   durationInSeconds: number;
   isFavorited: boolean;

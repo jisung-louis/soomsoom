@@ -1,0 +1,17 @@
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<mask id="mask0_1691_18803" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24">
+<rect width="24" height="24" fill="#484A4C"/>
+</mask>
+<g mask="url(#mask0_1691_18803)">
+<mask id="mask1_1691_18803" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="2" y="2" width="20" height="21">
+<path d="M2 2.00024H22V22.0002H2V2.00024Z" fill="#484A4C"/>
+<path d="M2 2.00024H22V22.0002H2V2.00024Z" fill="#484A4C"/>
+</mask>
+<g mask="url(#mask1_1691_18803)">
+<path d="M21 10.5C21 15.9183 16.9707 20.5 12.0001 20.5C7.02955 20.5 3 15.9183 3 10.5C3 6.08172 7.02944 4 12 4C16.9706 4 21 6.08172 21 10.5Z" fill="#99661F"/>
+</g>
+<ellipse cx="12" cy="9.5" rx="8" ry="5" fill="#3F98FF"/>
+<path d="M18 9.5C18 8.46342 17.2275 7.53208 16 6.89121C14.9385 6.337 13.5367 6 12 6M12 13C10.4633 13 9.06151 12.663 8 12.1088C6.7725 11.4679 6 10.5366 6 9.5" stroke="#7AB8FF" stroke-linecap="round"/>
+<path d="M12 8C11.2316 8 10.5308 8.14443 10 8.38195M10 10.6181C10.5308 10.8556 11.2316 11 12 11C12.7684 11 13.4692 10.8556 14 10.6181" stroke="#BCDCFF" stroke-linecap="round"/>
+</g>
+</svg>

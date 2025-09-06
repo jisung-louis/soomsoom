@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { Text, StyleSheet, ScrollView } from 'react-native';
 import { View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -16,12 +16,96 @@ import { useRoomStore } from '../../../stores/roomStore';
 import { roomItemList } from '../../../data/roomItemData';
 import { mockContentData, mockInstructorsData } from '../../../data/playContentData';
 import { Activity } from '../../../services/contentService';
+import { Surface } from '../../../components/common/surface/Surface';
+import LottieView from 'lottie-react-native';
+import { Button, ButtonRef } from '../../../components/common/buttons/Button';
+import { ButtonSmall } from '../../../components/common/buttons/ButtonSmall';
 
 const TestScreen = () => {
   const navigation = useNavigation<StackNavigationProp<HomeStackParamList>>();
+  const buttonRef = useRef<ButtonRef>(null);
   const handleBack = () => {
     navigation.goBack();
   };
+  
+  const lottieData = [
+    {
+      name: 'cat_basic_motion',
+      lottieJson: require('../../../assets/animations/cat_basic_motion.json'),
+    },
+    {
+      name: 'cat_eatfish',
+      lottieJson: require('../../../assets/animations/cat_eatfish.json'),
+    },
+    {
+      name: 'breathing_motion',
+      lottieJson: require('../../../assets/animations/breathing_motion.json'),
+    },
+    {
+      name: 'inhale_cat',
+      lottieJson: require('../../../assets/animations/inhale_cat.json'),
+    },
+    {
+      name: 'bubble_talk',
+      lottieJson: require('../../../assets/animations/bubble_talk.json'),
+    },
+    {
+      name: 'fish_down',
+      lottieJson: require('../../../assets/animations/fish_down.json'),
+    },
+    {
+      name: 'fish_up',
+      lottieJson: require('../../../assets/animations/fish_up.json'),
+    },
+    {
+      name: 'cat',
+      lottieJson: require('../../../assets/animations/cat.json'),
+    },
+    {
+      name: 'danpoong',
+      lottieJson: require('../../../assets/animations/danpoong.json'),
+    },
+    {
+      name: 'heart_up',
+      lottieJson: require('../../../assets/animations/heart_up.json'),
+    },
+    {
+      name: 'popup_particle',
+      lottieJson: require('../../../assets/animations/popup_particle.json'),
+    },
+    {
+      name: 'particle',
+      lottieJson: require('../../../assets/animations/particle.json'),
+    },
+    {
+      name: 'bronze_action',
+      lottieJson: require('../../../assets/animations/badge/bronze_action.json'),
+    },
+    {
+      name: 'silver_action',
+      lottieJson: require('../../../assets/animations/badge/silver_action.json'),
+    },
+    {
+      name: 'gold_action',
+      lottieJson: require('../../../assets/animations/badge/gold_action.json'),
+    },
+    {
+      name: 'hidden_action',
+      lottieJson: require('../../../assets/animations/badge/hidden_action.json'),
+    },
+    {
+      name: 'check',
+      lottieJson: require('../../../assets/animations/icon-motion/check.json'),
+    },
+    {
+      name: 'hand_touch',
+      lottieJson: require('../../../assets/animations/icon-motion/hand_touch.json'),
+    },
+    {
+      name: 'up_star',
+      lottieJson: require('../../../assets/animations/icon-motion/up_star.json'),
+    },
+  ];
   
   {/* 아이템 아이디 -> 아이템 이름 */}
   const itemIdToName = (itemId: number|null) => {
@@ -123,6 +207,44 @@ const TestScreen = () => {
             <Text style={styles.infoValue}>{useRoomStore.getState().placedItems.shelf ? itemIdToName(useRoomStore.getState().placedItems.shelf) : '없음'}</Text>
           </View>
         </View>
+        <Surface />
+        <View style={styles.lottieTestContainer}>
+          <Text style={styles.lottieTestTitle}>LOTTIE MOTION ANIMATIONS</Text>
+          <View style={{flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center'}}>
+            {lottieData.map((data) => (
+              <View 
+                key={data.name} 
+                style={styles.lottieContainer}
+              >
+                <LottieView
+                  source={data.lottieJson}
+                  autoPlay
+                  loop
+                  style={styles.lottie}
+                />
+                <Text style={styles.lottieName}>{data.name}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
+        <Surface />
+        <View style={styles.buttonTestContainer}>
+          <Button
+            ref={buttonRef}
+            title="테스트 버튼"
+            icon="check"
+            showIconMotion
+            onPress={() => {}}
+            variant="active"
+            size="large"
+            style={{width: '100%'}}
+          />
+          <ButtonSmall
+            title="하트 움직이기"
+            onPress={() => {buttonRef.current?.triggerShake()}}
+            variant="active"
+          />
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -167,6 +289,39 @@ const styles = StyleSheet.create({
     ...typography.body3,
     color: colors.grayScale900,
     lineHeight: 20,
+  },
+  lottieTestContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginVertical: 24,
+  },
+  lottieTestTitle: {
+    ...typography.heading7,
+    color: colors.grayScale900,
+  },
+  lottieContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    margin: 8,
+  },
+  lottie: {
+    width: 100, 
+    height: 100, 
+    borderWidth: 1, 
+    borderColor: colors.grayScale300,
+    borderRadius: radius.r8,
+    backgroundColor: colors.grayScale50,
+  },
+  lottieName: {
+    ...typography.caption4,
+    color: colors.grayScale900,
+    marginTop: 4,
+  },
+  buttonTestContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginVertical: 24,
+    gap: 20,
   },
 });
 

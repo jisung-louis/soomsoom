@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { syongsyongTypography, typography } from '../../../constants/typography';
@@ -11,7 +11,7 @@ import { radius } from '../../../constants/radius';
 import ShadowSVG from '../../../assets/icons/charactors/shadow.svg'
 import DefaultCharacter from '../../../assets/icons/charactors/default_character.svg'
 import CheckIcon from '../../../assets/icons/common/check_active.svg'
-import { Button } from '../../../components/common/buttons/Button';
+import { Button, ButtonRef } from '../../../components/common/buttons/Button';
 import PlayResult from '../../../components/tabs/play/PlayResultScreen/PlayResult';
 import Animated from 'react-native-reanimated';
 import { useSpringUpAnimation } from '../../../hooks/useSpringUpAnimation';
@@ -24,6 +24,7 @@ const MOCK_ACTIVITY_DESCRIPTION = [
 
 const PlayResultScreen = () => {
     const navigation = useNavigation<StackNavigationProp<PlayStackParamList>>();
+    const buttonRef = useRef<ButtonRef>(null);
     const handleBack = () => {
         navigation.goBack();
     };
@@ -52,6 +53,7 @@ const PlayResultScreen = () => {
         setTimeout(() => {
             // 아래에서 올라오면서 튕기는 효과
             triggerAnimation();
+            buttonRef.current?.triggerShake();
         }, 500);
     }, [triggerAnimation]);
 
@@ -96,6 +98,7 @@ const PlayResultScreen = () => {
                 />
                 <Animated.View style={[styles.buttonContainer, buttonAnimatedStyle]}>
                     <Button
+                        ref={buttonRef}
                         icon="heart"
                         title="하트 보상받기"
                         size="large"

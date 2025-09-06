@@ -147,6 +147,7 @@ const PlayInstructorDetailScreen: React.FC = () => {
             icon={instructor.isFollowing ? 'check' : undefined}
             variant={instructor.isFollowing ? 'secondary' : 'active'}  
             size='large'
+            showIconMotion
             onPress={async () => {
                 try {
                   const wasFollowing = instructor.isFollowing;

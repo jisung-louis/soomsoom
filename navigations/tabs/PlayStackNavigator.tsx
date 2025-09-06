@@ -11,6 +11,7 @@ import PlayBreathScreen from '../../screens/subpages/play/PlayBreathScreen';
 import PlayMeditationScreen from '../../screens/subpages/play/PlayMeditationScreen';
 import PlayResultScreen from '../../screens/subpages/play/PlayResultScreen';
 import PlayBreathContentScreen from '../../screens/subpages/play/PlayBreathContentScreen';
+import PlayActivityListScreen from '../../screens/subpages/play/play-category/PlayActivityListScreen';
 
 export type PlayStackParamList = {
   PlayTab: undefined;
@@ -22,6 +23,7 @@ export type PlayStackParamList = {
   PlayBreathContentScreen: { content: Activity };
   PlayMeditationScreen: { content: Activity };
   PlayResultScreen: undefined;
+  PlayActivityListScreen: { title: string, content: Activity[] };
 };
 
 const Stack = createStackNavigator<PlayStackParamList>();
@@ -43,6 +45,7 @@ export default function PlayStackNavigator() {
       <Stack.Screen name="PlayMeditationScreen" component={PlayMeditationScreen} options={{ gestureEnabled: false }} />
       <Stack.Screen name="PlayBreathContentScreen" component={PlayBreathContentScreen} />
       <Stack.Screen name="PlayResultScreen" component={PlayResultScreen} />
+      <Stack.Screen name="PlayActivityListScreen" component={PlayActivityListScreen} />
     </Stack.Navigator>
   );
 }

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ImageBackground } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { typography } from '../../../constants/typography';
@@ -17,14 +17,15 @@ const PlayMeditationScreen = ({route}: {route: RouteProp<PlayStackParamList, 'Pl
   const navigation = useNavigation<StackNavigationProp<PlayStackParamList>>();
   const { favoriteActivities } = usePlayStore();
   const { showToast } = useToast();
-  
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const handleBack = () => {
     navigation.goBack();
   };
   
-  const isFavorite = favoriteActivities.some(fav => fav.activityId === content.id);
+  const isFavorite: boolean = favoriteActivities.some(fav => fav.activityId === content.id);
   
   const handleToggleFavorite = async () => {
+    setIsLoading(true);
     try {
       const { favoriteActivity, unfavoriteActivity, favoriteActivities } = usePlayStore.getState();
       await toggleFavoriteActivity(content.id, {
@@ -39,6 +40,8 @@ const PlayMeditationScreen = ({route}: {route: RouteProp<PlayStackParamList, 'Pl
         theme: 'dark',
         iconType: 'brokenHeart',
       });
+    } finally {
+      setIsLoading(false);
     }
   };
   return (
@@ -57,6 +60,7 @@ const PlayMeditationScreen = ({route}: {route: RouteProp<PlayStackParamList, 'Pl
           content={content} 
           handleToggleFavorite={handleToggleFavorite} 
           isFavorite={isFavorite}
+          isFavoriteLoading={isLoading}
           onEnd={() => {
               navigation.navigate('PlayResultScreen');
           }}

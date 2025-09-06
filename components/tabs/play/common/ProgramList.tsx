@@ -10,9 +10,12 @@ import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { PlayStackParamList } from '../../../../navigations/tabs/PlayStackNavigator';
 import { Activity } from '../../../../services/contentService';
+import { titleLineBreaker } from '../../../../utils/textUtils';
 
 const ProgramList = ({ programData }: { programData: Activity[] }) => {
   const navigation = useNavigation<StackNavigationProp<PlayStackParamList>>();
+
+
   return(
     <View style={styles.container}>
       {
@@ -25,8 +28,10 @@ const ProgramList = ({ programData }: { programData: Activity[] }) => {
                   <Badge title={item.type === 'BREATHING' ? '호흡' : '명상'} />
                   <MoreIcon color={colors.grayScale300} />
                 </View>
-                <View style={styles.cardTitleContainer}>
-                  <Text style={styles.title}>{item.title}</Text>
+                <View style={styles.cardTitleAndTimeContainer}>
+                  <View style={styles.cardTitleContainer}>
+                    <Text style={styles.title} numberOfLines={2}>{titleLineBreaker(item.title)}</Text>
+                  </View>
                   <View style={styles.timeRow}>
                     <TimeIcon color={colors.grayScale700} width={16} height={16} />
                     <Text style={styles.time}>{Math.floor(item.durationInSeconds / 60)}min</Text>
@@ -60,7 +65,7 @@ const styles = StyleSheet.create({
   },
   card: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    gap: 20,
   },
   image: {
     width: 130,
@@ -68,9 +73,8 @@ const styles = StyleSheet.create({
     borderRadius: radius.r8,
   },
   cardContent: {
-    width: 165,
-    height: 108,
-    justifyContent: 'space-between',
+    flex: 1,
+    gap: 15,
   },
   textHeader: {
     flexDirection: 'row',
@@ -80,8 +84,12 @@ const styles = StyleSheet.create({
     ...typography.body1,
     color: colors.grayScale900,
   },
-  cardTitleContainer: {
+  cardTitleAndTimeContainer: {
     gap: 8,
+  },
+  cardTitleContainer: {
+    marginBottom: 6,
+    height: 16 * 1.3 * 2,
   },
   timeRow: {
     flexDirection: 'row',

@@ -1,10 +1,13 @@
-import React from 'react';
+import React, { forwardRef, useImperativeHandle } from 'react';
 import { TouchableOpacity, TouchableOpacityProps, StyleSheet, Text, View, StyleProp, ViewStyle, ActivityIndicator } from 'react-native';
 import { colors } from '../../../constants/colors';
 import { radius } from '../../../constants/radius';
 import { typography } from '../../../constants/typography';
 import CheckIcon from '../../../assets/icons/common/stroke_check.svg';
 import HeartIcon from '../../../assets/icons/common/Heart.svg';
+import { useShakeHorizontalAnimation } from '../../../hooks/useShakeHorizontalAnimation';
+import Animated from 'react-native-reanimated';
+import LottieView from 'lottie-react-native';
 
 export interface ButtonProps extends TouchableOpacityProps {
   title: string;
@@ -13,10 +16,15 @@ export interface ButtonProps extends TouchableOpacityProps {
   size?: 'medium' | 'large';
   style?: StyleProp<ViewStyle>;
   loading?: boolean;
+  showIconMotion?: boolean;
 }
 
-export const Button: React.FC<ButtonProps> = (props) => {
-  const { title, icon, variant = 'default', size = 'medium', style, loading = false, disabled, ...rest } = props;
+export interface ButtonRef {
+  triggerShake: () => void;
+}
+
+export const Button = forwardRef<ButtonRef, ButtonProps>((props, ref) => {
+  const { title, icon, variant = 'default', size = 'medium', style, loading = false, disabled, showIconMotion = false, ...rest } = props;
 
   // Spinner color follows text color per variant
   const spinnerColor = variant === 'active'
@@ -26,13 +34,53 @@ export const Button: React.FC<ButtonProps> = (props) => {
     : variant === 'secondary'
     ? colors.primary400
     : colors.grayScale400;
+    
+  const {animatedStyle, triggerShake, resetAnimation} = useShakeHorizontalAnimation({
+    shakeDistance: 15, 
+    shakeDuration: 150, 
+    shakeCount: 3,
+    friction: 4,
+  });
+
+  // 부모에서 triggerShake를 호출할 수 있도록 ref 노출
+  useImperativeHandle(ref, () => ({
+    triggerShake: () => {
+      if (icon && !loading && !disabled) {
+        triggerShake();
+      }
+    }
+  }));
 
   const isDisabled = !!disabled || loading;
 
   const renderLeft = () => {
     if (loading) return <ActivityIndicator size="small" color={spinnerColor} style={{ marginRight: 8 }} />;
-    if (icon === 'check') return <CheckIcon width={24} height={24} />;
-    if (icon === 'heart') return <HeartIcon width={24} height={24} />;
+    
+    if (icon === 'check') {
+      return showIconMotion ? (
+        <Animated.View style={[{width: 24, height: 24, zIndex: 100}, animatedStyle]}>
+          <LottieView
+            source={require('../../../assets/animations/icon-motion/check.json')}
+            autoPlay={false}
+            loop={false}
+            style={[{width: 24, height: 24}]}
+            />
+        </Animated.View>
+      ) : (
+        <Animated.View style={[{width: 24, height: 24, zIndex: 100}, animatedStyle]}>
+          <CheckIcon width={24} height={24} />
+        </Animated.View>
+      );
+    }
+
+    if (icon === 'heart') {
+      return (
+        <Animated.View style={[{width: 24, height: 24, zIndex: 100}, animatedStyle]}>
+          <HeartIcon width={24} height={24} />
+        </Animated.View>
+      );
+    }
+    
     return null;
   };
 
@@ -46,7 +94,7 @@ export const Button: React.FC<ButtonProps> = (props) => {
       <Text style={[styles.title, styles[variant], icon || loading ? { marginLeft: 6 } : null]}>{title}</Text>
     </TouchableOpacity>
   );
-};
+});
 
 const styles = StyleSheet.create({
   button: {

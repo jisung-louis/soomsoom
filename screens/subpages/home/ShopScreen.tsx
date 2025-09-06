@@ -152,11 +152,11 @@ const ShopScreen = () => {
                   </View>
                 )}
                 
-                {item.image === null ? (
-                  <View style={[styles.itemImage]} />
-                ) : (
-                  <Image source={item.image} style={styles.itemImage} />
-                )}
+                  <View style={[styles.itemImageContainer]}>
+                    {item.image !== null && (
+                      <Image source={item.image} style={styles.itemImage} resizeMode='contain'/>
+                    )}
+                  </View>
                 
                 <View style={styles.itemInfo}>
                   <Text style={styles.itemTitle}>{item.title}</Text>
@@ -265,11 +265,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
   },
-  itemImage: {
+  itemImageContainer: {
     width: ITEM_IMAGE_WIDTH,
     height: ITEM_IMAGE_HEIGHT,
     borderRadius: radius.r8,
     backgroundColor: colors.grayScale50,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  itemImage: {
+    width: 80,
+    height: 80,
   },
   itemPrice: {
     ...typography.caption1,

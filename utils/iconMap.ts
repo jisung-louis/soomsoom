@@ -19,6 +19,13 @@ import DepressedIconStroke from '../assets/icons/charactors/active/stroked/depre
 import SosoIconStroke from '../assets/icons/charactors/active/stroked/soso.svg';
 import HappyIconStroke from '../assets/icons/charactors/active/stroked/happy.svg';
 
+import CryCatIcon from '../assets/icons/charactors/cat-variation/cat_cry.svg';
+import NiceCatIcon from '../assets/icons/charactors/cat-variation/cat_nice.svg';
+import QuietCatIcon from '../assets/icons/charactors/cat-variation/cat_quiet.svg';
+import StackCatIcon from '../assets/icons/charactors/cat-variation/cat_stack.svg';
+import WriteCatIcon from '../assets/icons/charactors/cat-variation/cat_write.svg';
+
+
 export const characterIconMap = {
   active: {
     angry: AngryIconActive,
@@ -46,6 +53,13 @@ export const characterIconMap = {
   },
 };
 
+export const catIconMap = {
+  cry: CryCatIcon,
+  nice: NiceCatIcon,
+  quiet: QuietCatIcon,
+  stack: StackCatIcon,
+  write: WriteCatIcon,
+};
 
 
 export const characterTitleMap = {

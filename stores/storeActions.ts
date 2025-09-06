@@ -185,11 +185,6 @@ export const createFavoriteActions = () => {
     }
   };
 
-  const toggleInstructorFollow = async (instructorId: number) => {
-    // 이 함수는 더 이상 사용하지 않음 - toggleFollowInstructor 서비스 함수를 사용하세요
-    // 서비스 레이어에서 API 호출과 store 동기화를 모두 처리합니다
-    throw new Error('toggleInstructorFollow는 더 이상 사용되지 않습니다. toggleFollowInstructor 서비스 함수를 사용하세요.');
-  };
 
   const isFavorite = (activityId: number) => {
     const { favoriteActivities } = usePlayStore.getState();
@@ -198,7 +193,6 @@ export const createFavoriteActions = () => {
 
   return {
     toggleActivityFavorite,
-    toggleInstructorFollow,
     isFavorite,
   };
 };

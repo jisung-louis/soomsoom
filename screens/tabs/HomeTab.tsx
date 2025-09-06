@@ -118,6 +118,7 @@ const HomeTab = () => {
       )}
 
       {/* 개발자용 버튼 (추후 삭제) */}
+      {__DEV__ && (
       <View style={styles.developerButtons}>
         <Text>개발자용 버튼</Text>
         <ButtonSmall
@@ -145,8 +146,9 @@ const HomeTab = () => {
           }}
           variant="active"
           style={{width: '100%'}}
-        />
-      </View>
+          />
+        </View>
+      )}
     </UserRoom>
   );
 };

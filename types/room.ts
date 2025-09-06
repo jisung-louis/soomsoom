@@ -34,10 +34,13 @@ export interface PlacedItems {
   shelf: number | null;
 }
 
+//아이템 카테고리(type)
+export type RoomItemCategory = '보유중' | '컬렉션' | '악세사리' | '모자' | '배경' | '러그' | '선반' | '장식품';
+
 // 방 아이템 기본 정보
 export interface RoomItem {
   id: number;
-  type: string;
+  type: RoomItemCategory;
   title: string;
   image: any;
   lottieJson: any;

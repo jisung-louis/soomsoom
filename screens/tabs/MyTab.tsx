@@ -183,11 +183,13 @@ const MyTab = () => {
             onHeartPress={() => {}}
             style={styles.topNavigation}
             />
-        <View style={styles.testContainer}>
-            <Text style={styles.test}>모드 : {isEditMode ? '방 꾸미기 모드' : '일반 모드'}</Text>
-            <Text style={styles.test}>선택된 아이템 : {editModeSelectedItems.join(',')}</Text>
-            <Text style={styles.test}>배치된 아이템 : {Object.values(placedItems).filter(id => id !== null).join(',')}</Text>
-        </View>
+        {__DEV__ && (
+          <View style={styles.testContainer}>
+              <Text style={styles.test}>모드 : {isEditMode ? '방 꾸미기 모드' : '일반 모드'}</Text>
+              <Text style={styles.test}>선택된 아이템 : {editModeSelectedItems.join(',')}</Text>
+              <Text style={styles.test}>배치된 아이템 : {Object.values(placedItems).filter(id => id !== null).join(',')}</Text>
+          </View>
+        )}
         <UserRoom 
             cropTop={176} 
             scrollable={true}
@@ -294,7 +296,7 @@ const styles = StyleSheet.create({
   testContainer:{
     position: 'absolute',
     top: 100,
-    right: 20,
+    left: 20,
     zIndex: 100,
     backgroundColor: colors.white,
   },

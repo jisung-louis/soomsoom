@@ -6,53 +6,38 @@ import { radius } from '../../../../constants/radius';
 import { Button } from '../../../common/buttons/Button';
 import CheckActiveIcon from '../../../../assets/icons/common/check_active.svg';
 import CheckDisabledIcon from '../../../../assets/icons/common/check_disabled.svg';
+import { sv } from '../../../../utils/scale';
+import NumberPicker from '../../../common/picker/NumberPicker';
 
 interface MissionSelectorProps {
-  onConfirm: (missionName: string) => void;
+  onConfirm: (missionName: number) => void;
   onCancel: () => void;
-  initialMissionName?: string;
 }
 
 const MissionSelector: React.FC<MissionSelectorProps> = ({
   onConfirm,
   onCancel,
-  initialMissionName = '',
 }) => {
-  const [selectedMission, setSelectedMission] = useState<string>(initialMissionName);
-
-  const missions = [
-    { name: '기본 벨소리'},
-    { name: '목탁 소리'},
-    { name: '자연 소리'},
-    { name: '고양이 소리'},
-    { name: '강아지 소리'},
-  ];
+  const [selectedTime, setSelectedTime] = useState(1);
 
   const handleConfirm = () => {
-    onConfirm(selectedMission);
+    onConfirm(selectedTime);
   };
 
   return (
     <View style={styles.container}>
-      <View style={styles.soundList}>
-        {missions.map((mission, index) => (
-          <View key={mission.name}>
-            <TouchableOpacity
-              style={styles.soundItem}
-              onPress={() => setSelectedMission(mission.name)}
-            >
-              {selectedMission === mission.name ? (
-                <CheckActiveIcon width={24} height={24} color={colors.primary500} />
-              ) : (
-                <CheckDisabledIcon width={24} height={24} color={colors.grayScale400} />
-              )}
-              <Text style={styles.soundName}>{mission.name}</Text>
-            </TouchableOpacity>
-            {index < missions.length - 1 && <View style={styles.divider} />}
-          </View>
-        ))}
+      <View style={styles.missionExampleContainer}>
+        <Text style={styles.missionExampleText}>3 + 4 = ?</Text>
       </View>
-
+      <View style={styles.numberPickerContainer}>
+        <NumberPicker
+          onValueChange={setSelectedTime}
+          initialValue={selectedTime}
+          max={10}
+          min={1}
+          suffix="회"
+        />
+      </View>
       <View style={styles.buttonContainer}>
         <Button
           title="취소"
@@ -75,28 +60,24 @@ const styles = StyleSheet.create({
   container: {
     // flex: 1 제거하여 내부 콘텐츠 크기에 맞춤
   },
-  soundList: {
-    // flex: 1 제거하여 내부 콘텐츠 크기에 맞춤
-  },
-  soundItem: {
-    flexDirection: 'row',
+  missionExampleContainer: {
     alignItems: 'center',
-    paddingVertical: 16,
-    paddingHorizontal: 0,
+    justifyContent: 'center',
+    height: sv(126),
+    backgroundColor: colors.grayScale50,
+    borderRadius: radius.r12,
   },
-  soundName: {
-    ...typography.body2,
-    color: colors.grayScale900,
-    marginLeft: 16,
+  missionExampleText: {
+    ...typography.heading1,
+    color: colors.grayScale800,
   },
-  divider: {
-    height: 1,
-    backgroundColor: colors.grayScale100,
+  numberPickerContainer: {
+    marginTop: -30,
+    marginBottom: -30,
   },
   buttonContainer: {
     flexDirection: 'row',
     gap: 12,
-    marginTop: 20,
   },
 });
 

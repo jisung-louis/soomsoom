@@ -15,6 +15,8 @@ import { Activity, getActivityDetail, getUserFavoriteActivities } from '../../..
 import { usePlayStore } from '../../../stores/playStore';
 import { toggleFollowInstructor, getInstructorDetail, getFollowedInstructors, Instructor } from '../../../services/instructorService';
 import { useToast } from '../../../contexts/ToastContext';
+import { catIconMap } from '../../../utils/iconMap';
+import { syongsyongTypography } from '../../../constants/typography';
 
 const normalizeImageSource = (url?: string | null) =>
   url ? { uri: url } : require('../../../assets/images/play/playFavoriteScreen/default_image_1.png');
@@ -129,7 +131,7 @@ const PlayFavoriteScreen = () => {
       if (__DEV__) {
         // 개발 환경: Store에서 팔로우한 강사 ID 목록을 가져와서 상세 정보 조회
         const instructorDetails = await Promise.all(
-          followedInstructorsList.map(async (followed) => {
+          followedInstructors.map(async (followed) => {
             try {
               const instructorDetail = await getInstructorDetail(followed.instructorId);
               return instructorDetail;
@@ -210,7 +212,8 @@ const PlayFavoriteScreen = () => {
       <View style={styles.contentContainer}>
         {favoriteActivitiesList.length === 0 ? ( // 즐겨찾기 중인 프로그램이 하나도 없을 경우
           <View style={styles.emptyContainer}>
-            <Image source={require('../../../assets/images/play/playFavoriteScreen/empty_favorite_image.png')} style={styles.emptyFavoriteImage} />{/* TODO: 컴포넌트로 리팩터링하기 */}
+            <catIconMap.stack />
+            <Text style={styles.emptyText}>즐겨찾는 프로그램을{'\n'}추가해보세요!</Text>
           </View>
         ) : ( 
           <FlatList
@@ -229,15 +232,14 @@ const PlayFavoriteScreen = () => {
       <View style={styles.contentContainer}>
         {followedInstructorsList.length === 0 ? (
           <View style={styles.emptyContainer}>
-            <Image
-              source={require('../../../assets/images/play/playFavoriteScreen/empty_follow_image.png')}
-              style={styles.emptyFollowImage}
-            />
+            <catIconMap.cry />
+            <Text style={styles.emptyText}>팔로우한 선생님이 없어요.</Text>
           </View>
         ) : (
           <FlatList
             data={followedInstructorsList}
             keyExtractor={(item) => item.instructorId.toString()}
+            contentContainerStyle={{gap: 16, paddingBottom: 50}}
             renderItem={({ item }) => (
               <FollowInstructorList
                 followInstructorData={[{
@@ -335,6 +337,11 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    gap: 20,
+  },
+  emptyText: {
+    ...syongsyongTypography.title6,
+    textAlign: 'center',
   },
   emptyFavoriteImage: {
     width: 226,

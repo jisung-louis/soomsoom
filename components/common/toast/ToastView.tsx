@@ -93,14 +93,6 @@ const styles = StyleSheet.create({
     maxWidth: screenWidth - 40,
     minWidth: 56,
     alignSelf: 'flex-start',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 5,
   },
   iconContainer: {
     marginRight: 4,

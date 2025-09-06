@@ -32,7 +32,7 @@ export interface ActivityTimeline {
 export interface Activity {
   id: number;
   title: string;
-  type: 'BREATHING' | 'MEDITATION' | 'EXERCISE' | 'MUSIC';
+  type: 'BREATHING' | 'MEDITATION' | 'SLEEP' | 'REST' ;
   thumbnailImageUrl: string | null;
   descriptions: string[];
   author: ActivityAuthor;
@@ -88,7 +88,7 @@ export interface ActivityFavoriteResponse {
 // 즐겨찾기 액티비티 상세 정보 (백엔드 API 명세에 맞춤)
 export type FavoriteActivity = {
   activityId: number;
-  type: 'BREATHING' | 'MEDITATION' | 'EXERCISE' | 'MUSIC';
+  type: 'BREATHING' | 'MEDITATION' | 'SLEEP' | 'REST';
   title: string;
   thumbnailImageUrl: string | null;
   durationInSeconds: number;
@@ -218,7 +218,7 @@ export const getActivityDetail = async (
  * 타입별 액티비티 조회
  */
 export const getActivitiesByType = async (
-  type: 'BREATHING' | 'MEDITATION' | 'EXERCISE' | 'MUSIC',
+  type: 'BREATHING' | 'MEDITATION' | 'SLEEP' | 'REST' ,
   params?: Omit<GetActivitiesParams, 'type'>
 ): Promise<ActivitiesResponse> => {
   // 실제 API에서는 type 필터링이 지원되지 않을 수 있으므로

@@ -72,9 +72,9 @@ const AlarmAddScreen = () => {
     repeatDays: existingAlarm?.day || [] as string[],
     repeatType: existingAlarm?.repeatType || 'daily',
   });
-  const [initialMissionData, setMissionData] = useState({
-    missionName: '미션 없음',
-  });
+  // const [initialMissionData, setMissionData] = useState({
+  //   missionName: '미션 없음',
+  // });
   const [initialSoundData, setSoundData] = useState({
     soundName: existingAlarm?.soundName || '기본 벨소리',
   });
@@ -248,8 +248,10 @@ const AlarmAddScreen = () => {
     handleCloseBottomSheet();
   };
 
-  const handleMissionConfirm = (missionName: string) => {
-    setMissionData({ missionName });
+  const handleMissionConfirm = (missionName: number) => {
+    //setMissionData({ missionName });
+    {/* TODO: 미션 횟수 저장 필요 */}
+    console.log('미션 횟수:', missionName,'회');
     handleCloseBottomSheet();
   };
 
@@ -274,7 +276,6 @@ const AlarmAddScreen = () => {
           <MissionSelector
             onConfirm={handleMissionConfirm}
             onCancel={handleCloseBottomSheet}
-            initialMissionName={initialMissionData.missionName}
           />
         );
       case 'sound':
@@ -311,7 +312,7 @@ const AlarmAddScreen = () => {
                 onSoundPress={() => {handleSoundPress()}}
                 onVibrationToggle={() => {handleVibrationToggle()}}
                 repeatData={initialRepeatData}
-                missionData={initialMissionData}
+                //missionData={initialMissionData}
                 soundData={initialSoundData}
                 isVibrationOn={isVibrationOn}
             />
