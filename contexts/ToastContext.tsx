@@ -7,6 +7,7 @@ export interface ToastConfig {
   message: string;
   theme?: ToastTheme;
   iconType?: ToastIconType;
+  hasAnimation?: boolean;
   duration?: number;
 }
 
@@ -15,6 +16,7 @@ interface ToastContextType {
   message: string;
   iconType: ToastIconType;
   theme: ToastTheme;
+  hasAnimation: boolean;
   showToast: (config: ToastConfig) => void;
   hideToast: () => void;
 }
@@ -30,6 +32,7 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
   const [message, setMessage] = useState('');
   const [iconType, setIconType] = useState<ToastIconType>('none');
   const [theme, setTheme] = useState<ToastTheme>('dark');
+  const [hasAnimation, setHasAnimation] = useState(false);
   const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
 
   const showToast = useCallback((config: ToastConfig) => {
@@ -44,7 +47,12 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
     setMessage(config.message);
     setIconType(selectedIconType);
     setTheme(selectedTheme);
-    setVisible(true);
+    setHasAnimation(config.hasAnimation || false);
+    // visible이 이미 true여도 강제로 업데이트하여 애니메이션 트리거
+    setVisible(false);
+    setTimeout(() => {
+      setVisible(true);
+    }, 10);
 
     // 자동 숨김 타이머 설정
     const duration = config.duration || 2500;
@@ -67,6 +75,7 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
     message,
     iconType,
     theme,
+    hasAnimation,
     showToast,
     hideToast,
   };

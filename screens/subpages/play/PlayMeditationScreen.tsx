@@ -11,6 +11,7 @@ import PlayBar from '../../../components/tabs/play/PlayMeditationScreen/PlayBar'
 import { usePlayStore } from '../../../stores/playStore';
 import { toggleFavoriteActivity } from '../../../services/contentService';
 import { useToast } from '../../../contexts/ToastContext';
+import UserRoom from '../../../components/common/userroom/UserRoom';
 
 const PlayMeditationScreen = ({route}: {route: RouteProp<PlayStackParamList, 'PlayMeditationScreen'>}) => {
   const {content} = route.params;
@@ -23,6 +24,7 @@ const PlayMeditationScreen = ({route}: {route: RouteProp<PlayStackParamList, 'Pl
   };
   
   const isFavorite: boolean = favoriteActivities.some(fav => fav.activityId === content.id);
+  const CROP_TOP = 100;
   
   const handleToggleFavorite = async () => {
     setIsLoading(true);
@@ -45,28 +47,46 @@ const PlayMeditationScreen = ({route}: {route: RouteProp<PlayStackParamList, 'Pl
     }
   };
   return (
-    <ImageBackground 
-      source={require('../../../assets/images/background.png')}
-      style={styles.container}
-      resizeMode="cover"
-    >
-      <SafeAreaView style={styles.container}>
-        <SubpageHeader onBack={handleBack} />
-        <View style={styles.contentContainer}>
-          {/* 컨텐츠 (캐릭터, 캐릭터 꾸미기 아이템 등) */}
-        </View>
-        <PlayBar 
-          style={styles.playBar} 
-          content={content} 
-          handleToggleFavorite={handleToggleFavorite} 
-          isFavorite={isFavorite}
-          isFavoriteLoading={isLoading}
-          onEnd={() => {
-              navigation.navigate('PlayResultScreen');
-          }}
-            />
-      </SafeAreaView>
-    </ImageBackground>
+    // <ImageBackground 
+    //   source={require('../../../assets/images/background.png')}
+    //   style={styles.container}
+    //   resizeMode="cover"
+    // >
+    //   <SafeAreaView style={styles.container}>
+    //     <SubpageHeader onBack={handleBack} />
+    //     <View style={styles.contentContainer}>
+    //       {/* 컨텐츠 (캐릭터, 캐릭터 꾸미기 아이템 등) */}
+    //     </View>
+    //     <PlayBar 
+    //       style={styles.playBar} 
+    //       content={content} 
+    //       handleToggleFavorite={handleToggleFavorite} 
+    //       isFavorite={isFavorite}
+    //       isFavoriteLoading={isLoading}
+    //       onEnd={() => {
+    //           navigation.navigate('PlayResultScreen');
+    //       }}
+    //         />
+    //   </SafeAreaView>
+    // </ImageBackground>
+    <>
+      <UserRoom cropTop={CROP_TOP}>
+        <SubpageHeader onBack={handleBack} style={{transform: [{translateY: CROP_TOP}]}} />
+          <View style={styles.contentContainer}>
+            {/* 컨텐츠 (캐릭터, 캐릭터 꾸미기 아이템 등) */}
+          </View>
+      </UserRoom>
+      <PlayBar 
+        style={styles.playBar} 
+        content={content} 
+        handleToggleFavorite={handleToggleFavorite} 
+        isFavorite={isFavorite}
+        isFavoriteLoading={isLoading}
+        onEnd={() => {
+            navigation.navigate('PlayResultScreen');
+        }}
+        />
+      </>
   );
 };
 

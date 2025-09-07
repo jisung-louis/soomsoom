@@ -99,10 +99,10 @@ export const useEmotionRecord = (date: string, emotion: string) => {
       console.log('[감정 일기 등록]', payload);
 
       // 백엔드에 저장 요청 (신규 서비스)
-      await emotionDiaryService.createEmotionDiary(payload);
+      const diary = await emotionDiaryService.createEmotionDiary(payload);
 
-      // 첫 기록일 체크 (서버 기준 날짜 사용)
-      const isFirstRecord = await emotionDiaryService.isFirstRecord(formatDateForServer(date));
+      // 첫 기록일 체크 
+      const isFirstRecord = diary.diaryId === 1;
 
       return {
         success: true,

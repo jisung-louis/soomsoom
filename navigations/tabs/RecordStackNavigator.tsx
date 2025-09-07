@@ -6,7 +6,7 @@ import EmotionRecordScreen from '../../screens/subpages/record/EmotionRecordScre
 import EmotionRecordHelpScreen from '../../screens/subpages/record/EmotionRecordHelpScreen';
 
 export type RecordStackParamList = {
-  RecordTab: undefined;
+  RecordTab: { isFirstRecord?: boolean } | undefined;
   EmotionSelectScreen: { date: string };
   EmotionRecordScreen: { date: string; emotion: string };
   EmotionRecordHelpScreen: undefined;

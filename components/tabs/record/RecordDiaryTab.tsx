@@ -31,7 +31,7 @@ type RecordDiaryTabProps = {
   onNext: () => void;
   onViewTypeChange: (type: 'week' | 'month') => void;
   onDayPress: (date: dayjs.Dayjs) => void;
-  navigation: RecordDiaryTabNavigationProp;
+  onStartRecordPress: () => void;
   styles: StyleSheet.NamedStyles<any>;
   containsToday?: boolean;
   todayYear?: number;
@@ -46,7 +46,7 @@ const RecordDiaryTab = ({
   onNext,
   onViewTypeChange,
   onDayPress,
-  navigation,
+  onStartRecordPress,
   styles,
   containsToday,
   todayYear,
@@ -77,7 +77,7 @@ const RecordDiaryTab = ({
         <RecordMonthCalendar date={currentDate} recordedItems={recordedItems} />
       )}
       <Surface/>
-      <RecordList date={currentDate} recordedItems={recordedItems} navigation={navigation} />
+      <RecordList date={currentDate} recordedItems={recordedItems} onStartRecordPress={onStartRecordPress} />
     </ScrollView>
   );
 };

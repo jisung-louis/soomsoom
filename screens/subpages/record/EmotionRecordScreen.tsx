@@ -38,31 +38,27 @@ const EmotionRecordScreen = () => {
     navigation.navigate('EmotionRecordHelpScreen');
   };
 
-  const showFirstRecordCelebration = () => {
-    // TODO: 첫 기록일 축하 팝업 구현 (docs/TODO.md 참조)
-    console.log('🎉 첫 감정 기록을 축하합니다!');
-  };
 
   const handleSave = async () => {
     const result = await saveEmotionRecord();
     
     if (result.success) {
-      // 성공 토스트
-      showToast({
-        message: result.message,
-        theme: 'light',
-        iconType: 'alarm',
-      });
-
-      // 첫 기록일 축하
-      if (result.firstRecord) {
-        showFirstRecordCelebration();
+      // 첫 기록이 아닌 경우에만 토스트 표시
+      if (!result.firstRecord) {
+        showToast({
+          message: result.message,
+          theme: 'light',
+          iconType: 'alarm',
+        });
       }
 
-      // 홈으로 이동
+      // 홈으로 이동 (첫 기록 여부와 함께)
       navigation.reset({
         index: 0,
-        routes: [{ name: 'RecordTab' }],
+        routes: [{ 
+          name: 'RecordTab', 
+          params: { isFirstRecord: result.firstRecord } 
+        }],
       });
     } else {
       // 에러 토스트

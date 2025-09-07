@@ -50,6 +50,8 @@ const HomeTab = () => {
       message: '+10 하트 획득했어요!',
       theme: 'dark',
       iconType: 'heart',
+      hasAnimation: true,
+      duration: 900,
     });
   };
 
@@ -69,8 +71,13 @@ const HomeTab = () => {
   };
 
   const handleStoragePress = () => {
-    // 스토리지 버튼 기능 구현
-    console.log('스토리지 버튼 클릭');
+    // 스토리지 버튼 기능 구현 - My 탭으로 이동하고 편집 모드 시작
+    console.log('스토리지 버튼 클릭 - My 탭으로 이동하고 편집 모드 시작');
+    // 상위 탭 네비게이터를 통해 My 탭으로 이동 (편집 모드 파라미터와 함께)
+    navigation.getParent()?.navigate('my', { 
+      screen: 'MyTab', 
+      params: { autoEnterEditMode: true } 
+    });
   };
 
   const handleShowOnboarding = async () => {

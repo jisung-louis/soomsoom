@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, useWindowDimensions, Image, FlatList, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -17,6 +17,16 @@ import CheckDisableIcon from '../../../assets/icons/common/check_disabled.svg';
 import CheckActiveIcon from '../../../assets/icons/common/check_active.svg';
 import ArrowDropDownIcon from '../../../assets/icons/common/arrow_dropdown.svg';
 import EmotionIcon from '../../../assets/icons/common/emotion.svg';
+import IconTabMenu, { TabMenuItem } from '../../../components/common/tabmenu/IconTabMenu';
+import AccessoryIcon from '../../../assets/icons/my/room-decoration/accessory.svg';
+import CollectionIcon from '../../../assets/icons/my/room-decoration/collection.svg';
+import HatIcon from '../../../assets/icons/my/room-decoration/hat.svg';
+import BackgroundIcon from '../../../assets/icons/my/room-decoration/background.svg';
+import FurnitureIcon from '../../../assets/icons/my/room-decoration/furniture.svg';
+import RugIcon from '../../../assets/icons/my/room-decoration/rug.svg';
+import ShelfIcon from '../../../assets/icons/my/room-decoration/shelf.svg';
+import OrnamentIcon from '../../../assets/icons/my/room-decoration/ornament.svg';
+import WallPaperIcon from '../../../assets/icons/my/room-decoration/wallpaper.svg';
 
 import BannerItemImage from '../../../assets/images/home/shop/banner_item.svg';
 import BannerChargeImage from '../../../assets/images/home/shop/banner_charge.svg';
@@ -45,6 +55,65 @@ function padToThreeColumns(data: RoomItem[]) {
 const ITEM_IMAGE_WIDTH = 105;
 const ITEM_IMAGE_HEIGHT = 105;
 
+// 아이템 리스트 컴포넌트 (메모이제이션으로 최적화)
+const ItemList = React.memo(({ 
+  filteredItems, 
+  onItemPress, 
+  isOutOfStock, 
+  isOwned 
+}: {
+  filteredItems: RoomItem[];
+  onItemPress: (item: RoomItem) => void;
+  isOutOfStock: (itemId: number) => boolean;
+  isOwned: (itemId: number) => boolean;
+}) => {
+  return (
+    <FlatList 
+      style={styles.itemListContainer}
+      data={padToThreeColumns(filteredItems)}
+      numColumns={3}
+      columnWrapperStyle={styles.row}
+      showsVerticalScrollIndicator={false}
+      renderItem={({item, index}) => (
+        item.id === 0 ? (
+          <View style={[styles.item, {backgroundColor: 'transparent', elevation: 0, width: ITEM_IMAGE_WIDTH, height: ITEM_IMAGE_HEIGHT}]} key={item.id} />
+        ) : (
+          <TouchableOpacity style={styles.item} key={item.id} onPress={() => onItemPress(item as RoomItem)}>
+            {isOutOfStock(item.id) && (  
+              <View style={styles.grayDimmedContainer}>
+                <Text style={styles.outOfStockText}>다 팔렸어요!</Text>
+              </View>
+            )}
+            
+              <View style={[styles.itemImageContainer]}>
+                {item.image !== null && (
+                  <Image source={item.image} style={styles.itemImage} resizeMode='contain'/>
+                )}
+              </View>
+            
+            <View style={styles.itemInfo}>
+              <Text style={styles.itemTitle}>{item.title}</Text>
+              {!isOwned(item.id) ? (
+                <View style={styles.itemPriceContainer}>
+                  <EmotionIcon width={16} height={16} />
+                  <Text style={styles.itemPrice}>{item.price}</Text>
+                </View>
+              ) : (
+                <View style={styles.itemPriceContainer}>
+                  <Text style={styles.ownedText}>보유중</Text>
+                </View>
+              )}
+            </View>
+          </TouchableOpacity>
+        )
+      )} 
+      keyExtractor={(item) => item.id.toString()}
+    />
+  );
+});
+
+ItemList.displayName = 'ItemList';
+
 const ShopScreen = () => {
   const navigation = useNavigation<ShopScreenNavigationProp>();
   const { ownedItems, isOwned } = useRoomStore();
@@ -61,6 +130,22 @@ const ShopScreen = () => {
     { key: 'item', title: '아이템' },
     { key: 'charge', title: '충전소' },
   ]);
+  
+  // 아이템 카테고리 탭 메뉴
+  const [selectedItemTab, setSelectedItemTab] = useState(0);
+  const itemTabMenu: TabMenuItem[] = [
+    { icon: CollectionIcon, title: '전체' },
+    { icon: AccessoryIcon, title: '악세사리' },
+    { icon: HatIcon, title: '모자' },
+    { icon: BackgroundIcon, title: '배경' },
+    { icon: RugIcon, title: '러그' },
+    { icon: ShelfIcon, title: '선반' },
+    { icon: OrnamentIcon, title: '장식품' },
+  ];
+
+  const handleItemTabPress = (tabIndex: number) => {
+    setSelectedItemTab(tabIndex);
+  };
 
   const handleItemPress = (item: RoomItem) => {
     const itemIsOwned = isOwned(item.id);
@@ -102,20 +187,42 @@ const ShopScreen = () => {
     }
   };
 
-  const renderItemTab = () => {
+  // 필터링된 아이템 목록을 메모이제이션으로 최적화
+  const filteredItems = useMemo(() => {
+    // 카테고리 필터링 적용
+    let items = roomItemList;
+    if (selectedItemTab > 0) {
+      const selectedCategory = itemTabMenu[selectedItemTab].title;
+      items = roomItemList.filter(item => item.type === selectedCategory);
+    }
+    
     // 보유중 제외 필터링 적용
-    const filteredItems = excludeOwnedItems 
-      ? roomItemList.filter(item => !isOwned(item.id))
-      : roomItemList;
+    if (excludeOwnedItems) {
+      items = items.filter(item => !isOwned(item.id));
+    }
+    
+    return items;
+  }, [selectedItemTab, excludeOwnedItems, isOwned]);
 
+  const renderItemTab = () => {
     return (
       <View style={styles.content}>
         {/* <Image
           source={require('../../../assets/images/home/shop/banner_item.png')}
           style={[styles.bannerImage, { height: 100 }]}
         /> */}
+        {/* 아이템 카테고리 탭 메뉴 위치 */}
+        
+        {/* 아이템 카테고리 탭 메뉴 */}
+        <View style={styles.tabMenuContainer}>
+          <IconTabMenu
+            tabs={itemTabMenu}
+            selectedTab={selectedItemTab}
+            onTabPress={handleItemTabPress}
+          />
+        </View>
+        <View style={styles.innerContent}>
         <BannerItemImage width={'100%'} />
-
         <View style={styles.filterContainer}>
           <TouchableOpacity style={styles.excludeOwnedItems} onPress={handleExcludeOwnedItemsToggle}>
             {excludeOwnedItems ? <CheckActiveIcon /> : <CheckDisableIcon />}
@@ -135,47 +242,13 @@ const ShopScreen = () => {
           </TouchableOpacity>
         </View>
         
-        <FlatList 
-          style={styles.itemListContainer}
-          data={padToThreeColumns(filteredItems)}
-          numColumns={3}
-          columnWrapperStyle={styles.row}
-          showsVerticalScrollIndicator={false}
-          renderItem={({item, index}) => (
-            item.id === 0 ? (
-              <View style={[styles.item, {backgroundColor: 'transparent', elevation: 0, width: ITEM_IMAGE_WIDTH, height: ITEM_IMAGE_HEIGHT}]} key={item.id} />
-            ) : (
-              <TouchableOpacity style={styles.item} key={item.id} onPress={() => handleItemPress(item)}>
-                {isOutOfStock(item.id) && (  
-                  <View style={styles.grayDimmedContainer}>
-                    <Text style={styles.outOfStockText}>다 팔렸어요!</Text>
-                  </View>
-                )}
-                
-                  <View style={[styles.itemImageContainer]}>
-                    {item.image !== null && (
-                      <Image source={item.image} style={styles.itemImage} resizeMode='contain'/>
-                    )}
-                  </View>
-                
-                <View style={styles.itemInfo}>
-                  <Text style={styles.itemTitle}>{item.title}</Text>
-                  {!isOwned(item.id) ? (
-                    <View style={styles.itemPriceContainer}>
-                      <EmotionIcon width={16} height={16} />
-                      <Text style={styles.itemPrice}>{item.price}</Text>
-                    </View>
-                  ) : (
-                    <View style={styles.itemPriceContainer}>
-                      <Text style={styles.ownedText}>보유중</Text>
-                    </View>
-                  )}
-                </View>
-              </TouchableOpacity>
-            )
-          )} 
-          keyExtractor={(item) => item.id.toString()}
+        <ItemList 
+          filteredItems={filteredItems}
+          onItemPress={handleItemPress}
+          isOutOfStock={isOutOfStock}
+          isOwned={isOwned}
         />
+      </View>
       </View>
     );
   };
@@ -227,8 +300,13 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+  },
+  tabMenuContainer: {
+  },
+  innerContent: {
+    flex: 1,
     paddingHorizontal: 20,
-    paddingTop: 30,
+    paddingTop: 20,
   },
   header: {
     alignItems: 'center',
@@ -290,7 +368,7 @@ const styles = StyleSheet.create({
   },
   row: {
     justifyContent: 'space-between',
-    marginBottom: 10,
+    marginBottom: 20,
   },
   itemBadgeContainer: {
     position: 'absolute',

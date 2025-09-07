@@ -13,7 +13,7 @@ import PrivacyPolicyScreen from "../../screens/subpages/my/setting/PrivacyPolicy
 import MyRoomDecorationPurchaseScreen from "../../screens/subpages/my/room-decoration/MyRoomDecorationPurchaseScreen";
 
 export type MyStackParamList = {
-  MyTab: undefined;
+  MyTab: { autoEnterEditMode?: boolean } | undefined;
   MyAchievementScreen: undefined;
   MySettingScreen: undefined;
   NotificationSettingScreen: undefined;

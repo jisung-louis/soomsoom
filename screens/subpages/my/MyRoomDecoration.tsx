@@ -21,16 +21,12 @@ import { useRoomStore } from '../../../stores/roomStore';
 import { normalizeImageSource } from '../../../utils/textUtils';
 import { SvgProps } from 'react-native-svg';
 import { RoomItemCategory } from '../../../types/room';
+import IconTabMenu, { TabMenuItem } from '../../../components/common/tabmenu/IconTabMenu';
 
 const ITEM_IMAGE_WIDTH = 105;
 const ITEM_IMAGE_HEIGHT = 105;
 
-interface TabMenu {
-  icon: React.FC<SvgProps>;
-  title: RoomItemCategory;
-}
-
-const tabMenu: TabMenu[] = [
+const tabMenu: TabMenuItem[] = [
   {
     icon: InPossessionIcon,
     title: '보유중',
@@ -112,29 +108,10 @@ const MyRoomDecoration = ({
 
     return (
         <View style={styles.container}>
-            <FlatList
-                style={styles.tabMenuContainer}
-                data={tabMenu}
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.tabMenuContentContainer}
-                renderItem={({ item, index }) => (
-                    <TouchableOpacity 
-                        style={styles.tabMenu} 
-                        key={index} 
-                        onPress={() => handleTabPress(index)}
-                    >
-                        <item.icon 
-                            width={44} 
-                            height={44} 
-                            style={selectedTab === index ? styles.tabMenuIcon : styles.tabMenuIconUnselected} 
-                        />
-                        <Text style={selectedTab === index ? styles.tabMenuTitle : styles.tabMenuTitleUnselected}>
-                            {item.title}
-                        </Text>
-                    </TouchableOpacity>
-                )}
-                keyExtractor={(item, index) => `tab-${index}`}
+            <IconTabMenu
+                tabs={tabMenu}
+                selectedTab={selectedTab}
+                onTabPress={handleTabPress}
             />
             <FlatList 
             style={styles.itemListContainer}
@@ -182,34 +159,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  tabMenuContainer: {
-    paddingTop: 30,
-    paddingHorizontal: 20,
-    height: 118,
-  },
-  tabMenuContentContainer: {
-    gap: 20,
-    height: 68,
-    paddingRight: 20,
-  },
-  tabMenu: {
-    alignItems: 'center',
-    gap: 6,
-  },
-  tabMenuTitle: {
-    ...typography.body4,
-    color: colors.grayScale900,
-  },
-  tabMenuIcon: {
-
-  },
-  tabMenuTitleUnselected: {
-    ...typography.body4,
-    color: colors.grayScale300,
-  },
-  tabMenuIconUnselected: {
-    opacity: 0.4,
-  },
   item: {
     flexDirection: 'column',
     alignItems: 'center',
@@ -240,7 +189,7 @@ const styles = StyleSheet.create({
   },
   row: {
     justifyContent: 'space-between',
-    marginBottom: 10,
+    marginBottom: 20,
   },
   itemInfo: {
     gap: 4,

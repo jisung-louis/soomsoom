@@ -118,9 +118,9 @@ const UserRoom = ({children, previewMode = false, previewItemIds = [], cropTop =
     : roomItemList.find(i => i.id === placedItems.background)?.image);
 
   // cropTop이 있으면 자동으로 스크롤 가능
-  const isScrollable = scrollable !== undefined ? scrollable : cropTop > 0;
+  //const isScrollable = scrollable !== undefined ? scrollable : cropTop > 0;
   
-  if (isScrollable) {
+  if (scrollable) {
     return (
       <View style={styles.container}>
         <ScrollView 
@@ -172,7 +172,7 @@ const UserRoom = ({children, previewMode = false, previewItemIds = [], cropTop =
     <View style={styles.container}>
       <ImageBackground
         source={backgroundImage || require('../../../assets/images/backgrounds/default.png')}
-        style={styles.background}
+        style={[styles.background, cropTop>0 && {transform: [{translateY: -sv(cropTop)}]}]}
         resizeMode="cover"
       >
         <SafeAreaView style={styles.safeArea} edges={['top']}>

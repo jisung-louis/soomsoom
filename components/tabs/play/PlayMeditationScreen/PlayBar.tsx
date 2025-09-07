@@ -144,6 +144,9 @@ const PlayBar = ({style, content, handleToggleFavorite, isFavorite, isFavoriteLo
           </TouchableOpacity>
         ))}
       </View> */}
+      <View style={styles.adContainer}>
+        <Text style={styles.adText}>광고 영역</Text>
+      </View>
     </View>
   );
 };
@@ -216,6 +219,19 @@ const styles = StyleSheet.create({
   },
   speedText: {
     fontSize: 13,
+    color: colors.grayScale700,
+  },
+  adContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.grayScale200,
+    marginHorizontal: -20,
+    height: 70,
+    marginBottom: -20,
+  },
+  adText: {
+    ...typography.caption2,
     color: colors.grayScale700,
   },
 });

@@ -15,11 +15,9 @@ type RecordedItem = {
 interface RecordListProps {
   date: dayjs.Dayjs;
   recordedItems: RecordedItem[];
-  navigation: {
-    navigate: (screen: 'EmotionSelectScreen', params: { date: string }) => void;
-  };
+  onStartRecordPress: () => void;
 }
-const RecordList: React.FC<RecordListProps> = ({ date, recordedItems, navigation }) => {
+const RecordList: React.FC<RecordListProps> = ({ date, recordedItems, onStartRecordPress }) => {
   const currentMonth = date.month(); // 커서가 위치한 달
   const nowMonth = dayjs().month(); // 현재 달
   const hasThisMonthRecords = recordedItems.some(
@@ -32,11 +30,7 @@ const RecordList: React.FC<RecordListProps> = ({ date, recordedItems, navigation
       {!hasThisMonthRecords ? (
         nowMonth === currentMonth && dayjs().year() === date.year() ? (
           <RecordEmptyStateWithButton
-            onButtonPress={() => {
-              navigation.navigate('EmotionSelectScreen', { 
-                date: dayjs().format('YYYY-MM-DD') 
-              });
-            }}
+            onButtonPress={onStartRecordPress}
           />
         ) : (
             <EmptyMonth style={{ alignSelf: 'center', marginTop: 30 }}/>

@@ -61,7 +61,7 @@ export const Button = forwardRef<ButtonRef, ButtonProps>((props, ref) => {
         <Animated.View style={[{width: 24, height: 24, zIndex: 100}, animatedStyle]}>
           <LottieView
             source={require('../../../assets/animations/icon-motion/check.json')}
-            autoPlay={false}
+            autoPlay
             loop={false}
             style={[{width: 24, height: 24}]}
             />

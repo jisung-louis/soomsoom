@@ -1,5 +1,6 @@
 // 토스트 메시지 UI모양의 고정된 컴포넌트
 
+import LottieView from 'lottie-react-native';
 import React from 'react';
 import { View, Text, StyleSheet, Dimensions, StyleProp, ViewStyle } from 'react-native';
 import { colors } from '../../../constants/colors';
@@ -29,6 +30,7 @@ interface ToastViewProps {
   message: string;
   theme: ToastTheme;
   iconType?: ToastIconType;
+  hasAnimation?: boolean;
   style?: StyleProp<ViewStyle>;
 }
 
@@ -63,13 +65,26 @@ const getToastIcon = (iconType: ToastIconType) => {
   }
 };
 
-const ToastView: React.FC<ToastViewProps> = ({ message, theme, iconType = 'none', style }) => {
+const ToastView: React.FC<ToastViewProps> = ({ message, theme, iconType = 'none', hasAnimation = false, style }) => {
   const themeStyle = toastThemes[theme];
   const icon = getToastIcon(iconType);
 
   return (
     <View style={[styles.toast, { backgroundColor: themeStyle.backgroundColor }, style]}>
-      {icon && <View style={styles.iconContainer}>{icon}</View>}
+      {icon && 
+      <View style={styles.iconContainer}>
+        {iconType === 'heart' && hasAnimation && 
+        <LottieView
+          source={require('../../../assets/animations/heart_up.json')}
+          autoPlay
+          loop
+          onAnimationFinish={() => {
+            console.log('Animation finished');
+          }}
+          style={styles.icon}
+        />}
+        {icon}
+      </View>}
       <Text
         style={[
           styles.message,
@@ -96,6 +111,13 @@ const styles = StyleSheet.create({
   },
   iconContainer: {
     marginRight: 4,
+  },
+  icon: {
+    position: 'absolute',
+    left: -24,
+    top: -100,
+    width: 100,
+    height: 100,
   },
   message: {
     ...typography.body5,

@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { StyleSheet, Text, View, ScrollView, useWindowDimensions } from 'react-native';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { StyleSheet, Text, View, ScrollView, useWindowDimensions, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation, useTheme } from '@react-navigation/native';
+import { useNavigation, useTheme, useRoute, RouteProp } from '@react-navigation/native';
 import { CompositeNavigationProp } from '@react-navigation/native';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -21,6 +21,11 @@ import { emotionDiaryService } from '../../services/emotionDiaryService';
 import { emotionStatsService, MonthlyStatsItem, DailyDiaryItem } from '../../services/emotionStatsService';
 import { EmotionType } from '../../types';
 import { getMockDiaryDataForAPI } from '../../data/emotionReportMockData';
+import { BottomSheetModal } from '@gorhom/bottom-sheet';
+import CustomBottomSheet from '../../components/common/bottomsheet/CustomBottomSheet';
+import { Button } from '../../components/common/buttons/Button';
+import { syongsyongTypography, typography } from '../../constants/typography';
+import { radius } from '../../constants/radius';
 
 type RecordTabNavigationProp = CompositeNavigationProp<
   BottomTabNavigationProp<RootTabParamList, 'record'>,
@@ -35,8 +40,28 @@ const RecordTab = () => {
   const [viewType, setViewType] = useState<'week' | 'month'>('week');
   const { showToast } = useToast();
   const navigation = useNavigation<RecordTabNavigationProp>();
+  const route = useRoute<RouteProp<RecordStackParamList, 'RecordTab'>>();
   const layout = useWindowDimensions();
-  const { colors: themeColors } = useTheme();
+  const [isCelebrationParticle, setIsCelebrationParticle] = useState(false);
+
+  const celebrationSheetRef = useRef<BottomSheetModal>(null);
+
+  // 첫 기록 축하 바텀시트 표시
+  useEffect(() => {
+    if (route.params?.isFirstRecord) {
+      // 약간의 지연을 두고 바텀시트 열기
+      setTimeout(() => {
+        setIsCelebrationParticle(true);
+        celebrationSheetRef.current?.expand();
+      }, 100);
+    }
+  }, [route.params?.isFirstRecord]);
+
+  // 축하 바텀시트 닫기
+  const handleCelebrationClose = () => {
+    setIsCelebrationParticle(false);
+    celebrationSheetRef.current?.close();
+  };
 
   // 현재 선택된 날짜 범위 계산
   const currentDate = useMemo(() => (viewType === 'week' ? current.week : current.month), [viewType, current.week, current.month]);
@@ -60,94 +85,40 @@ const RecordTab = () => {
   const [reportCurrentYear, setReportCurrentYear] = useState(dayjs().year());
   const [reportCurrentMonth, setReportCurrentMonth] = useState(dayjs().month() + 1);
 
-  // 컴포넌트 마운트 시 로그
-  useEffect(() => {
-    if (__DEV__) {
-      console.log('=== RecordTab 마운트 ===');
-      console.log('초기 current.week:', current.week.format('YYYY-MM-DD'));
-      console.log('초기 current.month:', current.month.format('YYYY-MM-DD'));
-      console.log('초기 viewType:', viewType);
-      console.log('현재 시간:', dayjs().format('YYYY-MM-DD HH:mm:ss'));
-    }
-  }, []);
 
-  // current 변경 시 로그
-  useEffect(() => {
-    if (__DEV__) {
-      console.log('🔄 current 변경됨');
-      console.log('current.week:', current.week.format('YYYY-MM-DD'));
-      console.log('current.month:', current.month.format('YYYY-MM-DD'));
-    }
-  }, [current]);
 
-  // viewType 변경 시 로그
-  useEffect(() => {
-    if (__DEV__) {
-      console.log('🔄 viewType 변경됨:', viewType);
-      console.log('현재 선택된 날짜:', currentDate.format('YYYY-MM-DD'));
-    }
-  }, [viewType, currentDate]);
 
   // viewType 변경 핸들러
   const handleViewTypeChange = useCallback((newViewType: 'week' | 'month') => {
-    if (__DEV__) {
-      console.log('=== viewType 변경 요청 ===');
-      console.log('이전 viewType:', viewType);
-      console.log('새로운 viewType:', newViewType);
-      console.log('현재 currentDate:', currentDate.format('YYYY-MM-DD'));
-    }
     setViewType(newViewType);
-    if (__DEV__) {
-      console.log('✅ viewType 변경 완료');
-    }
   }, [viewType, currentDate]);
 
   const handlePrev = useCallback(() => {
-    if (__DEV__) {
-      console.log('=== handlePrev 디버그 시작 ===');
-      console.log('현재 viewType:', viewType);
-      console.log('현재 currentDate:', currentDate.format('YYYY-MM-DD'));
-    }
-
     if (viewType === 'week') {
       const prevWeek = current.week.subtract(1, 'week');
-      if (__DEV__) console.log('계산된 prevWeek:', prevWeek.format('YYYY-MM-DD'));
       setCurrent(prev => ({
         ...prev,
         week: prevWeek,
         month: prevWeek.startOf('month'),
       }));
-      if (__DEV__) console.log('✅ prevWeek로 current.week, current.month 업데이트 완료');
     } else {
       const prevMonth = current.month.subtract(1, 'month');
-      if (__DEV__) console.log('계산된 prevMonth:', prevMonth.format('YYYY-MM-DD'));
       setCurrent(prev => ({
         ...prev,
         month: prevMonth,
         week: prevMonth.startOf('month'),
       }));
-      if (__DEV__) console.log('✅ prevMonth로 current.month, current.week 업데이트 완료');
     }
-
-    if (__DEV__) console.log('=== handlePrev 디버그 완료 ===');
   }, [viewType, currentDate, current.week, current.month]);
 
   const handleNext = useCallback(() => {
-    if (__DEV__) {
-      console.log('=== handleNext 디버그 시작 ===');
-      console.log('현재 viewType:', viewType);
-      console.log('현재 currentDate:', currentDate.format('YYYY-MM-DD'));
-    }
-
     const today = dayjs();
 
     if (viewType === 'week') {
       const nextWeek = current.week.add(1, 'week');
-      if (__DEV__) console.log('계산된 nextWeek:', nextWeek.format('YYYY-MM-DD'));
 
       // 주간 단위 미래 체크
       if (nextWeek.isAfter(today, 'week')) {
-        if (__DEV__) console.log('🚨 미래 주간 감지됨 - 토스트 메시지 표시');
         showToast({ message: '미래의 감정은 지금 기록할 수 없어요!', theme: 'dark', iconType: 'brokenHeart' });
         return;
       }
@@ -157,14 +128,11 @@ const RecordTab = () => {
         week: nextWeek,
         month: nextWeek.startOf('month'), // ✅ 주 이동 시 월도 동기화
       }));
-      if (__DEV__) console.log('✅ 미래 주간이 아님 - current.week/month 업데이트');
     } else {
       const nextMonth = current.month.add(1, 'month');
-      if (__DEV__) console.log('계산된 nextMonth:', nextMonth.format('YYYY-MM-DD'));
 
       // 월간 단위 미래 체크
       if (nextMonth.isAfter(today, 'month')) {
-        if (__DEV__) console.log('🚨 미래 월간 감지됨 - 토스트 메시지 표시');
         showToast({ message: '미래의 감정은 지금 기록할 수 없어요!', theme: 'dark', iconType: 'brokenHeart' });
         return;
       }
@@ -174,10 +142,7 @@ const RecordTab = () => {
         month: nextMonth,
         week: nextMonth.startOf('month'),
       }));
-      if (__DEV__) console.log('✅ 미래 월간이 아님 - current.month/week 업데이트');
     }
-
-    if (__DEV__) console.log('=== handleNext 디버그 완료 ===');
   }, [viewType, currentDate, current.week, current.month, showToast]);
 
   const handleDayPress = useCallback((date: dayjs.Dayjs) => {
@@ -272,7 +237,7 @@ const RecordTab = () => {
             onNext={handleNext}
             onViewTypeChange={handleViewTypeChange}
             onDayPress={handleDayPress}
-            navigation={navigation}
+            onStartRecordPress={onStartRecordPress}
             styles={styles}
             containsToday={weekIncludesToday}
             todayYear={dayjs().year()}
@@ -312,6 +277,34 @@ const RecordTab = () => {
           />
         )}
       />
+        <CustomBottomSheet
+          children={
+            <View style={styles.celebrationContainer}>
+              <View style={styles.celebrationTextContainer}>
+                <Text style={styles.celebrationTitle}>첫 기록을 남겼어요!</Text>
+                <Text style={styles.celebrationMessage}>마음도, 꾸준히 움직이면 달라져요!</Text>
+              </View>
+              <View style={styles.celebrationImageContainer}>
+                <Image source={require('../../assets/images/common/cat_writing.png')} style={styles.celebrationImage} />
+              </View>
+              <Button
+                title="확인"
+                variant="active"
+                size="large"
+                onPress={handleCelebrationClose}
+                style={styles.celebrationButton}
+              />
+            </View>
+          }
+          bottomSheetModalRef={celebrationSheetRef}
+          hasBackDrop={true}
+          enablePanDownToClose={false}
+          hasXButton
+          enableOverDrag={false}
+          hasTopButton={false}
+          onClose={handleCelebrationClose}
+          hasCelebrationParticle={isCelebrationParticle}
+        />
     </SafeAreaView>
   );
 };
@@ -326,6 +319,44 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   calenderHeader: {
+    marginTop: 30,
+  },
+  // 축하 바텀시트 스타일
+  celebrationContainer: {
+    paddingBottom: 50,
+    paddingHorizontal: 20,
+    marginTop: -10
+  },
+  celebrationContent: {
+    gap: 20,
+  },
+  celebrationTextContainer: {
+    gap: 12,
+  },
+  celebrationTitle: {
+    ...syongsyongTypography.title4,
+  },
+  celebrationMessage: {
+    ...typography.body2,
+    color: colors.grayScale500,
+  },
+  celebrationImageContainer: {
+    width: 335,
+    height: 191,
+    backgroundColor: colors.grayScale100,
+    alignSelf: 'center',
+    alignItems: 'center',
+    marginTop: 20,
+    borderRadius: radius.r12,
+    overflow: 'hidden',
+  },
+  celebrationImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+  },
+  celebrationButton: {
+    width: '100%',
     marginTop: 30,
   },
 });

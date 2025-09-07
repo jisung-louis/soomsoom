@@ -88,13 +88,20 @@ const ShopItemDetailScreen = () => {
       />
       
       <View style={styles.content}>
-        <View style={styles.itemImageContainer}>
+        {/* <View style={styles.itemImageContainer}>
           {item?.image === null || itemIdToPositionType(itemId) === 'background' ? (
             <View style={styles.itemImage} />
           ) : (
-              <Image source={item?.image} style={styles.itemImage} />
+              <Image source={item?.image} style={styles.itemImage} resizeMode='contain'/>
           )}
-        </View>
+        </View> */}
+        {item?.image === null || itemIdToPositionType(itemId) === 'background' ? (
+          <View style={styles.itemImageContainer}/>
+        ) : (
+          <View style={styles.itemImageContainer}>
+            <Image source={item?.image} style={styles.itemImage} resizeMode='contain'/>
+          </View>
+        )}
         <View style={styles.itemInfo}>
           <View style={styles.itemName}>
             <Text style={styles.itemNameText}>{item?.title}</Text>
@@ -108,7 +115,7 @@ const ShopItemDetailScreen = () => {
     </UserRoom>
 
     <View style={styles.buttonContainer}>
-              <Button 
+        <Button 
           icon={alreadyOwned ? undefined : 'heart'}
           title={alreadyOwned ? ' 보유중' : (hasValidPrice ? ` ${priceText} 구매하기` : ' 가격 정보 없음')}
           size='large' 
@@ -142,18 +149,17 @@ const styles = StyleSheet.create({
   content: {
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 50,
   },
   itemImageContainer: {
     width: 80,
     height: 80,
-    backgroundColor: 'white',
     borderRadius: 8,
-    marginBottom: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   itemImage: {
-    width: '100%',
-    height: '100%',
+    width: '80%',
+    height: '80%',
   },
   itemInfo: {
     alignItems: 'center',

@@ -14,6 +14,7 @@ const CustomToast: React.FC = () => {
     message,
     iconType,
     theme,
+    hasAnimation,
     hideToast,
   } = useToast();
 
@@ -23,6 +24,16 @@ const CustomToast: React.FC = () => {
 
   useEffect(() => {
     if (visible) {
+      // 이미 토스트가 보이는 상태에서 새로운 토스트가 뜨면 애니메이션을 다시 실행
+      if (isAnimating) {
+        // 기존 애니메이션 중단
+        translateY.stopAnimation();
+        opacity.stopAnimation();
+        // 애니메이션 값 초기화
+        translateY.setValue(100);
+        opacity.setValue(0);
+      }
+      
       setIsAnimating(true);
       // 토스트 나타나기 애니메이션
       Animated.parallel([
@@ -74,6 +85,7 @@ const CustomToast: React.FC = () => {
             message={message}
             theme={theme}
             iconType={iconType}
+            hasAnimation={hasAnimation}
           />
         </Animated.View>
       </View>

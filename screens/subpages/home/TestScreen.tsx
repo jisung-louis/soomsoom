@@ -20,10 +20,12 @@ import { Surface } from '../../../components/common/surface/Surface';
 import LottieView from 'lottie-react-native';
 import { Button, ButtonRef } from '../../../components/common/buttons/Button';
 import { ButtonSmall } from '../../../components/common/buttons/ButtonSmall';
+import { useToast } from '../../../contexts/ToastContext';
 
 const TestScreen = () => {
   const navigation = useNavigation<StackNavigationProp<HomeStackParamList>>();
   const buttonRef = useRef<ButtonRef>(null);
+  const { showToast } = useToast();
   const handleBack = () => {
     navigation.goBack();
   };
@@ -241,6 +243,16 @@ const TestScreen = () => {
           <ButtonSmall
             title="아이콘 움직이기"
             onPress={() => {buttonRef.current?.triggerShake()}}
+            variant="active"
+          />
+          <Button
+            title="어두운 토스트 메시지"
+            onPress={() => {showToast({ message: '토스트 메시지', theme: 'dark', iconType: 'check', duration: 2500 })}}
+            variant="secondary"
+          />
+          <Button
+            title="밝은 토스트 메시지"
+            onPress={() => {showToast({ message: '토스트 메시지', theme: 'light', iconType: 'heart', hasAnimation: true })}}
             variant="active"
           />
         </View>

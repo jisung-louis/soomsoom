@@ -46,6 +46,7 @@ export const roomItemList: RoomItem[] = [
     price: 300,
     positionType: 'floor',
     position: { x: 0, y: 0 }, // 동적으로 계산됨
+    description: ['따뜻하고, 부드럽다냥','엉덩이 놓이고 싶어지는.'],
   },
   {
     id: 5,
@@ -220,12 +221,13 @@ export const roomItemList: RoomItem[] = [
   {
     id: 22,
     type: '배경',
-    title: '여름 바닷가',
+    title: '여름 바다 피크닉',
     image: require('../assets/images/backgrounds/beach.png'),
     lottieJson: null,
     price: 0,
     positionType: 'background',
     position: { x: 0, y: 0 }, // 동적으로 계산됨
+    description: ['냥냥 해변에 귀를 기울이면','거품 부서지는 소리가 들린다.'],
   },
   {
     id: 23,

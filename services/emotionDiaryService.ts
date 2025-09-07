@@ -82,24 +82,38 @@ export const emotionDiaryService = {
   // 감정일기 등록
   createEmotionDiary: async (req: CreateEmotionDiaryRequest): Promise<EmotionDiary> => {
     try {
-      const body: BackendCreateDiaryRequest = {
-        emotion: toBackendEmotion(req.emotion),
-        memo: req.memo,
-        date: req.date,
-      };
+      if (__DEV__) {
+        return {
+          diaryId: Math.floor(Math.random() * 2) + 1,
+          userId: 1,
+          emotion: req.emotion,
+          memo: req.memo || null,
+          recordDate: req.date,
+          createdAt: new Date().toISOString(),
+          modifiedAt: new Date().toISOString(),
+          deletedAt: null,
+        } as EmotionDiary;
+      }
+      else {
+        const body: BackendCreateDiaryRequest = {
+          emotion: toBackendEmotion(req.emotion),
+          memo: req.memo,
+          date: req.date,
+        };
 
-      const res = await apiClient.post<BackendDiaryResponse>('/diaries', body);
+        const res = await apiClient.post<BackendDiaryResponse>('/diaries', body);
 
-      return {
-        diaryId: res.diaryId,
-        userId: res.userId,
-        emotion: toFrontendEmotion(res.emotion),
-        memo: res.memo,
-        recordDate: res.recordDate,
-        createdAt: res.createdAt,
-        modifiedAt: res.modifiedAt,
-        deletedAt: res.deletedAt,
-      };
+        return {
+          diaryId: res.diaryId,
+          userId: res.userId,
+          emotion: toFrontendEmotion(res.emotion),
+          memo: res.memo,
+          recordDate: res.recordDate,
+          createdAt: res.createdAt,
+          modifiedAt: res.modifiedAt,
+          deletedAt: res.deletedAt,
+        } as EmotionDiary;
+      }
     } catch (error) {
       // 네트워크/기타 에러
       if (error instanceof AppError) {
@@ -226,46 +240,6 @@ export const emotionDiaryService = {
     } catch (error) {
       if (error instanceof AppError) throw error;
       throw createNetworkError('감정일기 삭제에 실패했습니다.', error as Error);
-    }
-  },
-
-  // 첫 기록일 체크 (서버 기준)
-  isFirstRecord: async (date: string): Promise<boolean> => {
-    try {
-      // getEmotionDiaries API를 사용하여 사용자의 전체 기록 개수 조회
-      // from을 과거 날짜로, to를 현재 날짜로 설정하여 전체 기록 조회
-      const pastDate = '2020-01-01'; // 충분히 과거 날짜
-      const currentDate = new Date().toISOString().split('T')[0]; // 오늘 날짜
-      
-      const response = await emotionDiaryService.getEmotionDiaries({
-        from: pastDate,
-        to: currentDate,
-        deletionStatus: 'ACTIVE',
-        page: 1,
-        size: 1, // 개수만 확인하면 되므로 최소 크기
-      });
-      
-      const totalRecords = response.page.totalElements;
-      const isFirstRecord = totalRecords === 0;
-      
-      console.log(`[첫 기록일 체크] 사용자 기록 개수: ${totalRecords}, 첫 기록일: ${isFirstRecord}`);
-      return isFirstRecord;
-      
-    } catch (error) {
-      console.error('[첫 기록일 체크 실패]', error);
-      
-      // 에러 타입별 처리
-      if (error instanceof AppError) {
-        throw error;
-      }
-      
-      // 네트워크 에러나 기타 에러 - 첫 기록일이 아닌 것으로 처리
-      throw new AppError(
-        '첫 기록일 체크에 실패했습니다.',
-        ErrorType.NETWORK,
-        'FIRST_RECORD_CHECK_FAILED',
-        'emotion-diary-service'
-      );
     }
   },
 };
