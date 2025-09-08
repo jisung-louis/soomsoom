@@ -53,8 +53,8 @@
 
 ```bash
 # 저장소 클론
-git clone https://github.com/jisung-louis/sumsum.git
-cd sumsum
+git clone https://github.com/jisung-louis/soomsoom.git
+cd soomsoom
 
 # 의존성 설치
 npm install
@@ -78,7 +78,7 @@ npm run android
 ## 📱 앱 구조
 
 ```
-sumsum/
+soomsoom/
 ├── components/          # 재사용 가능한 UI 컴포넌트
 ├── screens/            # 앱 화면 컴포넌트
 ├── navigations/        # 네비게이션 설정
@@ -117,7 +117,7 @@ sumsum/
 
 - **개발자**: jisung-louis
 - **이메일**: [이메일 주소]
-- **프로젝트 링크**: https://github.com/jisung-louis/sumsum
+- **프로젝트 링크**: https://github.com/jisung-louis/soomsoom
 
 ## 🙏 감사의 말
 

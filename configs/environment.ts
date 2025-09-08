@@ -39,7 +39,7 @@ export const environmentConfig = {
             default: 'http://localhost:3000'
           });
         })()
-      : 'https://api.sumsum.com',     // 프로덕션 API 서버
+      : 'https://api.soomsoom.com',     // 프로덕션 API 서버
     
     timeout: isDevelopment 
       ? 10000  // 개발: 10초 (디버깅 시간 고려)
@@ -66,6 +66,15 @@ export const environmentConfig = {
     enableCrashReporting: isProduction,   // 프로덕션에서만 크래시 리포팅
     enableLocalPurchaseSimulator: isDevelopment, // 개발에서만 로컬 구매 시뮬레이터
     showDebugInfo: isDevelopment,         // 개발에서만 디버그 정보 표시
+  },
+
+  // 소셜 로그인 설정
+  auth: {
+    google: {
+      clientId: isDevelopment 
+        ? 'YOUR_DEVELOPMENT_GOOGLE_CLIENT_ID'  // 개발용 Google Client ID
+        : 'YOUR_PRODUCTION_GOOGLE_CLIENT_ID',  // 프로덕션용 Google Client ID
+    },
   },
 } as const;
 

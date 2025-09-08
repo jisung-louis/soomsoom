@@ -7,6 +7,7 @@ import GoogleIcon from '../../assets/images/onboarding/google_icon.svg';
 import AppleIcon from '../../assets/images/onboarding/apple_icon.svg';
 import { radius } from '../../constants/radius';
 import { sv } from '../../utils/scale';
+import SocialLoginButtons from './SocialLoginButtons';
 
 const { width } = Dimensions.get('window');
 const TERMS_URL = 'https://www.notion.so/habjungdriking/2378c8e0513580758730fade7689a04a';
@@ -39,22 +40,7 @@ const Register = ({onComplete}: {onComplete: () => void}) => {
             <Text style={styles.subtitle}>숨숨</Text>
         </View>
         <View style={styles.socialLoginContainer}>
-            <TouchableOpacity 
-            style={[styles.socialLoginButton, styles.googleLoginButton]}
-            onPress={() => {onGoogleLogin()}}
-            activeOpacity={0.6}
-            >
-                <GoogleIcon width={24} height={24} />
-                <Text style={[styles.socialLoginText, styles.googleLoginText]}>Google로 계속하기</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-            style={[styles.socialLoginButton, styles.appleLoginButton]}
-            onPress={() => {onAppleLogin()}}
-            activeOpacity={0.6}
-            >
-                <AppleIcon width={24} height={24} />
-                <Text style={[styles.socialLoginText, styles.appleLoginText]}>애플로 계속하기</Text>
-            </TouchableOpacity>
+            <SocialLoginButtons onSuccess={onComplete} />
         </View>
         <TouchableOpacity style={styles.termContainer} onPress={() => { openExternalLink(TERMS_URL); }}>
             <Text style={styles.termText}>숨숨에 가입함으로써 이용약관 및</Text>

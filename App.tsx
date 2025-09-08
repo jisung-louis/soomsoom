@@ -14,12 +14,16 @@ import { loadFonts } from './utils/fontLoader';
 import { View, Text } from 'react-native';
 import { SplashScreen, OnboardingScreen } from './components/onboarding';
 import { OnboardingProvider, useOnboarding } from './contexts/OnboardingContext';
+import { useAuthStore } from './stores/authStore';
+import { loadTokens } from './services/authService';
 
 const AppContent = () => {
   enableScreens(true);
   const [fontsLoaded, setFontsLoaded] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const { hasSeenOnboarding, setHasSeenOnboarding } = useOnboarding();
+  const { setSession } = useAuthStore();
   
   // 폰트 로딩
   useEffect(() => {
@@ -46,9 +50,49 @@ const AppContent = () => {
     }
   };
 
+  // 자동 로그인 체크 함수
+  const checkAutoLogin = async () => {
+    try {
+      console.log('🔍 자동 로그인 체크 시작...');
+      const tokens = await loadTokens();
+      
+      if (tokens && tokens.accessToken) {
+        console.log('✅ 저장된 토큰 발견, 자동 로그인 시도...');
+        
+        // 토큰이 있으면 자동으로 로그인 상태로 설정
+        // 실제로는 서버에 토큰 유효성을 확인해야 하지만, 
+        // 개발 환경에서는 토큰이 있으면 로그인된 것으로 간주
+        const mockUser = {
+          id: 1,
+          name: '자동 로그인 사용자',
+          email: 'auto@example.com',
+          avatarUrl: null,
+        };
+        
+        await setSession({
+          user: mockUser,
+          tokens: tokens,
+        });
+        
+        console.log('✅ 자동 로그인 완료!');
+      } else {
+        console.log('❌ 저장된 토큰 없음, 로그아웃 상태 유지');
+      }
+    } catch (error) {
+      console.error('❌ 자동 로그인 체크 실패:', error);
+    } finally {
+      setIsCheckingAuth(false);
+    }
+  };
+
   // 앱 시작 시 알림 설정 초기화
   useEffect(() => {
     initializeNotificationSettings();
+  }, []);
+
+  // 앱 시작 시 자동 로그인 체크
+  useEffect(() => {
+    checkAutoLogin();
   }, []);
 
   const initializeNotificationSettings = async () => {
@@ -116,8 +160,8 @@ const AppContent = () => {
         <ToastProvider>
           {showSplash ? (
             <SplashScreen onComplete={() => setShowSplash(false)} />
-          ) : hasSeenOnboarding === null ? (
-            // 온보딩 상태를 확인하는 중
+          ) : hasSeenOnboarding === null || isCheckingAuth ? (
+            // 온보딩 상태 또는 인증 상태를 확인하는 중
             <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
               <Text>로딩 중...</Text>
             </View>

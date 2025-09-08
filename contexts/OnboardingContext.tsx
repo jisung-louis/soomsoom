@@ -29,11 +29,13 @@ export const OnboardingProvider = ({ children }: OnboardingProviderProps) => {
 
   const resetOnboarding = async () => {
     try {
+      console.log('🔄 온보딩 상태 리셋 시작...');
       await AsyncStorage.removeItem('hasSeenOnboarding');
       setHasSeenOnboarding(false);
-      console.log('온보딩 상태가 리셋되었습니다.');
+      console.log('✅ 온보딩 상태가 리셋되었습니다. (hasSeenOnboarding: false)');
     } catch (error) {
-      console.error('온보딩 상태 리셋 실패:', error);
+      console.error('❌ 온보딩 상태 리셋 실패:', error);
+      throw error; // 에러를 다시 던져서 상위에서 처리할 수 있도록
     }
   };
 

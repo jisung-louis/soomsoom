@@ -5,13 +5,13 @@
 ## 🚀 시작하기
 
 ### 1. 저장소 포크
-1. GitHub에서 [숨숨 저장소](https://github.com/jisung-louis/sumsum)를 방문합니다
+1. GitHub에서 [숨숨 저장소](https://github.com/jisung-louis/soomsoom)를 방문합니다
 2. 우측 상단의 "Fork" 버튼을 클릭합니다
 3. 포크된 저장소를 로컬에 클론합니다
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/sumsum.git
-cd sumsum
+git clone https://github.com/YOUR_USERNAME/soomsoom.git
+cd soomsoom
 ```
 
 ### 2. 개발 환경 설정
@@ -84,7 +84,7 @@ export const Component: React.FC<ComponentProps> = ({ title, onPress }) => {
 ## 🔄 작업 흐름
 
 ### 1. 이슈 확인
-- [이슈 목록](https://github.com/jisung-louis/sumsum/issues)에서 작업할 내용을 확인합니다
+- [이슈 목록](https://github.com/jisung-louis/soomsoom/issues)에서 작업할 내용을 확인합니다
 - 이미 작업 중인 이슈가 있는지 확인합니다
 
 ### 2. 개발 및 테스트
@@ -146,7 +146,7 @@ GitHub에서 Pull Request를 생성합니다.
 ## 🐛 버그 리포트
 
 버그를 발견했다면:
-1. [이슈 템플릿](https://github.com/jisung-louis/sumsum/issues/new/choose)을 사용합니다
+1. [이슈 템플릿](https://github.com/jisung-louis/soomsoom/issues/new/choose)을 사용합니다
 2. 재현 단계를 명확하게 작성합니다
 3. 환경 정보를 포함합니다
 4. 스크린샷이나 로그를 첨부합니다
@@ -154,7 +154,7 @@ GitHub에서 Pull Request를 생성합니다.
 ## 💡 기능 제안
 
 새로운 기능을 제안하려면:
-1. [기능 요청 템플릿](https://github.com/jisung-louis/sumsum/issues/new/choose)을 사용합니다
+1. [기능 요청 템플릿](https://github.com/jisung-louis/soomsoom/issues/new/choose)을 사용합니다
 2. 기능의 필요성을 명확하게 설명합니다
 3. 사용 시나리오를 제시합니다
 4. UI/UX 제안을 포함합니다
@@ -200,8 +200,8 @@ GitHub에서 Pull Request를 생성합니다.
 ## 📞 문의
 
 기여 과정에서 궁금한 점이 있다면:
-- [이슈](https://github.com/jisung-louis/sumsum/issues)에 질문을 남겨주세요
-- [토론](https://github.com/jisung-louis/sumsum/discussions)에 참여해주세요
+- [이슈](https://github.com/jisung-louis/soomsoom/issues)에 질문을 남겨주세요
+- [토론](https://github.com/jisung-louis/soomsoom/discussions)에 참여해주세요
 
 ---
 

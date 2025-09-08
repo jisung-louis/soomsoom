@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { Text, StyleSheet, ScrollView } from 'react-native';
 import { View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -13,6 +13,7 @@ import { useCurrencyStore } from '../../../stores/currencyStore';
 import { usePlayStore } from '../../../stores/playStore';
 import { useAlarmStore } from '../../../stores/alarmStore';
 import { useRoomStore } from '../../../stores/roomStore';
+import { useAuthStore } from '../../../stores/authStore';
 import { roomItemList } from '../../../data/roomItemData';
 import { mockContentData, mockInstructorsData } from '../../../data/playContentData';
 import { Activity } from '../../../services/contentService';
@@ -30,6 +31,10 @@ const TestScreen = () => {
   const navigation = useNavigation<StackNavigationProp<HomeStackParamList>>();
   const buttonRef = useRef<ButtonRef>(null);
   const { showToast } = useToast();
+  
+  // AuthStore 상태를 실시간으로 구독
+  const { user, isLoggedIn, tokens } = useAuthStore();
+  
   const handleBack = () => {
     navigation.goBack();
   };
@@ -257,7 +262,47 @@ const TestScreen = () => {
           />
         </View>
         <View style={[styles.infoCard, {gap:10}]}>
-          <Text>Zustand AsyncStorage 모든 상태</Text>
+          <Text style={styles.sectionTitle}>🔐 인증 상태 (AuthStore) - 실시간 업데이트</Text>
+          <View style={styles.infoCard}>
+            <Text style={styles.infoLabel}>로그인 상태</Text>
+            <Text style={styles.infoValue}>{isLoggedIn ? '✅ 로그인됨' : '❌ 로그아웃됨'}</Text>
+          </View>
+          {user && (
+            <>
+              <View style={styles.infoCard}>
+                <Text style={styles.infoLabel}>사용자 ID</Text>
+                <Text style={styles.infoValue}>{user.id}</Text>
+              </View>
+              <View style={styles.infoCard}>
+                <Text style={styles.infoLabel}>사용자 이름</Text>
+                <Text style={styles.infoValue}>{user.name || '없음'}</Text>
+              </View>
+              <View style={styles.infoCard}>
+                <Text style={styles.infoLabel}>이메일</Text>
+                <Text style={styles.infoValue}>{user.email || '없음'}</Text>
+              </View>
+              <View style={styles.infoCard}>
+                <Text style={styles.infoLabel}>아바타 URL</Text>
+                <Text style={styles.infoValue}>{user.avatarUrl || '없음'}</Text>
+              </View>
+            </>
+          )}
+          {tokens && (
+            <>
+              <View style={styles.infoCard}>
+                <Text style={styles.infoLabel}>Access Token</Text>
+                <Text style={styles.infoValue}>{tokens.accessToken ? '✅ 있음: ' + tokens.accessToken : '❌ 없음'}</Text>
+              </View>
+              <View style={styles.infoCard}>
+                <Text style={styles.infoLabel}>Refresh Token</Text>
+                <Text style={styles.infoValue}>{tokens.refreshToken ? '✅ 있음: ' + tokens.refreshToken : '❌ 없음'}</Text>
+              </View>
+            </>
+          )}
+        </View>
+
+        <View style={[styles.infoCard, {gap:10}]}>
+          <Text style={styles.sectionTitle}>💾 AsyncStorage 모든 상태</Text>
           {AsyncStorage.getAllKeys().then((keys) => {
             return keys.map((key) => {
               return AsyncStorage.getItem(key).then((value) => {

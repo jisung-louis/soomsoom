@@ -65,6 +65,6 @@
 
 ## 🔗 링크
 
-- [GitHub 저장소](https://github.com/jisung-louis/sumsum)
+- [GitHub 저장소](https://github.com/jisung-louis/soomsoom)
 - [기능 명세서](docs/FeatureSpec.md)
 - [README](README.md)

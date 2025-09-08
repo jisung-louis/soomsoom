@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "sumsum",
-    "slug": "sumsum",
+    "name": "soomsoom",
+    "slug": "soomsoom",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/app-icons/icon.png",
@@ -13,14 +13,17 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.soomsoom.app",
+      "usesAppleSignIn": true
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/app-icons/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.soomsoom.app"
     },
     "web": {
       "favicon": "./assets/app-icons/favicon.png"
@@ -43,7 +46,9 @@
             "./assets/fonts/Cafe24Syongsyong-v2.0.ttf"
           ]
         }
-      ]
-    ]
+      ],
+      "expo-apple-authentication"
+    ],
+    "scheme": "soomsoom"
   }
 }
