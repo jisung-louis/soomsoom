@@ -19,11 +19,13 @@ export interface ActivityNarrator {
   profileImageUrl: string | null;
 }
 
+export type BreathAction = 'START' | 'INHALE' | 'EXHALE' | 'HOLD' | 'END';
+
 // 액티비티 타임라인(only for BREATHING)
 export interface ActivityTimeline {
   id: number;
   time: number;
-  action: 'START' | 'INHALE' | 'EXHALE' | 'HOLD' | 'END';
+  action: BreathAction;
   text: string;
   duration: number | null;
 }
@@ -39,7 +41,7 @@ export interface Activity {
   narrator: ActivityNarrator;
   durationInSeconds: number;
   audioUrl: string | null;
-  timeline: ActivityTimeline[];
+  timeline: ActivityTimeline[] | null;
   isFavorited: boolean;
 }
 

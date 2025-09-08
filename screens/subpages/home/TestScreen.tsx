@@ -21,6 +21,10 @@ import LottieView from 'lottie-react-native';
 import { Button, ButtonRef } from '../../../components/common/buttons/Button';
 import { ButtonSmall } from '../../../components/common/buttons/ButtonSmall';
 import { useToast } from '../../../contexts/ToastContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+import CatBasic from '../../../assets/images/play/playBreathing/basic.svg';
+import CatHold from '../../../assets/images/play/playBreathing/hold.svg';
 
 const TestScreen = () => {
   const navigation = useNavigation<StackNavigationProp<HomeStackParamList>>();
@@ -58,10 +62,6 @@ const TestScreen = () => {
     {
       name: 'fish_up',
       lottieJson: require('../../../assets/animations/fish_up.json'),
-    },
-    {
-      name: 'cat',
-      lottieJson: require('../../../assets/animations/cat.json'),
     },
     {
       name: 'danpoong',
@@ -255,6 +255,16 @@ const TestScreen = () => {
             onPress={() => {showToast({ message: '토스트 메시지', theme: 'light', iconType: 'heart', hasAnimation: true })}}
             variant="active"
           />
+        </View>
+        <View style={[styles.infoCard, {gap:10}]}>
+          <Text>Zustand AsyncStorage 모든 상태</Text>
+          {AsyncStorage.getAllKeys().then((keys) => {
+            return keys.map((key) => {
+              return AsyncStorage.getItem(key).then((value) => {
+                return <Text key={key}>{key}: {value}</Text>
+              });
+            });
+          })}
         </View>
       </ScrollView>
     </SafeAreaView>

@@ -33,22 +33,7 @@ export const mockContentData: Activity[] = [
     },
     durationInSeconds: 300, // 5분
     audioUrl: require('../assets/audios/test_audio.mp3'),
-    timeline: [
-      {
-        id: 1,
-        time: 0.0,
-        action: 'START',
-        text: '명상을 시작합니다.',
-        duration: null,
-      },
-      {
-        id: 2,
-        time: 5.0,
-        action: 'INHALE',
-        text: '숨을 들이쉬세요.',
-        duration: 4.0,
-      },
-    ],
+    timeline: null,
     isFavorited: false,
   },
   {
@@ -75,22 +60,7 @@ export const mockContentData: Activity[] = [
     },
     durationInSeconds: 300, // 5분
     audioUrl: require('../assets/audios/test_audio.mp3'),
-    timeline: [
-      {
-        id: 3,
-        time: 0.0,
-        action: 'START',
-        text: '명상을 시작합니다.',
-        duration: null,
-      },
-      {
-        id: 4,
-        time: 5.0,
-        action: 'INHALE',
-        text: '숨을 들이쉬세요.',
-        duration: 4.0,
-      },
-    ],
+    timeline: null,
     isFavorited: false,
   },
   {
@@ -117,17 +87,108 @@ export const mockContentData: Activity[] = [
     audioUrl: null,
     timeline: [
       {
-        id: 5,
+        id: 1,
         time: 0.0,
         action: 'START',
         text: '호흡을 시작합니다.',
         duration: null,
       },
       {
-        id: 6,
+        id: 2,
         time: 5.0,
         action: 'INHALE',
         text: '숨을 들이쉬세요.',
+        duration: 4.0,
+      },
+      {
+        id: 2.5,
+        time: 7.0,
+        action: 'HOLD',
+        text: '변수발생!',
+        duration: 4.0,
+      },
+      {
+        id: 3,
+        time: 10.0,
+        action: 'HOLD',
+        text: '숨을 들이 쉰 상태로 참으세요.',
+        duration: 4.0,
+      },
+      {
+        id: 4,
+        time: 15.0,
+        action: 'EXHALE',
+        text: '숨을 내쉬세요.',
+        duration: 4.0,
+      },
+      {
+        id: 5,
+        time: 20.0,
+        action: 'HOLD',
+        text: '숨을 내쉰 상태로 참으세요.',
+        duration: 4.0,
+      },
+      {
+        id: 6,
+        time: 25.0,
+        action: 'INHALE',
+        text: '숨을 들이쉬세요.',
+        duration: 4.0,
+      },
+      {
+        id: 7,
+        time: 30.0,
+        action: 'HOLD',
+        text: '숨을 들이 쉰 상태로 참으세요.',
+        duration: 4.0,
+      },
+      {
+        id: 8,
+        time: 35.0,
+        action: 'EXHALE',
+        text: '숨을 내쉬세요.',
+        duration: 4.0,
+      },
+      {
+        id: 9,
+        time: 40.0,
+        action: 'HOLD',
+        text: '숨을 내쉰 상태로 참으세요.',
+        duration: 4.0,
+      },
+      {
+        id: 10,
+        time: 45.0,
+        action: 'INHALE',
+        text: '숨을 들이쉬세요.',
+        duration: 4.0,
+      },
+      {
+        id: 11,
+        time: 50.0,
+        action: 'HOLD',
+        text: '숨을 들이 쉰 상태로 참으세요.',
+        duration: 4.0,
+      },
+      {
+        id: 12,
+        time: 55.0,
+        action: 'EXHALE',
+        text: '숨을 내쉬세요.',
+        duration: 4.0,
+      },
+      {
+        id: 13,
+        time: 60.0,
+        action: 'HOLD',
+        text: '숨을 내쉰 상태로 참으세요.',
+        duration: 4.0,
+      },
+      {
+        id: 14,
+        time: 65.0,
+        action: 'END',
+        text: '호흡을 끝냅니다.',
         duration: 4.0,
       },
     ],
@@ -157,14 +218,14 @@ export const mockContentData: Activity[] = [
     audioUrl: null,
     timeline: [
       {
-        id: 7,
+        id: 1,
         time: 0.0,
         action: 'START',
         text: '호흡을 시작합니다.',
         duration: null,
       },
       {
-        id: 8,
+        id: 2,
         time: 5.0,
         action: 'INHALE',
         text: '숨을 들이쉬세요.',
@@ -179,7 +240,9 @@ export const mockContentData: Activity[] = [
     type: 'BREATHING',
     thumbnailImageUrl: require('../assets/images/play/playFavoriteScreen/default_image_1.png'),
     descriptions: [
-      '생각이 많을 때, 교호 호흡 컨텐츠의 설명 부분입니다.'
+      '생각이 많을 때, 교호 호흡 컨텐츠의 설명 부분입니다다다다다다다다다다다.',
+      '생각이 많을 때, 교호 호흡 컨텐츠의 설명 부분입니다.',
+      '생각이 많을 때, 교호 호흡 컨텐츠의 설명 부분입니다.',
     ],
     author: {
       id: 0,
@@ -197,14 +260,14 @@ export const mockContentData: Activity[] = [
     audioUrl: null,
     timeline: [
       {
-        id: 9,
+        id: 1,
         time: 0.0,
         action: 'START',
         text: '호흡을 시작합니다.',
         duration: null,
       },
       {
-        id: 10,
+        id: 2,
         time: 5.0,
         action: 'INHALE',
         text: '숨을 들이쉬세요.',

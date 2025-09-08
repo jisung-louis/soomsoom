@@ -14,6 +14,7 @@ import { Button } from '../../../../components/common/buttons/Button';
 import { cancelAlarmNotifications, requestNotificationPermissions } from '../../../../services/alarmNotificationService';
 import { scheduleDiaryNotification } from '../../../../utils/notificationUtils';
 import { parseNotificationTime } from '../../../../utils/timeUtils';
+import { useToast } from '../../../../hooks/useToast';
 
 interface TimeData {
   period: string;
@@ -28,6 +29,8 @@ const NotificationSettingScreen = () => {
       hour: '8', 
       minute: '30' 
     });
+
+    const { showToast } = useToast();
     
     // 마음일기 알림 상태 관리
     const [isDiaryNotificationEnabled, setIsDiaryNotificationEnabled] = useState(false);
@@ -144,14 +147,26 @@ const NotificationSettingScreen = () => {
                 await scheduleDiaryNotificationLocal();
                 
                 // 3. 알림 활성화 되었다는 토스트 메시지
-                Alert.alert('알림 활성화', '마음일기 알림이 활성화되었습니다.');
+                //Alert.alert('알림 활성화', '마음일기 알림이 활성화되었습니다.');
+                showToast({
+                    message: '마음일기 알람이 설정되었어요!',
+                    theme: 'dark',
+                    iconType: 'alarm',
+                    duration: 2500,
+                });
                 
             } else {
                 // 1. 기존 알림 스케줄 취소
                 await cancelDiaryNotification();
                 
                 // 2. 알림 비활성화 되었다는 토스트 메시지
-                Alert.alert('알림 비활성화', '마음일기 알림이 비활성화되었습니다.');
+                //Alert.alert('알림 비활성화', '마음일기 알림이 비활성화되었습니다.');
+                showToast({
+                    message: '마음일기 알람이 해제되었어요!',
+                    theme: 'dark',
+                    iconType: 'brokenHeart',
+                    duration: 2500,
+                });
             }
         } catch (error) {
             console.error('알림 설정 저장 실패:', error);

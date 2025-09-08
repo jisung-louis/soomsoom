@@ -1,3 +1,10 @@
+// 초를 분과 초로 변환하는 함수
+export const convertSecondsToMinutesAndSeconds = (seconds: number): { minutes: number; seconds: number } => {
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+  return { minutes, seconds: remainingSeconds };
+};
+
 // 시간을 분으로 변환하는 함수
 export const convertTimeToMinutes = (time: string): number => {
   const [hours, minutes] = time.split(':').map(Number);

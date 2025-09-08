@@ -18,15 +18,14 @@ import CheckActiveIcon from '../../../assets/icons/common/check_active.svg';
 import ArrowDropDownIcon from '../../../assets/icons/common/arrow_dropdown.svg';
 import EmotionIcon from '../../../assets/icons/common/emotion.svg';
 import IconTabMenu, { TabMenuItem } from '../../../components/common/tabmenu/IconTabMenu';
+import EntireIcon from '../../../assets/icons/my/room-decoration/entire.svg';
 import AccessoryIcon from '../../../assets/icons/my/room-decoration/accessory.svg';
 import CollectionIcon from '../../../assets/icons/my/room-decoration/collection.svg';
 import HatIcon from '../../../assets/icons/my/room-decoration/hat.svg';
 import BackgroundIcon from '../../../assets/icons/my/room-decoration/background.svg';
-import FurnitureIcon from '../../../assets/icons/my/room-decoration/furniture.svg';
 import RugIcon from '../../../assets/icons/my/room-decoration/rug.svg';
 import ShelfIcon from '../../../assets/icons/my/room-decoration/shelf.svg';
 import OrnamentIcon from '../../../assets/icons/my/room-decoration/ornament.svg';
-import WallPaperIcon from '../../../assets/icons/my/room-decoration/wallpaper.svg';
 
 import BannerItemImage from '../../../assets/images/home/shop/banner_item.svg';
 import BannerChargeImage from '../../../assets/images/home/shop/banner_charge.svg';
@@ -134,7 +133,8 @@ const ShopScreen = () => {
   // 아이템 카테고리 탭 메뉴
   const [selectedItemTab, setSelectedItemTab] = useState(0);
   const itemTabMenu: TabMenuItem[] = [
-    { icon: CollectionIcon, title: '전체' },
+    { icon: EntireIcon, title: '전체' },
+    { icon: CollectionIcon, title: '컬렉션' },
     { icon: AccessoryIcon, title: '악세사리' },
     { icon: HatIcon, title: '모자' },
     { icon: BackgroundIcon, title: '배경' },

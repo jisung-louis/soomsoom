@@ -143,7 +143,7 @@ const UserRoom = ({children, previewMode = false, previewItemIds = [], cropTop =
               {/* 기본 캐릭터 요소들 */}
               <LottieView
                 key={`cat-${replayKey.current}`}
-                source={require('../../../assets/animations/cat.json')}
+                source={require('../../../assets/animations/cat_basic_motion.json')}
                 autoPlay
                 loop
                 style={itemStyles.cat}
@@ -180,7 +180,7 @@ const UserRoom = ({children, previewMode = false, previewItemIds = [], cropTop =
           {/* 기본 캐릭터 요소들 */}
           <LottieView
             key={`cat-${replayKey.current}`}
-            source={require('../../../assets/animations/cat.json')}
+            source={require('../../../assets/animations/cat_basic_motion.json')}
             autoPlay
             loop
             style={itemStyles.cat}

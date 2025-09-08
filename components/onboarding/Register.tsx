@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Dimensions, TouchableOpacity, Linking, Alert } from 'react-native';
 import Logo from '../../assets/icons/logo.svg';
 import { syongsyongTypography, typography } from '../../constants/typography';
 import { colors } from '../../constants/colors';
@@ -9,6 +9,8 @@ import { radius } from '../../constants/radius';
 import { sv } from '../../utils/scale';
 
 const { width } = Dimensions.get('window');
+const TERMS_URL = 'https://www.notion.so/habjungdriking/2378c8e0513580758730fade7689a04a';
+const PRIVACY_URL = 'https://example.com/privacy';
 
 const Register = ({onComplete}: {onComplete: () => void}) => {
   const onGoogleLogin = () => {
@@ -17,6 +19,18 @@ const Register = ({onComplete}: {onComplete: () => void}) => {
   const onAppleLogin = () => {
     console.log('애플로 계속하기');
     onComplete();//임시로 완료처리
+  }
+  const openExternalLink = async (url: string) => {
+    try {
+      const supported = await Linking.canOpenURL(url);
+      if (supported) {
+        await Linking.openURL(url);
+      } else {
+        Alert.alert('링크를 열 수 없어요', '지원되지 않는 URL 형식입니다.');
+      }
+    } catch (error) {
+      Alert.alert('오류가 발생했어요', '잠시 후 다시 시도해주세요.');
+    }
   }
   return (
     <View style={styles.container}>
@@ -42,7 +56,7 @@ const Register = ({onComplete}: {onComplete: () => void}) => {
                 <Text style={[styles.socialLoginText, styles.appleLoginText]}>애플로 계속하기</Text>
             </TouchableOpacity>
         </View>
-        <TouchableOpacity style={styles.termContainer} onPress={() => {{/* TODO:하이퍼링크 이동 */}}}>
+        <TouchableOpacity style={styles.termContainer} onPress={() => { openExternalLink(TERMS_URL); }}>
             <Text style={styles.termText}>숨숨에 가입함으로써 이용약관 및</Text>
             <Text style={styles.termText}>개인정보처리방침에 동의하게 됩니다.</Text>
         </TouchableOpacity>
