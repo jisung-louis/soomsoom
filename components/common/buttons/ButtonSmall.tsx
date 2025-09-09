@@ -1,12 +1,13 @@
 import React from 'react';
-import { TouchableOpacity, TouchableOpacityProps, StyleSheet, Text, View } from 'react-native';
+import { TouchableOpacity, TouchableOpacityProps, StyleSheet, Text, View, StyleProp, ViewStyle } from 'react-native';
 import { colors } from '../../../constants/colors';
 import { radius } from '../../../constants/radius';
 import { typography } from '../../../constants/typography';
 
 interface ButtonProps extends TouchableOpacityProps {
   title: string;
-  variant?: 'default' | 'active';
+  variant?: 'default' | 'active' | 'secondary';
+  style?: StyleProp<ViewStyle>;
 }
 
 export const BUTTON_SIZE = {
@@ -31,7 +32,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     flexDirection: 'row',
     padding: 12,
-    width: BUTTON_SIZE.width,
+    width: BUTTON_SIZE.width, // 이걸 주석화하면 버튼 크기는 글자 크기에 따라 자동으로 조정됨
     height: BUTTON_SIZE.height,
   },
   title: {
@@ -46,5 +47,9 @@ const styles = StyleSheet.create({
   active: {
     backgroundColor: colors.primary300,
     color: colors.white,
+  },
+  secondary: {
+    backgroundColor: colors.primary50,
+    color: colors.primary400,
   },
 });

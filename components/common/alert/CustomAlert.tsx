@@ -1,10 +1,11 @@
 import React from 'react';
-import { View, Text, StyleSheet, Modal, TouchableOpacity, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, Modal, TouchableOpacity, Dimensions, Image } from 'react-native';
 import { colors } from '../../../constants/colors';
 import { syongsyongTypography, typography } from '../../../constants/typography';
 import { radius } from '../../../constants/radius';
 import XButton from '../../../assets/icons/common/close.svg';
 import { Button, ButtonProps } from '../buttons/Button';
+import LottieView from 'lottie-react-native';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -16,13 +17,14 @@ export type AlertButton = {
 
 type CustomAlertProps = {
   visible: boolean;
+  image?: string | any; // string (URI) 또는 any (Lottie 파일)
   message: string;
   subMessage?: string;
   buttons: AlertButton[];
   onClose?: () => void;
 };
 
-const CustomAlert = ({ visible, message, subMessage, buttons, onClose }: CustomAlertProps) => {
+const CustomAlert = ({ visible, image, message, subMessage, buttons, onClose }: CustomAlertProps) => {
   const handleBackdropPress = () => {
     if (onClose) {
       onClose();
@@ -61,6 +63,23 @@ const CustomAlert = ({ visible, message, subMessage, buttons, onClose }: CustomA
           <TouchableOpacity style={styles.closeButton} onPress={onClose}>
             <XButton width={24} height={24} />
           </TouchableOpacity>
+
+          {/* 이미지 */}
+          {image && (
+            typeof image === 'string' && image.endsWith('.json') ? (
+              <View style={styles.imageContainer}>
+                <LottieView source={image} autoPlay loop style={styles.image} />
+              </View>
+            ) : typeof image === 'string' ? (
+              <View style={styles.imageContainer}>
+                <Image source={{ uri: image }} style={styles.image} />
+              </View>
+            ) : (
+              <View style={styles.imageContainer}>
+                <LottieView source={image} autoPlay loop style={styles.image} />
+              </View>
+            )
+          )}
 
           {/* 메시지 */}
           <View style={styles.messageContainer}>
@@ -120,6 +139,14 @@ const styles = StyleSheet.create({
   closeButtonText: {
     ...typography.body4,
     color: colors.grayScale700,
+  },
+  imageContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  image: {
+    width: 100,
+    height: 100,
   },
   messageContainer: {
     marginTop: 20,

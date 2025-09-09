@@ -1,4 +1,4 @@
-// Play 관련 임시 데이터
+// 개발용 임시 데이터
 // TODO: 백엔드 연동 후 실제 API 데이터로 교체
 
 // 타입들은 contentService.ts에서 관리하고 import해서 사용

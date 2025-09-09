@@ -3,6 +3,7 @@ import { AppError, createNetworkError, ErrorType } from '../utils/errorHandler';
 import { EmotionType } from '../types';
 import { BackendEmotion, toBackendEmotion, toFrontendEmotion } from '../utils/emotionMap';
 import { getMockDiaryData } from '../data/emotionReportMockData';
+import { useAchievementStore } from '../stores/achievementStore';
 
 // Request/Response 타입
 export interface CreateEmotionDiaryRequest {
@@ -83,7 +84,7 @@ export const emotionDiaryService = {
   createEmotionDiary: async (req: CreateEmotionDiaryRequest): Promise<EmotionDiary> => {
     try {
       if (__DEV__) {
-        return {
+        const result = {
           diaryId: Math.floor(Math.random() * 2) + 1,
           userId: 1,
           emotion: req.emotion,
@@ -93,6 +94,12 @@ export const emotionDiaryService = {
           modifiedAt: new Date().toISOString(),
           deletedAt: null,
         } as EmotionDiary;
+
+        // 개발 환경에서도 업적 체크
+        useAchievementStore.getState().scheduleCheck(400);
+        console.log('📝 감정일기 등록 성공 (개발), 업적 체크 스케줄링');
+
+        return result;
       }
       else {
         const body: BackendCreateDiaryRequest = {
@@ -103,7 +110,7 @@ export const emotionDiaryService = {
 
         const res = await apiClient.post<BackendDiaryResponse>('/diaries', body);
 
-        return {
+        const result = {
           diaryId: res.diaryId,
           userId: res.userId,
           emotion: toFrontendEmotion(res.emotion),
@@ -113,6 +120,12 @@ export const emotionDiaryService = {
           modifiedAt: res.modifiedAt,
           deletedAt: res.deletedAt,
         } as EmotionDiary;
+
+        // 감정일기 등록 성공 후 업적 체크
+        useAchievementStore.getState().scheduleCheck(400);
+        console.log('📝 감정일기 등록 성공, 업적 체크 스케줄링');
+
+        return result;
       }
     } catch (error) {
       // 네트워크/기타 에러

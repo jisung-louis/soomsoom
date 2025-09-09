@@ -16,6 +16,9 @@ import { SplashScreen, OnboardingScreen } from './components/onboarding';
 import { OnboardingProvider, useOnboarding } from './contexts/OnboardingContext';
 import { useAuthStore } from './stores/authStore';
 import { loadTokens } from './services/authService';
+import { useAchievementStore } from './stores/achievementStore';
+import AchievementUnlockedPopup from './components/common/achievement/AchievementUnlockedPopup';
+// initializeMockUserProgress는 achievementStore에서 자동으로 호출됨
 
 const AppContent = () => {
   enableScreens(true);
@@ -24,6 +27,7 @@ const AppContent = () => {
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const { hasSeenOnboarding, setHasSeenOnboarding } = useOnboarding();
   const { setSession } = useAuthStore();
+  const { initOnAppStart } = useAchievementStore();
   
   // 폰트 로딩
   useEffect(() => {
@@ -90,10 +94,16 @@ const AppContent = () => {
     initializeNotificationSettings();
   }, []);
 
-  // 앱 시작 시 자동 로그인 체크
+  // 앱 시작 시 자동 로그인 체크 및 업적 시스템 초기화
   useEffect(() => {
-    checkAutoLogin();
-  }, []);
+    const initializeApp = async () => {
+      await checkAutoLogin();
+      // 업적 시스템 초기화 (Mock 데이터 초기화 포함)
+      await initOnAppStart();
+    };
+
+    initializeApp();
+  }, [initOnAppStart]);
 
   const initializeNotificationSettings = async () => {
     try {
@@ -172,6 +182,7 @@ const AppContent = () => {
               <AppNavigator />
               <StatusBar style="auto" />
               <CustomToast />
+              <AchievementUnlockedPopup />
             </>
           ) : (
             <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>

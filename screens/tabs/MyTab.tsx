@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import UserRoom from '../../components/common/userroom/UserRoom';
-import { View, StyleSheet, Text, ScrollView, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, Text, ScrollView, TouchableOpacity, FlatList } from 'react-native';
 import { colors } from '../../constants/colors';
 import { radius } from '../../constants/radius';
 import { typography } from '../../constants/typography';
@@ -16,6 +16,10 @@ import { syongsyongTypography } from '../../constants/typography';
 import { ToggleButton } from '../../components/common/buttons/ToggleButton';
 import ArrowRight from '../../assets/icons/common/arrow_right.svg';
 import BadgeEmpty from '../../assets/icons/my/badge_empty.svg';
+import BadgeBronze from '../../assets/icons/my/badge_bronze.svg';
+import BadgeSilver from '../../assets/icons/my/badge_silver.svg';
+import BadgeGold from '../../assets/icons/my/badge_gold.svg';
+import BadgeHidden from '../../assets/icons/my/badge_hidden.svg';
 import { Button } from '../../components/common/buttons/Button';
 import CustomBottomSheet from '../../components/common/bottomsheet/CustomBottomSheet';
 import MyRoomDecoration from '../subpages/my/MyRoomDecoration';
@@ -23,6 +27,8 @@ import { roomItemList } from '../../data/roomItemData';
 import { objectPosition } from '../../constants/roomLayout';
 import { useRoomStore } from '../../stores/roomStore';
 import CustomAlert from '../../components/common/alert/CustomAlert';
+import { bindAchievementNavigationHandler, useAchievementStore } from '../../stores/achievementStore';
+import LottieView from 'lottie-react-native';
 
 const mockStatusData = [
     { title: '기록', valueType: '회', value: 0 },
@@ -44,6 +50,9 @@ const MyTab = () => {
 
   // ===== Stores (selectors) =====
   const heartPoints = useCurrencyStore(state => state.heartPoints);
+  
+  // 업적 데이터
+  const { achievementDefinitions, cache, userAchievements, scheduleCheck } = useAchievementStore();
 
   const placedItems = useRoomStore(state => state.placedItems);
   const isOwned = useRoomStore(state => state.isOwned);
@@ -56,6 +65,94 @@ const MyTab = () => {
   const [selectedTab, setSelectedTab] = useState(0);
   const [editModeSelectedItems, setEditModeSelectedItems] = useState<number[]>([]); // 선택된 아이템 ID들
   const [showSaveAlert, setShowSaveAlert] = useState(false); // 저장 알림 표시 여부
+
+  // 달성한 업적들 가져오기
+  const achievedAchievements = useMemo(() => {
+    const achieved: Array<{id: number, name: string, grade: string}> = [];
+    
+    // cache 우선, userAchievements 백업
+    Array.from(achievementDefinitions.keys()).forEach(achievementId => {
+      let isAchieved = false;
+      
+      if (cache.has(achievementId)) {
+        const cacheData = cache.get(achievementId);
+        isAchieved = cacheData?.isAchieved ?? false;
+      } else {
+        const userAchievement = userAchievements.get(achievementId);
+        isAchieved = userAchievement?.isAchieved ?? false;
+      }
+      
+      if (isAchieved) {
+        const achievement = achievementDefinitions.get(achievementId);
+        if (achievement) {
+          achieved.push({
+            id: achievementId,
+            name: achievement.name,
+            grade: achievement.grade
+          });
+        }
+      }
+    });
+    
+    return achieved;
+  }, [achievementDefinitions, cache, userAchievements]);
+
+  // 3의 배수로 맞추기 위한 데이터 (placeholder 포함)
+  const achievementDataWithPlaceholders = useMemo(() => {
+    const data: Array<{id: number | string, name: string, grade: string}> = [...achievedAchievements];
+    const remainder = data.length % 3;
+    
+    if (remainder !== 0) {
+      const placeholdersNeeded = 3 - remainder;
+      for (let i = 0; i < placeholdersNeeded; i++) {
+        data.push({
+          id: `placeholder-${i}`, // 고유한 키를 위한 placeholder ID
+          name: '',
+          grade: 'PLACEHOLDER'
+        });
+      }
+    }
+    
+    return data;
+  }, [achievedAchievements]);
+
+  // 뱃지 아이콘 렌더링 함수
+  const renderBadgeIcon = (grade: string, width: number = 60, height: number = 60) => {
+    switch (grade) {
+      case 'BRONZE':
+        return <LottieView
+          source={require('../../assets/animations/badge/bronze_action.json')}
+          autoPlay
+          loop
+          style={{ width, height }}
+        />;
+      case 'SILVER':
+        return <LottieView
+          source={require('../../assets/animations/badge/silver_action.json')}
+          autoPlay
+          loop
+          style={{ width, height }}
+        />;
+      case 'GOLD':
+        return <LottieView
+          source={require('../../assets/animations/badge/gold_action.json')}
+          autoPlay
+          loop
+          style={{ width, height }}
+        />;
+      case 'SPECIAL':
+        return <LottieView
+          source={require('../../assets/animations/badge/hidden_action.json')}
+          autoPlay
+          loop
+          style={{ width, height }}
+        />;
+      case 'PLACEHOLDER':
+        return <View style={{ width, height }} />; // 투명 placeholder
+      default:
+        return <BadgeEmpty width={width} height={height} />;
+    }
+  };
 
   useEffect(() => {
     const items: number[] = [];
@@ -72,6 +169,20 @@ const MyTab = () => {
     });
     setEditModeSelectedItems(items);
   }, []);
+
+  // 업적 데이터 가져오기 (MyTab 마운트 시)
+  useEffect(() => {
+    console.log('🏆 MyTab 마운트: 업적 데이터 가져오기 시작');
+    scheduleCheck(500); // 500ms 후 업적 체크
+  }, [scheduleCheck]);
+
+  // 네비게이션 핸들러 등록 (팝업에서 업적 화면으로 이동할 수 있도록)
+  useEffect(() => {
+    bindAchievementNavigationHandler(() => {
+      console.log('🎯 업적 화면으로 네비게이션 요청됨');
+      navigation.navigate('MyAchievementScreen');
+    });
+  }, [navigation]);
 
   // 선택된 아이템 중 미보유 아이템
   const purchaseItems = useMemo(() => {
@@ -242,8 +353,10 @@ const MyTab = () => {
   useEffect(() => {
     if (route.params?.autoEnterEditMode) {
       enterEditMode();
+      // 파라미터 사용 후 즉시 초기화 (다음 클릭을 위해)
+      navigation.setParams({ autoEnterEditMode: undefined });
     }
-  }, [route.params?.autoEnterEditMode]);
+  }, [route.params?.autoEnterEditMode, navigation]);
 
   useEffect(() => {
     if (isEditMode) {
@@ -307,11 +420,12 @@ const MyTab = () => {
                             <Text style={styles.cardHeaderNameText}>야옹이님</Text>
                             <Text style={styles.cardHeaderIdText}>ID : Timestamp</Text>
                             </View>
+                            {/* TODO: 연동 기능 추가 */}
                             <ToggleButton
-                            defaultTitle=""
-                            activeTitle="연동하기"
-                            isActive={true}
-                            onPress={() => {}}
+                              defaultTitle=""
+                              activeTitle="연동하기"
+                              isActive={true}
+                              onPress={() => {}}
                             />
                         </View>
                         <View style={styles.statusCardContent}>
@@ -329,10 +443,33 @@ const MyTab = () => {
                             <Text style={{...syongsyongTypography.title5}}>업적</Text>
                             <ArrowRight width={24} height={24} fill={colors.grayScale800} />
                         </TouchableOpacity>
-                        <View style={styles.achievementCardNoContent}>{/*사용자의 뱃지 유무에 따라서 분기*/}
+                        {achievedAchievements.length > 0 ? (
+                          <View style={styles.achievementCardContent}>
+                            <FlatList
+                              data={achievementDataWithPlaceholders}
+                              renderItem={({ item: achievement }) => (
+                                <View style={styles.achievementItem}>
+                                  {renderBadgeIcon(achievement.grade, 48, 48)}
+                                  {achievement.grade !== 'PLACEHOLDER' && (
+                                    <Text style={styles.achievementName} numberOfLines={2}>
+                                      {achievement.name}
+                                    </Text>
+                                  )}
+                                </View>
+                              )}
+                              keyExtractor={(item) => item.id.toString()}
+                              numColumns={3}
+                              scrollEnabled={false}
+                              contentContainerStyle={styles.achievementGrid}
+                              columnWrapperStyle={styles.achievementRow}
+                            />
+                          </View>
+                        ) : (
+                          <View style={styles.achievementCardNoContent}>
                             <BadgeEmpty width={100} height={100} />
                             <Text style={{...syongsyongTypography.title6}}>완료한 업적이 없어요!</Text>
-                        </View>
+                          </View>
+                        )}
                     </View>
                 </View>
                 )}
@@ -434,7 +571,23 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   achievementCardContent: {
+  },
+  achievementGrid: {
+    gap: 20,
+  },
+  achievementRow: {
+    justifyContent: 'flex-start',
+    gap: 20,
+  },
+  achievementItem: {
+    flex: 1,
     alignItems: 'center',
+    gap: 8,
+  },
+  achievementName: {
+    ...typography.body5,
+    color: colors.grayScale800,
+    textAlign: 'center',
   },
   achievementCardNoContent: {
     alignItems: 'center',

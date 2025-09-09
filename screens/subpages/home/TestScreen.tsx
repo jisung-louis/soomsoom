@@ -14,6 +14,8 @@ import { usePlayStore } from '../../../stores/playStore';
 import { useAlarmStore } from '../../../stores/alarmStore';
 import { useRoomStore } from '../../../stores/roomStore';
 import { useAuthStore } from '../../../stores/authStore';
+import { useAchievementStore } from '../../../stores/achievementStore';
+import { updateMockUserProgress, resetMockUserProgress, simulateUserAction } from '../../../data/achievementMockData';
 import { roomItemList } from '../../../data/roomItemData';
 import { mockContentData, mockInstructorsData } from '../../../data/playContentData';
 import { Activity } from '../../../services/contentService';
@@ -35,9 +37,25 @@ const TestScreen = () => {
   // AuthStore 상태를 실시간으로 구독
   const { user, isLoggedIn, tokens } = useAuthStore();
   
+  // AchievementStore 상태를 실시간으로 구독
+  const { 
+    achievementDefinitions,
+    userAchievements, 
+    getAchievedCount, 
+    getTotalCount,
+    resetAllAchievements,
+    scheduleCheck,
+    resetShownAchievements
+  } = useAchievementStore();
+  
   const handleBack = () => {
     navigation.goBack();
   };
+
+  // TestScreen 마운트 시 업적 체크 (Mock 데이터는 achievementStore에서 자동 초기화됨)
+  useEffect(() => {
+    scheduleCheck(500);
+  }, [scheduleCheck]);
   
   const lottieData = [
     {
@@ -260,6 +278,102 @@ const TestScreen = () => {
             onPress={() => {showToast({ message: '토스트 메시지', theme: 'light', iconType: 'heart', hasAnimation: true })}}
             variant="active"
           />
+        </View>
+
+        <View style={[styles.infoCard, {gap:10}]}>
+          <Text style={styles.sectionTitle}>🏆 업적 테스트</Text>
+          <View style={styles.infoCard}>
+            <Text style={styles.infoLabel}>업적 달성 현황</Text>
+            <Text style={styles.infoValue}>{getAchievedCount()} / {getTotalCount()} 달성</Text>
+            <Text style={styles.infoValue}>캐시 크기: {useAchievementStore.getState().cache.size}</Text>
+          </View>
+          <View style={{flexDirection: 'row', gap: 10, width: '100%', flexWrap: 'wrap'}}>
+          <ButtonSmall
+            title="일기 작성 1회(테스트)"
+            onPress={() => {
+              console.log('🧪 TestScreen: 일기 작성 1회 시뮬레이션');
+              simulateUserAction('DIARY_WRITE', 1);
+              scheduleCheck(400);
+              showToast({ message: '일기 작성 1회!', iconType: 'heart' });
+            }}
+            variant="active"
+            style={{width: 153}}
+          />
+          <ButtonSmall
+            title="일기 작성 5회(테스트)"
+            onPress={() => {
+              console.log('🧪 TestScreen: 일기 작성 5회 시뮬레이션');
+              simulateUserAction('DIARY_WRITE', 5);
+              scheduleCheck(400);
+              showToast({ message: '일기 작성 5회!', iconType: 'heart' });
+            }}
+            variant="active"
+            style={{width: 153}}
+          />
+          <ButtonSmall
+            title="명상 완료 1회(테스트)"
+            onPress={() => {
+              console.log('🧪 TestScreen: 명상 완료 1회 시뮬레이션');
+              simulateUserAction('MEDITATION_COMPLETE', 1);
+              scheduleCheck(400);
+              showToast({ message: '명상 완료 1회!', iconType: 'heart' });
+            }}
+            variant="active"
+            style={{width: 153}}
+          />
+          <ButtonSmall
+            title="명상 완료 10회(테스트)"
+            onPress={() => {
+              console.log('🧪 TestScreen: 명상 완료 10회 시뮬레이션');
+              simulateUserAction('MEDITATION_COMPLETE', 10);
+              scheduleCheck(400);
+              showToast({ message: '명상 완료 10회!', iconType: 'heart' });
+            }}
+            variant="active"
+            style={{width: 153}}
+          />
+          <ButtonSmall
+            title="호흡 완료 1회(테스트)"
+            onPress={() => {
+              console.log('🧪 TestScreen: 호흡 완료 1회 시뮬레이션');
+              simulateUserAction('BREATHING_COMPLETE', 1);
+              scheduleCheck(400);
+              showToast({ message: '호흡 완료 1회!', iconType: 'heart' });
+            }}
+            variant="active"
+            style={{width: 153}}
+          />
+          <ButtonSmall
+            title="앱 방문 5일(테스트)"
+            onPress={() => {
+              console.log('🧪 TestScreen: 앱 방문 5일 시뮬레이션');
+              simulateUserAction('APP_VISIT', 5);
+              scheduleCheck(400);
+              showToast({ message: '앱 방문 5일!', iconType: 'heart' });
+            }}
+            variant="active"
+            style={{width: 153}}
+          />
+          <ButtonSmall
+            title="모든 업적 리셋"
+            onPress={() => {
+              resetAllAchievements(); // 정적 데이터 리셋
+              resetMockUserProgress(); // Mock 데이터 리셋
+              showToast({ message: '모든 업적이 리셋되었습니다!' });
+            }}
+            variant="secondary"
+            style={{width: 153}}
+          />
+          <ButtonSmall
+            title="팝업 기록 초기화"
+            onPress={async () => {
+              await resetShownAchievements();
+              showToast({ message: '팝업 기록이 초기화되었습니다!' });
+            }}
+            variant="secondary"
+            style={{width: 153}}
+          />
+          </View>
         </View>
         <View style={[styles.infoCard, {gap:10}]}>
           <Text style={styles.sectionTitle}>🔐 인증 상태 (AuthStore) - 실시간 업데이트</Text>

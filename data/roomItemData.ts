@@ -1,3 +1,4 @@
+// 개발용 임시 데이터
 // 방 꾸미기 아이템 데이터
 import { RoomItem, RoomItemPositionType } from '../types/room';
 

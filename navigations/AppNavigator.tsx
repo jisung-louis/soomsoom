@@ -23,19 +23,44 @@ const Tab = createBottomTabNavigator<RootTabParamList>();
 export default function AppNavigator() {
   return (
     <NavigationContainer>
-      <Tab.Navigator
-        initialRouteName="home"
-        screenOptions={{ headerShown: false }}
-        tabBar={(props) => <CustomTabBar {...props} />}
-        
-      >
-        <Tab.Screen name="home" component={HomeStackNavigator} />
-        <Tab.Screen name="record" component={RecordStackNavigator} />
-        <Tab.Screen name="play" component={PlayStackNavigator} />
-        <Tab.Screen name="alarm" component={AlarmStackNavigator} />
-        <Tab.Screen name="my" component={MyStackNavigator} />
-      </Tab.Navigator>
+      <AppNavigatorContent />
     </NavigationContainer>
+  );
+}
+
+function AppNavigatorContent() {
+  return (
+    <Tab.Navigator
+      initialRouteName="home"
+      screenOptions={{ headerShown: false }}
+      tabBar={(props) => <CustomTabBar {...props} />}
+    >
+      <Tab.Screen 
+        name="home" 
+        component={HomeStackNavigator}
+        options={{ lazy: false }}
+      />
+      <Tab.Screen 
+        name="record" 
+        component={RecordStackNavigator}
+        options={{ lazy: false }}
+      />
+      <Tab.Screen 
+        name="play" 
+        component={PlayStackNavigator}
+        options={{ lazy: false }}
+      />
+      <Tab.Screen 
+        name="alarm" 
+        component={AlarmStackNavigator}
+        options={{ lazy: false }}
+      />
+      <Tab.Screen 
+        name="my" 
+        component={MyStackNavigator}
+        options={{ lazy: false }}
+      />
+    </Tab.Navigator>
   );
 }
 
@@ -56,7 +81,7 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
     home: ['ShopScreen', 'ShopItemDetailScreen', 'MailboxScreen', 'MailboxDetailScreen', 'TestScreen'],
     play: ['PlayFavoriteScreen', 'PlayHistoryScreen', 'PlayDetailScreen', 'PlayInstructorDetailScreen', 'PlayBreathScreen', 'PlayMeditationScreen', 'PlayResultScreen', 'PlayBreathContentScreen', 'PlayActivityListScreen'],
     alarm: ['AlarmAddScreen', ],
-    my: ['MyRoomDecorationPurchaseScreen'],
+    my: ['MyRoomDecorationPurchaseScreen', 'MyAchievementScreen'],
   };
 
   // 현재 화면이 숨겨야 하는 화면인지 확인
