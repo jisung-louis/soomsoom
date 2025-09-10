@@ -20,10 +20,20 @@ const AccountInfoScreen = () => {
         navigation.goBack();
     };
 
-    // 사용자의 소셜 로그인 타입 확인 (실제로는 백엔드에서 받아와야 함)
+    // 사용자의 소셜 로그인 타입 확인
     const getSocialLoginType = (): '구글' | '애플' | '카카오' => {
-        // 임시로 구글로 설정 (실제로는 user.provider 정보를 사용해야 함)
-        return '구글';
+        if (!user?.provider) {
+            return '구글'; // 기본값
+        }
+        
+        switch (user.provider) {
+            case 'google':
+                return '구글';
+            case 'apple':
+                return '애플';
+            default:
+                return '구글'; // 기본값
+        }
     };
 
     const handleLogout = async () => {
@@ -41,9 +51,9 @@ const AccountInfoScreen = () => {
                     onPress: async () => {
                         try {
                             await logout();
-                            await resetOnboarding(); // 온보딩 상태 리셋
+                            //await resetOnboarding(); // 온보딩 상태 리셋
                             showToast({ message: '로그아웃되었습니다.' });
-                            console.log('🔄 온보딩 상태가 리셋되었습니다. 다음 앱 시작 시 온보딩 화면이 표시됩니다.');
+                            //console.log('🔄 온보딩 상태가 리셋되었습니다. 다음 앱 시작 시 온보딩 화면이 표시됩니다.');
                         } catch (error) {
                             console.error('로그아웃 에러:', error);
                             showToast({ message: '로그아웃에 실패했습니다.' });

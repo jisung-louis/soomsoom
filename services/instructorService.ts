@@ -1,5 +1,5 @@
 import { apiClient } from './apiClient';
-import { AppError, ErrorType, createNetworkError } from '../utils/errorHandler';
+import { createNetworkError } from '../utils/errorHandler';
 import { mockInstructorsData, mockContentData } from '../data/playContentData';
 
 // 타입 정의 (실제 API 명세에 맞춤)
@@ -100,10 +100,10 @@ export const getInstructors = async (params?: GetInstructorsParams): Promise<Ins
     if (params?.deletionStatus) {
       queryParams.append('deletionStatus', params.deletionStatus);
     }
-    if (params?.page) {
+    if (params?.page !== undefined) {
       queryParams.append('page', params.page.toString());
     }
-    if (params?.size) {
+    if (params?.size !== undefined) {
       queryParams.append('size', params.size.toString());
     }
     if (params?.sort) {

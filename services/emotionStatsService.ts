@@ -1,6 +1,5 @@
 import { EmotionRankingData, MonthlyEmotionStats, EmotionType } from '../types';
-import { characterIconMap, characterTitleMap } from '../utils/iconMap';
-import { AppError, ErrorType, createNetworkError } from '../utils/errorHandler';
+import { AppError, createNetworkError } from '../utils/errorHandler';
 import { apiClient } from './apiClient';
 import { BackendEmotion, toFrontendEmotion } from '../utils/emotionMap';
 import dayjs from 'dayjs';

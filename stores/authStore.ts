@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import type { AuthResponse, AuthTokens, AuthUser } from '../services/authService';
 import { clearTokens, persistTokens } from '../services/authService';
+import { apiClient } from '../services/apiClient';
 
 export interface AuthState {
   user: AuthUser | null;
@@ -19,6 +20,10 @@ export const useAuthStore = create<AuthState>()(
     setSession: async (payload: AuthResponse) => {
       console.log('🔐 Zustand에 로그인 정보 저장 중...', payload);
       await persistTokens(payload.tokens);
+      
+      // ApiClient에 토큰 설정
+      apiClient.setTokens(payload.tokens.accessToken, payload.tokens.refreshToken);
+      
       set({ user: payload.user, tokens: payload.tokens, isLoggedIn: true });
       console.log('✅ Zustand에 로그인 정보 저장 완료!', { 
         user: payload.user, 
@@ -29,6 +34,10 @@ export const useAuthStore = create<AuthState>()(
     logout: async () => {
       console.log('🚪 로그아웃 시작...');
       await clearTokens();
+      
+      // ApiClient에서 토큰 초기화
+      apiClient.clearTokens();
+      
       set({ user: null, tokens: null, isLoggedIn: false });
       console.log('✅ 로그아웃 완료!');
     },

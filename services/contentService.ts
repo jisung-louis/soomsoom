@@ -1,5 +1,5 @@
 import { apiClient } from './apiClient';
-import { AppError, ErrorType, createNetworkError } from '../utils/errorHandler';
+import { createNetworkError } from '../utils/errorHandler';
 import { mockContentData } from '../data/playContentData';
 
 /* API 응답 타입 정의 (실제 API 명세에 맞춤) */

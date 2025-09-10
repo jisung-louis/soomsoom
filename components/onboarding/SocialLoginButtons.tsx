@@ -1,10 +1,15 @@
 import React, { useState } from 'react';
-import { View } from 'react-native';
-import { ButtonSmall } from '../common/buttons/ButtonSmall';
+import { View, Text, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
 import { useToast } from '../../contexts/ToastContext';
 import { useAuthStore } from '../../stores/authStore';
-import { getPushTokenAsync, loginWithApple, loginWithGoogle, postSocialLogin, mockLoginWithGoogle, mockLoginWithApple, persistUser } from '../../services/authService';
-import { environmentConfig } from '../../configs/environment';
+import { getPushTokenAsync, loginWithApple, loginWithGoogle, postSocialLogin, persistUser } from '../../services/authService';
+import GoogleIcon from '../../assets/images/onboarding/google_icon.svg';
+import AppleIcon from '../../assets/images/onboarding/apple_icon.svg';
+import { colors } from '../../constants/colors';
+import { radius } from '../../constants/radius';
+import { typography } from '../../constants/typography';
+
+const { width } = Dimensions.get('window');
 
 interface Props {
   onSuccess?: () => void;
@@ -28,7 +33,22 @@ export const SocialLoginButtons: React.FC<Props> = ({ onSuccess }) => {
       await persistUser(res.user); // 사용자 정보를 AsyncStorage에 저장
       onSuccess?.();
     } catch (e: any) {
-      showToast(e?.message || '구글 로그인에 실패했어요.');
+      console.error('Google 로그인 에러 상세:', e);
+      
+      // 에러 타입별 구체적인 메시지 제공
+      let errorMessage = '구글 로그인에 실패했어요.';
+      
+      if (e?.message?.includes('취소')) {
+        errorMessage = '구글 로그인이 취소되었어요.';
+      } else if (e?.message?.includes('네트워크')) {
+        errorMessage = '네트워크 연결을 확인해주세요.';
+      } else if (e?.message?.includes('권한')) {
+        errorMessage = '구글 로그인 권한이 필요해요.';
+      } else if (e?.message?.includes('서버')) {
+        errorMessage = '서버에 문제가 있어요. 잠시 후 다시 시도해주세요.';
+      }
+      
+      showToast({ message: errorMessage });
     } finally {
       setLoading(null);
     }
@@ -47,7 +67,24 @@ export const SocialLoginButtons: React.FC<Props> = ({ onSuccess }) => {
       await persistUser(res.user); // 사용자 정보를 AsyncStorage에 저장
       onSuccess?.();
     } catch (e: any) {
-      showToast(e?.message || '애플 로그인에 실패했어요.');
+      console.error('Apple 로그인 에러 상세:', e);
+      
+      // 에러 타입별 구체적인 메시지 제공
+      let errorMessage = '애플 로그인에 실패했어요.';
+      
+      if (e?.message?.includes('취소')) {
+        errorMessage = '애플 로그인이 취소되었어요.';
+      } else if (e?.message?.includes('네트워크')) {
+        errorMessage = '네트워크 연결을 확인해주세요.';
+      } else if (e?.message?.includes('권한')) {
+        errorMessage = '애플 로그인 권한이 필요해요.';
+      } else if (e?.message?.includes('서버')) {
+        errorMessage = '서버에 문제가 있어요. 잠시 후 다시 시도해주세요.';
+      } else if (e?.message?.includes('사용할 수 없습니다')) {
+        errorMessage = '이 기기에서는 애플 로그인을 사용할 수 없어요.';
+      }
+      
+      showToast({ message: errorMessage });
     } finally {
       setLoading(null);
     }
@@ -55,10 +92,30 @@ export const SocialLoginButtons: React.FC<Props> = ({ onSuccess }) => {
 
   return (
     <View style={{ gap: 10 }}>
-      <ButtonSmall title={loading === 'google' ? '구글 로그인 중...' : 'Google로 계속하기'} onPress={handleGoogle} disabled={!!loading} />
-      <ButtonSmall title={loading === 'apple' ? '애플 로그인 중...' : '애플로 계속하기'} onPress={handleApple} disabled={!!loading} />
+      <TouchableOpacity style={[styles.button, { backgroundColor: colors.white }]} onPress={handleGoogle} disabled={!!loading} activeOpacity={0.8} >
+        <GoogleIcon width={24} height={24} />
+        <Text style={[styles.buttonText, { color: colors.black }]}>{loading === 'google' ? 'Google 로그인 중...' : 'Google로 계속하기'}</Text>
+      </TouchableOpacity>
+        <TouchableOpacity style={[styles.button, { backgroundColor: colors.black }]} onPress={handleApple} disabled={!!loading} activeOpacity={0.8} >
+        <AppleIcon width={24} height={24} />
+        <Text style={[styles.buttonText, { color: colors.white }]}>{loading === 'apple' ? '애플 로그인 중...' : '애플로 계속하기'}</Text>
+      </TouchableOpacity>
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  button: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    height: 56,
+    borderRadius: radius.r8,
+  },
+  buttonText: {
+    ...typography.body2,
+  },
+});
 
 export default SocialLoginButtons;

@@ -1,5 +1,5 @@
 import { apiClient } from './apiClient';
-import { AppError, createNetworkError, ErrorType } from '../utils/errorHandler';
+import { AppError, createNetworkError } from '../utils/errorHandler';
 import { EmotionType } from '../types';
 import { BackendEmotion, toBackendEmotion, toFrontendEmotion } from '../utils/emotionMap';
 import { getMockDiaryData } from '../data/emotionReportMockData';

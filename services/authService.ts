@@ -15,6 +15,7 @@ export interface AuthUser {
   name: string | null;
   email: string | null;
   avatarUrl: string | null;
+  provider?: 'google' | 'apple'; // 소셜 로그인 제공자
 }
 
 export interface AuthTokens {
@@ -77,6 +78,12 @@ export async function loginWithGoogle(): Promise<{ provider: SocialProvider; pro
     await GoogleSignin.hasPlayServices();
     const userInfo = await GoogleSignin.signIn();
     
+    // 사용자 정보가 없으면 취소로 간주
+    if (!userInfo.data?.user || !userInfo.data?.idToken) {
+      console.log('❌ Google 로그인 취소됨: 사용자 정보 없음');
+      throw new Error('Google 로그인이 취소되었습니다.');
+    }
+    
     console.log('✅ Google Sign-In 성공:', {
       id: userInfo.data?.user?.id,
       name: userInfo.data?.user?.name,
@@ -98,7 +105,7 @@ export async function loginWithGoogle(): Promise<{ provider: SocialProvider; pro
     console.error('❌ Google 로그인 에러 상세:', error);
     console.error('❌ 에러 스택:', error.stack);
     
-    if (error.code === 'SIGN_IN_CANCELLED') {
+    if (error.code === 'SIGN_IN_CANCELLED' || error.message?.includes('취소')) {
       throw new Error('Google 로그인이 취소되었습니다.');
     }
     throw new Error(`Google 로그인에 실패했습니다: ${error.message}`);
@@ -126,15 +133,35 @@ export async function loginWithApple(): Promise<{ provider: SocialProvider; prov
       nonce,
     });
 
+    // Apple 로그인 정보 파싱
+    const fullName = credential.fullName;
+    const displayName = fullName ? 
+      `${fullName.givenName || ''} ${fullName.familyName || ''}`.trim() : 
+      null;
+    
+    console.log('🍎 Apple 로그인 정보 파싱:', {
+      userId: credential.user,
+      email: credential.email,
+      fullName: fullName,
+      displayName: displayName,
+      hasEmail: !!credential.email,
+      hasName: !!displayName
+    });
+
+    // 저장된 Apple 사용자 정보 확인 (재로그인 시 사용)
+    let savedAppleInfo = null;
+    if (!displayName && !credential.email) {
+      savedAppleInfo = await loadAppleUserInfo();
+      console.log('🍎 저장된 Apple 정보 사용:', savedAppleInfo);
+    }
+
     return {
       provider: 'apple',
       providerToken: credential.identityToken!,
       profile: {
         id: credential.user,
-        name: credential.fullName ? 
-          `${credential.fullName.givenName || ''} ${credential.fullName.familyName || ''}`.trim() : 
-          null,
-        email: credential.email,
+        name: displayName || savedAppleInfo?.name || null,
+        email: credential.email || savedAppleInfo?.email || null,
       },
       authorizationCode: credential.authorizationCode!,
       nonce,
@@ -157,10 +184,11 @@ export async function postSocialLogin(params: {
   nonce?: string;
 }): Promise<AuthResponse> {
   try {
-    // 개발 환경에서는 모의 API 응답 사용 (실제 Google 로그인은 테스트하되 백엔드 API는 Mock 사용)
+    // 개발 환경에서는 모의 API 응답 사용 (실제 소셜 로그인은 테스트하되 백엔드 API는 Mock 사용)
     if (environmentConfig.debug.enabled) {
-      console.log('🔧 개발 모드: 실제 Google 로그인 + Mock 백엔드 API 응답 사용');
-      console.log('📱 받은 Google 프로필 정보:', {
+      const providerName = params.provider === 'google' ? 'Google' : 'Apple';
+      console.log(`🔧 개발 모드: 실제 ${providerName} 로그인 + Mock 백엔드 API 응답 사용`);
+      console.log(`📱 받은 ${providerName} 프로필 정보:`, {
         provider: params.provider,
         name: params.profile?.name,
         email: params.profile?.email,
@@ -168,13 +196,14 @@ export async function postSocialLogin(params: {
         hasToken: !!params.providerToken
       });
       
-      // 실제 Google 프로필 정보를 사용한 Mock 응답 데이터
+      // 실제 소셜 로그인 프로필 정보를 사용한 Mock 응답 데이터
       const mockResponse: AuthResponse = {
         user: {
           id: Math.floor(Math.random() * 1000) + 1,
-          name: params.profile?.name || 'Google 사용자',
-          email: params.profile?.email || 'google@example.com',
+          name: params.profile?.name || (params.provider === 'apple' ? 'Apple 사용자' : 'Google 사용자'),
+          email: params.profile?.email || (params.provider === 'apple' ? 'apple@example.com' : 'google@example.com'),
           avatarUrl: params.profile?.picture || null,
+          provider: params.provider, // 소셜 로그인 제공자 정보 추가
         },
         tokens: {
           accessToken: 'mock_access_token_' + Date.now(),
@@ -232,10 +261,23 @@ export async function persistUser(user: AuthUser): Promise<void> {
   console.log('💾 AsyncStorage에 사용자 정보 저장 중...', { 
     id: user.id,
     name: user.name,
-    email: user.email
+    email: user.email,
+    provider: user.provider
   });
   
   await AsyncStorage.setItem('userInfo', JSON.stringify(user));
+  
+  // Apple 사용자의 경우 추가로 원본 정보 저장 (이름/이메일이 있을 때만)
+  if (user.provider === 'apple' && (user.name || user.email)) {
+    const appleUserInfo = {
+      userId: user.id,
+      name: user.name,
+      email: user.email,
+      savedAt: new Date().toISOString()
+    };
+    await AsyncStorage.setItem('appleUserInfo', JSON.stringify(appleUserInfo));
+    console.log('🍎 Apple 사용자 원본 정보 저장:', appleUserInfo);
+  }
   
   console.log('✅ AsyncStorage에 사용자 정보 저장 완료!');
 }
@@ -248,13 +290,32 @@ export async function loadUser(): Promise<AuthUser | null> {
       console.log('✅ 저장된 사용자 정보 로드:', { 
         id: user.id,
         name: user.name,
-        email: user.email
+        email: user.email,
+        provider: user.provider
       });
       return user;
     }
     return null;
   } catch (error) {
     console.error('❌ 사용자 정보 로드 실패:', error);
+    return null;
+  }
+}
+
+export async function loadAppleUserInfo(): Promise<{ name: string | null; email: string | null } | null> {
+  try {
+    const appleData = await AsyncStorage.getItem('appleUserInfo');
+    if (appleData) {
+      const appleInfo = JSON.parse(appleData);
+      console.log('🍎 저장된 Apple 사용자 원본 정보 로드:', appleInfo);
+      return {
+        name: appleInfo.name,
+        email: appleInfo.email
+      };
+    }
+    return null;
+  } catch (error) {
+    console.error('❌ Apple 사용자 정보 로드 실패:', error);
     return null;
   }
 }
@@ -271,6 +332,110 @@ export async function clearTokens(): Promise<void> {
   await SecureStore.deleteItemAsync('accessToken');
   await SecureStore.deleteItemAsync('refreshToken');
   console.log('✅ SecureStore에서 토큰 삭제 완료!');
+}
+
+/**
+ * 토큰 유효성 검증
+ * @param accessToken 검증할 액세스 토큰
+ * @returns 토큰이 유효한지 여부
+ */
+export async function validateToken(accessToken: string): Promise<boolean> {
+  try {
+    console.log('🔍 토큰 유효성 검증 시작...');
+    
+    // 개발 환경에서는 Mock 검증
+    if (environmentConfig.debug.enabled) {
+      console.log('🔧 개발 모드: Mock 토큰 검증');
+      
+      // Mock 토큰 형식 검증 (실제로는 서버에서 검증)
+      const isValidFormat = accessToken.startsWith('mock_access_token_');
+      const isNotExpired = accessToken.length > 20; // 간단한 만료 체크
+      
+      // 테스트용: 토큰 유효성 검증 실패 시뮬레이션
+      // 아래 주석을 해제하면 토큰 검증이 실패하여 자동로그인 실패 화면이 나타납니다
+      //const isValidFormat = false; // 테스트용
+      
+      if (isValidFormat && isNotExpired) {
+        console.log('✅ Mock 토큰 유효성 검증 성공');
+        return true;
+      } else {
+        console.log('❌ Mock 토큰 유효성 검증 실패');
+        return false;
+      }
+    }
+    
+    // 프로덕션 환경에서는 실제 서버 검증
+    const response = await fetch(`${API_BASE_URL}/auth/validate`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({ token: accessToken }),
+    });
+    
+    if (response.ok) {
+      console.log('✅ 서버 토큰 유효성 검증 성공');
+      return true;
+    } else {
+      console.log('❌ 서버 토큰 유효성 검증 실패');
+      return false;
+    }
+  } catch (error) {
+    console.error('❌ 토큰 유효성 검증 에러:', error);
+    return false;
+  }
+}
+
+/**
+ * 토큰 갱신 (리프레시 토큰 사용)
+ * @param refreshToken 리프레시 토큰
+ * @returns 새로운 액세스 토큰
+ */
+export async function refreshAccessToken(refreshToken: string): Promise<AuthTokens | null> {
+  try {
+    console.log('🔄 토큰 갱신 시작...');
+    
+    // 개발 환경에서는 Mock 갱신
+    if (environmentConfig.debug.enabled) {
+      console.log('🔧 개발 모드: Mock 토큰 갱신');
+      
+      // Mock 토큰 갱신 (실제로는 서버에서 갱신)
+      const newTokens: AuthTokens = {
+        accessToken: 'mock_access_token_' + Date.now(),
+        refreshToken: 'mock_refresh_token_' + Date.now(),
+      };
+      
+      // 테스트용: 토큰 갱신 실패 시뮬레이션
+      // 아래 주석을 해제하면 토큰 갱신이 실패하여 자동로그인 실패 화면이 나타납니다
+      //console.log('❌ Mock 토큰 갱신 실패 (테스트용)');
+      //return null; // 테스트용
+      
+      console.log('✅ Mock 토큰 갱신 성공');
+      return newTokens;
+    }
+    
+    // 프로덕션 환경에서는 실제 서버 갱신
+    const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ refreshToken }),
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      console.log('✅ 서버 토큰 갱신 성공');
+      return data.tokens;
+    } else {
+      console.log('❌ 서버 토큰 갱신 실패');
+      return null;
+    }
+  } catch (error) {
+    console.error('❌ 토큰 갱신 에러:', error);
+    return null;
+  }
 }
 
 // 개발용 모의 로그인 함수들

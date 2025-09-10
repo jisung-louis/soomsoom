@@ -40,7 +40,7 @@ const Register = ({onComplete}: {onComplete: () => void}) => {
             <Text style={styles.subtitle}>숨숨</Text>
         </View>
         <View style={styles.socialLoginContainer}>
-            <SocialLoginButtons onSuccess={onComplete} />
+          <SocialLoginButtons onSuccess={onComplete} />
         </View>
         <TouchableOpacity style={styles.termContainer} onPress={() => { openExternalLink(TERMS_URL); }}>
             <Text style={styles.termText}>숨숨에 가입함으로써 이용약관 및</Text>
@@ -70,9 +70,7 @@ const styles = StyleSheet.create({
     lineHeight: 48,
   },
   socialLoginContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 10,
+    width: '100%',
   },
   socialLoginButton: {
     flexDirection: 'row',

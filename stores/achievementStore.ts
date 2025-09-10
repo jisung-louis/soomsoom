@@ -181,7 +181,7 @@ export const useAchievementStore = create<AchievementState>()(
           return;
         }
 
-        const response = await fetchMyAchievements(token, statusFilter);
+        const response = await fetchMyAchievements({ statusFilter, page: 1, size: 12 });
         const userAchievements = new Map<number, UserAchievement>();
         
         response.content.forEach(achievement => {
@@ -203,10 +203,7 @@ export const useAchievementStore = create<AchievementState>()(
 
     loadAchievementDetail: async (achievementId: number) => {
       try {
-        // 개발 환경에서는 관리자 토큰 없이도 조회 가능
-        const adminToken = useAuthStore.getState().tokens?.accessToken || 'dev-token';
-        
-        const achievement = await fetchAchievementDetail(achievementId, adminToken);
+        const achievement = await fetchAchievementDetail(achievementId);
         console.log('✅ 업적 상세 정보 로드 완료:', achievementId);
         return achievement;
       } catch (error) {
@@ -232,7 +229,7 @@ export const useAchievementStore = create<AchievementState>()(
           return;
         }
         
-        const { content } = await fetchMyAchievements(tokens.accessToken);
+        const { content } = await fetchMyAchievements({ statusFilter: 'ALL', page: 1, size: 12 });
         const byId = get().cache;
         const newly: MyAchievement[] = [];
         const { shown } = get();

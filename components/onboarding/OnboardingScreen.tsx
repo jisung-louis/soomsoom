@@ -2,11 +2,11 @@ import React from 'react';
 import { View, StyleSheet, ImageBackground } from 'react-native';
 import { useOnboarding } from '../../hooks/useOnboarding';
 import { OnboardingStep } from './OnboardingStep';
-import PlayResult from './PlayResult';
 import { colors } from '../../constants/colors';
 
 interface OnboardingScreenProps {
   onComplete: () => void;
+  initialStep?: number; // 특정 스텝으로 바로 이동 (예: 자동로그인 실패 시 register 스텝)
 }
 
 /**
@@ -18,7 +18,7 @@ interface OnboardingScreenProps {
  * - 각 단계별 컴포넌트로 분리
  * - 데이터를 별도 파일로 분리
  */
-const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }) => {
+const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, initialStep }) => {
   const {
     currentStep,
     onboardingData,
@@ -28,7 +28,15 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }) => {
     updateTimeSelection,
     canProceedToNext,
     getCurrentStepData,
+    goToStep,
   } = useOnboarding();
+
+  // initialStep이 제공되면 해당 스텝으로 이동
+  React.useEffect(() => {
+    if (initialStep !== undefined) {
+      goToStep(initialStep);
+    }
+  }, [initialStep, goToStep]);
 
   const currentStepData = getCurrentStepData();
 

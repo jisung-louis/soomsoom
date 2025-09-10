@@ -35,7 +35,7 @@ const TestScreen = () => {
   const { showToast } = useToast();
   
   // AuthStore 상태를 실시간으로 구독
-  const { user, isLoggedIn, tokens } = useAuthStore();
+  const { user, isLoggedIn, tokens, logout } = useAuthStore();
   
   // AchievementStore 상태를 실시간으로 구독
   const { 
@@ -278,6 +278,16 @@ const TestScreen = () => {
             onPress={() => {showToast({ message: '토스트 메시지', theme: 'light', iconType: 'heart', hasAnimation: true })}}
             variant="active"
           />
+          <ButtonSmall
+          title="자동로그인 실패 테스트"
+          onPress={() => {
+            console.log('🧪 자동로그인 실패 화면 테스트...');
+            logout(); // 로그아웃하여 자동로그인 실패 상태로 이동
+            showToast({ message: '자동로그인 실패 화면을 테스트합니다.' });
+          }}
+          variant="secondary"
+          style={{width: 153}}
+        />
         </View>
 
         <View style={[styles.infoCard, {gap:10}]}>
