@@ -3,7 +3,7 @@ import { View } from 'react-native';
 import { ButtonSmall } from '../common/buttons/ButtonSmall';
 import { useToast } from '../../contexts/ToastContext';
 import { useAuthStore } from '../../stores/authStore';
-import { getPushTokenAsync, loginWithApple, loginWithGoogle, postSocialLogin, mockLoginWithGoogle, mockLoginWithApple } from '../../services/authService';
+import { getPushTokenAsync, loginWithApple, loginWithGoogle, postSocialLogin, mockLoginWithGoogle, mockLoginWithApple, persistUser } from '../../services/authService';
 import { environmentConfig } from '../../configs/environment';
 
 interface Props {
@@ -20,13 +20,12 @@ export const SocialLoginButtons: React.FC<Props> = ({ onSuccess }) => {
       setLoading('google');
       const deviceToken = await getPushTokenAsync();
       
-      // 개발 환경에서는 모의 로그인 사용
-      const { provider, providerToken, profile } = environmentConfig.debug.enabled 
-        ? await mockLoginWithGoogle()
-        : await loginWithGoogle();
+      // EAS 개발 빌드에서 실제 Google 로그인 테스트
+      const { provider, providerToken, profile } = await loginWithGoogle();
         
       const res = await postSocialLogin({ provider, providerToken, deviceToken, profile });
       await setSession(res);
+      await persistUser(res.user); // 사용자 정보를 AsyncStorage에 저장
       onSuccess?.();
     } catch (e: any) {
       showToast(e?.message || '구글 로그인에 실패했어요.');
@@ -40,13 +39,12 @@ export const SocialLoginButtons: React.FC<Props> = ({ onSuccess }) => {
       setLoading('apple');
       const deviceToken = await getPushTokenAsync();
       
-      // 개발 환경에서는 모의 로그인 사용
-      const { provider, providerToken, profile, authorizationCode, nonce } = environmentConfig.debug.enabled 
-        ? await mockLoginWithApple()
-        : await loginWithApple();
+      // 실제 Apple 로그인 사용 (테스트용)
+      const { provider, providerToken, profile, authorizationCode, nonce } = await loginWithApple();
         
       const res = await postSocialLogin({ provider, providerToken, deviceToken, profile, authorizationCode, nonce });
       await setSession(res);
+      await persistUser(res.user); // 사용자 정보를 AsyncStorage에 저장
       onSuccess?.();
     } catch (e: any) {
       showToast(e?.message || '애플 로그인에 실패했어요.');

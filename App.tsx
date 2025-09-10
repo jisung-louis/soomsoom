@@ -15,7 +15,7 @@ import { View, Text } from 'react-native';
 import { SplashScreen, OnboardingScreen } from './components/onboarding';
 import { OnboardingProvider, useOnboarding } from './contexts/OnboardingContext';
 import { useAuthStore } from './stores/authStore';
-import { loadTokens } from './services/authService';
+import { loadTokens, loadUser } from './services/authService';
 import { useAchievementStore } from './stores/achievementStore';
 import AchievementUnlockedPopup from './components/common/achievement/AchievementUnlockedPopup';
 // initializeMockUserProgress는 achievementStore에서 자동으로 호출됨
@@ -59,28 +59,21 @@ const AppContent = () => {
     try {
       console.log('🔍 자동 로그인 체크 시작...');
       const tokens = await loadTokens();
+      const user = await loadUser();
       
-      if (tokens && tokens.accessToken) {
-        console.log('✅ 저장된 토큰 발견, 자동 로그인 시도...');
+      if (tokens && tokens.accessToken && user) {
+        console.log('✅ 저장된 토큰과 사용자 정보 발견, 자동 로그인 시도...');
         
-        // 토큰이 있으면 자동으로 로그인 상태로 설정
         // 실제로는 서버에 토큰 유효성을 확인해야 하지만, 
         // 개발 환경에서는 토큰이 있으면 로그인된 것으로 간주
-        const mockUser = {
-          id: 1,
-          name: '자동 로그인 사용자',
-          email: 'auto@example.com',
-          avatarUrl: null,
-        };
-        
         await setSession({
-          user: mockUser,
+          user: user,
           tokens: tokens,
         });
         
         console.log('✅ 자동 로그인 완료!');
       } else {
-        console.log('❌ 저장된 토큰 없음, 로그아웃 상태 유지');
+        console.log('❌ 저장된 토큰 또는 사용자 정보 없음, 로그아웃 상태 유지');
       }
     } catch (error) {
       console.error('❌ 자동 로그인 체크 실패:', error);

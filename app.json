@@ -15,7 +15,11 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.soomsoom.app",
-      "usesAppleSignIn": true
+      "usesAppleSignIn": true,
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      },
+      "associatedDomains": ["applinks:auth.expo.io"]
     },
     "android": {
       "adaptiveIcon": {
@@ -23,7 +27,11 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.soomsoom.app"
+      "package": "com.soomsoom.app",
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS"
+      ]
     },
     "web": {
       "favicon": "./assets/app-icons/favicon.png"
@@ -47,8 +55,19 @@
           ]
         }
       ],
-      "expo-apple-authentication"
+      "expo-apple-authentication",
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.107458236623-0mru63ph97l3va5ru46hravkoo7r2q9q"
+        }
+      ]
     ],
-    "scheme": "soomsoom"
+    "scheme": "soomsoom",
+    "extra": {
+      "eas": {
+        "projectId": "7f902b97-4f3d-48af-9a0a-1a71a63f49d6"
+      }
+    }
   }
 }

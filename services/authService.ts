@@ -3,7 +3,9 @@ import * as SecureStore from 'expo-secure-store';
 import * as Notifications from 'expo-notifications';
 import * as AuthSession from 'expo-auth-session';
 import * as AppleAuthentication from 'expo-apple-authentication';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { Platform } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { environmentConfig } from '../configs/environment';
 
 export type SocialProvider = 'google' | 'apple';
@@ -28,63 +30,78 @@ export interface AuthResponse {
 // 환경별 API 베이스 URL 연결
 const API_BASE_URL = environmentConfig.api.baseUrl;
 
-// Google OAuth 설정
+// Google Sign-In 설정
 const GOOGLE_CLIENT_ID = environmentConfig.auth.google.clientId;
-const GOOGLE_REDIRECT_URI = AuthSession.makeRedirectUri();
+const GOOGLE_IOS_CLIENT_ID = environmentConfig.auth.google.iosClientId;
+
+// Google Sign-In 초기화
+GoogleSignin.configure({
+  webClientId: GOOGLE_CLIENT_ID, // Web Application Client ID
+  iosClientId: GOOGLE_IOS_CLIENT_ID, // iOS Client ID
+  offlineAccess: true,
+  hostedDomain: '',
+  forceCodeForRefreshToken: true,
+});
+
+console.log('🔧 Google Sign-In 설정:', {
+  clientId: GOOGLE_CLIENT_ID,
+  hasClientId: !!GOOGLE_CLIENT_ID,
+  isDev: __DEV__
+});
 
 export async function getPushTokenAsync(): Promise<string | null> {
   try {
     const { status } = await Notifications.requestPermissionsAsync();
     if (status !== 'granted') return null;
-    const token = await Notifications.getExpoPushTokenAsync();
-    // NOTE: EAS 빌드/프로덕션에선 projectId 설정 필요
+    
+    // EAS 빌드에서는 projectId 설정 필요
+    const token = await Notifications.getExpoPushTokenAsync({
+      projectId: '7f902b97-4f3d-48af-9a0a-1a71a63f49d6' // app.json의 EAS projectId
+    });
+    
     return token.data ?? null;
-  } catch {
+  } catch (error) {
+    console.error('❌ Push Token 획득 실패:', error);
     return null;
   }
 }
 
-// Google 로그인 구현
+// Google 로그인 구현 (Google Sign-In 라이브러리 사용)
 export async function loginWithGoogle(): Promise<{ provider: SocialProvider; providerToken: string; profile?: any }> {
   try {
-    // Google OAuth 요청 생성
-    const request = new AuthSession.AuthRequest({
-      clientId: GOOGLE_CLIENT_ID,
-      scopes: ['openid', 'profile', 'email'],
-      redirectUri: GOOGLE_REDIRECT_URI,
-      responseType: AuthSession.ResponseType.Token,
-      extraParams: {},
-    });
-
-    // 로그인 프롬프트 실행
-    const result = await request.promptAsync({});
+    console.log('🔍 Google 로그인 시작...');
+    console.log('📱 Client ID:', GOOGLE_CLIENT_ID);
     
-    if (result.type === 'success' && result.authentication?.accessToken) {
-      const accessToken = result.authentication.accessToken;
-      
-      // Google UserInfo API 호출하여 프로필 정보 가져오기
-      const profileResponse = await fetch(`https://www.googleapis.com/oauth2/v2/userinfo?access_token=${accessToken}`);
-      const profile = await profileResponse.json();
-      
-      return {
-        provider: 'google',
-        providerToken: accessToken,
-        profile: {
-          id: profile.id,
-          name: profile.name,
-          email: profile.email,
-          picture: profile.picture,
-        }
-      };
-    } else {
-      throw new Error('Google 로그인이 취소되었습니다.');
-    }
+    // Google Sign-In 로그인 실행
+    console.log(' Google Sign-In 로그인 실행 중...');
+    await GoogleSignin.hasPlayServices();
+    const userInfo = await GoogleSignin.signIn();
+    
+    console.log('✅ Google Sign-In 성공:', {
+      id: userInfo.data?.user?.id,
+      name: userInfo.data?.user?.name,
+      email: userInfo.data?.user?.email,
+      hasPhoto: !!userInfo.data?.user?.photo
+    });
+    
+    return {
+      provider: 'google',
+      providerToken: userInfo.data?.idToken!,
+      profile: {
+        id: userInfo.data?.user?.id,
+        name: userInfo.data?.user?.name,
+        email: userInfo.data?.user?.email,
+        picture: userInfo.data?.user?.photo,
+      }
+    };
   } catch (error: any) {
-    console.error('Google 로그인 에러:', error);
-    if (error.message?.includes('취소')) {
+    console.error('❌ Google 로그인 에러 상세:', error);
+    console.error('❌ 에러 스택:', error.stack);
+    
+    if (error.code === 'SIGN_IN_CANCELLED') {
       throw new Error('Google 로그인이 취소되었습니다.');
     }
-    throw new Error('Google 로그인에 실패했습니다. 잠시 후 다시 시도해주세요.');
+    throw new Error(`Google 로그인에 실패했습니다: ${error.message}`);
   }
 }
 
@@ -140,16 +157,23 @@ export async function postSocialLogin(params: {
   nonce?: string;
 }): Promise<AuthResponse> {
   try {
-    // 개발 환경에서는 모의 API 응답 사용
+    // 개발 환경에서는 모의 API 응답 사용 (실제 Google 로그인은 테스트하되 백엔드 API는 Mock 사용)
     if (environmentConfig.debug.enabled) {
-      console.log('🔧 개발 모드: 모의 소셜 로그인 API 응답 사용');
+      console.log('🔧 개발 모드: 실제 Google 로그인 + Mock 백엔드 API 응답 사용');
+      console.log('📱 받은 Google 프로필 정보:', {
+        provider: params.provider,
+        name: params.profile?.name,
+        email: params.profile?.email,
+        picture: params.profile?.picture,
+        hasToken: !!params.providerToken
+      });
       
-      // 모의 응답 데이터
+      // 실제 Google 프로필 정보를 사용한 Mock 응답 데이터
       const mockResponse: AuthResponse = {
         user: {
           id: Math.floor(Math.random() * 1000) + 1,
-          name: params.profile?.name || '테스트 사용자',
-          email: params.profile?.email || 'test@example.com',
+          name: params.profile?.name || 'Google 사용자',
+          email: params.profile?.email || 'google@example.com',
           avatarUrl: params.profile?.picture || null,
         },
         tokens: {
@@ -202,6 +226,37 @@ export async function persistTokens(tokens: AuthTokens): Promise<void> {
   }
   
   console.log('✅ SecureStore에 토큰 저장 완료!');
+}
+
+export async function persistUser(user: AuthUser): Promise<void> {
+  console.log('💾 AsyncStorage에 사용자 정보 저장 중...', { 
+    id: user.id,
+    name: user.name,
+    email: user.email
+  });
+  
+  await AsyncStorage.setItem('userInfo', JSON.stringify(user));
+  
+  console.log('✅ AsyncStorage에 사용자 정보 저장 완료!');
+}
+
+export async function loadUser(): Promise<AuthUser | null> {
+  try {
+    const userData = await AsyncStorage.getItem('userInfo');
+    if (userData) {
+      const user = JSON.parse(userData) as AuthUser;
+      console.log('✅ 저장된 사용자 정보 로드:', { 
+        id: user.id,
+        name: user.name,
+        email: user.email
+      });
+      return user;
+    }
+    return null;
+  } catch (error) {
+    console.error('❌ 사용자 정보 로드 실패:', error);
+    return null;
+  }
 }
 
 export async function loadTokens(): Promise<AuthTokens | null> {

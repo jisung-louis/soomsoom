@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { Text, StyleSheet, ScrollView } from 'react-native';
+import { Text, StyleSheet, ScrollView, Image } from 'react-native';
 import { View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -282,7 +282,7 @@ const TestScreen = () => {
 
         <View style={[styles.infoCard, {gap:10}]}>
           <Text style={styles.sectionTitle}>🏆 업적 테스트</Text>
-          <View style={styles.infoCard}>
+          <View style={styles.infoCardInnerCard}>
             <Text style={styles.infoLabel}>업적 달성 현황</Text>
             <Text style={styles.infoValue}>{getAchievedCount()} / {getTotalCount()} 달성</Text>
             <Text style={styles.infoValue}>캐시 크기: {useAchievementStore.getState().cache.size}</Text>
@@ -377,37 +377,40 @@ const TestScreen = () => {
         </View>
         <View style={[styles.infoCard, {gap:10}]}>
           <Text style={styles.sectionTitle}>🔐 인증 상태 (AuthStore) - 실시간 업데이트</Text>
-          <View style={styles.infoCard}>
+          <View style={styles.infoCardInnerCard}>
             <Text style={styles.infoLabel}>로그인 상태</Text>
             <Text style={styles.infoValue}>{isLoggedIn ? '✅ 로그인됨' : '❌ 로그아웃됨'}</Text>
           </View>
           {user && (
             <>
-              <View style={styles.infoCard}>
+              <View style={styles.infoCardInnerCard}>
                 <Text style={styles.infoLabel}>사용자 ID</Text>
                 <Text style={styles.infoValue}>{user.id}</Text>
               </View>
-              <View style={styles.infoCard}>
+              <View style={styles.infoCardInnerCard}>
                 <Text style={styles.infoLabel}>사용자 이름</Text>
                 <Text style={styles.infoValue}>{user.name || '없음'}</Text>
               </View>
-              <View style={styles.infoCard}>
+              <View style={styles.infoCardInnerCard}>
                 <Text style={styles.infoLabel}>이메일</Text>
                 <Text style={styles.infoValue}>{user.email || '없음'}</Text>
               </View>
-              <View style={styles.infoCard}>
-                <Text style={styles.infoLabel}>아바타 URL</Text>
-                <Text style={styles.infoValue}>{user.avatarUrl || '없음'}</Text>
+              <View style={styles.infoCardInnerCard}>
+                <Text style={styles.infoLabel}>아바타 URL 이미지</Text>
+                {user.avatarUrl ? 
+                  <Image source={{uri: user.avatarUrl}} style={{width: 100, height: 100, borderRadius: radius.r10}} /> 
+                  : <Text style={styles.infoValue}>없음</Text>
+                }
               </View>
             </>
           )}
           {tokens && (
             <>
-              <View style={styles.infoCard}>
+              <View style={styles.infoCardInnerCard}>
                 <Text style={styles.infoLabel}>Access Token</Text>
                 <Text style={styles.infoValue}>{tokens.accessToken ? '✅ 있음: ' + tokens.accessToken : '❌ 없음'}</Text>
               </View>
-              <View style={styles.infoCard}>
+              <View style={styles.infoCardInnerCard}>
                 <Text style={styles.infoLabel}>Refresh Token</Text>
                 <Text style={styles.infoValue}>{tokens.refreshToken ? '✅ 있음: ' + tokens.refreshToken : '❌ 없음'}</Text>
               </View>
@@ -424,6 +427,22 @@ const TestScreen = () => {
               });
             });
           })}
+        </View>
+        <View style={styles.infoCard}>
+          <Text style={styles.sectionTitle}>모든 Store 상태</Text>
+          <View style={styles.infoCardInnerCard}>
+            <Text style={styles.infoValue}>{JSON.stringify(useCurrencyStore.getState())}</Text>
+            <Surface style={{marginVertical: 10, height: 1}} color={colors.grayScale300}/>
+            <Text style={styles.infoValue}>{JSON.stringify(useAlarmStore.getState())}</Text>
+            <Surface style={{marginVertical: 10, height: 1}} color={colors.grayScale300}/>
+            <Text style={styles.infoValue}>{JSON.stringify(useAchievementStore.getState())}</Text>
+            <Surface style={{marginVertical: 10, height: 1}} color={colors.grayScale300}/>
+            <Text style={styles.infoValue}>{JSON.stringify(useAuthStore.getState())}</Text>
+            <Surface style={{marginVertical: 10, height: 1}} color={colors.grayScale300}/>
+            <Text style={styles.infoValue}>{JSON.stringify(useRoomStore.getState())}</Text>
+            <Surface style={{marginVertical: 10, height: 1}} color={colors.grayScale300}/>
+            <Text style={styles.infoValue}>{JSON.stringify(usePlayStore.getState())}</Text>
+          </View>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -459,6 +478,14 @@ const styles = StyleSheet.create({
     borderLeftWidth: 4,
     borderLeftColor: colors.primary300,
   },
+  infoCardInnerCard: {
+    backgroundColor: colors.grayScale100,
+    borderRadius: radius.r8,
+    borderWidth: 0.5,
+    borderColor: colors.grayScale300,
+    padding: 16,
+    marginBottom: 8,
+  },
   infoLabel: {
     ...typography.body4,
     color: colors.grayScale600,
@@ -468,7 +495,6 @@ const styles = StyleSheet.create({
   infoValue: {
     ...typography.body3,
     color: colors.grayScale900,
-    lineHeight: 20,
   },
   lottieTestContainer: {
     alignItems: 'center',

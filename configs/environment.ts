@@ -72,8 +72,11 @@ export const environmentConfig = {
   auth: {
     google: {
       clientId: isDevelopment 
-        ? 'YOUR_DEVELOPMENT_GOOGLE_CLIENT_ID'  // 개발용 Google Client ID
-        : 'YOUR_PRODUCTION_GOOGLE_CLIENT_ID',  // 프로덕션용 Google Client ID
+        ? '107458236623-5cc2h8h6ot6irjfnso4bmgrf2c8pi5sm.apps.googleusercontent.com'  // 개발용 Web Application Client ID
+        : '107458236623-5cc2h8h6ot6irjfnso4bmgrf2c8pi5sm.apps.googleusercontent.com',  // 프로덕션용 Web Application Client ID (동일)
+      iosClientId: isDevelopment
+        ? '107458236623-0mru63ph97l3va5ru46hravkoo7r2q9q.apps.googleusercontent.com'  // 개발용 iOS Client ID
+        : '107458236623-0mru63ph97l3va5ru46hravkoo7r2q9q.apps.googleusercontent.com', // 프로덕션용 iOS Client ID (동일)
     },
   },
 } as const;
