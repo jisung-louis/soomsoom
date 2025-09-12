@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Dimensions, TouchableOpacity, Platform } from 'react-native';
 import { useToast } from '../../contexts/ToastContext';
 import { useAuthStore } from '../../stores/authStore';
 import { getPushTokenAsync, loginWithApple, loginWithGoogle, postSocialLogin, persistUser } from '../../services/authService';
+import * as Device from 'expo-device';
+import * as Localization from 'expo-localization';
 import GoogleIcon from '../../assets/images/onboarding/google_icon.svg';
 import AppleIcon from '../../assets/images/onboarding/apple_icon.svg';
 import { colors } from '../../constants/colors';
@@ -20,6 +22,26 @@ export const SocialLoginButtons: React.FC<Props> = ({ onSuccess }) => {
   const setSession = useAuthStore(s => s.setSession);
   const [loading, setLoading] = useState<'google' | 'apple' | null>(null);
 
+  // 디바이스 정보 수집 함수
+  const getDeviceInfo = () => {
+    return {
+      platform: Platform.OS as 'ios' | 'android',
+      version: Platform.Version.toString(),
+      model: Device.modelName || 'Unknown',
+    };
+  };
+
+  // 앱 버전 정보 (package.json에서 가져오기)
+  const getAppVersion = () => {
+    try {
+      const packageJson = require('../../package.json');
+      return packageJson.version;
+    } catch (error) {
+      console.warn('package.json에서 버전 정보를 가져올 수 없습니다:', error);
+      return '1.0.0'; // fallback
+    }
+  };
+
   const handleGoogle = async () => {
     try {
       setLoading('google');
@@ -27,8 +49,23 @@ export const SocialLoginButtons: React.FC<Props> = ({ onSuccess }) => {
       
       // EAS 개발 빌드에서 실제 Google 로그인 테스트
       const { provider, providerToken, profile } = await loginWithGoogle();
+      
+      // 추가 정보 수집
+      const deviceInfo = getDeviceInfo();
+      const appVersion = getAppVersion();
+      const timezone = Localization.getCalendars()[0]?.timeZone || 'UTC';
+      const language = Localization.getLocales()[0]?.languageTag || 'ko-KR';
         
-      const res = await postSocialLogin({ provider, providerToken, deviceToken, profile });
+      const res = await postSocialLogin({ 
+        provider, 
+        providerToken, 
+        deviceToken, 
+        profile,
+        deviceInfo,
+        appVersion,
+        timezone,
+        language
+      });
       await setSession(res);
       await persistUser(res.user); // 사용자 정보를 AsyncStorage에 저장
       onSuccess?.();
@@ -61,8 +98,25 @@ export const SocialLoginButtons: React.FC<Props> = ({ onSuccess }) => {
       
       // 실제 Apple 로그인 사용 (테스트용)
       const { provider, providerToken, profile, authorizationCode, nonce } = await loginWithApple();
+      
+      // 추가 정보 수집
+      const deviceInfo = getDeviceInfo();
+      const appVersion = getAppVersion();
+      const timezone = Localization.getCalendars()[0]?.timeZone || 'UTC';
+      const language = Localization.getLocales()[0]?.languageTag || 'ko-KR';
         
-      const res = await postSocialLogin({ provider, providerToken, deviceToken, profile, authorizationCode, nonce });
+      const res = await postSocialLogin({ 
+        provider, 
+        providerToken, 
+        deviceToken, 
+        profile, 
+        authorizationCode, 
+        nonce,
+        deviceInfo,
+        appVersion,
+        timezone,
+        language
+      });
       await setSession(res);
       await persistUser(res.user); // 사용자 정보를 AsyncStorage에 저장
       onSuccess?.();

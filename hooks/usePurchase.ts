@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useCurrencyStore } from '../stores/currencyStore';
-import { useRoomStore } from '../stores/roomStore';
 import { purchaseItemsApi, purchaseSingleItemApi } from '../services/purchaseService';
+import { useOwnedItems } from './useOwnedItems';
 import { handlePurchaseError } from '../utils/purchaseErrorHandler';
 
 export interface UsePurchaseOptions {
@@ -18,8 +18,8 @@ export interface UsePurchaseReturn {
   errorSubMessage?: string;
   
   // 액션
-  purchaseItems: (itemIds: number[]) => Promise<void>;
-  purchaseSingleItem: (itemId: number) => Promise<void>;
+  purchaseItems: (itemIds: number[], expectedTotalPrice: number) => Promise<void>;
+  purchaseSingleItem: (itemId: number, expectedTotalPrice: number) => Promise<void>;
   showSuccessAlert: () => void;
   hideSuccessAlert: () => void;
   showErrorAlert: (title: string, subMessage?: string) => void;
@@ -29,6 +29,7 @@ export interface UsePurchaseReturn {
 
 export function usePurchase(options: UsePurchaseOptions = {}): UsePurchaseReturn {
   const { onSuccess, onError } = options;
+  const { loadOwnedItems } = useOwnedItems();
   
   // 상태
   const [isPurchasing, setIsPurchasing] = useState(false);
@@ -46,8 +47,19 @@ export function usePurchase(options: UsePurchaseOptions = {}): UsePurchaseReturn
       const res = await purchaseFn();
 
       // 스토어 동기화
-      useCurrencyStore.setState({ heartPoints: res.heartPoints });
-      useRoomStore.setState({ ownedItems: res.ownedItems, placedItems: res.placedItems });
+      // 구매 후 보유 포인트 반영 (신규 명세: remainingPoints)
+      if (typeof res?.remainingPoints === 'number') {
+        useCurrencyStore.setState({ heartPoints: res.remainingPoints });
+      }
+      
+      // 구매 후 소유 아이템 목록 동기화 (prod 환경에서만)
+      if (!__DEV__) {
+        try {
+          await loadOwnedItems();
+        } catch (error) {
+          console.warn('⚠️ 소유 아이템 목록 동기화 실패:', error);
+        }
+      }
 
       setIsSuccessAlertVisible(true);
       onSuccess?.();
@@ -63,7 +75,7 @@ export function usePurchase(options: UsePurchaseOptions = {}): UsePurchaseReturn
   }, [isPurchasing, onSuccess, onError]);
 
   // 다중 아이템 구매
-  const purchaseItems = useCallback(async (itemIds: number[]) => {
+  const purchaseItems = useCallback(async (itemIds: number[], expectedTotalPrice: number) => {
     if (!itemIds.length) {
       setErrorTitle('선택된 아이템이 없어요');
       setErrorSubMessage('구매할 아이템을 먼저 선택해 주세요.');
@@ -71,12 +83,12 @@ export function usePurchase(options: UsePurchaseOptions = {}): UsePurchaseReturn
       return;
     }
 
-    await executePurchase(() => purchaseItemsApi(itemIds));
+    await executePurchase(() => purchaseItemsApi({ itemIds, expectedTotalPrice }));
   }, [executePurchase]);
 
   // 단일 아이템 구매
-  const purchaseSingleItem = useCallback(async (itemId: number) => {
-    await executePurchase(() => purchaseSingleItemApi(itemId));
+  const purchaseSingleItem = useCallback(async (itemId: number, expectedTotalPrice: number) => {
+    await executePurchase(() => purchaseSingleItemApi(itemId, expectedTotalPrice));
   }, [executePurchase]);
 
   // Alert 관리

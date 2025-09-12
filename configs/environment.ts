@@ -101,16 +101,16 @@ export const initialStates = {
   // 방 아이템 관련 초기 상태 (프리셋)
   room: {
     ownedItems: isDevelopment 
-      ? [1, 2, 3, 4, 5, 6, 12, 20, 21, 22, 23, 24] // 개발: 더 많은 아이템
-      : [1, 2, 3, 4, 5, 6, 12, 20],                // 실제: 기본 아이템만
+      ? [6] // 개발
+      : [],// 실제
     
     placedItems: {
       background: 6,
-      eyewear: 12,
-      hat: 20,
-      frame: [2, 3] as [number | null, number | null],
-      floor: 4,
-      shelf: 5,
+      eyewear: null,
+      hat: null,
+      frame: [null, null] as [number | null, number | null],
+      floor: null,
+      shelf: null,
     },
     
     selectedItems: [] as number[],

@@ -3,7 +3,7 @@ import { View, Text, ImageBackground, StyleSheet, Image, ScrollView } from 'reac
 import LottieView from 'lottie-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRoomStore } from '../../../stores/roomStore';
-import { roomItemList } from '../../../data/roomItemData';
+import { getItems } from '../../../services/itemService';
 import { objectPosition, itemStyles } from '../../../constants/roomLayout';
 import { ss, sv } from '../../../utils/scale';
 
@@ -19,6 +19,26 @@ export type UserRoomProps = {
 const UserRoom = ({children, previewMode = false, previewItemIds = [], cropTop = 0, scrollable, scrollViewRef}: UserRoomProps) => {
   const placedItems = useRoomStore(state => state.placedItems);
   const replayKey = useRef(0);
+  const [itemMap, setItemMap] = React.useState<Map<number, { image?: any; lottieJson?: any; positionType?: string }>>(new Map());
+
+  React.useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const res = await getItems({ sort: 'CREATED', page: 1, size: 200 });
+        const map = new Map<number, { image?: any; lottieJson?: any; positionType?: string }>();
+        res.content.forEach((it) => {
+          map.set(it.id, {
+            image: typeof it.imageUrl === 'string' ? undefined : (it.imageUrl as any),
+            lottieJson: typeof it.lottieUrl === 'string' ? undefined : (it.lottieUrl as any),
+            positionType: it.equipSlot?.toLowerCase?.(),
+          });
+        });
+        if (mounted) setItemMap(map);
+      } catch {}
+    })();
+    return () => { mounted = false; };
+  }, []);
 
   // 프리뷰 아이템을 positionType별로 매핑
   const previewByCategory = useMemo(() => {
@@ -26,7 +46,7 @@ const UserRoom = ({children, previewMode = false, previewItemIds = [], cropTop =
     const frameItems: number[] = [];
     
     previewItemIds.forEach((id) => {
-      const item = roomItemList.find(i => i.id === id);
+      const item = itemMap.get(id);
       if (item?.positionType) {
         if (item.positionType === 'frame') {
           frameItems.push(id);
@@ -44,15 +64,15 @@ const UserRoom = ({children, previewMode = false, previewItemIds = [], cropTop =
       shelf: map.shelf ?? null,
       frameItems 
     };
-  }, [previewItemIds]);
+  }, [previewItemIds, itemMap]);
 
   // Lottie 애니메이션이 필요한 아이템들만 필터링
   const lottieItemIds = useMemo(() => {
     return previewItemIds.filter(id => {
-      const item = roomItemList.find(i => i.id === id);
+      const item = itemMap.get(id);
       return item?.lottieJson;
     });
-  }, [previewItemIds]);
+  }, [previewItemIds, itemMap]);
 
   useEffect(() => {
     // Lottie 애니메이션 아이템이 변경될 때만 애니메이션 리셋 후 재생
@@ -63,7 +83,7 @@ const UserRoom = ({children, previewMode = false, previewItemIds = [], cropTop =
 
   const renderLottieItem = useCallback((itemId: number | null, position: { x: number; y: number }, style: any, key: string) => {
     if (!itemId) return null;
-    const item = roomItemList.find(i => i.id === itemId);
+    const item = itemMap.get(itemId);
     if (!item?.lottieJson) return null;
     return (
       <LottieView
@@ -77,11 +97,11 @@ const UserRoom = ({children, previewMode = false, previewItemIds = [], cropTop =
         }]}
       />
     );
-  }, [replayKey.current]);
+  }, [replayKey.current, itemMap]);
 
   const renderImageItem = useCallback((itemId: number | null, position: { x: number; y: number }, containerStyle: any, imageStyle: any, key: string) => {
     if (!itemId) return null;
-    const item = roomItemList.find(i => i.id === itemId);
+    const item = itemMap.get(itemId);
     if (!item?.image) return null;
     return (
       <View 
@@ -92,7 +112,7 @@ const UserRoom = ({children, previewMode = false, previewItemIds = [], cropTop =
         <Image source={item.image} style={imageStyle} />
       </View>
     );
-  }, [replayKey.current]);
+  }, [replayKey.current, itemMap]);
 
   const backgroundPreviewId = previewByCategory.background;
   const eyewearPreviewId = previewByCategory.eyewear;
@@ -114,8 +134,8 @@ const UserRoom = ({children, previewMode = false, previewItemIds = [], cropTop =
   const frameItems = placedItems.frame || [null, null];
 
   const backgroundImage = (backgroundPreviewId
-    ? roomItemList.find(i => i.id === backgroundPreviewId)?.image
-    : roomItemList.find(i => i.id === placedItems.background)?.image);
+    ? itemMap.get(backgroundPreviewId)?.image
+    : itemMap.get(placedItems.background || -1)?.image);
 
   // cropTop이 있으면 자동으로 스크롤 가능
   //const isScrollable = scrollable !== undefined ? scrollable : cropTop > 0;

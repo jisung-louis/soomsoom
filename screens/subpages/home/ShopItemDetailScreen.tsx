@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { View, Text, StyleSheet, Image } from 'react-native';
-import { roomItemList } from '../../../data/roomItemData';
+import { getItemDetail, Item } from '../../../services/itemService';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { HomeStackParamList } from '../../../navigations/tabs/HomeStackNavigator';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -23,11 +23,24 @@ const ShopItemDetailScreen = () => {
     const { itemId } = route.params;
     const navigation = useNavigation<StackNavigationProp<HomeStackParamList>>();
     const [catLayout, setCatLayout] = useState({x: 0, y: 0, width: 0, height: 0});
-    const item = roomItemList.find(item => item.id === itemId);
+    const [item, setItem] = useState<Item | null>(null);
     console.log('item', item);
     const heartPoints = useCurrencyStore(state => state.heartPoints);
     const isOwnedSelector = useRoomStore(state => state.isOwned);
     const alreadyOwned = useMemo(() => (item ? isOwnedSelector(item.id) : false), [item, isOwnedSelector]);
+
+    React.useEffect(() => {
+        let mounted = true;
+        (async () => {
+            try {
+                const data = await getItemDetail(itemId);
+                if (mounted) setItem(data);
+            } catch (e) {
+                console.warn('아이템 상세 로드 실패:', e);
+            }
+        })();
+        return () => { mounted = false; };
+    }, [itemId]);
 
     const {
         isPurchasing,
@@ -58,13 +71,16 @@ const ShopItemDetailScreen = () => {
             return;
         }
         if (alreadyOwned) {
+            console.log('이미 보유한 아이템:', item?.name);
             return;
         }
         if (!hasValidPrice) {
+            console.log('가격 정보 없음:', item?.name);
             return;
         }
 
-        await purchaseSingleItem(itemId);
+        console.log('구매 시도:', item?.name, item.price);
+        await purchaseSingleItem(itemId, item.price ?? 0);
     }, [alreadyOwned, hasValidPrice, item, itemId, purchaseSingleItem]);
 
     const handleBuy = useCallback(() => {
@@ -74,8 +90,8 @@ const ShopItemDetailScreen = () => {
 
     const itemIdToPositionType = (itemId: number | null) => {
       if (!itemId) return null;
-      const item = roomItemList.find(i => i.id === itemId);
-      return item?.positionType;
+      // 서버 스펙에는 positionType이 없으므로, 이미지 컨테이너 처리만 위해 background 추정 로직 생략
+      return null;
     };
   return (
     <>
@@ -95,19 +111,24 @@ const ShopItemDetailScreen = () => {
               <Image source={item?.image} style={styles.itemImage} resizeMode='contain'/>
           )}
         </View> */}
-        {item?.image === null || itemIdToPositionType(itemId) === 'background' ? (
-          <View style={styles.itemImageContainer}/>
-        ) : (
-          <View style={styles.itemImageContainer}>
-            <Image source={item?.image} style={styles.itemImage} resizeMode='contain'/>
-          </View>
-        )}
+        <View style={styles.itemImageContainer}>
+          {(() => {
+            const placeholder = require('../../../assets/icons/default_test_image.png');
+            const src =
+              typeof item?.imageUrl === 'string'
+                ? { uri: item.imageUrl }
+                : (item?.imageUrl || placeholder);
+            return (
+              <Image source={src as any} style={styles.itemImage} resizeMode='contain' />
+            );
+          })()}
+        </View>
         <View style={styles.itemInfo}>
           <View style={styles.itemName}>
-            <Text style={styles.itemNameText}>{item?.title}</Text>
+            <Text style={styles.itemNameText}>{item?.name || '아이템 이름이 없습니다.'}</Text>
           </View>
           <View style={styles.itemDescription}>
-            <Text style={styles.itemDescriptionText}>{item?.description?.join('\n')}</Text>
+            <Text style={styles.itemDescriptionText}>{item?.description || '아이템 설명이 없습니다.'}</Text>
           </View>
         </View>
       </View>

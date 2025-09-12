@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
-import { RoomItem } from '../../../data/roomItemData';
+import type { ImageSourcePropType } from 'react-native';
 import CheckIcon from '../../../assets/icons/common/check_active.svg';
 import CheckIconInactive from '../../../assets/icons/common/check_disabled.svg';
 import XIcon from '../../../assets/icons/common/x.svg';
@@ -10,7 +10,12 @@ import { typography } from '../../../constants/typography';
 import HeartIcon from '../../../assets/icons/common/Heart.svg';
 
 interface PurchaseItemListProps {
-    item: RoomItem;
+    item: {
+        id: number;
+        title: string;
+        image: ImageSourcePropType | null;
+        price: number;
+    };
     isChecked: boolean;
     onCheckPress: () => void;
     onXPress: () => void;
@@ -25,7 +30,9 @@ const PurchaseItemList = ({ item, isChecked, onCheckPress, onXPress }: PurchaseI
                 </TouchableOpacity>
                 <View style={styles.itemInfoContainer}>
                     <View style={styles.itemImageContainer}>
-                        <Image source={item.image} style={styles.itemImage} />
+                        {item.image ? (
+                            <Image source={item.image as any} style={styles.itemImage} />
+                        ) : null}
                     </View>
                     <View style={styles.itemInfo}>
                         <Text style={styles.itemTitle}>{item.title}</Text>

@@ -16,7 +16,7 @@ import { radius } from '../../../constants/radius';
 import EmotionIcon from '../../../assets/icons/common/emotion.svg';
 import Badge from '../../../components/common/badge/Badge';
 import CheckIcon from '../../../assets/icons/common/stroke_check copy.svg';
-import { roomItemList } from '../../../data/roomItemData';
+import { getItems } from '../../../services/itemService';
 import { useRoomStore } from '../../../stores/roomStore';
 import { normalizeImageSource } from '../../../utils/textUtils';
 import { SvgProps } from 'react-native-svg';
@@ -96,10 +96,29 @@ const MyRoomDecoration = ({
   onItemSelection: (itemId: number) => void
 }) => {
     const { ownedItems, isOwned } = useRoomStore();
-    const InPossessionItemData: ItemList[] = roomItemList.filter(item => ownedItems.includes(item.id));
+    const [items, setItems] = useState<ItemList[]>([]);
+    React.useEffect(() => {
+      let mounted = true;
+      (async () => {
+        try {
+          const res = await getItems({ sort: 'CREATED', page: 1, size: 200 });
+          const mapped: ItemList[] = res.content.map((it) => ({
+            id: it.id,
+            type: (it.itemType === 'ACCESSORY' ? '악세사리' : it.itemType === 'HAT' ? '모자' : it.itemType === 'BACKGROUND' ? '배경' : it.itemType === 'FLOOR' ? '러그' : it.itemType === 'SHELF' ? '선반' : '장식품') as any,
+            title: it.name,
+            image: typeof it.imageUrl === 'string' ? undefined : (it.imageUrl as any),
+            price: it.price,
+          }));
+          if (mounted) setItems(mapped);
+        } catch {}
+      })();
+      return () => { mounted = false; };
+    }, []);
+
+    const InPossessionItemData: ItemList[] = items.filter(item => ownedItems.includes(item.id));
     const filteredData = selectedTab === 0
       ? InPossessionItemData
-      : roomItemList.filter(item => item.type === tabMenu[selectedTab].title);
+      : items.filter(item => item.type === tabMenu[selectedTab].title);
     const paddedData = padToThreeColumns(filteredData);
 
     const handleItemPress = (id: number) => {

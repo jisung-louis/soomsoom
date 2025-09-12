@@ -23,7 +23,8 @@ import BadgeHidden from '../../assets/icons/my/badge_hidden.svg';
 import { Button } from '../../components/common/buttons/Button';
 import CustomBottomSheet from '../../components/common/bottomsheet/CustomBottomSheet';
 import MyRoomDecoration from '../subpages/my/MyRoomDecoration';
-import { roomItemList } from '../../data/roomItemData';
+import { getItems } from '../../services/itemService';
+import { useOwnedItems } from '../../hooks/useOwnedItems';
 import { objectPosition } from '../../constants/roomLayout';
 import { useRoomStore } from '../../stores/roomStore';
 import CustomAlert from '../../components/common/alert/CustomAlert';
@@ -64,7 +65,33 @@ const MyTab = () => {
   const [isEditMode, setIsEditMode] = useState(false); // 방 꾸미기 모드 
   const [selectedTab, setSelectedTab] = useState(0);
   const [editModeSelectedItems, setEditModeSelectedItems] = useState<number[]>([]); // 선택된 아이템 ID들
+  const ownedItems = useRoomStore(state => state.ownedItems);
   const [showSaveAlert, setShowSaveAlert] = useState(false); // 저장 알림 표시 여부
+  const [itemMap, setItemMap] = useState<Map<number, { positionType: string }>>(new Map());
+  const { loadOwnedItems } = useOwnedItems();
+
+  // 아이템 데이터 로드
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const res = await getItems({ sort: 'CREATED', page: 1, size: 200 });
+        const map = new Map<number, { positionType: string }>();
+        res.content.forEach((it) => {
+          map.set(it.id, {
+            positionType: it.equipSlot?.toLowerCase() || '',
+          });
+        });
+        if (mounted) setItemMap(map);
+      } catch {}
+    })();
+    return () => { mounted = false; };
+  }, []);
+
+  // 앱 시작 시 소유 아이템 로드
+  useEffect(() => {
+    loadOwnedItems();
+  }, [loadOwnedItems]);
 
   // 달성한 업적들 가져오기
   const achievedAchievements = useMemo(() => {
@@ -202,7 +229,7 @@ const MyTab = () => {
   }, []);
 
   const handleItemSelection = useCallback((itemId: number) => {
-    const itemData = roomItemList.find(item => item.id === itemId);
+    const itemData = itemMap.get(itemId);
     if (!itemData) return;
 
     setEditModeSelectedItems(prev => {
@@ -215,17 +242,17 @@ const MyTab = () => {
           return prev.filter(id => id !== itemId);
         } else {
           // 선택되지 않은 경우 추가 (최대 2개 제한)
-          const currentFrameItems = prev.filter(id => {
-            const existingItem = roomItemList.find(item => item.id === id);
-            return existingItem?.positionType === 'frame';
-          });
+            const currentFrameItems = prev.filter(id => {
+              const existingItem = itemMap.get(id);
+              return existingItem?.positionType === 'frame';
+            });
           
           if (currentFrameItems.length < 2) {
             return [...prev, itemId];
           } else {
             // 이미 2개가 선택된 경우 첫 번째 것을 제거하고 새 것으로 교체
             const otherItems = prev.filter(id => {
-              const existingItem = roomItemList.find(item => item.id === id);
+              const existingItem = itemMap.get(id);
               return existingItem?.positionType !== 'frame';
             });
             return [...otherItems, currentFrameItems[1], itemId];
@@ -234,7 +261,7 @@ const MyTab = () => {
       } else {
         // 다른 카테고리의 경우 기존 로직 (1개만 선택 가능)
         const filteredItems = prev.filter(id => {
-          const existingItem = roomItemList.find(item => item.id === id);
+          const existingItem = itemMap.get(id);
           return existingItem?.positionType !== itemData.positionType;
         });
 
@@ -243,7 +270,7 @@ const MyTab = () => {
         return isAlreadySelected ? filteredItems : [...filteredItems, itemId];
       }
     });
-  }, []);
+  }, [itemMap]);
 
   const enterEditMode = () => {
     setIsEditMode(true);
@@ -296,7 +323,7 @@ const MyTab = () => {
     const frameItems: number[] = [];
     
     editModeSelectedItems.forEach((itemId) => {
-      const itemData = roomItemList.find((it) => it.id === itemId);
+      const itemData = itemMap.get(itemId);
       if (itemData) {
         if (itemData.positionType === 'frame') {
           frameItems.push(itemId);
@@ -379,6 +406,7 @@ const MyTab = () => {
         {__DEV__ && (
           <View style={styles.testContainer}>
               <Text style={styles.test}>모드 : {isEditMode ? '방 꾸미기 모드' : '일반 모드'}</Text>
+              <Text style={styles.test}>보유 아이템 : {ownedItems.join(',')}</Text>
               <Text style={styles.test}>선택된 아이템 : {editModeSelectedItems.join(',')}</Text>
               <Text style={styles.test}>배치된 아이템 : {(() => {
                 const items: number[] = [];

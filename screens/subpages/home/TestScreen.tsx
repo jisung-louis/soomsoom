@@ -16,7 +16,7 @@ import { useRoomStore } from '../../../stores/roomStore';
 import { useAuthStore } from '../../../stores/authStore';
 import { useAchievementStore } from '../../../stores/achievementStore';
 import { updateMockUserProgress, resetMockUserProgress, simulateUserAction } from '../../../data/achievementMockData';
-import { roomItemList } from '../../../data/roomItemData';
+import { getItems } from '../../../services/itemService';
 import { mockContentData, mockInstructorsData } from '../../../data/playContentData';
 import { Activity } from '../../../services/contentService';
 import { Surface } from '../../../components/common/surface/Surface';
@@ -133,9 +133,24 @@ const TestScreen = () => {
   ];
   
   {/* 아이템 아이디 -> 아이템 이름 */}
+  const [idToNameMap, setIdToNameMap] = useState<Map<number, string>>(new Map());
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const res = await getItems({ sort: 'CREATED', page: 1, size: 200 });
+        const map = new Map<number, string>();
+        res.content.forEach(it => {
+          map.set(it.id, it.name);
+        });
+        if (mounted) setIdToNameMap(map);
+      } catch {}
+    })();
+    return () => { mounted = false; };
+  }, []);
   const itemIdToName = (itemId: number|null) => {
     if (itemId === null) return '없음';
-    return roomItemList.find((item) => item.id === itemId)?.title;
+    return idToNameMap.get(itemId) ?? `아이템 ${itemId}`;
   };
 
   {/* 액티비티 아이디 -> 액티비티 이름 */}

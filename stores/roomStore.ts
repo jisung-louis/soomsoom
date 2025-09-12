@@ -21,6 +21,7 @@ interface RoomState {
   // 소유 아이템 관리
   addOwnedItem: (itemId: number) => void;
   removeOwnedItem: (itemId: number) => void;
+  setOwnedItems: (itemIds: number[]) => void;
   
   // 배치 아이템 관리
   placeItem: (itemId: number, category: RoomItemPositionType) => void;
@@ -60,6 +61,10 @@ export const useRoomStore = create<RoomState>()(
         set((state) => ({
           ownedItems: state.ownedItems.filter(id => id !== itemId)
         }));
+      },
+      
+      setOwnedItems: (itemIds: number[]) => {
+        set({ ownedItems: itemIds });
       },
       
       // 배치 아이템 관리 액션

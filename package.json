@@ -44,7 +44,10 @@
     "react-native-svg": "^15.11.2",
     "react-native-tab-view": "^4.1.2",
     "react-native-vector-icons": "^10.2.0",
-    "zustand": "^5.0.6"
+    "zustand": "^5.0.6",
+    "expo-device": "~7.1.4",
+    "expo-localization": "~16.1.6",
+    "expo-application": "~6.1.5"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

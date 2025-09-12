@@ -182,6 +182,14 @@ export async function postSocialLogin(params: {
   profile?: any;
   authorizationCode?: string;
   nonce?: string;
+  deviceInfo?: {
+    platform: 'ios' | 'android';
+    version: string;
+    model?: string;
+  };
+  appVersion?: string;
+  timezone?: string;
+  language?: string;
 }): Promise<AuthResponse> {
   try {
     // 개발 환경에서는 모의 API 응답 사용 (실제 소셜 로그인은 테스트하되 백엔드 API는 Mock 사용)

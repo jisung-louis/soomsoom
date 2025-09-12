@@ -12,7 +12,8 @@ import Badge from '../../../../components/common/badge/Badge';
 import HeartIcon from '../../../../assets/icons/common/Heart.svg';
 import { useCurrencyStore } from '../../../../stores/currencyStore';
 import { typography, syongsyongTypography } from '../../../../constants/typography';
-import { roomItemList } from '../../../../data/roomItemData';
+import { getItems } from '../../../../services/itemService';
+import type { ImageSourcePropType } from 'react-native';
 import PurchaseItemList from '../../../../components/tabs/my/PurchaseItemList';
 import { Button } from '../../../../components/common/buttons/Button';
 import CustomAlert from '../../../../components/common/alert/CustomAlert';
@@ -50,11 +51,32 @@ const MyRoomDecorationPurchaseScreen = () => {
     }, [purchaseItemsParams]);
 
     // 빠른 조회를 위한 id→item 맵
-    const itemMap = useMemo(() => {
-        const m = new Map<number, typeof roomItemList[number]>();
-        roomItemList.forEach((it) => m.set(it.id, it));
-        return m;
+    const [items, setItems] = useState<Array<{ id: number; title: string; image: ImageSourcePropType | null; price: number }>>([]);
+
+    useEffect(() => {
+        let mounted = true;
+        (async () => {
+            try {
+                const res = await getItems({ sort: 'CREATED', page: 1, size: 200 });
+                const mapped = res.content.map((it) => ({
+                    id: it.id,
+                    title: it.name,
+                    image: typeof it.imageUrl === 'string' ? null : (it.imageUrl as any) ?? null,
+                    price: it.price,
+                }));
+                if (mounted) setItems(mapped);
+            } catch (e) {
+                console.warn('구매 화면 아이템 로드 실패:', e);
+            }
+        })();
+        return () => { mounted = false; };
     }, []);
+
+    const itemMap = useMemo(() => {
+        const m = new Map<number, { id: number; title: string; image: ImageSourcePropType | null; price: number }>();
+        items.forEach((it) => m.set(it.id, it));
+        return m;
+    }, [items]);
 
     const itemIdToItem = useCallback((id: number) => itemMap.get(id), [itemMap]);
 
@@ -94,8 +116,9 @@ const MyRoomDecorationPurchaseScreen = () => {
     }, [navigation, isPurchasing, resetLocalState]);
     
     const handlePurchase = useCallback(async () => {
-        await purchaseItems(isCheckedItems);
-    }, [isCheckedItems, purchaseItems]);
+        const sum = isCheckedItems.reduce((acc, id) => acc + (itemMap.get(id)?.price || 0), 0);
+        await purchaseItems(isCheckedItems, sum);
+    }, [isCheckedItems, purchaseItems, itemMap]);
     
     return (
         <>

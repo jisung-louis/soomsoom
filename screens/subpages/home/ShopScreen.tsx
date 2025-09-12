@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, useWindowDimensions, Image, FlatList, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { HomeStackParamList } from '../../../navigations/tabs/HomeStackNavigator';
 import SubpageHeader from '../../../components/common/top-navigation/SubpageHeader';
@@ -11,8 +11,10 @@ import HeartPoint from '../../../components/common/heart-point/HeartPoint';
 import { TabMenu } from '../../../components/common/tabmenu/TabMenu';
 import { SceneMap, TabView } from 'react-native-tab-view';
 import { radius } from '../../../constants/radius';
-import { roomItemList, RoomItem } from '../../../data/roomItemData';
+import { getItems, Item, ItemType } from '../../../services/itemService';
+import type { ImageSourcePropType } from 'react-native';
 import { useRoomStore } from '../../../stores/roomStore';
+import { useOwnedItems } from '../../../hooks/useOwnedItems';
 import CheckDisableIcon from '../../../assets/icons/common/check_disabled.svg';
 import CheckActiveIcon from '../../../assets/icons/common/check_active.svg';
 import ArrowDropDownIcon from '../../../assets/icons/common/arrow_dropdown.svg';
@@ -34,7 +36,16 @@ import { useCurrencyStore } from '../../../stores/currencyStore';
 type ShopScreenNavigationProp = StackNavigationProp<HomeStackParamList, 'ShopScreen'>;
 
 // 3의 배수로 맞추는 패딩 함수 (MyRoomDecoration과 동일)
-function padToThreeColumns(data: RoomItem[]) {
+type RoomItemLike = {
+  id: number;
+  title: string;
+  image: ImageSourcePropType | null;
+  price: number;
+  type: string;
+  isSoldOut?: boolean;
+};
+
+function padToThreeColumns(data: RoomItemLike[]) {
   const remainder = data.length % 3;
   if (remainder === 0) return data;
   const placeholders = Array(3 - remainder).fill(null).map((_, idx) => ({
@@ -61,8 +72,8 @@ const ItemList = React.memo(({
   isOutOfStock, 
   isOwned 
 }: {
-  filteredItems: RoomItem[];
-  onItemPress: (item: RoomItem) => void;
+  filteredItems: RoomItemLike[];
+  onItemPress: (item: RoomItemLike) => void;
   isOutOfStock: (itemId: number) => boolean;
   isOwned: (itemId: number) => boolean;
 }) => {
@@ -72,12 +83,12 @@ const ItemList = React.memo(({
       data={padToThreeColumns(filteredItems)}
       numColumns={3}
       columnWrapperStyle={styles.row}
-      showsVerticalScrollIndicator={false}
+      scrollEnabled={false}
       renderItem={({item, index}) => (
         item.id === 0 ? (
           <View style={[styles.item, {backgroundColor: 'transparent', elevation: 0, width: ITEM_IMAGE_WIDTH, height: ITEM_IMAGE_HEIGHT}]} key={item.id} />
         ) : (
-          <TouchableOpacity style={styles.item} key={item.id} onPress={() => onItemPress(item as RoomItem)}>
+          <TouchableOpacity style={styles.item} key={item.id} onPress={() => onItemPress(item)}>
             {isOutOfStock(item.id) && (  
               <View style={styles.grayDimmedContainer}>
                 <Text style={styles.outOfStockText}>다 팔렸어요!</Text>
@@ -86,7 +97,7 @@ const ItemList = React.memo(({
             
               <View style={[styles.itemImageContainer]}>
                 {item.image !== null && (
-                  <Image source={item.image} style={styles.itemImage} resizeMode='contain'/>
+                  <Image source={item.image as any} style={styles.itemImage} resizeMode='contain'/>
                 )}
               </View>
             
@@ -115,7 +126,15 @@ ItemList.displayName = 'ItemList';
 
 const ShopScreen = () => {
   const navigation = useNavigation<ShopScreenNavigationProp>();
-  const { ownedItems, isOwned } = useRoomStore();
+  const { ownedItems } = useRoomStore();
+  const { loadOwnedItems } = useOwnedItems();
+  
+  // isOwned 함수를 직접 정의하여 최신 상태 반영
+  const isOwned = (itemId: number) => {
+    const result = ownedItems.includes(itemId);
+    console.log(`🔍 isOwned 체크: itemId=${itemId}, ownedItems=${JSON.stringify(ownedItems)}, result=${result}`);
+    return result;
+  };
   const layout = useWindowDimensions();
   const [excludeOwnedItems, setExcludeOwnedItems] = useState(false);
   const [outOfStockItems, setOutOfStockItems] = useState<number[]>([]);
@@ -147,7 +166,7 @@ const ShopScreen = () => {
     setSelectedItemTab(tabIndex);
   };
 
-  const handleItemPress = (item: RoomItem) => {
+  const handleItemPress = (item: RoomItemLike) => {
     const itemIsOwned = isOwned(item.id);
     navigation.navigate('ShopItemDetailScreen', { itemId: item.id });
     if (itemIsOwned) {
@@ -165,22 +184,68 @@ const ShopScreen = () => {
     // TODO: 보유중 제외 기능 구현
   };
 
-  useEffect(() => {
-    // TODO: 품절 아이템 목록 백엔드에서 가져오기
-    console.log('outOfStockItems', outOfStockItems);
-  }, [outOfStockItems]);
+  // 품절 아이템 목록은 서버 isSoldOut으로 초기화하고,
+  // 테스트 토글 시에만 outOfStockItems를 사용합니다.
 
   // 품절 아이템 체크 함수
   const isOutOfStock = (itemId: number) => {
+    const found = items.find(i => i.id === itemId);
+    if (found?.isSoldOut) return true;
     return outOfStockItems.includes(itemId);
   };
 
   // 보유 아이템 체크 함수는 스토어에서 가져옴
 
+  // 서비스에서 불러온 아이템 목록 (서버 스펙 → 화면용으로 매핑)
+  const [items, setItems] = useState<RoomItemLike[]>([]);
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const res = await getItems({ sort: 'CREATED', page: 1, size: 60 });
+        const mapped: RoomItemLike[] = res.content.map((it) => ({
+          id: it.id,
+          title: it.name,
+          image: typeof it.imageUrl === 'string' ? null : (it.imageUrl as any) ?? null,
+          price: it.price,
+          isSoldOut: it.isSoldOut,
+          type:
+            it.itemType === 'ACCESSORY' ? '악세사리' :
+            it.itemType === 'HAT' ? '모자' :
+            it.itemType === 'BACKGROUND' ? '배경' :
+            it.itemType === 'FLOOR' ? '러그' :
+            it.itemType === 'SHELF' ? '선반' :
+            '장식품',
+        }));
+        if (mounted) {
+          setItems(mapped);
+          const initialSoldOutIds = mapped.filter(i => i.isSoldOut).map(i => i.id);
+          setOutOfStockItems(initialSoldOutIds);
+        }
+      } catch (e) {
+        console.warn('아이템 목록 로드 실패:', e);
+      }
+    })();
+    return () => { mounted = false; };
+  }, []);
+
+  // 상점 진입 시 소유 아이템 로드
+  useEffect(() => {
+    loadOwnedItems();
+  }, [loadOwnedItems]);
+
+  // 화면 포커스 시 소유 아이템 동기화 (구매 후 돌아왔을 때 반영)
+  useFocusEffect(
+    React.useCallback(() => {
+      loadOwnedItems();
+    }, [loadOwnedItems])
+  );
+
   // 테스트용: 모든 아이템을 품절로 만들거나 품절해제
   const handleMakeAllOutOfStock = () => {
     if (outOfStockItems.length === 0) {
-      const allItemIds = roomItemList.map(item => item.id);
+      const allItemIds = items.map(item => item.id);
       setOutOfStockItems(allItemIds);
     } else {
       setOutOfStockItems([]);
@@ -189,66 +254,62 @@ const ShopScreen = () => {
 
   // 필터링된 아이템 목록을 메모이제이션으로 최적화
   const filteredItems = useMemo(() => {
-    // 카테고리 필터링 적용
-    let items = roomItemList;
+    let list = items;
     if (selectedItemTab > 0) {
       const selectedCategory = itemTabMenu[selectedItemTab].title;
-      items = roomItemList.filter(item => item.type === selectedCategory);
+      list = items.filter(item => item.type === selectedCategory);
     }
-    
-    // 보유중 제외 필터링 적용
     if (excludeOwnedItems) {
-      items = items.filter(item => !isOwned(item.id));
+      list = list.filter(item => !isOwned(item.id));
     }
-    
-    return items;
-  }, [selectedItemTab, excludeOwnedItems, isOwned]);
+    return list;
+  }, [items, selectedItemTab, excludeOwnedItems, ownedItems]);
 
   const renderItemTab = () => {
     return (
       <View style={styles.content}>
-        {/* <Image
-          source={require('../../../assets/images/home/shop/banner_item.png')}
-          style={[styles.bannerImage, { height: 100 }]}
-        /> */}
-        {/* 아이템 카테고리 탭 메뉴 위치 */}
-        
-        {/* 아이템 카테고리 탭 메뉴 */}
-        <View style={styles.tabMenuContainer}>
-          <IconTabMenu
-            tabs={itemTabMenu}
-            selectedTab={selectedItemTab}
-            onTabPress={handleItemTabPress}
-          />
-        </View>
-        <View style={styles.innerContent}>
-        <BannerItemImage width={'100%'} />
-        <View style={styles.filterContainer}>
-          <TouchableOpacity style={styles.excludeOwnedItems} onPress={handleExcludeOwnedItemsToggle}>
-            {excludeOwnedItems ? <CheckActiveIcon /> : <CheckDisableIcon />}
-            <Text style={[styles.excludeOwnedItemsText, {color: excludeOwnedItems ? colors.grayScale900 : colors.grayScale500}]}>보유중 제외</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={{backgroundColor: colors.grayScale100, borderRadius: radius.r16, paddingHorizontal: 10, paddingVertical: 4}} 
-          onPress={handleMakeAllOutOfStock}>
-            {outOfStockItems.length === 0 ? (
-              <Text style={{...typography.body5, color: colors.grayScale900}}>품절(Test)</Text>
-            ) : (
-              <Text style={{...typography.body5, color: colors.grayScale900}}>품절해제(Test)</Text>
-            )}
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.dropdownSort} onPress={() => {Alert.alert('추천순 나열','구현중입니다')}}>
-            <Text style={styles.dropdownSortText}>추천순</Text>
-            <ArrowDropDownIcon />
-          </TouchableOpacity>
-        </View>
-        
-        <ItemList 
-          filteredItems={filteredItems}
-          onItemPress={handleItemPress}
-          isOutOfStock={isOutOfStock}
-          isOwned={isOwned}
-        />
-      </View>
+          {/* <Image
+            source={require('../../../assets/images/home/shop/banner_item.png')}
+            style={[styles.bannerImage, { height: 100 }]}
+          /> */}
+          {/* 아이템 카테고리 탭 메뉴 위치 */}
+          
+          {/* 아이템 카테고리 탭 메뉴 */}
+          <View style={styles.tabMenuContainer}>
+            <IconTabMenu
+              tabs={itemTabMenu}
+              selectedTab={selectedItemTab}
+              onTabPress={handleItemTabPress}
+            />
+          </View>
+          <ScrollView showsVerticalScrollIndicator={false} style={styles.innerContent}>
+            <BannerItemImage width={'100%'} />
+            <View style={styles.filterContainer}>
+              <TouchableOpacity style={styles.excludeOwnedItems} onPress={handleExcludeOwnedItemsToggle}>
+                {excludeOwnedItems ? <CheckActiveIcon /> : <CheckDisableIcon />}
+                <Text style={[styles.excludeOwnedItemsText, {color: excludeOwnedItems ? colors.grayScale900 : colors.grayScale500}]}>보유중 제외</Text>
+              </TouchableOpacity>
+              {/* <TouchableOpacity style={{backgroundColor: colors.grayScale100, borderRadius: radius.r16, paddingHorizontal: 10, paddingVertical: 4}} 
+              onPress={handleMakeAllOutOfStock}>
+                {outOfStockItems.length === 0 ? (
+                  <Text style={{...typography.body5, color: colors.grayScale900}}>품절(Test)</Text>
+                ) : (
+                  <Text style={{...typography.body5, color: colors.grayScale900}}>품절해제(Test)</Text>
+                )}
+              </TouchableOpacity> */}
+              <TouchableOpacity style={styles.dropdownSort} onPress={() => {Alert.alert('추천순 나열','구현중입니다')}}>
+                <Text style={styles.dropdownSortText}>추천순</Text>
+                <ArrowDropDownIcon />
+              </TouchableOpacity>
+            </View>
+            
+            <ItemList 
+              filteredItems={filteredItems}
+              onItemPress={handleItemPress}
+              isOutOfStock={isOutOfStock}
+              isOwned={isOwned}
+            />
+        </ScrollView>
       </View>
     );
   };

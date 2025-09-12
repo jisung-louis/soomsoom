@@ -268,4 +268,91 @@ export const getItemsByPositionType = (positionType: RoomItem['positionType']) =
 };
 
 // 보유 중인 아이템 ID 리스트
-export const IN_POSSESSION_ITEMS = [1, 7, 8];
+export const IN_POSSESSION_ITEMS = [6];
+
+// =============================
+// 서버 스펙과 동일한 Item 타입 Mock
+// =============================
+
+// 서버 스펙 타입 정의(서비스와 동일하게 유지)
+export type ItemType =
+  | 'ACCESSORY'
+  | 'HAT'
+  | 'BACKGROUND'
+  | 'FURNITURE'
+  | 'SHELF'
+  | 'FLOOR'
+  | 'FRAME';
+
+export type EquipSlot =
+  | 'BACKGROUND'
+  | 'EYEWEAR'
+  | 'HAT'
+  | 'FRAME'
+  | 'FLOOR'
+  | 'SHELF';
+
+export type AcquisitionType = 'PURCHASE' | 'DEFAULT' | 'REWARD';
+
+export interface ServerItem {
+  id: number;
+  name: string;
+  description: string;
+  phrase: string | null;
+  itemType: ItemType;
+  equipSlot: EquipSlot;
+  acquisitionType: AcquisitionType;
+  price: number;
+  imageUrl: string | null;
+  lottieUrl: string | null;
+  isSoldOut: boolean;
+  isOwned: boolean;
+  isEquipped: boolean;
+  createdAt: string;
+  modifiedAt: string;
+  deletedAt: string | null;
+}
+
+const equipSlotMap: Record<string, EquipSlot> = {
+  eyewear: 'EYEWEAR',
+  hat: 'HAT',
+  background: 'BACKGROUND',
+  frame: 'FRAME',
+  floor: 'FLOOR',
+  shelf: 'SHELF',
+};
+const itemTypeFromPosition: Record<string, ItemType> = {
+  eyewear: 'ACCESSORY',
+  hat: 'HAT',
+  background: 'BACKGROUND',
+  frame: 'FRAME',
+  floor: 'FLOOR',
+  shelf: 'SHELF',
+};
+
+function toServerItem(mock: RoomItem): ServerItem {
+  const name = mock.title;
+  const description = Array.isArray(mock.description)
+    ? mock.description.join('\n')
+    : (typeof (mock as any).description === 'string' ? (mock as any).description : '');
+  return {
+    id: mock.id,
+    name,
+    description,
+    phrase: null,
+    itemType: itemTypeFromPosition[mock.positionType] ?? 'FRAME',
+    equipSlot: equipSlotMap[mock.positionType] ?? 'FRAME',
+    acquisitionType: 'DEFAULT',
+    price: mock.price ?? 0,
+    imageUrl: mock.image ?? null,
+    lottieUrl: mock.lottieJson ?? null,
+    isSoldOut: false,
+    isOwned: IN_POSSESSION_ITEMS.includes(mock.id),
+    isEquipped: false,
+    createdAt: new Date().toISOString(),
+    modifiedAt: new Date().toISOString(),
+    deletedAt: null,
+  };
+}
+
+export const serverItemList: ServerItem[] = roomItemList.map(toServerItem);

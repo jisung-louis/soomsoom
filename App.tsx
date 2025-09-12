@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity, AppState } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import { StatusBar } from 'expo-status-bar';
 import { PortalProvider } from '@gorhom/portal';
@@ -19,6 +19,8 @@ import { loadTokens, loadUser, validateToken, refreshAccessToken } from './servi
 import { apiClient } from './services/apiClient';
 import { useAchievementStore } from './stores/achievementStore';
 import AchievementUnlockedPopup from './components/common/achievement/AchievementUnlockedPopup';
+import { useOwnedItems } from './hooks/useOwnedItems';
+import { checkAppVersionOnStart } from './services/versionService';
 
 const AppContent = () => {
   enableScreens(true);
@@ -29,6 +31,7 @@ const AppContent = () => {
   const { hasSeenOnboarding, setHasSeenOnboarding } = useOnboarding();
   const { setSession, isLoggedIn } = useAuthStore();
   const { initOnAppStart } = useAchievementStore();
+  const { loadOwnedItems } = useOwnedItems();
   
   // 폰트 로딩
   useEffect(() => {
@@ -54,6 +57,19 @@ const AppContent = () => {
       setAuthStatus('logged_out');
     }
   }, [isLoggedIn, authStatus]);
+
+  // 앱 포그라운드 복귀 시 소유 아이템 동기화
+  useEffect(() => {
+    const handleAppStateChange = (nextAppState: string) => {
+      if (nextAppState === 'active' && isLoggedIn) {
+        console.log('📱 앱 포그라운드 복귀, 소유 아이템 동기화');
+        loadOwnedItems();
+      }
+    };
+
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
+    return () => subscription?.remove();
+  }, [isLoggedIn, loadOwnedItems]);
 
   const completeOnboarding = async () => {
     try {
@@ -93,6 +109,9 @@ const AppContent = () => {
             
             console.log('✅ 자동 로그인 완료!');
             setAuthStatus('logged_in');
+            
+            // 로그인 성공 후 소유 아이템 로드
+            loadOwnedItems();
           } else {
             // 토큰이 만료되었으면 갱신 시도
             console.log('🔄 토큰 만료, 갱신 시도...');
@@ -112,6 +131,9 @@ const AppContent = () => {
                 
                 console.log('✅ 토큰 갱신 후 자동 로그인 완료!');
                 setAuthStatus('logged_in');
+                
+                // 토큰 갱신 후 소유 아이템 로드
+                loadOwnedItems();
               } else {
                 // 토큰 갱신 실패
                 console.log('❌ 토큰 갱신 실패, 로그아웃 처리');
@@ -148,8 +170,13 @@ const AppContent = () => {
   // 앱 시작 시 자동 로그인 체크 및 업적 시스템 초기화
   useEffect(() => {
     const initializeApp = async () => {
+      // 1. 앱 버전 체크 (가장 먼저 실행)
+      await checkAppVersionOnStart();
+      
+      // 2. 자동 로그인 체크
       await checkAutoLogin();
-      // 업적 시스템 초기화 (Mock 데이터 초기화 포함)
+      
+      // 3. 업적 시스템 초기화 (Mock 데이터 초기화 포함)
       await initOnAppStart();
     };
 
@@ -226,10 +253,16 @@ const AppContent = () => {
             <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
               <Text>로딩 중...</Text>
             </View>
-          ) : !hasSeenOnboarding || authStatus === 'logged_out' || authStatus === 'auto_login_failed' ? (
-            <OnboardingScreen 
-              onComplete={completeOnboarding} 
-              initialStep={authStatus === 'logged_out' || authStatus === 'auto_login_failed' ? 15 : undefined} // 로그아웃/자동로그인 실패 시 register(step15)로 이동
+          ) : !hasSeenOnboarding ? (
+            // 앱 설치 후 첫 실행(온보딩을 한 번도 안 본 사람) → 온보딩 첫 스텝부터
+            <OnboardingScreen
+              onComplete={completeOnboarding}
+            />
+          ) : authStatus === 'logged_out' || authStatus === 'auto_login_failed' ? (
+            // 온보딩을 본 적 있지만 로그아웃된 사람 → 로그인 스텝(15)
+            <OnboardingScreen
+              onComplete={completeOnboarding}
+              initialStep={15}
             />
           ) : fontsLoaded ? (
             <>
