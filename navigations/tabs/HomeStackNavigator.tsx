@@ -11,7 +11,7 @@ import { MailData } from '../../screens/subpages/home/MailboxScreen';
 export type HomeStackParamList = {
   HomeTab: undefined;
   ShopScreen: undefined;
-  ShopItemDetailScreen: { itemId: number };
+  ShopItemDetailScreen: { itemId: number, isCollection: boolean };
   TestScreen: undefined;
   MailboxScreen: undefined;
   MailboxDetailScreen: { content: MailData };

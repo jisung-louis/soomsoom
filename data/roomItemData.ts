@@ -27,6 +27,7 @@ export const roomItemList: RoomItem[] = [
     price: 300,
     positionType: 'frame',
     position: { x: 0, y: 0 }, // 동적으로 계산됨
+    description: ['처음 숨숨에 오신 것을 환영하는 의미로 드리는 기본 액자입니다.','이곳에서 좋은 추억을 많이 만드세요.'],
   },
   {
     id: 3,
@@ -65,9 +66,10 @@ export const roomItemList: RoomItem[] = [
     title: '기본 방',
     image: require('../assets/images/backgrounds/default.png'),
     lottieJson: null,
-    price: 0,
+    price: 100,
     positionType: 'background',
     position: { x: 0, y: 0 }, // 동적으로 계산됨
+    description: ["따뜻하고 아늑한 기본 방", "편안한 휴식을 위한 공간"],
   },
   {
     id: 7,
@@ -135,9 +137,10 @@ export const roomItemList: RoomItem[] = [
     title: '예술가 모자',
     image: undefined,
     lottieJson: require('../assets/animations/item/hat/artist_hat.json'),
-    price: 0,
+    price: 100,
     positionType: 'hat',
     position: { x: 0, y: 0 }, // 동적으로 계산됨
+    description: ['창의적인 영감을 주는 모자','예술가의 감성을 담아보세요'],
   },
   {
     id: 14,
@@ -145,9 +148,10 @@ export const roomItemList: RoomItem[] = [
     title: '베레모',
     image: undefined,
     lottieJson: require('../assets/animations/item/hat/beret.json'),
-    price: 0,
+    price: 300,
     positionType: 'hat',
     position: { x: 0, y: 0 }, // 동적으로 계산됨
+    description: ['우아하고 세련된 베레모','프랑스의 로맨틱한 매력을 느껴보세요'],
   },
   {
     id: 15,
@@ -158,6 +162,7 @@ export const roomItemList: RoomItem[] = [
     price: 300,
     positionType: 'hat',
     position: { x: 0, y: 0 }, // 동적으로 계산됨
+    description: ['자유로운 새의 모자','하늘을 날아다니는 듯한 기분을 느껴보세요'],
   },
   {
     id: 16,
@@ -225,7 +230,7 @@ export const roomItemList: RoomItem[] = [
     title: '여름 바다 피크닉',
     image: require('../assets/images/backgrounds/beach.png'),
     lottieJson: null,
-    price: 0,
+    price: 100,
     positionType: 'background',
     position: { x: 0, y: 0 }, // 동적으로 계산됨
     description: ['냥냥 해변에 귀를 기울이면','거품 부서지는 소리가 들린다.'],
@@ -239,6 +244,7 @@ export const roomItemList: RoomItem[] = [
     price: 200,
     positionType: 'background',
     position: { x: 0, y: 0 }, // 동적으로 계산됨
+    description: ["가족이 모이는 따뜻한 추석", "전통의 아름다움을 느껴보세요"],
   },
   {
     id: 24,

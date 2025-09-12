@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { View, Text, StyleSheet, Image } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, Modal, Pressable, TouchableWithoutFeedback } from 'react-native';
 import { getItemDetail, Item } from '../../../services/itemService';
+import { getCollectionDetail, CollectionDetail } from '../../../services/collectionService';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { HomeStackParamList } from '../../../navigations/tabs/HomeStackNavigator';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -15,32 +16,47 @@ import { useCurrencyStore } from '../../../stores/currencyStore';
 import { useRoomStore } from '../../../stores/roomStore';
 import { usePurchase } from '../../../hooks/usePurchase';
 import UserRoom from '../../../components/common/userroom/UserRoom';
+import InPossessionItemList from '../../../components/tabs/home/InPossessionItemList';
+import { radius } from '../../../constants/radius';
 
 type ShopItemDetailScreenRouteProp = RouteProp<HomeStackParamList, 'ShopItemDetailScreen'>;
 
 const ShopItemDetailScreen = () => {
     const route = useRoute<ShopItemDetailScreenRouteProp>();
-    const { itemId } = route.params;
+    const { itemId, isCollection } = route.params;
     const navigation = useNavigation<StackNavigationProp<HomeStackParamList>>();
     const [catLayout, setCatLayout] = useState({x: 0, y: 0, width: 0, height: 0});
     const [item, setItem] = useState<Item | null>(null);
+    const [collection, setCollection] = useState<CollectionDetail | null>(null);
+    const [isPossessionModalVisible, setPossessionModalVisible] = useState(false);
     console.log('item', item);
+    console.log('collection', collection);
     const heartPoints = useCurrencyStore(state => state.heartPoints);
     const isOwnedSelector = useRoomStore(state => state.isOwned);
-    const alreadyOwned = useMemo(() => (item ? isOwnedSelector(item.id) : false), [item, isOwnedSelector]);
+    const alreadyOwned = useMemo(() => {
+        if (isCollection && collection) {
+            return collection.isOwned;
+        }
+        return item ? isOwnedSelector(item.id) : false;
+    }, [item, collection, isCollection, isOwnedSelector]);
 
     React.useEffect(() => {
         let mounted = true;
         (async () => {
             try {
-                const data = await getItemDetail(itemId);
-                if (mounted) setItem(data);
+                if (isCollection) {
+                    const data = await getCollectionDetail(itemId);
+                    if (mounted) setCollection(data);
+                } else {
+                    const data = await getItemDetail(itemId);
+                    if (mounted) setItem(data);
+                }
             } catch (e) {
-                console.warn('아이템 상세 로드 실패:', e);
+                console.warn(isCollection ? '컬렉션 상세 로드 실패:' : '아이템 상세 로드 실패:', e);
             }
         })();
         return () => { mounted = false; };
-    }, [itemId]);
+    }, [itemId, isCollection]);
 
     const {
         isPurchasing,
@@ -59,44 +75,61 @@ const ShopItemDetailScreen = () => {
     }, [navigation]);
 
     const priceText = useMemo(() => {
-        const p = item?.price ?? 0;
+        const p = isCollection ? (collection?.purchasePrice ?? 0) : (item?.price ?? 0);
         return p.toLocaleString();
-    }, [item]);
+    }, [item, collection, isCollection]);
 
-    const hasValidPrice = useMemo(() => typeof item?.price === 'number' && (item?.price ?? 0) >= 0, [item]);
+    const hasValidPrice = useMemo(() => {
+        if (isCollection) {
+            return typeof collection?.purchasePrice === 'number' && (collection?.purchasePrice ?? 0) >= 0;
+        }
+        return typeof item?.price === 'number' && (item?.price ?? 0) >= 0;
+    }, [item, collection, isCollection]);
 
     const onBuy = useCallback(async () => {
-        if (!item) {
-            // usePurchase 훅의 showErrorAlert 사용
-            return;
+        if (isCollection) {
+            if (!collection) {
+                console.warn('컬렉션 데이터 없음');
+                return;
+            }
+            if (alreadyOwned) {
+                console.log('이미 보유한 컬렉션:', collection.name);
+                return;
+            }
+            if (!hasValidPrice) {
+                console.log('가격 정보 없음:', collection.name);
+                return;
+            }
+            console.log('컬렉션 구매 시도:', collection.name, collection.purchasePrice);
+            // TODO: 컬렉션 구매 로직 구현 (전체 컬렉션 구매)
+            await purchaseSingleItem(itemId, collection.purchasePrice ?? 0);
+        } else {
+            if (!item) {
+                console.warn('아이템 데이터 없음');
+                return;
+            }
+            if (alreadyOwned) {
+                console.log('이미 보유한 아이템:', item.name);
+                return;
+            }
+            if (!hasValidPrice) {
+                console.log('가격 정보 없음:', item.name);
+                return;
+            }
+            console.log('아이템 구매 시도:', item.name, item.price);
+            await purchaseSingleItem(itemId, item.price ?? 0);
         }
-        if (alreadyOwned) {
-            console.log('이미 보유한 아이템:', item?.name);
-            return;
-        }
-        if (!hasValidPrice) {
-            console.log('가격 정보 없음:', item?.name);
-            return;
-        }
-
-        console.log('구매 시도:', item?.name, item.price);
-        await purchaseSingleItem(itemId, item.price ?? 0);
-    }, [alreadyOwned, hasValidPrice, item, itemId, purchaseSingleItem]);
+    }, [alreadyOwned, hasValidPrice, item, collection, isCollection, itemId, purchaseSingleItem]);
 
     const handleBuy = useCallback(() => {
         if (isPurchasing) return;
         onBuy();
     }, [isPurchasing, onBuy]);
 
-    const itemIdToPositionType = (itemId: number | null) => {
-      if (!itemId) return null;
-      // 서버 스펙에는 positionType이 없으므로, 이미지 컨테이너 처리만 위해 background 추정 로직 생략
-      return null;
-    };
   return (
     <>
     <UserRoom
-      previewItemIds={[itemId]}
+      previewItemIds={isCollection ? (collection?.items?.map(it => it.id) ?? []) : [itemId]}
     >
       <SubpageHeader 
         onBack={handleBack} 
@@ -104,49 +137,95 @@ const ShopItemDetailScreen = () => {
       />
       
       <View style={styles.content}>
-        {/* <View style={styles.itemImageContainer}>
-          {item?.image === null || itemIdToPositionType(itemId) === 'background' ? (
-            <View style={styles.itemImage} />
-          ) : (
-              <Image source={item?.image} style={styles.itemImage} resizeMode='contain'/>
-          )}
-        </View> */}
-        <View style={styles.itemImageContainer}>
-          {(() => {
-            const placeholder = require('../../../assets/icons/default_test_image.png');
-            const src =
-              typeof item?.imageUrl === 'string'
+        {alreadyOwned ? (
+          <View style={styles.collectionInfo}>
+            <View style={[styles.collectionCountContainer, {backgroundColor: colors.primary300}]}>
+              <Text style={styles.collectionCount}>
+                보유중
+              </Text>
+            </View>
+          </View>
+        ):(
+          !isCollection ? (
+          <View style={styles.itemImageContainer}>
+            {(() => {
+              const placeholder = require('../../../assets/icons/default_test_image.png');
+              let src;
+              src = typeof item?.imageUrl === 'string'
                 ? { uri: item.imageUrl }
                 : (item?.imageUrl || placeholder);
-            return (
-              <Image source={src as any} style={styles.itemImage} resizeMode='contain' />
-            );
-          })()}
-        </View>
+              return (
+                <Image source={src as any} style={styles.itemImage} resizeMode='contain' />
+              );
+            })()}
+          </View>
+        ) : (
+            <View style={styles.collectionInfo}>
+              <TouchableOpacity style={styles.collectionCountContainer} onPress={() => setPossessionModalVisible(true)}>
+                <Text style={styles.collectionCount}>
+                  보유현황 보기 ({collection?.ownedItemsCount}/{collection?.totalItemsCount})
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )
+        )}
         <View style={styles.itemInfo}>
           <View style={styles.itemName}>
-            <Text style={styles.itemNameText}>{item?.name || '아이템 이름이 없습니다.'}</Text>
+            <Text style={styles.itemNameText}>
+              {isCollection 
+                ? (collection?.name || '컬렉션 이름이 없습니다.') 
+                : (item?.name || '아이템 이름이 없습니다.')
+              }
+            </Text>
           </View>
           <View style={styles.itemDescription}>
-            <Text style={styles.itemDescriptionText}>{item?.description || '아이템 설명이 없습니다.'}</Text>
+            <Text style={styles.itemDescriptionText}>
+              {isCollection 
+                ? (collection?.description || '컬렉션 설명이 없습니다.') 
+                : (item?.description || '아이템 설명이 없습니다.')
+              }
+            </Text>
           </View>
+          {isCollection && collection && (
+            <View style={styles.collectionInfo}>
+              <Text style={styles.collectionPhrase}>{collection.phrase}</Text>
+              <Text style={styles.collectionCount}>
+                보유: {collection.ownedItemsCount}/{collection.totalItemsCount}개
+              </Text>
+            </View>
+          )}
         </View>
       </View>
       
     </UserRoom>
 
-    <View style={styles.buttonContainer}>
-        <Button 
-          icon={alreadyOwned ? undefined : 'heart'}
-          title={alreadyOwned ? ' 보유중' : (hasValidPrice ? ` ${priceText} 구매하기` : ' 가격 정보 없음')}
-          size='large' 
-          variant={isPurchasing || alreadyOwned || !hasValidPrice ? 'default' : 'active'} 
-          style={{gap: 2, width: '100%'}} 
-          disabled={isPurchasing || alreadyOwned || !hasValidPrice}
-          loading={isPurchasing}
-          onPress={handleBuy} 
-        />
-    </View>
+    <Modal
+      visible={isPossessionModalVisible}
+      transparent
+      animationType="fade"
+      onRequestClose={() => setPossessionModalVisible(false)}
+    >
+      <Pressable style={styles.modalBackdrop} onPress={() => setPossessionModalVisible(false)}>
+        <Pressable onPress={(e) => e.stopPropagation()}>
+          <InPossessionItemList collection={collection!}/>
+        </Pressable>
+      </Pressable>
+    </Modal>
+
+    {!alreadyOwned && (
+      <View style={styles.buttonContainer}>
+          <Button 
+            icon={'heart'}
+            title={hasValidPrice ? ` ${priceText} ${isCollection ? '컬렉션' : ''} 구매하기` : ' 가격 정보 없음'}
+            size='large' 
+            variant={isPurchasing || alreadyOwned || !hasValidPrice ? 'default' : 'active'} 
+            style={{gap: 2, width: '100%'}} 
+            disabled={isPurchasing || alreadyOwned || !hasValidPrice}
+            loading={isPurchasing}
+            onPress={handleBuy} 
+          />
+      </View>
+    )}
     
     <CustomAlert
       visible={isSuccessAlertVisible}
@@ -202,6 +281,28 @@ const styles = StyleSheet.create({
     color: colors.grayScale700,
     textAlign: 'center',
   },
+  collectionInfo: {
+    alignItems: 'center',
+    height: 80,
+  },
+  collectionPhrase: {
+    ...typography.caption1,
+    color: colors.grayScale600,
+    textAlign: 'center',
+    fontStyle: 'italic',
+  },
+  collectionCountContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: 36,
+    borderRadius: radius.max,
+    backgroundColor: colors.grayScale800,
+    paddingHorizontal: 16,
+  },
+  collectionCount: {
+    ...typography.body5,
+    color: colors.white,
+  },
   previewItem: {
     width: 80,
     height: 80,
@@ -214,6 +315,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     width: '100%',
     zIndex: 1000,
+  },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'center',
   },
 });
 

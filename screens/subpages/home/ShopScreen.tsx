@@ -12,7 +12,9 @@ import { TabMenu } from '../../../components/common/tabmenu/TabMenu';
 import { SceneMap, TabView } from 'react-native-tab-view';
 import { radius } from '../../../constants/radius';
 import { getItems, Item, ItemType } from '../../../services/itemService';
+import { getCollections, type CollectionSummary } from '../../../services/collectionService';
 import type { ImageSourcePropType } from 'react-native';
+import ItemList, { RoomItemLike } from '../../../components/shop/ItemList';
 import { useRoomStore } from '../../../stores/roomStore';
 import { useOwnedItems } from '../../../hooks/useOwnedItems';
 import CheckDisableIcon from '../../../assets/icons/common/check_disabled.svg';
@@ -35,92 +37,7 @@ import { useCurrencyStore } from '../../../stores/currencyStore';
 
 type ShopScreenNavigationProp = StackNavigationProp<HomeStackParamList, 'ShopScreen'>;
 
-// 3의 배수로 맞추는 패딩 함수 (MyRoomDecoration과 동일)
-type RoomItemLike = {
-  id: number;
-  title: string;
-  image: ImageSourcePropType | null;
-  price: number;
-  type: string;
-  isSoldOut?: boolean;
-};
-
-function padToThreeColumns(data: RoomItemLike[]) {
-  const remainder = data.length % 3;
-  if (remainder === 0) return data;
-  const placeholders = Array(3 - remainder).fill(null).map((_, idx) => ({
-    __isPlaceholder: true,
-    id: 0,
-    type: '',
-    title: '',
-    image: null,
-    lottieJson: null,
-    price: 0,
-    positionType: 'eyewear' as const,
-    position: { x: 0, y: 0 },
-  }));
-  return [...data, ...placeholders];
-}
-
-const ITEM_IMAGE_WIDTH = 105;
-const ITEM_IMAGE_HEIGHT = 105;
-
-// 아이템 리스트 컴포넌트 (메모이제이션으로 최적화)
-const ItemList = React.memo(({ 
-  filteredItems, 
-  onItemPress, 
-  isOutOfStock, 
-  isOwned 
-}: {
-  filteredItems: RoomItemLike[];
-  onItemPress: (item: RoomItemLike) => void;
-  isOutOfStock: (itemId: number) => boolean;
-  isOwned: (itemId: number) => boolean;
-}) => {
-  return (
-    <FlatList 
-      style={styles.itemListContainer}
-      data={padToThreeColumns(filteredItems)}
-      numColumns={3}
-      columnWrapperStyle={styles.row}
-      scrollEnabled={false}
-      renderItem={({item, index}) => (
-        item.id === 0 ? (
-          <View style={[styles.item, {backgroundColor: 'transparent', elevation: 0, width: ITEM_IMAGE_WIDTH, height: ITEM_IMAGE_HEIGHT}]} key={item.id} />
-        ) : (
-          <TouchableOpacity style={styles.item} key={item.id} onPress={() => onItemPress(item)}>
-            {isOutOfStock(item.id) && (  
-              <View style={styles.grayDimmedContainer}>
-                <Text style={styles.outOfStockText}>다 팔렸어요!</Text>
-              </View>
-            )}
-            
-              <View style={[styles.itemImageContainer]}>
-                {item.image !== null && (
-                  <Image source={item.image as any} style={styles.itemImage} resizeMode='contain'/>
-                )}
-              </View>
-            
-            <View style={styles.itemInfo}>
-              <Text style={styles.itemTitle}>{item.title}</Text>
-              {!isOwned(item.id) ? (
-                <View style={styles.itemPriceContainer}>
-                  <EmotionIcon width={16} height={16} />
-                  <Text style={styles.itemPrice}>{item.price}</Text>
-                </View>
-              ) : (
-                <View style={styles.itemPriceContainer}>
-                  <Text style={styles.ownedText}>보유중</Text>
-                </View>
-              )}
-            </View>
-          </TouchableOpacity>
-        )
-      )} 
-      keyExtractor={(item) => item.id.toString()}
-    />
-  );
-});
+// ItemList 컴포넌트는 '../../../components/shop/ItemList'로 분리됨
 
 ItemList.displayName = 'ItemList';
 
@@ -172,7 +89,7 @@ const ShopScreen = () => {
 
   const handleItemPress = (item: RoomItemLike) => {
     const itemIsOwned = isOwned(item.id);
-    navigation.navigate('ShopItemDetailScreen', { itemId: item.id });
+    navigation.navigate('ShopItemDetailScreen', { itemId: item.id, isCollection: false });
     if (itemIsOwned) {
       // 이미 보유한 아이템
 
@@ -183,6 +100,11 @@ const ShopScreen = () => {
       // TODO: 구매 로직 구현
     }
   };
+
+  const handleCollectionItemPress = (collection: RoomItemLike) => {
+    navigation.navigate('ShopItemDetailScreen', { itemId: collection.id, isCollection: true });
+  };
+
   const handleExcludeOwnedItemsToggle = () => {
     setExcludeOwnedItems(!excludeOwnedItems);
     // TODO: 보유중 제외 기능 구현
@@ -222,6 +144,9 @@ const ShopScreen = () => {
 
   // 서비스에서 불러온 아이템 목록 (서버 스펙 → 화면용으로 매핑)
   const [items, setItems] = useState<RoomItemLike[]>([]);
+  // 컬렉션 데이터 (화면 마운트 시 선로딩)
+  const [collections, setCollections] = useState<CollectionSummary[]>([]);
+  const [collectionsLoading, setCollectionsLoading] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -254,6 +179,24 @@ const ShopScreen = () => {
     return () => { mounted = false; };
   }, []);
 
+  // 컬렉션은 탭 선택 여부와 상관없이 화면 마운트 시 한번 로드
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        setCollectionsLoading(true);
+        const res = await getCollections({ sort: 'CREATED', page: 1, size: 12 });
+        if (!mounted) return;
+        setCollections(res.content);
+      } catch (e) {
+        console.warn('컬렉션 목록 로드 실패:', e);
+      } finally {
+        if (mounted) setCollectionsLoading(false);
+      }
+    })();
+    return () => { mounted = false; };
+  }, []);
+
   // 상점 진입 시 소유 아이템 로드
   useEffect(() => {
     loadOwnedItems();
@@ -279,9 +222,22 @@ const ShopScreen = () => {
   // 필터링 + 정렬 적용된 아이템 목록
   const filteredItems = useMemo(() => {
     let list = items;
-    if (selectedItemTab > 0) {
+    if (selectedItemTab > 1) {
       const selectedCategory = itemTabMenu[selectedItemTab].title;
       list = items.filter(item => item.type === selectedCategory);
+    } else if (selectedItemTab === 1) {
+      list = collections.map(collection => ({
+        id: collection.id,
+        title: collection.name,
+        image: collection.imageUrl ? require('../../../assets/images/backgrounds/chuseok.png') : null,
+        price: collection.purchasePrice,
+        type: '컬렉션',
+        isCollection: true,
+        phrase: collection.phrase,
+        ownedItemsCount: collection.ownedItemsCount,
+        totalItemsCount: collection.totalItemsCount,
+        collectionOwned: collection.isOwned,
+      }));
     }
     if (excludeOwnedItems) {
       list = list.filter(item => !isOwned(item.id));
@@ -305,7 +261,8 @@ const ShopScreen = () => {
         break;
     }
     return sorted;
-  }, [items, selectedItemTab, excludeOwnedItems, ownedItems, sortKey]);
+  }, [items, selectedItemTab, excludeOwnedItems, ownedItems, sortKey, collections]);
+  
 
   const renderItemTab = () => {
     return (
@@ -342,7 +299,7 @@ const ShopScreen = () => {
               <View style={{ position: 'relative' }}>
                 <TouchableOpacity style={styles.dropdownSort} onPress={toggleSortOpen}>
                   <Text style={styles.dropdownSortText}>{sortLabel}</Text>
-                  <ArrowDropDownIcon />
+                  <ArrowDropDownIcon color={colors.grayScale800} />
                 </TouchableOpacity>
                 {sortOpen && (
                   <View style={styles.dropdownMenu}>
@@ -362,13 +319,29 @@ const ShopScreen = () => {
                 )}
               </View>
             </View>
-            
-            <ItemList 
-              filteredItems={filteredItems}
-              onItemPress={handleItemPress}
-              isOutOfStock={isOutOfStock}
-              isOwned={isOwned}
-            />
+            {itemTabMenu[selectedItemTab].title === '컬렉션' ? (
+              <View style={{ marginTop: 10 }}>
+                {collectionsLoading ? (
+                  <Text style={styles.dropdownItemText}>컬렉션 불러오는 중...</Text>
+                ) : (
+                  <ItemList
+                    filteredItems={filteredItems}
+                    onItemPress={handleCollectionItemPress}
+                    isOutOfStock={() => false}
+                    isOwned={() => false}
+                    isCollection
+                  />
+                )}
+              </View>
+            ) : (
+              <ItemList 
+                filteredItems={filteredItems}
+                onItemPress={handleItemPress}
+                isOutOfStock={isOutOfStock}
+                isOwned={isOwned}
+                isCollection={false}
+              />
+            )}
         </ScrollView>
       </View>
     );
@@ -445,37 +418,6 @@ const styles = StyleSheet.create({
     color: colors.grayScale600,
     textAlign: 'center',
   },
-  section: {
-    marginBottom: 40,
-  },
-  sectionTitle: {
-    ...typography.heading6,
-    color: colors.grayScale800,
-    marginBottom: 20,
-  },
-  itemGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    gap: 16,
-  },
-  item: {
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: 8,
-  },
-  itemImageContainer: {
-    width: ITEM_IMAGE_WIDTH,
-    height: ITEM_IMAGE_HEIGHT,
-    borderRadius: radius.r8,
-    backgroundColor: colors.grayScale50,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  itemImage: {
-    width: 80,
-    height: 80,
-  },
   itemPrice: {
     ...typography.caption1,
     color: colors.grayScale900,
@@ -483,47 +425,6 @@ const styles = StyleSheet.create({
   bannerImage: {
     width: '100%',
     borderRadius: radius.r16,
-  },
-  itemListContainer: {
-    flex: 1,
-  },
-  row: {
-    justifyContent: 'space-between',
-    marginBottom: 20,
-  },
-  itemBadgeContainer: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-    backgroundColor: colors.primary100,
-    borderRadius: 12,
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    borderWidth: 1,
-    borderColor: colors.primary300,
-    zIndex: 10,
-  },
-  ownedBadge: {
-    ...typography.body5,
-    color: colors.primary600,
-    fontWeight: '600',
-  },
-  itemInfo: {
-    alignItems: 'center',
-    gap: 4,
-  },
-  itemTitle: {
-    ...typography.caption2,
-    color: colors.grayScale700,
-    textAlign: 'center',
-  },
-  itemPriceContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  heartIcon: {
-    fontSize: 16,
   },
   filterContainer: {
     marginTop: 30,
@@ -577,27 +478,45 @@ const styles = StyleSheet.create({
     ...typography.body5,
     color: colors.grayScale900,
   },
-  ownedText: {
+  collectionCard: {
+    width: '48%',
+    borderRadius: radius.r12,
+    backgroundColor: colors.grayScale50,
+    borderWidth: 1,
+    borderColor: colors.grayScale100,
+    overflow: 'hidden',
+  },
+  collectionImage: {
+    width: '100%',
+    height: 100,
+    backgroundColor: colors.grayScale100,
+  },
+  collectionInfo: {
+    padding: 10,
+    gap: 4,
+  },
+  collectionTitle: {
+    ...typography.body4,
+    color: colors.grayScale900,
+    fontWeight: '600',
+  },
+  collectionPhrase: {
+    ...typography.caption2,
+    color: colors.grayScale600,
+  },
+  collectionMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 6,
+  },
+  collectionMeta: {
+    ...typography.caption1,
+    color: colors.grayScale700,
+  },
+  collectionOwned: {
     ...typography.caption1,
     color: colors.primary300,
-  },
-  grayDimmedContainer: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    width: ITEM_IMAGE_WIDTH,
-    height: ITEM_IMAGE_HEIGHT,
-    backgroundColor: '#292A2B',
-    borderRadius: radius.r8,
-    opacity: 0.6,
-    zIndex: 100,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  outOfStockText: {
-    ...syongsyongTypography.title6,
-    fontSize: 16,
-    color: colors.white,
   },
 });
 
