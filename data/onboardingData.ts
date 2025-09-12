@@ -143,15 +143,15 @@ export const onboardingSteps: OnboardingStep[] = [
     id: 'onboarding11',//countdown
     //showNext: false,
     backgroundColor: colors.primary50,
-    showNext: true,
+    showNext: false,
   },
   {
     id: 'onboarding12',
-    title: [
-      [["호흡 (미구현) ", normalText]]
-    ],
+    // title: [
+    //   [["호흡 (미구현) ", normalText]]
+    // ],
     backgroundColor: colors.primary50,
-    showNext: true,
+    showNext: false,
   },
   {
     id: 'onboarding13',//playresult

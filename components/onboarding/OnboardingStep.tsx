@@ -13,6 +13,7 @@ import { ss, sv } from '../../utils/scale';
 import LottieView from 'lottie-react-native';
 import { itemStyles } from '../../constants/roomLayout';
 import { Dimensions, LayoutChangeEvent } from 'react-native';
+import BreathingGuide from './BreathingGuide';
 
 const { width: WINDOW_WIDTH, height: WINDOW_HEIGHT } = Dimensions.get('window');
 
@@ -149,12 +150,10 @@ export const OnboardingStep: React.FC<OnboardingStepProps> = ({
           />
         );
 
-    //   case 'onboarding12'://breath
-    //     return (
-    //       <View>
-    //         <Text>breath</Text>
-    //       </View>
-    //     );
+      case 'onboarding12'://breath
+        return (
+          <BreathingGuide onComplete={onNext} />
+        );
         
       case 'onboarding13'://playresult
         return (
@@ -175,12 +174,12 @@ export const OnboardingStep: React.FC<OnboardingStepProps> = ({
     setContentContainerX(thisXY.nativeEvent.layout.x);
     setContentContainerY(thisXY.nativeEvent.layout.y);
   };
-  const NO_TITLE_STEP_ID = ['onboarding03', 'onboarding05', 'onboarding06', 'onboarding11', 'onboarding13', 'register'];
+  const NO_TITLE_STEP_ID = ['onboarding03', 'onboarding05', 'onboarding06', 'onboarding11', 'onboarding12', 'onboarding13', 'register'];
   return (
     <View style={styles.container}>
       {/* 제목 */}
       {NO_TITLE_STEP_ID.includes(stepId) ? null : (
-      <View style={styles.titleContainer}>
+        <View style={styles.titleContainer}>
           {renderTitle()}
         </View>
       )}

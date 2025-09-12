@@ -10,8 +10,8 @@ import { sv } from '../../utils/scale';
 import SocialLoginButtons from './SocialLoginButtons';
 
 const { width } = Dimensions.get('window');
-const TERMS_URL = 'https://www.notion.so/habjungdriking/2378c8e0513580758730fade7689a04a';
-const PRIVACY_URL = 'https://example.com/privacy';
+const TERMS_URL = 'https://habjungdriking.notion.site/Terms-of-Service-2368c8e0513580f9999ccb7bb901a0d5';
+const PRIVACY_URL = 'https://habjungdriking.notion.site/2378c8e0513580758730fade7689a04a';
 
 const Register = ({onComplete}: {onComplete: () => void}) => {
   const onGoogleLogin = () => {
@@ -42,18 +42,28 @@ const Register = ({onComplete}: {onComplete: () => void}) => {
         <View style={styles.socialLoginContainer}>
           <SocialLoginButtons onSuccess={onComplete} />
         </View>
-        <TouchableOpacity style={styles.termContainer} onPress={() => { openExternalLink(TERMS_URL); }}>
-            <Text style={styles.termText}>숨숨에 가입함으로써 이용약관 및</Text>
-            <Text style={styles.termText}>개인정보처리방침에 동의하게 됩니다.</Text>
+        <TouchableOpacity style={styles.noLoginContainer} onPress={onComplete}>
+          <Text style={styles.noLoginText}>비회원으로 계속하기</Text>
         </TouchableOpacity>
+        <View style={styles.termContainer}>
+          <View style={styles.termTextContainer}>
+            <Text style={styles.termText}>숨숨에 가입함으로써 </Text>
+            <Text style={styles.TouchableTermText} onPress={() => { openExternalLink(TERMS_URL); }}>이용약관 </Text>
+            <Text style={styles.termText}>및</Text>
+          </View>
+          <View style={styles.termTextContainer}>
+            <Text style={styles.TouchableTermText} onPress={() => { openExternalLink(PRIVACY_URL); }}>개인정보처리방침</Text>
+            <Text style={styles.termText}>에 동의하게 됩니다.</Text>
+          </View>
+        </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
     alignItems: 'center',
-    gap: 100,
     width: '100%',
     marginTop: sv(153),
   },
@@ -71,40 +81,40 @@ const styles = StyleSheet.create({
   },
   socialLoginContainer: {
     width: '100%',
+    marginTop: sv(83),
   },
-  socialLoginButton: {
-    flexDirection: 'row',
+  noLoginContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
-    height: 56,
-    width: width * 0.85,
-    borderRadius: radius.r8,
+    marginTop: sv(30),
   },
-  googleLoginButton: {
-    backgroundColor: colors.white,
-  },
-  appleLoginButton: {
-    backgroundColor: colors.black,
-  },
-  socialLoginText: {
-    ...typography.body2,
-  },
-  googleLoginText: {
-    color: colors.black,
-  },
-  appleLoginText: {
+  noLoginText: {
+    ...syongsyongTypography.title6,
     color: colors.white,
+    textDecorationLine: 'underline',
+    textShadowColor: colors.white,
+    fontSize: 18,
   },
   termContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
+    marginTop: sv(100),
+  },
+  termTextContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
   },
   termText: {
     ...typography.body5,
     color: colors.primary100,
-    lineHeight: 15,
+  },
+  TouchableTermText: {
+    ...typography.body5,
+    color: colors.primary100,
+    textDecorationLine: 'underline',
+    textDecorationColor: colors.primary100,
+    textDecorationStyle: 'solid',
+    fontWeight: 'bold',
   },
 });
 

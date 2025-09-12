@@ -139,6 +139,10 @@ const ShopScreen = () => {
   const [excludeOwnedItems, setExcludeOwnedItems] = useState(false);
   const [outOfStockItems, setOutOfStockItems] = useState<number[]>([]);
   const { heartPoints } = useCurrencyStore();
+  // 정렬 드롭다운 상태
+  type SortKey = 'POPULAR' | 'LATEST' | 'PRICE_DESC' | 'PRICE_ASC';
+  const [sortOpen, setSortOpen] = useState(false);
+  const [sortKey, setSortKey] = useState<SortKey>('PRICE_ASC'); // 디폴트: 가격낮은순
   const handleBack = () => {
     navigation.goBack();
   };
@@ -183,6 +187,26 @@ const ShopScreen = () => {
     setExcludeOwnedItems(!excludeOwnedItems);
     // TODO: 보유중 제외 기능 구현
   };
+
+  const toggleSortOpen = () => setSortOpen(v => !v);
+  const handleSelectSort = (key: SortKey) => {
+    setSortKey(key);
+    setSortOpen(false);
+  };
+
+  const sortLabel = useMemo(() => {
+    switch (sortKey) {
+      case 'POPULAR':
+        return '구매순';
+      case 'LATEST':
+        return '최신순';
+      case 'PRICE_DESC':
+        return '가격높은순';
+      case 'PRICE_ASC':
+      default:
+        return '가격낮은순';
+    }
+  }, [sortKey]);
 
   // 품절 아이템 목록은 서버 isSoldOut으로 초기화하고,
   // 테스트 토글 시에만 outOfStockItems를 사용합니다.
@@ -252,7 +276,7 @@ const ShopScreen = () => {
     }
   };
 
-  // 필터링된 아이템 목록을 메모이제이션으로 최적화
+  // 필터링 + 정렬 적용된 아이템 목록
   const filteredItems = useMemo(() => {
     let list = items;
     if (selectedItemTab > 0) {
@@ -262,8 +286,26 @@ const ShopScreen = () => {
     if (excludeOwnedItems) {
       list = list.filter(item => !isOwned(item.id));
     }
-    return list;
-  }, [items, selectedItemTab, excludeOwnedItems, ownedItems]);
+    const sorted = [...list];
+    switch (sortKey) {
+      case 'POPULAR':
+        // 구매순: 서버 지표 부재로 임시로 가격 내림차순을 근사치로 사용
+        sorted.sort((a, b) => b.price - a.price);
+        break;
+      case 'LATEST':
+        // 최신순: 생성일 정보가 없어 id가 클수록 최신이라고 가정
+        sorted.sort((a, b) => b.id - a.id);
+        break;
+      case 'PRICE_DESC':
+        sorted.sort((a, b) => b.price - a.price);
+        break;
+      case 'PRICE_ASC':
+      default:
+        sorted.sort((a, b) => a.price - b.price);
+        break;
+    }
+    return sorted;
+  }, [items, selectedItemTab, excludeOwnedItems, ownedItems, sortKey]);
 
   const renderItemTab = () => {
     return (
@@ -297,10 +339,28 @@ const ShopScreen = () => {
                   <Text style={{...typography.body5, color: colors.grayScale900}}>품절해제(Test)</Text>
                 )}
               </TouchableOpacity> */}
-              <TouchableOpacity style={styles.dropdownSort} onPress={() => {Alert.alert('추천순 나열','구현중입니다')}}>
-                <Text style={styles.dropdownSortText}>추천순</Text>
-                <ArrowDropDownIcon />
-              </TouchableOpacity>
+              <View style={{ position: 'relative' }}>
+                <TouchableOpacity style={styles.dropdownSort} onPress={toggleSortOpen}>
+                  <Text style={styles.dropdownSortText}>{sortLabel}</Text>
+                  <ArrowDropDownIcon />
+                </TouchableOpacity>
+                {sortOpen && (
+                  <View style={styles.dropdownMenu}>
+                    <TouchableOpacity style={styles.dropdownItem} onPress={() => handleSelectSort('POPULAR')}>
+                      <Text style={styles.dropdownItemText}>구매순</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.dropdownItem} onPress={() => handleSelectSort('LATEST')}>
+                      <Text style={styles.dropdownItemText}>최신순</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.dropdownItem} onPress={() => handleSelectSort('PRICE_DESC')}>
+                      <Text style={styles.dropdownItemText}>가격높은순</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.dropdownItem} onPress={() => handleSelectSort('PRICE_ASC')}>
+                      <Text style={styles.dropdownItemText}>가격낮은순</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </View>
             </View>
             
             <ItemList 
@@ -487,6 +547,33 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   dropdownSortText: {
+    ...typography.body5,
+    color: colors.grayScale900,
+  },
+  dropdownMenu: {
+    position: 'absolute',
+    top: 28,
+    right: 0,
+    backgroundColor: colors.white,
+    borderRadius: radius.r12,
+    paddingVertical: 6,
+    paddingHorizontal: 6,
+    borderWidth: 1,
+    borderColor: colors.grayScale100,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+    minWidth: 140,
+    zIndex: 1000,
+  },
+  dropdownItem: {
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    borderRadius: radius.r8,
+  },
+  dropdownItemText: {
     ...typography.body5,
     color: colors.grayScale900,
   },
