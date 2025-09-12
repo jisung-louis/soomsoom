@@ -21,9 +21,24 @@ import { useAchievementStore } from './stores/achievementStore';
 import AchievementUnlockedPopup from './components/common/achievement/AchievementUnlockedPopup';
 import { useOwnedItems } from './hooks/useOwnedItems';
 import { checkAppVersionOnStart } from './services/versionService';
+import { MathMission, MultiStepMission, validateMathAnswer } from './utils/mathMissionGenerator';
+import { useAlarmStore } from './stores/alarmStore';
+import { setupMissionNotificationCategory } from './services/alarmNotificationService';
+import { NavigationContainerRef } from '@react-navigation/native';
+
+enableScreens(true);
+
+// iOS/Android 공통 알림 표시 정책: 모듈 스코프에서 1회만 등록
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowBanner: true,   // 배너 표시
+    shouldShowList: true,     // 알림 리스트 표시
+    shouldPlaySound: true,    // 사운드
+    shouldSetBadge: false,    // 배지 미사용
+  }),
+});
 
 const AppContent = () => {
-  enableScreens(true);
   const [fontsLoaded, setFontsLoaded] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
@@ -32,7 +47,11 @@ const AppContent = () => {
   const { setSession, isLoggedIn } = useAuthStore();
   const { initOnAppStart } = useAchievementStore();
   const { loadOwnedItems } = useOwnedItems();
+  const { updateMissionProgress, dismissAlarm } = useAlarmStore();
   
+  // Navigation ref for programmatic navigation
+  const navigationRef = React.useRef<NavigationContainerRef<any>>(null);
+
   // 폰트 로딩
   useEffect(() => {
     const loadAppFonts = async () => {
@@ -80,6 +99,58 @@ const AppContent = () => {
       console.error('온보딩 완료 상태 저장 실패:', error);
       setHasSeenOnboarding(true);
       setAuthStatus('logged_in');
+    }
+  };
+
+  // 알림 응답 리스너 등록 (구독 반환)
+  const setupNotificationResponseListener = () => {
+    const sub = Notifications.addNotificationResponseReceivedListener(response => {
+      const { actionIdentifier, notification } = response;
+      const { alarmId, missionType, missionData, missionPack } = notification.request.content.data as { alarmId: string, missionType?: string, missionData?: MathMission, missionPack?: MultiStepMission };
+
+      // 기본 탭 → 해제/미션 화면으로
+      if (!actionIdentifier || actionIdentifier === Notifications.DEFAULT_ACTION_IDENTIFIER) {
+        navigationRef.current?.navigate('alarm', {
+          screen: 'AlarmDismissScreen',
+          params: { alarmId, missionType, missionData, missionPack },
+        });
+        return;
+      }
+
+      // 미션 응답 처리
+      if (missionType === 'math' && missionData) {
+        handleMathMissionResponse(actionIdentifier, missionData, alarmId);
+      }
+    });
+    return sub;
+  };
+  
+  // 수학 미션 응답 처리
+  const handleMathMissionResponse = (actionIdentifier: string, missionData: MathMission, alarmId: string) => {
+    if (actionIdentifier.startsWith('answer_')) {
+      // 숫자 버튼 클릭 시
+      const answer = actionIdentifier.split('_')[1];
+      console.log(`사용자 답변: ${answer}`);
+      
+      // 정답 검증
+      const { isCorrect, shouldDismiss } = validateMathAnswer(missionData, answer);
+      
+      if (isCorrect) {
+        console.log('정답! 알람 해제');
+        // 미션 완료로 알람 해제
+        dismissAlarm(alarmId);
+      } else if (shouldDismiss) {
+        console.log('최대 시도 횟수 도달, 알람 해제');
+        // 최대 시도 횟수 도달로 알람 해제
+        dismissAlarm(alarmId);
+      } else {
+        console.log('틀렸습니다. 다시 시도하세요.');
+        // 미션 진행 상태 업데이트 (시도 횟수 증가)
+        updateMissionProgress(alarmId, missionData);
+      }
+    } else if (actionIdentifier === 'submit') {
+      console.log('제출 버튼 클릭');
+      // 제출 버튼은 현재 구현하지 않음 (숫자 버튼으로만 답변)
     }
   };
 
@@ -161,9 +232,32 @@ const AppContent = () => {
     }
   };
 
-  // 앱 시작 시 알림 설정 초기화
+  // 앱 시작 시 알림 설정 초기화 & 리스너
   useEffect(() => {
-    initializeNotificationSettings();
+    (async () => {
+      initializeNotificationSettings(); // TODO: 필요 시 호출 빈도 조정
+      // 미션 알림 카테고리 등록 (한 번만)
+      //await setupMissionNotificationCategory(); // 미션 알림 카테고리 설정 주석 처리
+
+      // 콜드 스타트로 알림에서 진입한 경우 처리
+      const last = await Notifications.getLastNotificationResponseAsync();
+      if (last) {
+        const { actionIdentifier, notification } = last;
+        const { alarmId, missionType, missionData, missionPack } = notification.request.content.data as { alarmId: string, missionType?: string, missionData?: MathMission, missionPack?: MultiStepMission };
+
+        if (!actionIdentifier || actionIdentifier === Notifications.DEFAULT_ACTION_IDENTIFIER) {
+          navigationRef.current?.navigate('alarm', {
+            screen: 'AlarmDismissScreen',
+            params: { alarmId, missionType, missionData, missionPack },
+          });
+        }
+      }
+    })();
+
+    const sub = setupNotificationResponseListener();
+    return () => {
+      sub?.remove();
+    };
   }, []);
 
 
@@ -232,16 +326,6 @@ const AppContent = () => {
     }
   };
 
-  Notifications.setNotificationHandler({
-    handleNotification: async () => {
-      return {
-        shouldShowBanner: true, // 알림 배너 표시
-        shouldShowList: true, // 알림 리스트 표시
-        shouldPlaySound: true, // 알림 사운드 재생
-        shouldSetBadge: false, // 배지 설정 여부 (뱃지 : 앱 아이콘 옆에 숫자 표시 된 거)
-      } as NotificationBehavior;
-    },
-  });
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <PortalProvider>
@@ -266,7 +350,7 @@ const AppContent = () => {
             />
           ) : fontsLoaded ? (
             <>
-              <AppNavigator />
+              <AppNavigator ref={navigationRef} />
               <StatusBar style="auto" />
               <CustomToast />
               <AchievementUnlockedPopup />

@@ -14,10 +14,12 @@ import RepeatSelector from '../../../components/tabs/alarm/AlarmAddScreen/Repeat
 import MissionSelector from '../../../components/tabs/alarm/AlarmAddScreen/MissionSelector';
 import SoundSelector from '../../../components/tabs/alarm/AlarmAddScreen/SoundSelector';
 import { useAlarmStore } from '../../../stores/alarmStore';
+import { MissionData } from '../../../stores/alarmStore';
 import BottomSheet from '@gorhom/bottom-sheet';
 import CustomBottomSheet from '../../../components/common/bottomsheet/CustomBottomSheet';
 import { CustomAlert, AlertButton } from '../../../components/common/alert';
 import { convert24To12Hour, convert12To24Hour } from '../../../utils/timeUtils';
+import { generateMissionsByData } from '../../../utils/mathMissionGenerator';
 
 type BottomSheetType = 'repeat' | 'mission' | 'sound' | null;
 
@@ -72,9 +74,10 @@ const AlarmAddScreen = () => {
     repeatDays: existingAlarm?.day || [] as string[],
     repeatType: existingAlarm?.repeatType || 'daily',
   });
-  // const [initialMissionData, setMissionData] = useState({
-  //   missionName: '미션 없음',
-  // });
+  const [initialMissionData, setMissionData] = useState<MissionData>({
+    missionType: 'none',
+    missionCount: 0,
+  });
   const [initialSoundData, setSoundData] = useState({
     soundName: existingAlarm?.soundName || '기본 벨소리',
   });
@@ -168,6 +171,7 @@ const AlarmAddScreen = () => {
     }
   };
   
+  // 사용자가 오른쪽 위 알람 설정 저장 버튼을 눌렀을 때
   const handleSuccess = async () => {
     if (isLoading) return;
     
@@ -182,14 +186,21 @@ const AlarmAddScreen = () => {
       // 시간 형식 변환
       const timeString = convert12To24Hour(`${selectedTime.period} ${selectedTime.hour}:${selectedTime.minute}`);
       
+      let mission = null;
+      if (initialMissionData.missionType !== 'none') { // 알람에 미션 설정이 없으면 미션 생성 X
+        mission = generateMissionsByData({
+          missionType: initialMissionData.missionType,
+          missionCount: initialMissionData.missionCount,
+        });
+      }
+      
       const alarmData = {
         time: timeString,
         repeatDays: initialRepeatData.repeatDays,
         repeatType: initialRepeatData.repeatType,
         soundName: initialSoundData.soundName,
         isVibrationOn: isVibrationOn,
-        title: '알람 제목',
-        body: `알람 내용 (시간 : ${timeString})`,
+        mission: mission,
       };
       
       if (isCreateMode) {
@@ -248,10 +259,9 @@ const AlarmAddScreen = () => {
     handleCloseBottomSheet();
   };
 
-  const handleMissionConfirm = (missionName: number) => {
-    //setMissionData({ missionName });
-    {/* TODO: 미션 횟수 저장 필요 */}
-    console.log('미션 횟수:', missionName,'회');
+  const handleMissionConfirm = (missionData: MissionData) => {
+    setMissionData(missionData);
+    console.log('설정한 미션:', missionData.missionType, missionData.missionCount,'회');
     handleCloseBottomSheet();
   };
 
@@ -312,7 +322,7 @@ const AlarmAddScreen = () => {
                 onSoundPress={() => {handleSoundPress()}}
                 onVibrationToggle={() => {handleVibrationToggle()}}
                 repeatData={initialRepeatData}
-                //missionData={initialMissionData}
+                missionData={initialMissionData}
                 soundData={initialSoundData}
                 isVibrationOn={isVibrationOn}
             />

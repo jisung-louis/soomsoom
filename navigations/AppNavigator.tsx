@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { NavigationContainer } from '@react-navigation/native';
+import React, { useState, useEffect, forwardRef } from 'react';
+import { NavigationContainer, NavigationContainerRef } from '@react-navigation/native';
 import { createBottomTabNavigator, BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { getFocusedRouteNameFromRoute } from '@react-navigation/native';
 import { BottomNavigation, BottomTabKey } from '../components/navigation/BottomNavigation';
@@ -20,13 +20,17 @@ export type RootTabParamList = {
 
 const Tab = createBottomTabNavigator<RootTabParamList>();
 
-export default function AppNavigator() {
+const AppNavigator = forwardRef<NavigationContainerRef<any>>((props, ref) => {
   return (
-    <NavigationContainer>
+    <NavigationContainer ref={ref}>
       <AppNavigatorContent />
     </NavigationContainer>
   );
-}
+});
+
+AppNavigator.displayName = 'AppNavigator';
+
+export default AppNavigator;
 
 function AppNavigatorContent() {
   return (
@@ -80,7 +84,7 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
     record: ['EmotionSelectScreen', 'EmotionRecordScreen', 'EmotionRecordHelpScreen'],
     home: ['ShopScreen', 'ShopItemDetailScreen', 'MailboxScreen', 'MailboxDetailScreen', 'TestScreen'],
     play: ['PlayFavoriteScreen', 'PlayHistoryScreen', 'PlayDetailScreen', 'PlayInstructorDetailScreen', 'PlayBreathScreen', 'PlayMeditationScreen', 'PlayResultScreen', 'PlayBreathContentScreen', 'PlayActivityListScreen'],
-    alarm: ['AlarmAddScreen', ],
+    alarm: ['AlarmAddScreen', 'AlarmDismissScreen', 'MissionAccomplishmentScreen'],
     my: ['MyRoomDecorationPurchaseScreen', 'MyAchievementScreen'],
   };
 

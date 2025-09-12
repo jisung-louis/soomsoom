@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { scheduleAlarm, cancelAlarmNotifications } from '../services/alarmNotificationService';
 import { sortDays } from '../utils/dayDisplayUtils';
+import { MathMission, MultiStepMission } from '../utils/mathMissionGenerator';
 
 export interface AlarmItem {
   id: number;
@@ -10,6 +11,7 @@ export interface AlarmItem {
   repeatType?: string;
   soundName?: string;
   isVibrationOn?: boolean;
+  mission?: MultiStepMission | null;
 }
 
 export interface AlarmData {
@@ -20,6 +22,7 @@ export interface AlarmData {
   isVibrationOn: boolean;
   title?: string;
   body?: string;
+  mission?: MultiStepMission | null;
 }
 
 interface AlarmStore {
@@ -30,6 +33,15 @@ interface AlarmStore {
   deleteAlarm: (id: number) => Promise<void>;
   toggleAlarm: (id: number) => Promise<void>;
   updateAlarmList: (alarmList: AlarmItem[]) => void;
+
+  // 미션 관련 함수 (시도 횟수 제거로 현재는 진행도 업데이트 없음)
+  updateMissionProgress: (alarmId: string, missionData: MathMission) => void;
+  dismissAlarm: (alarmId: string) => void;
+}
+
+export interface MissionData {
+  missionType: 'none' | 'math' | 'english';
+  missionCount: number | 0;
 }
 
 const initialAlarmList: AlarmItem[] = []; // 빈 배열로 시작
@@ -48,6 +60,7 @@ export const useAlarmStore = create<AlarmStore>((set, get) => ({
       soundName: alarmData.soundName,
       isVibrationOn: alarmData.isVibrationOn,
       isActive: true,
+      mission: alarmData.mission || null,
     };
     
     // Zustand 스토어에 알람 추가
@@ -63,8 +76,7 @@ export const useAlarmStore = create<AlarmStore>((set, get) => ({
         repeatDays: sortedDays, // 정렬된 요일 사용
         soundName: alarmData.soundName,
         isVibrationOn: alarmData.isVibrationOn,
-        title: alarmData.title || '알람',
-        body: alarmData.body || `알람 시간입니다 (${alarmData.time})`,
+        mission: alarmData.mission || null,
       });
       
       if (success) {
@@ -111,8 +123,7 @@ export const useAlarmStore = create<AlarmStore>((set, get) => ({
           repeatDays: alarm.day,
           soundName: alarm.soundName || '기본',
           isVibrationOn: alarm.isVibrationOn || false,
-          title: '알람',
-          body: `알람 시간입니다 (${alarm.time})`,
+          mission: alarm.mission || null,
         });
         
         if (success) {
@@ -171,6 +182,7 @@ export const useAlarmStore = create<AlarmStore>((set, get) => ({
             repeatType: alarmData.repeatType,
             soundName: alarmData.soundName,
             isVibrationOn: alarmData.isVibrationOn,
+            mission: alarmData.mission || null,
           };
         }
         return item;
@@ -185,8 +197,7 @@ export const useAlarmStore = create<AlarmStore>((set, get) => ({
         repeatDays: sortedDays,
         soundName: alarmData.soundName,
         isVibrationOn: alarmData.isVibrationOn,
-        title: alarmData.title || '알람',
-        body: alarmData.body || `알람 시간입니다 (${alarmData.time})`,
+        mission: alarmData.mission || null,
       });
       
       if (success) {
@@ -201,5 +212,27 @@ export const useAlarmStore = create<AlarmStore>((set, get) => ({
   
   updateAlarmList: (alarmList: AlarmItem[]) => {
     set({ alarmList });
+  },
+
+  updateMissionProgress: (_alarmId: string, _missionData: MathMission) => {
+    // 시도 횟수(tracking) 제거에 따라 현재는 상태 갱신하지 않음
+  },
+  
+  // 알람 해제 (미션 완료 시)
+  dismissAlarm: (alarmId: string) => {
+    // 알림 취소
+    cancelAlarmNotifications(alarmId);
+    
+    // 스토어에서 알람 비활성화
+    set((state) => ({
+      alarmList: state.alarmList.map((item) => {
+        if (String(item.id) === alarmId) {
+          return { ...item, isActive: false };
+        }
+        return item;
+      }),
+    }));
+    
+    console.log(`알람 ${alarmId} 미션 완료로 인해 해제됨`);
   },
 })); 

@@ -145,7 +145,8 @@ export async function loginWithApple(): Promise<{ provider: SocialProvider; prov
       fullName: fullName,
       displayName: displayName,
       hasEmail: !!credential.email,
-      hasName: !!displayName
+      hasName: !!displayName,
+      providerToken: credential.identityToken!,
     });
 
     // 저장된 Apple 사용자 정보 확인 (재로그인 시 사용)

@@ -8,9 +8,10 @@ import CheckActiveIcon from '../../../../assets/icons/common/check_active.svg';
 import CheckDisabledIcon from '../../../../assets/icons/common/check_disabled.svg';
 import { sv } from '../../../../utils/scale';
 import NumberPicker from '../../../common/picker/NumberPicker';
+import { MissionData } from '../../../../stores/alarmStore';
 
 interface MissionSelectorProps {
-  onConfirm: (missionName: number) => void;
+  onConfirm: (missionData: MissionData) => void;
   onCancel: () => void;
 }
 
@@ -18,10 +19,16 @@ const MissionSelector: React.FC<MissionSelectorProps> = ({
   onConfirm,
   onCancel,
 }) => {
-  const [selectedTime, setSelectedTime] = useState(1);
+  const [selectedMission, setSelectedMission] = useState<MissionData>({ missionType: 'none', missionCount: 0 }); // 아직 미션 종류는 수학문제 밖에 없음
+  const [selectedMissionCount, setSelectedMissionCount] = useState(1);
 
   const handleConfirm = () => {
-    onConfirm(selectedTime);
+    onConfirm({ 
+      missionType: 
+        //selectedMission.missionType, // 아직 미션 종류는 수학문제 밖에 없음
+        'math', // 아직 미션 종류는 수학문제 밖에 없음
+      missionCount: 
+        selectedMissionCount });
   };
 
   return (
@@ -31,8 +38,8 @@ const MissionSelector: React.FC<MissionSelectorProps> = ({
       </View>
       <View style={styles.numberPickerContainer}>
         <NumberPicker
-          onValueChange={setSelectedTime}
-          initialValue={selectedTime}
+          onValueChange={setSelectedMissionCount}
+          initialValue={selectedMissionCount}
           max={10}
           min={1}
           suffix="회"

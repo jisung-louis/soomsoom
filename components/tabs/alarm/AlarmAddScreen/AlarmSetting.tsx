@@ -4,6 +4,7 @@ import { colors } from '../../../../constants/colors';
 import { typography } from '../../../../constants/typography';
 import ArrowRightIcon from '../../../../assets/icons/common/arrow_right.svg';
 import { getDayDisplayText } from '../../../../utils/dayDisplayUtils';
+import { MissionData } from '../../../../stores/alarmStore';
 
 interface AlarmSettingProps {
   onRepeatPress: () => void;
@@ -15,16 +16,14 @@ interface AlarmSettingProps {
     repeatDays: string[];
     repeatType: string;
   };
-  // missionData: {
-  //   missionName: string;
-  // };
+  missionData: MissionData;
   soundData: {
     soundName: string;
   };
   isVibrationOn: boolean;
 }
 
-const AlarmSetting = ({ onRepeatPress, onMissionPress, onSoundPress, onVibrationToggle, repeatData, /* missionData, */ soundData, isVibrationOn }: AlarmSettingProps) => {
+const AlarmSetting = ({ onRepeatPress, onMissionPress, onSoundPress, onVibrationToggle, repeatData, missionData, soundData, isVibrationOn }: AlarmSettingProps) => {
   const dayText = getDayDisplayText(repeatData.repeatDays);
 
   return (
@@ -40,7 +39,7 @@ const AlarmSetting = ({ onRepeatPress, onMissionPress, onSoundPress, onVibration
         <TouchableOpacity style={styles.settingItemContainer} onPress={() => {onMissionPress()}}>
             <Text style={styles.title}>미션</Text>
             <View style={styles.settingItemRightContent}>
-                {/* <Text style={styles.settingItemRightContentText}>{missionData.missionName}</Text> */}
+                <Text style={styles.settingItemRightContentText}>{missionData.missionType} {missionData.missionCount}회</Text>
                 <ArrowRightIcon width={24} height={24} color={colors.grayScale900} />
             </View>
         </TouchableOpacity>
