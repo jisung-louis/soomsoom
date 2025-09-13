@@ -30,6 +30,7 @@ const AlarmAddScreen = () => {
   const { addAlarm, getAlarmById, updateAlarm, deleteAlarm } = useAlarmStore();
   const [bottomSheetType, setBottomSheetType] = useState<BottomSheetType>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   
   // 바텀시트 ref 추가
   const bottomSheetRef = useRef<BottomSheet>(null);
@@ -114,7 +115,8 @@ const AlarmAddScreen = () => {
     { text: '삭제', onPress: async () => {
       if (!alarmId) return;
       
-      setIsLoading(true);
+      setShowDeleteAlert(false); // 🔥 삭제 확인 알러트 먼저 닫기
+      setIsDeleting(true);
       try {
         await deleteAlarm(alarmId);
         setShowDeleteSuccessAlert(true);
@@ -122,7 +124,7 @@ const AlarmAddScreen = () => {
         console.error('알람 삭제 실패:', error);
         setShowDeleteErrorAlert(true);
       } finally {
-        setIsLoading(false);
+        setIsDeleting(false);
       }
     }}
   ];
@@ -330,10 +332,11 @@ const AlarmAddScreen = () => {
         {!isCreateMode && (
             <View style={styles.buttonContainer}>
                 <Button 
-                  title="알람 삭제" 
+                  title={isDeleting ? "삭제 중..." : "알람 삭제"} 
                   variant="secondary"  
+                  disabled={isDeleting}
                   onPress={() => {
-                    if (isLoading) return;
+                    if (isDeleting) return;
                     setShowDeleteAlert(true);
                   }} 
                 />
@@ -392,7 +395,7 @@ const AlarmAddScreen = () => {
           visible={showDeleteSuccessAlert}
           message="알람이 삭제되었어요."
           buttons={deleteSuccessAlertButtons}
-          onClose={() => setShowDeleteSuccessAlert(false)}
+          onClose={() => {setShowDeleteSuccessAlert(false); navigation.goBack();}}
         />
 
         <CustomAlert

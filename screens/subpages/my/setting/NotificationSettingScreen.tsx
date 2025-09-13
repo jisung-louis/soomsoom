@@ -239,7 +239,13 @@ const NotificationSettingScreen = () => {
             if (isDiaryNotificationEnabled) {
                 console.log('알림이 활성화되어 있으므로 새로운 시간으로 스케줄링 업데이트');
                 await scheduleDiaryNotificationWithTime(time); // 새로운 시간을 직접 전달
-                Alert.alert('알림 시간 변경', '마음일기 알림 시간이 변경되었습니다.');
+                //Alert.alert('알림 시간 변경', '마음일기 알림 시간이 변경되었습니다.');
+                showToast({
+                    message: '마음일기 알람 시간이 변경되었어요!',
+                    theme: 'dark',
+                    iconType: 'alarm',
+                    duration: 2500,
+                });
             } else {
                 console.log('알림이 비활성화되어 있으므로 스케줄링하지 않음');
             }

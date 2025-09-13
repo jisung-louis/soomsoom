@@ -19,6 +19,8 @@ interface ToastContextType {
   hasAnimation: boolean;
   showToast: (config: ToastConfig) => void;
   hideToast: () => void;
+  hasBottomNavigation: boolean;
+  setHasBottomNavigation: (hasBottomNav: boolean) => void;
 }
 
 const ToastContext = createContext<ToastContextType | undefined>(undefined);
@@ -34,6 +36,7 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
   const [theme, setTheme] = useState<ToastTheme>('dark');
   const [hasAnimation, setHasAnimation] = useState(false);
   const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
+  const [hasBottomNavigation, setHasBottomNavigation] = useState(true); // 기본값: 바텀 네비게이션 있음
 
   const showToast = useCallback((config: ToastConfig) => {
     // 기존 타이머가 있다면 클리어
@@ -78,6 +81,8 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
     hasAnimation,
     showToast,
     hideToast,
+    hasBottomNavigation,
+    setHasBottomNavigation,
   };
 
   return (

@@ -213,6 +213,8 @@ const scheduleWeeklyRegularAlarm = async (alarmData: {
   isVibrationOn: boolean;
   title?: string;
   body?: string;
+  isBurstMode?: boolean;
+  burstWindowMinutes?: number;
 }): Promise<boolean> => {
   try {
     const { hours, minutes } = parseAlarmTime(alarmData.time);
@@ -243,17 +245,37 @@ const scheduleWeeklyRegularAlarm = async (alarmData: {
 
         const { title, body } = buildAlarmNotificationContent({ alarmData });
 
-        await scheduleBurstPerMinute({
-          alarmId: alarmData.id,
-          startDate: firstTriggerDate,
-          minutesWindow: REPEAT_WINDOW_MINUTES,
-          title,
-          body,
-          soundName: alarmData.soundName,
-          data: { time: alarmData.time, day: day },
-        });
-
-        console.log(`요일 ${day} 일반 알림 버스트 예약 완료`);
+        // 버스트 모드 여부에 따라 분기
+        if (alarmData.isBurstMode !== false) {
+          // 버스트 모드 (기본값)
+          await scheduleBurstPerMinute({
+            alarmId: alarmData.id,
+            startDate: firstTriggerDate,
+            minutesWindow: alarmData.burstWindowMinutes || REPEAT_WINDOW_MINUTES,
+            title,
+            body,
+            soundName: alarmData.soundName,
+            data: { time: alarmData.time, day: day },
+          });
+          console.log(`요일 ${day} 일반 알림 버스트 예약 완료`);
+        } else {
+          // 단일 모드 (마음일기 알림용)
+          const notificationId = await Notifications.scheduleNotificationAsync({
+            content: {
+              title,
+              body,
+              sound: alarmData.soundName === '기본' ? 'default' : `${alarmData.soundName}.wav`,
+              data: { alarmId: alarmData.id, time: alarmData.time, day: day },
+            },
+            trigger: {
+              type: Notifications.SchedulableTriggerInputTypes.WEEKLY,
+              weekday: weekday,
+              hour: hours,
+              minute: minutes,
+            },
+          });
+          console.log(`요일 ${day} 일반 알림 단일 예약 완료: ${notificationId}`);
+        }
       } catch (dayError) {
         console.error(`요일 ${day} 일반 알림 예약 실패:`, dayError);
         throw dayError;
@@ -381,6 +403,8 @@ export const scheduleWeeklyAlarm = async (alarmData: {
   title?: string;
   body?: string;
   mission?: MultiStepMission | MathMission | null;
+  isBurstMode?: boolean;
+  burstWindowMinutes?: number;
 }): Promise<boolean> => {
   try {
     if (alarmData.mission) {
@@ -404,6 +428,8 @@ export const scheduleAlarm = async (alarmData: {
   title?: string;
   body?: string;
   mission?: MultiStepMission | MathMission | null;
+  isBurstMode?: boolean;
+  burstWindowMinutes?: number;
 }): Promise<boolean> => {
   try {
     const hasPermission = await requestNotificationPermissions();

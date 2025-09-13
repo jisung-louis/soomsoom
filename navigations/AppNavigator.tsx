@@ -4,6 +4,7 @@ import { createBottomTabNavigator, BottomTabBarProps } from '@react-navigation/b
 import { getFocusedRouteNameFromRoute } from '@react-navigation/native';
 import { BottomNavigation, BottomTabKey } from '../components/navigation/BottomNavigation';
 import { StyleSheet, Animated } from 'react-native';
+import { useToast } from '../contexts/ToastContext';
 import HomeStackNavigator from './tabs/HomeStackNavigator';
 import RecordStackNavigator from './tabs/RecordStackNavigator';
 import PlayStackNavigator from './tabs/PlayStackNavigator';
@@ -33,11 +34,13 @@ AppNavigator.displayName = 'AppNavigator';
 export default AppNavigator;
 
 function AppNavigatorContent() {
+  const { setHasBottomNavigation } = useToast();
+
   return (
     <Tab.Navigator
       initialRouteName="home"
       screenOptions={{ headerShown: false }}
-      tabBar={(props) => <CustomTabBar {...props} />}
+      tabBar={(props) => <CustomTabBar {...props} setHasBottomNavigation={setHasBottomNavigation} />}
     >
       <Tab.Screen 
         name="home" 
@@ -68,7 +71,7 @@ function AppNavigatorContent() {
   );
 }
 
-function CustomTabBar({ state, navigation }: BottomTabBarProps) {
+function CustomTabBar({ state, navigation, setHasBottomNavigation }: BottomTabBarProps & { setHasBottomNavigation: (hasBottomNav: boolean) => void }) {
   // 애니메이션 값
   const [fadeAnim] = useState(new Animated.Value(1));
   const [translateY] = useState(new Animated.Value(0));
@@ -100,6 +103,9 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
   // 애니메이션으로 바텀 내비게이션 숨김/표시
   useEffect(() => {
     const hideBottomNav = shouldHideBottomNav();
+    
+    // ToastContext에 바텀 네비게이션 상태 업데이트
+    setHasBottomNavigation(!hideBottomNav);
     
     if (hideBottomNav) {
       // fade-out 및 slide-down 애니메이션

@@ -16,6 +16,7 @@ const CustomToast: React.FC = () => {
     theme,
     hasAnimation,
     hideToast,
+    hasBottomNavigation,
   } = useToast();
 
   const [isAnimating, setIsAnimating] = useState(false);
@@ -71,7 +72,7 @@ const CustomToast: React.FC = () => {
 
   return (
     <TouchableWithoutFeedback onPress={hideToast}>
-      <View style={styles.container}>
+      <View style={[styles.container, { paddingBottom: hasBottomNavigation ? 140 : 30 }]}>
         <Animated.View
           style={[
             styles.animatedContainer,
@@ -101,7 +102,7 @@ const styles = StyleSheet.create({
     right: 0,
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingBottom: 140, // 하단 네비게이션 바 고려
+    // paddingBottom은 동적으로 계산됨
     zIndex: 9999,
   },
   animatedContainer: {

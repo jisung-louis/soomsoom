@@ -184,6 +184,7 @@ export const scheduleDiaryNotification = async (timeString: string) => {
       isVibrationOn: true,
       title: '마음일기 작성 시간입니다',
       body: '오늘 하루는 어떠셨나요? 마음일기를 작성해보세요.',
+      isBurstMode: false, // 🔥 단일 모드
     });
     
     if (success) {
