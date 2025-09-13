@@ -28,6 +28,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import CatBasic from '../../../assets/images/play/playBreathing/basic.svg';
 import CatHold from '../../../assets/images/play/playBreathing/hold.svg';
+import { useCartStore } from '../../../stores/cartStore';
 
 const TestScreen = () => {
   const navigation = useNavigation<StackNavigationProp<HomeStackParamList>>();
@@ -303,6 +304,15 @@ const TestScreen = () => {
           variant="secondary"
           style={{width: 153}}
         />
+        <Button
+          title="장바구니 초기화"
+          onPress={() => {
+            useCartStore.getState().clearCart();
+            showToast({ message: '장바구니 초기화되었습니다.' });
+          }}
+          variant="active"
+          style={{width: 153}}
+        />
         </View>
 
         <View style={[styles.infoCard, {gap:10}]}>
@@ -456,17 +466,33 @@ const TestScreen = () => {
         <View style={styles.infoCard}>
           <Text style={styles.sectionTitle}>모든 Store 상태</Text>
           <View style={styles.infoCardInnerCard}>
+
+            <Text style={styles.infoLabel}>하트포인트</Text>
             <Text style={styles.infoValue}>{JSON.stringify(useCurrencyStore.getState())}</Text>
             <Surface style={{marginVertical: 10, height: 1}} color={colors.grayScale300}/>
+            
+            <Text style={styles.infoLabel}>알람</Text>
             <Text style={styles.infoValue}>{JSON.stringify(useAlarmStore.getState())}</Text>
             <Surface style={{marginVertical: 10, height: 1}} color={colors.grayScale300}/>
+
+            <Text style={styles.infoLabel}>업적</Text>
             <Text style={styles.infoValue}>{JSON.stringify(useAchievementStore.getState())}</Text>
             <Surface style={{marginVertical: 10, height: 1}} color={colors.grayScale300}/>
+
+            <Text style={styles.infoLabel}>인증</Text>
             <Text style={styles.infoValue}>{JSON.stringify(useAuthStore.getState())}</Text>
             <Surface style={{marginVertical: 10, height: 1}} color={colors.grayScale300}/>
+
+            <Text style={styles.infoLabel}>방</Text>
             <Text style={styles.infoValue}>{JSON.stringify(useRoomStore.getState())}</Text>
             <Surface style={{marginVertical: 10, height: 1}} color={colors.grayScale300}/>
+
+            <Text style={styles.infoLabel}>즐겨찾기/팔로우</Text>
             <Text style={styles.infoValue}>{JSON.stringify(usePlayStore.getState())}</Text>
+            <Surface style={{marginVertical: 10, height: 1}} color={colors.grayScale300}/>
+
+            <Text style={styles.infoLabel}>장바구니</Text>
+            <Text style={styles.infoValue}>{JSON.stringify(useCartStore.getState())}</Text>
           </View>
         </View>
       </ScrollView>

@@ -18,6 +18,7 @@ import { usePurchase } from '../../../hooks/usePurchase';
 import UserRoom from '../../../components/common/userroom/UserRoom';
 import InPossessionItemList from '../../../components/tabs/home/InPossessionItemList';
 import { radius } from '../../../constants/radius';
+import { Alert } from 'react-native';
 
 type ShopItemDetailScreenRouteProp = RouteProp<HomeStackParamList, 'ShopItemDetailScreen'>;
 
@@ -90,6 +91,8 @@ const ShopItemDetailScreen = () => {
         if (isCollection) {
             if (!collection) {
                 console.warn('컬렉션 데이터 없음');
+                // TODO: 사용자에게 데이터 로딩 실패 알림
+                Alert.alert('컬렉션 데이터 로딩 실패');
                 return;
             }
             if (alreadyOwned) {
@@ -98,6 +101,8 @@ const ShopItemDetailScreen = () => {
             }
             if (!hasValidPrice) {
                 console.log('가격 정보 없음:', collection.name);
+                // TODO: 가격 정보 없음 에러 표시
+                Alert.alert('가격 정보 없음');
                 return;
             }
             console.log('컬렉션 구매 시도:', collection.name, collection.purchasePrice);
@@ -106,6 +111,8 @@ const ShopItemDetailScreen = () => {
         } else {
             if (!item) {
                 console.warn('아이템 데이터 없음');
+                // TODO: 사용자에게 데이터 로딩 실패 알림
+                Alert.alert('아이템 데이터 로딩 실패');
                 return;
             }
             if (alreadyOwned) {
@@ -114,6 +121,8 @@ const ShopItemDetailScreen = () => {
             }
             if (!hasValidPrice) {
                 console.log('가격 정보 없음:', item.name);
+                // TODO: 가격 정보 없음 에러 표시
+                Alert.alert('가격 정보 없음');
                 return;
             }
             console.log('아이템 구매 시도:', item.name, item.price);
@@ -123,8 +132,36 @@ const ShopItemDetailScreen = () => {
 
     const handleBuy = useCallback(() => {
         if (isPurchasing) return;
+        console.log('🛒 구매 버튼 클릭:', { 
+            isPurchasing, 
+            alreadyOwned, 
+            hasValidPrice, 
+            heartPoints,
+            itemPrice: item?.price,
+            collectionPrice: collection?.purchasePrice
+        });
         onBuy();
-    }, [isPurchasing, onBuy]);
+    }, [isPurchasing, onBuy, alreadyOwned, hasValidPrice, heartPoints, item?.price, collection?.purchasePrice]);
+
+
+    const onPurchaseSuccess = useCallback(async () => {
+        await hideSuccessAlert();
+        handleBack();
+    }, [hideSuccessAlert, handleBack]);
+
+    const goToChargeTab = useCallback(() => {
+        // 홈 탭 스택을 초기화하고 ShopScreen의 충전소 탭으로 이동
+        navigation.reset({
+            index: 1,
+            routes: [
+                { name: 'HomeTab' },
+                { 
+                    name: 'ShopScreen',
+                    params: { initialTab: 'charge' } // 충전소 탭으로 직접 이동
+                }
+            ],
+        });
+    }, [navigation]);
 
   return (
     <>
@@ -230,14 +267,25 @@ const ShopItemDetailScreen = () => {
     <CustomAlert
       visible={isSuccessAlertVisible}
       message="구매가 완료되었어요!"
-      buttons={[{ text: '확인', onPress: hideSuccessAlert }]}
-      onClose={hideSuccessAlert}
+      buttons={[{ text: '확인', onPress: onPurchaseSuccess }]}
+      onClose={onPurchaseSuccess}
     />
     <CustomAlert
       visible={isErrorAlertVisible}
       message={errorTitle || '구매에 실패했어요.'}
       subMessage={errorSubMessage}
-      buttons={[{ text: '확인', onPress: hideErrorAlert }]}
+      buttons={
+        errorTitle?.includes('하트') && errorTitle?.includes('부족')
+          ? [
+              { text: '나중에', onPress: hideErrorAlert },
+              { text: '충전소가기', onPress: async () => {
+                hideErrorAlert();
+                goToChargeTab();
+                console.log('충전소로 이동');
+              }}
+            ]
+          : [{ text: '확인', onPress: hideErrorAlert }]
+      }
       onClose={hideErrorAlert}
     />
   

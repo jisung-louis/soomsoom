@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { View, Text, StyleSheet, Image, FlatList } from 'react-native';
-import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp, CommonActions } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { MyStackParamList } from '../../../../navigations/tabs/MyStackNavigator';
 import { WINDOW_WIDTH } from '@gorhom/bottom-sheet';
@@ -31,7 +31,7 @@ const MyRoomDecorationPurchaseScreen = () => {
     const [isExitAlertVisible, setIsExitAlertVisible] = useState(false);
     
     const heartPoints = useCurrencyStore(state => state.heartPoints);
-
+    
     const {
         isPurchasing,
         isSuccessAlertVisible,
@@ -42,6 +42,7 @@ const MyRoomDecorationPurchaseScreen = () => {
         hideSuccessAlert,
         hideErrorAlert,
         resetState,
+        addToCart,
     } = usePurchase();
 
     useEffect(() => {
@@ -83,7 +84,11 @@ const MyRoomDecorationPurchaseScreen = () => {
     const sumPrice = useMemo(() => {
         return isCheckedItems.reduce((acc, id) => {
             const item = itemIdToItem(id);
-            return acc + (item?.price || 0);
+            if (!item) {
+                console.warn(`아이템 데이터 없음: ${id}`);
+                return acc; // 데이터 없는 아이템은 가격 계산에서 제외
+            }
+            return acc + (item.price || 0);
         }, 0);
     }, [isCheckedItems, itemIdToItem]);
 
@@ -119,6 +124,41 @@ const MyRoomDecorationPurchaseScreen = () => {
         const sum = isCheckedItems.reduce((acc, id) => acc + (itemMap.get(id)?.price || 0), 0);
         await purchaseItems(isCheckedItems, sum);
     }, [isCheckedItems, purchaseItems, itemMap]);
+
+    const goToChargeTab = useCallback(async () => {
+        try {
+            // 체크된 아이템들을 장바구니에 추가
+            if (isCheckedItems.length > 0) {
+                await addToCart(isCheckedItems);
+                console.log('🛒 장바구니에 아이템 추가됨:', isCheckedItems);
+            }
+            
+            // 홈 탭의 ShopScreen 충전소 탭으로 이동
+            navigation.dispatch(
+                CommonActions.reset({
+                    index: 0,
+                    routes: [
+                        {
+                            name: 'home' as never,
+                            state: {
+                                routes: [
+                                    { name: 'HomeTab' },
+                                    { 
+                                        name: 'ShopScreen',
+                                        params: { initialTab: 'charge' }
+                                    }
+                                ],
+                                index: 1
+                            }
+                        }
+                    ]
+                })
+            );
+            console.log('충전소로 이동 완료');
+        } catch (error) {
+            console.error('장바구니 추가 실패:', error);
+        }
+    }, [isCheckedItems, addToCart, navigation]);
     
     return (
         <>
@@ -169,7 +209,7 @@ const MyRoomDecorationPurchaseScreen = () => {
                   variant={isPurchasing ? 'default' : 'active'}
                   size='large'
                   style={{width: '100%'}}
-                  disabled={isPurchasing}
+                  disabled={isPurchasing || sumPrice === 0}
                   loading={isPurchasing}
                   onPress={handlePurchase}
                 />
@@ -188,7 +228,16 @@ const MyRoomDecorationPurchaseScreen = () => {
             visible={isErrorAlertVisible}
             message={errorTitle || '구매에 실패했어요.'}
             subMessage={errorSubMessage}
-            buttons={[{ text: '확인', onPress: hideErrorAlert }]}
+            buttons={[
+                { text: '나중에', onPress: hideErrorAlert },
+                { text: '충전소가기', onPress: async () => {
+                    hideErrorAlert();
+                    // hideErrorAlert가 완료된 후 goToChargeTab 실행
+                    setTimeout(async () => {
+                        await goToChargeTab();
+                    }, 50);
+                }}
+            ]}
             onClose={hideErrorAlert}
         />
         <CustomAlert

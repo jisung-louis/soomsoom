@@ -28,6 +28,8 @@ import { useOwnedItems } from '../../hooks/useOwnedItems';
 import { objectPosition } from '../../constants/roomLayout';
 import { useRoomStore } from '../../stores/roomStore';
 import CustomAlert from '../../components/common/alert/CustomAlert';
+import { usePurchase } from '../../hooks/usePurchase';
+import { PurchasedItem } from '../../services/purchaseService';
 import { bindAchievementNavigationHandler, useAchievementStore } from '../../stores/achievementStore';
 import LottieView from 'lottie-react-native';
 
@@ -65,10 +67,14 @@ const MyTab = () => {
   const [isEditMode, setIsEditMode] = useState(false); // 방 꾸미기 모드 
   const [selectedTab, setSelectedTab] = useState(0);
   const [editModeSelectedItems, setEditModeSelectedItems] = useState<number[]>([]); // 선택된 아이템 ID들
+  const [initialSelectedItems, setInitialSelectedItems] = useState<number[]>([]); // 편집 모드 진입 시 초기 선택된 아이템
   const ownedItems = useRoomStore(state => state.ownedItems);
   const [showSaveAlert, setShowSaveAlert] = useState(false); // 저장 알림 표시 여부
   const [itemMap, setItemMap] = useState<Map<number, { positionType: string }>>(new Map());
   const { loadOwnedItems } = useOwnedItems();
+  
+  // 장바구니 관련 훅
+  const { getCartItems, clearAllCartItems } = usePurchase();
 
   // 아이템 데이터 로드
   useEffect(() => {
@@ -181,21 +187,70 @@ const MyTab = () => {
     }
   };
 
+  // 편집 모드 진입 시 선택된 아이템 초기화 (장바구니 포함)
   useEffect(() => {
-    const items: number[] = [];
-    Object.entries(placedItems).forEach(([key, value]) => {
-      if (key === 'frame' && Array.isArray(value)) {
-        // frame 배열의 경우 각 요소를 개별적으로 처리
-        value.forEach(item => {
-          if (item !== null) items.push(item);
+    if (!isEditMode) return; // 편집 모드가 아닐 때는 실행하지 않음
+    
+    let mounted = true;
+    (async () => {
+      try {
+        // 1. 현재 배치된 아이템들 수집
+        const placedItemsList: number[] = [];
+        Object.entries(placedItems).forEach(([key, value]) => {
+          if (key === 'frame' && Array.isArray(value)) {
+            // frame 배열의 경우 각 요소를 개별적으로 처리
+            value.forEach(item => {
+              if (item !== null) placedItemsList.push(item);
+            });
+          } else if (value !== null && value !== undefined) {
+            // 다른 카테고리는 기존 로직
+            placedItemsList.push(value as number);
+          }
         });
-      } else if (value !== null && value !== undefined) {
-        // 다른 카테고리는 기존 로직
-        items.push(value as number);
+
+        // 2. 장바구니에서 아이템들 조회
+        console.log('🛒 MyTab - 편집 모드 진입: 장바구니 조회 시작');
+        const cartData = await getCartItems();
+        const cartItemIds: number[] = cartData.items?.map((item: PurchasedItem) => item.id) || [];
+        
+        if (cartItemIds.length > 0) {
+          console.log('🛒 MyTab - 장바구니 아이템 발견:', cartItemIds);
+        }
+
+        // 3. 배치된 아이템 + 장바구니 아이템 합치기 (중복 제거)
+        const allItems = [...new Set([...placedItemsList, ...cartItemIds])];
+        
+        if (mounted) {
+          setEditModeSelectedItems(allItems);
+          setInitialSelectedItems([...allItems]); // 초기 선택된 아이템 저장
+          console.log('🛒 MyTab - 편집 모드 선택된 아이템 초기화:', {
+            placedItems: placedItemsList,
+            cartItems: cartItemIds,
+            total: allItems
+          });
+        }
+      } catch (error) {
+        console.warn('🛒 MyTab - 장바구니 조회 실패:', error);
+        // 장바구니 조회 실패 시 기존 로직으로 폴백
+        const items: number[] = [];
+        Object.entries(placedItems).forEach(([key, value]) => {
+          if (key === 'frame' && Array.isArray(value)) {
+            value.forEach(item => {
+              if (item !== null) items.push(item);
+            });
+          } else if (value !== null && value !== undefined) {
+            items.push(value as number);
+          }
+        });
+        if (mounted) {
+          setEditModeSelectedItems(items);
+          setInitialSelectedItems([...items]); // 초기 선택된 아이템 저장
+        }
       }
-    });
-    setEditModeSelectedItems(items);
-  }, []);
+    })();
+    
+    return () => { mounted = false; };
+  }, [isEditMode, getCartItems, placedItems]);
 
   // 업적 데이터 가져오기 (MyTab 마운트 시)
   useEffect(() => {
@@ -272,6 +327,69 @@ const MyTab = () => {
     });
   }, [itemMap]);
 
+  // 컬렉션 아이템들을 한꺼번에 처리하는 함수
+  const handleCollectionSelection = useCallback((itemIds: number[]) => {
+    console.log('🎨 컬렉션 선택 시작:', itemIds);
+
+    setEditModeSelectedItems(prev => {
+      console.log('🔍 컬렉션 선택 상태 확인:', {
+        itemIds,
+        prev,
+        allSelected: itemIds.every(itemId => prev.includes(itemId))
+      });
+      
+      //만약 컬렉션 아이템들이 이미 모두 선택되어 있으면 제거
+      if (itemIds.every(itemId => prev.includes(itemId))) {
+        const newItems = prev.filter(id => !itemIds.includes(id));
+        console.log('✅ 컬렉션 아이템들이 이미 모두 선택되어 있으면 제거:', {
+          before: prev,
+          after: newItems
+        });
+        return newItems;
+      }
+      
+      console.log('📋 기존 선택된 아이템들:', prev);
+      
+      // 컬렉션 아이템들의 positionType을 확인하여 기존 선택된 같은 카테고리 아이템들을 제거
+      let newItems = [...prev];
+      
+      itemIds.forEach(itemId => {
+        const itemData = itemMap.get(itemId);
+        console.log(`🔍 아이템 ${itemId} 데이터:`, itemData);
+        
+        if (!itemData) return;
+        
+        // 같은 카테고리의 기존 아이템들을 제거
+        newItems = newItems.filter(id => {
+          const existingItem = itemMap.get(id);
+          return existingItem?.positionType !== itemData.positionType;
+        });
+        
+        // frame의 경우 특별 처리 (2개까지 선택 가능)
+        if (itemData.positionType === 'frame') {
+          const currentFrameItems = newItems.filter(id => {
+            const existingItem = itemMap.get(id);
+            return existingItem?.positionType === 'frame';
+          });
+          
+          // frame 아이템을 추가 (최대 2개 제한)
+          const frameItemsToAdd = itemIds.filter(id => {
+            const item = itemMap.get(id);
+            return item?.positionType === 'frame';
+          }).slice(0, 2 - currentFrameItems.length);
+          
+          newItems = [...newItems, ...frameItemsToAdd];
+        } else {
+          // 다른 카테고리는 1개만 선택 가능
+          newItems = [...newItems, itemId];
+        }
+      });
+      
+      console.log('✅ 최종 선택된 아이템들:', newItems);
+      return newItems;
+    });
+  }, [itemMap]);
+
   const enterEditMode = () => {
     setIsEditMode(true);
     const items: number[] = [];
@@ -289,16 +407,25 @@ const MyTab = () => {
     setEditModeSelectedItems(items);
   };
 
-  const exitEditMode = () => {
+  const exitEditMode = async () => {
+    // 장바구니 초기화
+    try {
+      console.log('🛒 MyTab - 편집 모드 종료: 장바구니 초기화');
+      await clearAllCartItems();
+    } catch (error) {
+      console.warn('🛒 MyTab - 장바구니 초기화 실패:', error);
+    }
+    
     setIsEditMode(false);
     setEditModeSelectedItems([]);
+    setInitialSelectedItems([]);
     setShowSaveAlert(false);
   };
 
   const saveOrPurchaseItems = () => {
     // 구매 대상이 하나도 없으면 저장, 있으면 구매 플로우
     if (purchaseCount === 0) { //저장
-        setShowSaveAlert(true);
+        saveItems();
     } else { // 구매
       // TODO: 구매 플로우 열기 (예: 결제 다이얼로그/상점 이동)
       console.log('구매');
@@ -394,11 +521,29 @@ const MyTab = () => {
     }
   }, [isEditMode]);
 
+  const onBackButtonClick = () => {
+    // 배열을 정렬해서 비교 (순서 무관하게)
+    const sortedInitial = [...initialSelectedItems].sort((a, b) => a - b);
+    const sortedCurrent = [...editModeSelectedItems].sort((a, b) => a - b);
+    
+    // 배열 길이와 내용이 모두 같은지 확인
+    const isUnchanged = sortedInitial.length === sortedCurrent.length && 
+                       sortedInitial.every((item, index) => item === sortedCurrent[index]);
+    
+    if (isUnchanged) {
+      console.log('🛒 MyTab - 변경사항 없음: 바로 편집 모드 종료');
+      exitEditMode();
+    } else {
+      console.log('🛒 MyTab - 변경사항 있음: 저장 확인 알림 표시');
+      setShowSaveAlert(true);
+    }
+  };
+
   return (
     <View style={styles.container}>
         <MyTabTopNavigation
             isEditMode={isEditMode}
-            onEditModeToggle={() => {exitEditMode()}}
+            onEditModeToggle={onBackButtonClick}
             onSettingPress={() => {navigation.navigate('MySettingScreen')}}
             onHeartPress={() => {}}
             style={styles.topNavigation}
@@ -512,6 +657,7 @@ const MyTab = () => {
               handleTabPress={handleTabPress}
               selectedItems={editModeSelectedItems}
               onItemSelection={handleItemSelection}
+              onCollectionSelection={handleCollectionSelection}
             />
           </View>
         }

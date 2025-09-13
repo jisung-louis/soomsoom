@@ -1,6 +1,7 @@
 import { apiClient } from './apiClient';
 import { environmentConfig } from '../configs/environment';
 import { mockCollectionData } from '../data/mockCollectionData';
+import { Item } from './itemService';
 
 export type CollectionSort = 'POPULARITY' | 'PRICE_ASC' | 'PRICE_DESC' | 'CREATED';
 export type DeletionStatus = 'ACTIVE' | 'DELETED' | 'ALL';
@@ -15,7 +16,7 @@ export interface PageMeta {
 export interface CollectionSummary {
   id: number;
   name: string;
-  description: string;
+  description: string[];
   phrase: string;
   imageUrl: string | null;
   lottieUrl: string | null;
@@ -25,26 +26,7 @@ export interface CollectionSummary {
   totalItemsCount: number;
   isOwned: boolean;
   isEquipped: boolean;
-  items: null; // 목록 응답에서는 null
-  createdAt: string;
-  modifiedAt: string;
-  deletedAt: string | null;
-}
-
-export interface CollectionItemInDetail {
-  id: number;
-  name: string;
-  description: string[];
-  phrase: string;
-  itemType: string; // 서버 enum 원문 사용
-  equipSlot: string; // 서버 enum 원문 사용
-  acquisitionType: string; // 서버 enum 원문 사용
-  price: number;
-  imageUrl: string | null;
-  lottieUrl: string | null;
-  isSoldOut: boolean;
-  isOwned: boolean;
-  isEquipped: boolean;
+  items: null; // 백엔드에서 컬렉션 목록 조회 시 items는 null로 반환
   createdAt: string;
   modifiedAt: string;
   deletedAt: string | null;
@@ -53,7 +35,7 @@ export interface CollectionItemInDetail {
 export interface CollectionDetail {
   id: number;
   name: string;
-  description: string;
+  description: string[];
   phrase: string;
   imageUrl: string | null;
   lottieUrl: string | null;
@@ -63,7 +45,7 @@ export interface CollectionDetail {
   totalItemsCount: number;
   isOwned: boolean;
   isEquipped: boolean;
-  items: CollectionItemInDetail[];
+  items: Item[];
   createdAt: string;
   modifiedAt: string;
   deletedAt: string | null;
@@ -107,7 +89,7 @@ export async function getCollections(params: GetCollectionsParams = {}): Promise
       totalItemsCount: d.totalItemsCount,
       isOwned: d.isOwned,
       isEquipped: d.isEquipped,
-      items: null,
+      items: null, // 목록 조회에서는 items를 null로 반환
       createdAt: d.createdAt,
       modifiedAt: d.modifiedAt,
       deletedAt: d.deletedAt,
@@ -199,7 +181,7 @@ export async function getOwnedCollections(params: GetOwnedCollectionsParams = {}
       totalItemsCount: d.totalItemsCount,
       isOwned: true,
       isEquipped: d.isEquipped,
-      items: null,
+      items: null, // 목록 조회에서는 items를 null로 반환
       createdAt: d.createdAt,
       modifiedAt: d.modifiedAt,
       deletedAt: d.deletedAt,

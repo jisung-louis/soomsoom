@@ -217,3 +217,79 @@ export const createAuthenticationError = (message: string, code?: string): AppEr
 export const createPermissionError = (message: string, code?: string): AppError => {
   return errorHandler.createPermissionError(message, code);
 };
+
+/**
+ * 에러 상세 정보 타입
+ */
+export interface ErrorDetails {
+  title: string;
+  message: string;
+  type?: ErrorType;
+  code?: string;
+}
+
+/**
+ * 에러를 파싱하여 상세 정보를 반환
+ */
+export function parseError(error: any): ErrorDetails {
+  // Error 객체인 경우
+  if (error instanceof Error) {
+    // 하트 포인트 부족 에러
+    if (error.message.includes('하트 포인트 부족')) {
+      // "하트 포인트 부족: 현재 100, 필요 300" 형태에서 부족한 포인트 추출
+      const match = error.message.match(/현재 (\d+), 필요 (\d+)/);
+      if (match) {
+        const current = parseInt(match[1]);
+        const needed = parseInt(match[2]);
+        const shortage = needed - current;
+        return {
+          title: `하트 ${shortage}개가 부족해요`,
+          message: '', // 메시지는 없음
+          type: ErrorType.VALIDATION,
+          code: 'INSUFFICIENT_POINTS'
+        };
+      }
+      
+      // 매칭되지 않는 경우 기본 메시지
+      return {
+        title: '하트 포인트가 부족해요',
+        message: '',
+        type: ErrorType.VALIDATION,
+        code: 'INSUFFICIENT_POINTS'
+      };
+    }
+    
+    // 가격 불일치 에러
+    if (error.message.includes('가격 불일치')) {
+      return {
+        title: '가격 정보 오류',
+        message: error.message,
+        type: ErrorType.VALIDATION,
+        code: 'PRICE_MISMATCH'
+      };
+    }
+    
+    // 일반 에러
+    return {
+      title: '구매 실패',
+      message: error.message,
+      type: ErrorType.UNKNOWN
+    };
+  }
+  
+  // 문자열 에러인 경우
+  if (typeof error === 'string') {
+    return {
+      title: '구매 실패',
+      message: error,
+      type: ErrorType.UNKNOWN
+    };
+  }
+  
+  // 기타 에러
+  return {
+    title: '알 수 없는 오류',
+    message: '구매 중 문제가 발생했어요.',
+    type: ErrorType.UNKNOWN
+  };
+}

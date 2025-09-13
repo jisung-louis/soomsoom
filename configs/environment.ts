@@ -31,13 +31,8 @@ export const environmentConfig = {
   api: {
     baseUrl: isDevelopment 
       ? (() => {
-          // 개발 환경에서 플랫폼별 로컬 서버 사용
-          const { Platform } = require('react-native');
-          return Platform.select({
-            ios: 'http://localhost:3000',        // iOS 시뮬레이터
-            android: 'http://10.0.2.2:3000',    // Android 에뮬레이터
-            default: 'http://localhost:3000'
-          });
+          // 개발 서버 고정(사용자 제공)
+          return 'http://13.125.237.63:8080';
         })()
       : 'https://api.soomsoom.com',     // 프로덕션 API 서버
     

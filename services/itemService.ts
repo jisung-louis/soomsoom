@@ -26,7 +26,7 @@ export type ItemSort = 'POPULARITY' | 'PRICE_ASC' | 'PRICE_DESC' | 'CREATED';
 export interface Item {
   id: number;
   name: string;
-  description: string;
+  description: string[];
   phrase: string | null;
   itemType: ItemType;
   equipSlot: EquipSlot;

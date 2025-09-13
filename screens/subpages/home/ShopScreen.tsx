@@ -1,7 +1,7 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useRef, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, useWindowDimensions, Image, FlatList, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { useNavigation, useFocusEffect, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { HomeStackParamList } from '../../../navigations/tabs/HomeStackNavigator';
 import SubpageHeader from '../../../components/common/top-navigation/SubpageHeader';
@@ -34,6 +34,9 @@ import OrnamentIcon from '../../../assets/icons/my/room-decoration/ornament.svg'
 import BannerItemImage from '../../../assets/images/home/shop/banner_item.svg';
 import BannerChargeImage from '../../../assets/images/home/shop/banner_charge.svg';
 import { useCurrencyStore } from '../../../stores/currencyStore';
+import CustomBottomSheet from '../../../components/common/bottomsheet/CustomBottomSheet';
+import { BottomSheetModal } from '@gorhom/bottom-sheet';
+import { Button } from '../../../components/common/buttons/Button';
 
 type ShopScreenNavigationProp = StackNavigationProp<HomeStackParamList, 'ShopScreen'>;
 
@@ -43,23 +46,20 @@ ItemList.displayName = 'ItemList';
 
 const ShopScreen = () => {
   const navigation = useNavigation<ShopScreenNavigationProp>();
+  const route = useRoute<RouteProp<HomeStackParamList, 'ShopScreen'>>();
   const { ownedItems } = useRoomStore();
   const { loadOwnedItems } = useOwnedItems();
   
-  // isOwned 함수를 직접 정의하여 최신 상태 반영
-  const isOwned = (itemId: number) => {
-    const result = ownedItems.includes(itemId);
-    console.log(`🔍 isOwned 체크: itemId=${itemId}, ownedItems=${JSON.stringify(ownedItems)}, result=${result}`);
-    return result;
-  };
+  // ownedItems를 Set으로 변환하여 O(1) 검색 최적화
+  const ownedItemsSet = useMemo(() => new Set(ownedItems), [ownedItems]);
   const layout = useWindowDimensions();
   const [excludeOwnedItems, setExcludeOwnedItems] = useState(false);
   const [outOfStockItems, setOutOfStockItems] = useState<number[]>([]);
   const { heartPoints } = useCurrencyStore();
   // 정렬 드롭다운 상태
   type SortKey = 'POPULAR' | 'LATEST' | 'PRICE_DESC' | 'PRICE_ASC';
-  const [sortOpen, setSortOpen] = useState(false);
-  const [sortKey, setSortKey] = useState<SortKey>('PRICE_ASC'); // 디폴트: 가격낮은순
+  const [sortKey, setSortKey] = useState<SortKey>('POPULAR'); // 디폴트: 구매순
+  const sortBottomSheetRef = useRef<BottomSheetModal>(null);
   const handleBack = () => {
     navigation.goBack();
   };
@@ -69,6 +69,14 @@ const ShopScreen = () => {
     { key: 'item', title: '아이템' },
     { key: 'charge', title: '충전소' },
   ]);
+
+  // initialTab 파라미터에 따라 초기 탭 설정
+  useEffect(() => {
+    if (route.params?.initialTab) {
+      const tabIndex = route.params.initialTab === 'charge' ? 1 : 0;
+      setIndex(tabIndex);
+    }
+  }, [route.params?.initialTab]);
   
   // 아이템 카테고리 탭 메뉴
   const [selectedItemTab, setSelectedItemTab] = useState(0);
@@ -87,34 +95,27 @@ const ShopScreen = () => {
     setSelectedItemTab(tabIndex);
   };
 
-  const handleItemPress = (item: RoomItemLike) => {
-    const itemIsOwned = isOwned(item.id);
-    navigation.navigate('ShopItemDetailScreen', { itemId: item.id, isCollection: false });
-    if (itemIsOwned) {
-      // 이미 보유한 아이템
-
-      console.log('이미 보유한 아이템:', item.title);
-    } else {
-      // 구매 가능한 아이템
-      console.log('구매 시도:', item.title, item.price);
-      // TODO: 구매 로직 구현
-    }
-  };
-
-  const handleCollectionItemPress = (collection: RoomItemLike) => {
-    navigation.navigate('ShopItemDetailScreen', { itemId: collection.id, isCollection: true });
-  };
 
   const handleExcludeOwnedItemsToggle = () => {
     setExcludeOwnedItems(!excludeOwnedItems);
     // TODO: 보유중 제외 기능 구현
   };
 
-  const toggleSortOpen = () => setSortOpen(v => !v);
-  const handleSelectSort = (key: SortKey) => {
-    setSortKey(key);
-    setSortOpen(false);
+  const toggleSortBottomSheet = () => {
+    setSortOption(sortKey); // 바텀시트 열 때 현재 정렬 기준으로 초기화
+    sortBottomSheetRef.current?.expand();
   };
+
+  const [sortOption, setSortOption] = useState<SortKey>(sortKey);
+
+  const handleSelectSortOption = useCallback((option: SortKey) => {
+    setSortOption(option);
+  }, []);
+
+  const handleApplySort = useCallback(() => {
+    setSortKey(sortOption);
+    sortBottomSheetRef.current?.close();
+  }, [sortOption]);
 
   const sortLabel = useMemo(() => {
     switch (sortKey) {
@@ -123,27 +124,50 @@ const ShopScreen = () => {
       case 'LATEST':
         return '최신순';
       case 'PRICE_DESC':
-        return '가격높은순';
+        return '높은순';
       case 'PRICE_ASC':
       default:
-        return '가격낮은순';
+        return '낮은순';
     }
   }, [sortKey]);
-
-  // 품절 아이템 목록은 서버 isSoldOut으로 초기화하고,
-  // 테스트 토글 시에만 outOfStockItems를 사용합니다.
-
-  // 품절 아이템 체크 함수
-  const isOutOfStock = (itemId: number) => {
-    const found = items.find(i => i.id === itemId);
-    if (found?.isSoldOut) return true;
-    return outOfStockItems.includes(itemId);
-  };
 
   // 보유 아이템 체크 함수는 스토어에서 가져옴
 
   // 서비스에서 불러온 아이템 목록 (서버 스펙 → 화면용으로 매핑)
   const [items, setItems] = useState<RoomItemLike[]>([]);
+  
+  // isOwned 함수 - 서버에서 받은 isOwned 정보를 우선 사용
+  const isOwned = useCallback((itemId: number) => {
+    const item = items.find(i => i.id === itemId);
+    return item?.isOwned ?? ownedItemsSet.has(itemId);
+  }, [items, ownedItemsSet]);
+
+  const handleItemPress = useCallback((item: RoomItemLike) => {
+    const itemIsOwned = isOwned(item.id);
+    navigation.navigate('ShopItemDetailScreen', { itemId: item.id, isCollection: false });
+    if (itemIsOwned) {
+      // 이미 보유한 아이템
+      console.log('이미 보유한 아이템:', item.title);
+    } else {
+      // 구매 가능한 아이템
+      console.log('구매 시도:', item.title, item.price);
+      // TODO: 구매 로직 구현
+    }
+  }, [isOwned, navigation]);
+
+  const handleCollectionItemPress = useCallback((collection: RoomItemLike) => {
+    navigation.navigate('ShopItemDetailScreen', { itemId: collection.id, isCollection: true });
+  }, [navigation]);
+  
+  // 품절 아이템 목록은 서버 isSoldOut으로 초기화하고,
+  // 테스트 토글 시에만 outOfStockItems를 사용합니다.
+
+  // 품절 아이템 체크 함수
+  const isOutOfStock = useCallback((itemId: number) => {
+    const found = items.find(i => i.id === itemId);
+    if (found?.isSoldOut) return true;
+    return outOfStockItems.includes(itemId);
+  }, [items, outOfStockItems]);
   // 컬렉션 데이터 (화면 마운트 시 선로딩)
   const [collections, setCollections] = useState<CollectionSummary[]>([]);
   const [collectionsLoading, setCollectionsLoading] = useState(false);
@@ -159,6 +183,7 @@ const ShopScreen = () => {
           image: typeof it.imageUrl === 'string' ? null : (it.imageUrl as any) ?? null,
           price: it.price,
           isSoldOut: it.isSoldOut,
+          isOwned: it.isOwned, // 서버에서 받은 isOwned 정보 사용
           type:
             it.itemType === 'ACCESSORY' ? '악세사리' :
             it.itemType === 'HAT' ? '모자' :
@@ -240,7 +265,7 @@ const ShopScreen = () => {
       }));
     }
     if (excludeOwnedItems) {
-      list = list.filter(item => !isOwned(item.id));
+      list = list.filter(item => !item.isOwned);
     }
     const sorted = [...list];
     switch (sortKey) {
@@ -261,7 +286,7 @@ const ShopScreen = () => {
         break;
     }
     return sorted;
-  }, [items, selectedItemTab, excludeOwnedItems, ownedItems, sortKey, collections]);
+  }, [items, selectedItemTab, excludeOwnedItems, sortKey, collections]);
   
 
   const renderItemTab = () => {
@@ -297,32 +322,16 @@ const ShopScreen = () => {
                 )}
               </TouchableOpacity> */}
               <View style={{ position: 'relative' }}>
-                <TouchableOpacity style={styles.dropdownSort} onPress={toggleSortOpen}>
+                <TouchableOpacity style={styles.dropdownSort} onPress={toggleSortBottomSheet}>
                   <Text style={styles.dropdownSortText}>{sortLabel}</Text>
                   <ArrowDropDownIcon color={colors.grayScale800} />
                 </TouchableOpacity>
-                {sortOpen && (
-                  <View style={styles.dropdownMenu}>
-                    <TouchableOpacity style={styles.dropdownItem} onPress={() => handleSelectSort('POPULAR')}>
-                      <Text style={styles.dropdownItemText}>구매순</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.dropdownItem} onPress={() => handleSelectSort('LATEST')}>
-                      <Text style={styles.dropdownItemText}>최신순</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.dropdownItem} onPress={() => handleSelectSort('PRICE_DESC')}>
-                      <Text style={styles.dropdownItemText}>가격높은순</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.dropdownItem} onPress={() => handleSelectSort('PRICE_ASC')}>
-                      <Text style={styles.dropdownItemText}>가격낮은순</Text>
-                    </TouchableOpacity>
-                  </View>
-                )}
               </View>
             </View>
             {itemTabMenu[selectedItemTab].title === '컬렉션' ? (
               <View style={{ marginTop: 10 }}>
                 {collectionsLoading ? (
-                  <Text style={styles.dropdownItemText}>컬렉션 불러오는 중...</Text>
+                  <Text style={styles.dropdownSortText}>컬렉션 불러오는 중...</Text>
                 ) : (
                   <ItemList
                     filteredItems={filteredItems}
@@ -383,6 +392,60 @@ const ShopScreen = () => {
           />
         )}
       />
+      
+      {/* 정렬 옵션 바텀시트 */}
+      <CustomBottomSheet
+        bottomSheetModalRef={sortBottomSheetRef}
+        hasXButton
+      >
+        <View style={styles.sortBottomSheetContent}>
+          <View style={styles.sortOptionContainer}>
+            <TouchableOpacity 
+              style={[styles.sortOption, sortOption === 'POPULAR' && styles.sortOptionSelected]} 
+              onPress={() => handleSelectSortOption('POPULAR')}
+            >
+              <Text style={[styles.sortOptionText, sortOption === 'POPULAR' && styles.sortOptionTextSelected]}>
+                구매순
+              </Text>
+            </TouchableOpacity>
+          
+            <TouchableOpacity 
+              style={[styles.sortOption, sortOption === 'LATEST' && styles.sortOptionSelected]} 
+              onPress={() => handleSelectSortOption('LATEST')}
+            >
+              <Text style={[styles.sortOptionText, sortOption === 'LATEST' && styles.sortOptionTextSelected]}>
+                최신순
+              </Text>
+            </TouchableOpacity>
+          
+            <TouchableOpacity 
+              style={[styles.sortOption, sortOption === 'PRICE_DESC' && styles.sortOptionSelected]} 
+              onPress={() => handleSelectSortOption('PRICE_DESC')}
+            >
+              <Text style={[styles.sortOptionText, sortOption === 'PRICE_DESC' && styles.sortOptionTextSelected]}>
+                높은순
+              </Text>
+            </TouchableOpacity>
+          
+            <TouchableOpacity 
+              style={[styles.sortOption, sortOption === 'PRICE_ASC' && styles.sortOptionSelected]} 
+              onPress={() => handleSelectSortOption('PRICE_ASC')}
+            >
+              <Text style={[styles.sortOptionText, sortOption === 'PRICE_ASC' && styles.sortOptionTextSelected]}>
+                낮은순
+              </Text>
+            </TouchableOpacity>
+          </View>
+          <Button
+            title='적용하기'
+            size='large'
+            variant='active'
+            onPress={handleApplySort}
+            style={{width: '100%', marginTop: 42,}}
+            />
+        </View>
+        
+      </CustomBottomSheet>
     </SafeAreaView>
   );
 };
@@ -451,33 +514,6 @@ const styles = StyleSheet.create({
     ...typography.body5,
     color: colors.grayScale900,
   },
-  dropdownMenu: {
-    position: 'absolute',
-    top: 28,
-    right: 0,
-    backgroundColor: colors.white,
-    borderRadius: radius.r12,
-    paddingVertical: 6,
-    paddingHorizontal: 6,
-    borderWidth: 1,
-    borderColor: colors.grayScale100,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-    minWidth: 140,
-    zIndex: 1000,
-  },
-  dropdownItem: {
-    paddingVertical: 8,
-    paddingHorizontal: 10,
-    borderRadius: radius.r8,
-  },
-  dropdownItemText: {
-    ...typography.body5,
-    color: colors.grayScale900,
-  },
   collectionCard: {
     width: '48%',
     borderRadius: radius.r12,
@@ -517,6 +553,30 @@ const styles = StyleSheet.create({
   collectionOwned: {
     ...typography.caption1,
     color: colors.primary300,
+  },
+  // 정렬 바텀시트 스타일
+  sortBottomSheetContent: {
+    marginBottom: 50,
+    paddingHorizontal: 20,
+  },
+  sortOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: 58,
+    borderRadius: radius.r8,
+  },
+  sortOptionSelected: {
+    backgroundColor: colors.primary50,
+  },
+  sortOptionText: {
+    ...typography.heading7,
+    color: colors.grayScale900,
+  },
+  sortOptionTextSelected: {
+    color: colors.primary400,
+  },
+  sortOptionContainer: {
   },
 });
 

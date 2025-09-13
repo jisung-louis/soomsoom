@@ -14,6 +14,7 @@ export type RoomItemLike = {
   price: number;
   type: string;
   isSoldOut?: boolean;
+  isOwned?: boolean; // 서버에서 받은 보유 상태
   isCollection?: boolean;
   // 컬렉션 전용 필드
   phrase?: string;
@@ -288,6 +289,29 @@ const styles = StyleSheet.create({
   },
 });
 
-export default React.memo(ItemList);
+export default React.memo(ItemList, (prevProps, nextProps) => {
+  // items 배열이 실제로 변경되었는지 확인
+  if (prevProps.filteredItems.length !== nextProps.filteredItems.length) {
+    return false;
+  }
+  
+  // 각 아이템의 id와 isOwned 상태만 비교
+  for (let i = 0; i < prevProps.filteredItems.length; i++) {
+    const prevItem = prevProps.filteredItems[i];
+    const nextItem = nextProps.filteredItems[i];
+    
+    if (prevItem.id !== nextItem.id || 
+        prevItem.isOwned !== nextItem.isOwned ||
+        prevItem.isSoldOut !== nextItem.isSoldOut) {
+      return false;
+    }
+  }
+  
+  // 함수 props는 참조 비교 (useCallback으로 최적화되어 있음)
+  return prevProps.onItemPress === nextProps.onItemPress &&
+         prevProps.isOutOfStock === nextProps.isOutOfStock &&
+         prevProps.isOwned === nextProps.isOwned &&
+         prevProps.isCollection === nextProps.isCollection;
+});
 
 

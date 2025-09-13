@@ -31,7 +31,7 @@ const PurchaseItemList = ({ item, isChecked, onCheckPress, onXPress }: PurchaseI
                 <View style={styles.itemInfoContainer}>
                     <View style={styles.itemImageContainer}>
                         {item.image ? (
-                            <Image source={item.image as any} style={styles.itemImage} />
+                            <Image source={item.image as any} style={styles.itemImage} resizeMode='contain' />
                         ) : null}
                     </View>
                     <View style={styles.itemInfo}>

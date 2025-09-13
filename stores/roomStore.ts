@@ -8,7 +8,7 @@ interface RoomState {
   // 소유 아이템 관리
   ownedItems: number[];
   
-  // 홈화면 배치 아이템 관리 (카테고리별) - 각 카테고리마다 0~1개만 배치 가능
+  // 홈화면 배치 아이템 관리 (카테고리별) - 각 카테고리마다 0~1개만 배치 가능 (frame은 2개 배치 가능)
   placedItems: PlacedItems;
   
   // 현재 선택된 아이템들 (임시 선택용)

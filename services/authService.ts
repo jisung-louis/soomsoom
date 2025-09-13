@@ -176,6 +176,7 @@ export async function loginWithApple(): Promise<{ provider: SocialProvider; prov
   }
 }
 
+//모의용
 export async function postSocialLogin(params: {
   provider: SocialProvider;
   providerToken: string;
@@ -249,6 +250,91 @@ export async function postSocialLogin(params: {
     }
     
     throw new Error(message);
+  }
+}
+
+// =============================
+// 실제 서버 소셜 로그인 교환 API (명세 반영)
+// =============================
+
+export type SocialProviderServer = 'GOOGLE' | 'APPLE';
+
+export interface SocialLoginExchangeRequest {
+  provider: SocialProviderServer; // 'GOOGLE' | 'APPLE'
+  providerToken: string; // 소셜 제공자 발급 토큰 (idToken 등)
+  deviceId: string; // 현재 기기 고유 식별자
+}
+
+export interface SocialLoginExchangeResponse {
+  accessToken: string;
+  refreshToken: string;
+}
+
+/**
+ * 소셜 로그인 교환 (서버 명세: POST /auth/social)
+ * - Body: { provider, providerToken, deviceId }
+ * - Response: { accessToken, refreshToken }
+ */
+export async function postSocialLoginServer(
+  payload: SocialLoginExchangeRequest,
+): Promise<SocialLoginExchangeResponse> {
+  const url = `${API_BASE_URL}/auth/social`; // use environment base URL (https in prod)
+  const { provider, providerToken, deviceId } = payload;
+
+  if (__DEV__) {
+    console.log('🔐 postSocialLoginServer payload', {
+      provider,
+      deviceId,
+      providerTokenPreview: providerToken?.slice(0, 12) + '…',
+      apiBase: API_BASE_URL,
+      url,
+    });
+  }
+
+  try {
+    const res = await axios.post(
+      url,
+      { provider, providerToken, deviceId },
+      {
+        headers: { 'Content-Type': 'application/json' },
+        timeout: 15000,
+      },
+    );
+
+    if (__DEV__) {
+      console.log('✅ social exchange success', {
+        hasAccess: !!res.data?.accessToken,
+        hasRefresh: !!res.data?.refreshToken,
+        status: res.status,
+      });
+    }
+
+    return res.data as SocialLoginExchangeResponse;
+  } catch (error: any) {
+    // AxiosError safe logging
+    const status = error?.response?.status;
+    const data = error?.response?.data;
+    const message = error?.message;
+
+    console.error('❌ social exchange failed', {
+      status,
+      data,
+      message,
+      url,
+      provider,
+    });
+
+    // rethrow with actionable message
+    if (!error?.response) {
+      throw new Error('네트워크 연결을 확인해주세요. (서버 응답 없음)');
+    }
+    if (status === 403) {
+      throw new Error('토큰 검증에 실패했어요. 올바른 소셜 토큰인지 확인해주세요.');
+    }
+    if (status === 400) {
+      throw new Error('요청 형식이 올바르지 않아요. (provider/providerToken/deviceId 확인)');
+    }
+    throw error;
   }
 }
 

@@ -2,6 +2,7 @@ import { apiClient } from './apiClient';
 import { roomItemList } from '../data/roomItemData';
 import { useCurrencyStore } from '../stores/currencyStore';
 import { useRoomStore } from '../stores/roomStore';
+import { useCartStore } from '../stores/cartStore';
 
 // 요청 타입 (신규 명세)
 export type PurchaseItemsRequest = {
@@ -201,8 +202,27 @@ export interface CartResponse {
 }
 
 export async function getCart(): Promise<CartResponse> {
-  const res = await apiClient.get<CartResponse>('/cart');
-  return res;
+  if (__DEV__) {
+    // Dev 환경: Zustand store에서 장바구니 조회
+    console.log('🛒 [DEV] 장바구니 조회 (Zustand store)');
+    
+    const { items, totalPrice } = useCartStore.getState();
+    
+    console.log('🛒 [DEV] 현재 장바구니 상태:', {
+      itemsCount: items.length,
+      totalPrice,
+      itemIds: items.map(item => item.id)
+    });
+    
+    return {
+      items,
+      totalPrice
+    };
+  } else {
+    // Prod 환경: 실제 서버 API 호출
+    const res = await apiClient.get<CartResponse>('/cart');
+    return res;
+  }
 }
 
 // =====================
@@ -215,8 +235,66 @@ export interface AddCartItemsRequest {
 }
 
 export async function addItemsToCart(body: AddCartItemsRequest): Promise<CartResponse> {
-  const res = await apiClient.post<CartResponse>('/cart/items', body);
-  return res;
+  if (__DEV__) {
+    // Dev 환경: Zustand store에 아이템 추가
+    console.log('🛒 [DEV] 장바구니에 아이템 추가 (Zustand store):', body);
+    
+    const { itemIds } = body;
+    const itemsToAdd = roomItemList.filter(item => itemIds.includes(item.id));
+    
+    // PurchasedItem 형태로 변환
+    const purchasedItems: PurchasedItem[] = itemsToAdd.map(item => ({
+      id: item.id,
+      name: item.title,
+      description: Array.isArray(item.description) 
+        ? item.description.join('\n') 
+        : (item.description || ''),
+      phrase: null,
+      itemType: item.type === '악세사리' ? 'ACCESSORY' :
+                item.type === '모자' ? 'HAT' :
+                item.type === '배경' ? 'BACKGROUND' :
+                item.type === '러그' ? 'FLOOR' :
+                item.type === '선반' ? 'SHELF' :
+                'FRAME',
+      equipSlot: item.positionType === 'eyewear' ? 'EYEWEAR' :
+                 item.positionType === 'hat' ? 'HAT' :
+                 item.positionType === 'background' ? 'BACKGROUND' :
+                 item.positionType === 'frame' ? 'FRAME' :
+                 item.positionType === 'floor' ? 'FLOOR' :
+                 'SHELF',
+      acquisitionType: 'PURCHASE' as AcquisitionType,
+      price: item.price || 0,
+      imageUrl: typeof item.image === 'string' ? item.image : null,
+      lottieUrl: item.lottieJson || null,
+      isSoldOut: false,
+      isOwned: false,
+      isEquipped: false,
+      createdAt: new Date().toISOString(),
+      modifiedAt: new Date().toISOString(),
+      deletedAt: null,
+    }));
+    
+    // Zustand store에 아이템 추가
+    useCartStore.getState().addItems(purchasedItems);
+    
+    // 현재 장바구니 상태 반환
+    const { items, totalPrice } = useCartStore.getState();
+    
+    console.log('✅ [DEV] 장바구니 추가 완료:', {
+      addedItems: purchasedItems.length,
+      totalItems: items.length,
+      totalPrice
+    });
+    
+    return {
+      items,
+      totalPrice
+    };
+  } else {
+    // Prod 환경: 실제 서버 API 호출
+    const res = await apiClient.post<CartResponse>('/cart/items', body);
+    return res;
+  }
 }
 
 // =====================
@@ -225,8 +303,75 @@ export async function addItemsToCart(body: AddCartItemsRequest): Promise<CartRes
 // =====================
 
 export async function removeItemFromCart(itemId: number): Promise<CartResponse> {
-  const res = await apiClient.delete<CartResponse>(`/cart/items/${itemId}`);
-  return res;
+  if (__DEV__) {
+    // Dev 환경: Zustand store에서 아이템 제거
+    console.log('🛒 [DEV] 장바구니에서 아이템 제거 (Zustand store):', itemId);
+    
+    // Zustand store에서 아이템 제거
+    useCartStore.getState().removeItem(itemId);
+    
+    // 현재 장바구니 상태 반환
+    const { items, totalPrice } = useCartStore.getState();
+    
+    console.log('✅ [DEV] 장바구니에서 제거 완료:', {
+      removedItemId: itemId,
+      remainingItems: items.length,
+      totalPrice
+    });
+    
+    return {
+      items,
+      totalPrice
+    };
+  } else {
+    // Prod 환경: 실제 서버 API 호출
+    const res = await apiClient.delete<CartResponse>(`/cart/items/${itemId}`);
+    return res;
+  }
+}
+
+// =====================
+// 장바구니 전체 초기화
+// =====================
+
+export async function clearAllCartItems(): Promise<CartResponse> {
+  if (__DEV__) {
+    // Dev 환경: Zustand store에서 장바구니 전체 초기화
+    console.log('🛒 [DEV] 장바구니 전체 초기화 (Zustand store)');
+    
+    // Zustand store에서 장바구니 초기화
+    useCartStore.getState().clearCart();
+    
+    console.log('✅ [DEV] 장바구니 전체 초기화 완료');
+    
+    return {
+      items: [],
+      totalPrice: 0
+    };
+  } else {
+    // Prod 환경: 현재 장바구니의 모든 아이템을 조회 후 하나씩 제거
+    console.log('🛒 [PROD] 장바구니 전체 초기화 (서버 API)');
+    
+    // 1. 현재 장바구니 조회
+    const cartData = await getCart();
+    
+    // 2. 모든 아이템을 하나씩 제거
+    const removePromises = cartData.items.map(item => 
+      apiClient.delete<CartResponse>(`/cart/items/${item.id}`)
+    );
+    
+    // 3. 모든 제거 요청을 병렬로 실행
+    await Promise.all(removePromises);
+    
+    console.log('✅ [PROD] 장바구니 전체 초기화 완료:', {
+      removedItems: cartData.items.length
+    });
+    
+    return {
+      items: [],
+      totalPrice: 0
+    };
+  }
 }
 
 // =====================
@@ -238,7 +383,51 @@ export interface PurchaseCartRequest {
   expectedTotalPrice: number;
 }
 
-export async function purchaseCart(body: PurchaseCartRequest): Promise<CartResponse> {
-  const res = await apiClient.post<CartResponse>('/purchase/cart', body);
-  return res;
+export async function purchaseCart(body: PurchaseCartRequest): Promise<PurchaseItemsResponse> {
+  if (__DEV__) {
+    // Dev 환경: Zustand store에서 장바구니 구매 시뮬레이션
+    console.log('🛒 [DEV] 장바구니 구매 시뮬레이션 (Zustand store):', body);
+    
+    const { expectedTotalPrice } = body;
+    const currentHeartPoints = useCurrencyStore.getState().heartPoints;
+    const { items: cartItems, totalPrice } = useCartStore.getState();
+    
+    // 가격 검증
+    if (totalPrice !== expectedTotalPrice) {
+      throw new Error(`가격 불일치: 예상 ${expectedTotalPrice}, 실제 ${totalPrice}`);
+    }
+    
+    // 하트 포인트 부족 체크
+    if (currentHeartPoints < expectedTotalPrice) {
+      throw new Error(`하트 포인트 부족: 현재 ${currentHeartPoints}, 필요 ${expectedTotalPrice}`);
+    }
+    
+    // 하트 포인트 차감
+    const remainingPoints = currentHeartPoints - expectedTotalPrice;
+    useCurrencyStore.setState({ heartPoints: remainingPoints });
+    
+    // 구매한 아이템들을 소유 아이템에 추가
+    const { addOwnedItem } = useRoomStore.getState();
+    cartItems.forEach(item => {
+      addOwnedItem(item.id);
+    });
+    
+    // 장바구니 초기화
+    useCartStore.getState().clearCart();
+    
+    console.log('✅ [DEV] 장바구니 구매 완료:', {
+      purchasedItems: cartItems.length,
+      expectedTotalPrice,
+      remainingPoints
+    });
+    
+    return {
+      purchasedItems: cartItems,
+      remainingPoints
+    };
+  } else {
+    // Prod 환경: 실제 서버 API 호출
+    const res = await apiClient.post<PurchaseItemsResponse>('/purchase/cart', body);
+    return res;
+  }
 }

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, Dimensions, TouchableOpacity, Platform } from 'react-native';
 import { useToast } from '../../contexts/ToastContext';
 import { useAuthStore } from '../../stores/authStore';
-import { getPushTokenAsync, loginWithApple, loginWithGoogle, postSocialLogin, persistUser } from '../../services/authService';
+import { getPushTokenAsync, loginWithApple, loginWithGoogle, postSocialLogin, persistUser, postSocialLoginServer } from '../../services/authService';
 import * as Device from 'expo-device';
 import * as Localization from 'expo-localization';
 import GoogleIcon from '../../assets/images/onboarding/google_icon.svg';
@@ -56,6 +56,23 @@ export const SocialLoginButtons: React.FC<Props> = ({ onSuccess }) => {
       const timezone = Localization.getCalendars()[0]?.timeZone || 'UTC';
       const language = Localization.getLocales()[0]?.languageTag || 'ko-KR';
         
+      // // 우선 실제 서버 교환 API 시도
+      // try {
+      //   const deviceId = `${Device.modelName || 'Unknown'}-${Device.osBuildId || 'dev'}`;
+      //   const serverRes = await postSocialLoginServer({
+      //     provider: 'GOOGLE',
+      //     providerToken,
+      //     deviceId,
+      //   });
+      //   console.log('✅ 서버 소셜 로그인 교환 성공:', serverRes.refreshToken);
+      //   showToast({ message: '서버 연결 성공. refreshToken 수신됨.' });
+      //   onSuccess?.();
+      //   return;
+      // } catch (serverErr) {
+      //   console.warn('실서버 교환 실패. 모의 API로 폴백합니다:', serverErr);
+      // }
+
+      // // 폴백: 기존 모의 API
       const res = await postSocialLogin({ 
         provider, 
         providerToken, 
@@ -105,6 +122,23 @@ export const SocialLoginButtons: React.FC<Props> = ({ onSuccess }) => {
       const timezone = Localization.getCalendars()[0]?.timeZone || 'UTC';
       const language = Localization.getLocales()[0]?.languageTag || 'ko-KR';
         
+      // // 우선 실제 서버 교환 API 시도
+      // try {
+      //   const deviceId = `${Device.modelName || 'Unknown'}-${Device.osBuildId || 'dev'}`;
+      //   const serverRes = await postSocialLoginServer({
+      //     provider: 'APPLE',
+      //     providerToken,
+      //     deviceId,
+      //   });
+      //   console.log('✅ 서버 소셜 로그인 교환 성공:', serverRes.refreshToken);
+      //   showToast({ message: '서버 연결 성공. refreshToken 수신됨.' });
+      //   onSuccess?.();
+      //   return;
+      // } catch (serverErr) {
+      //   console.warn('실서버 교환 실패. 모의 API로 폴백합니다:', serverErr);
+      // }
+
+      // // 폴백: 기존 모의 API
       const res = await postSocialLogin({ 
         provider, 
         providerToken, 

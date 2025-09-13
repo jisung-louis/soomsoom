@@ -5,7 +5,7 @@ export const mockCollectionData: CollectionDetail[] = [
     {
         id: 1,
         name: "컬렉션 데이터 모크",
-        description: "당신의 공간을 아늑함으로 채워보세요. 작은 소품들이 모여 큰 행복을 만듭니다.",
+        description: ["당신의 공간을 아늑함으로 채워보세요. 작은 소품들이 모여 큰 행복을 만듭니다."],
         phrase: "이곳은 당신만의 안식처.",
         imageUrl: require('../assets/images/backgrounds/chuseok.png'),  
         lottieUrl: null,
@@ -60,7 +60,7 @@ export const mockCollectionData: CollectionDetail[] = [
     {
         id: 2,
         name: "모자 컬렉션",
-        description: "다양한 모자로 나만의 개성을 표현해보세요. 매일 다른 모습으로 변신할 수 있어요.",
+        description: ["다양한 모자로 나만의 개성을 표현해보세요. 매일 다른 모습으로 변신할 수 있어요."],
         phrase: "오늘은 어떤 모자일까?",
         imageUrl: "",
         lottieUrl: null,
@@ -133,7 +133,7 @@ export const mockCollectionData: CollectionDetail[] = [
     {
         id: 3,
         name: "배경 컬렉션",
-        description: "계절과 분위기에 맞는 다양한 배경으로 나만의 공간을 꾸며보세요.",
+        description: ["계절과 분위기에 맞는 다양한 배경으로 나만의 공간을 꾸며보세요."] ,
         phrase: "어디서든 편안한 나만의 공간",
         imageUrl: "",
         lottieUrl: null,
