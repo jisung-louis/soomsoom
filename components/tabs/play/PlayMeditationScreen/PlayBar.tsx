@@ -21,9 +21,28 @@ type PlayBarProps = {
   isFavorite: boolean;
   isFavoriteLoading: boolean;
   onEnd: () => void;
+  onPositionChange?: (position: number) => void;
+  onPlayStart?: () => void;
+  onPlayPause?: () => void;
+  onPlayTimeUpdate?: (playTime: number) => void;
+  initialPosition?: number;
+  onPlayerReady?: (playerControls: { pause: () => void; stop: () => void }) => void;
 };
 
-const PlayBar = ({style, content, handleToggleFavorite, isFavorite, isFavoriteLoading, onEnd}: PlayBarProps) => {
+const PlayBar = ({
+  style, 
+  content, 
+  handleToggleFavorite, 
+  isFavorite, 
+  isFavoriteLoading, 
+  onEnd,
+  onPositionChange,
+  onPlayStart,
+  onPlayPause,
+  onPlayTimeUpdate,
+  initialPosition = 0,
+  onPlayerReady
+}: PlayBarProps) => {
   // 오디오 플레이어 훅 사용
   const [isRepeat, setIsRepeat] = React.useState(false);
   const isRepeatRef = React.useRef(isRepeat);
@@ -31,6 +50,10 @@ const PlayBar = ({style, content, handleToggleFavorite, isFavorite, isFavoriteLo
     console.log('🎧 isRepeat 상태:', isRepeat);
     isRepeatRef.current = isRepeat;
   }, [isRepeat]);
+
+  // 실제 재생 시간 추적
+  const playTimeRef = React.useRef(0);
+  const playTimeIntervalRef = React.useRef<NodeJS.Timeout | null>(null);
 
   const {
     isPlaying, isLoading, duration, position,
@@ -48,6 +71,92 @@ const PlayBar = ({style, content, handleToggleFavorite, isFavorite, isFavoriteLo
       }
     }
   });
+
+  // 플레이어 제어 함수들을 외부로 노출
+  React.useEffect(() => {
+    if (onPlayerReady) {
+      onPlayerReady({
+        pause: pause,
+        stop: pause, // stop이 없으므로 pause 사용
+      });
+    }
+  }, [onPlayerReady, pause]);
+
+  // position 변경 감지하여 콜백 호출
+  React.useEffect(() => {
+    if (onPositionChange) {
+      onPositionChange(position);
+    }
+  }, [position, onPositionChange]);
+
+  // 재생 시간 추적 시작/중지
+  React.useEffect(() => {
+    if (isPlaying) {
+      // 재생 시작 시 1초마다 재생 시간 업데이트
+      playTimeIntervalRef.current = setInterval(() => {
+        playTimeRef.current += 1;
+        if (onPlayTimeUpdate) {
+          onPlayTimeUpdate(playTimeRef.current);
+        }
+        console.log(`⏱️ 실제 재생 시간: ${playTimeRef.current}초`);
+      }, 1000);
+    } else {
+      // 일시정지 시 재생 시간 추적 중지
+      if (playTimeIntervalRef.current) {
+        clearInterval(playTimeIntervalRef.current);
+        playTimeIntervalRef.current = null;
+      }
+    }
+
+    return () => {
+      if (playTimeIntervalRef.current) {
+        clearInterval(playTimeIntervalRef.current);
+        playTimeIntervalRef.current = null;
+      }
+    };
+  }, [isPlaying, onPlayTimeUpdate]);
+
+  // 재생 상태 변경 감지하여 콜백 호출
+  React.useEffect(() => {
+    if (isPlaying && onPlayStart) {
+      onPlayStart();
+    } else if (!isPlaying && onPlayPause) {
+      onPlayPause();
+    }
+  }, [isPlaying, onPlayStart, onPlayPause]);
+
+  // 이어듣기 위치를 저장할 ref
+  const pendingInitialPosition = React.useRef<number | null>(null);
+
+  // initialPosition이 설정되면 ref에 저장
+  React.useEffect(() => {
+    if (initialPosition > 0) {
+      pendingInitialPosition.current = initialPosition;
+      console.log(`🎯 이어듣기 위치 저장: ${initialPosition}초`);
+    }
+  }, [initialPosition]);
+
+  // duration이 로드되면 저장된 이어듣기 위치 적용
+  React.useEffect(() => {
+    if (pendingInitialPosition.current && duration > 0) {
+      const position = pendingInitialPosition.current;
+      if (position < duration / 1000) {
+        console.log(`🎯 이어듣기 위치 설정: ${position}초 (전체: ${duration / 1000}초)`);
+        // 약간의 지연을 두고 seekTo 호출 (오디오가 완전히 로드된 후)
+        const timer = setTimeout(() => {
+          seekTo(position * 1000); // 초를 밀리초로 변환
+          pendingInitialPosition.current = null; // 적용 완료 후 초기화
+        }, 500);
+        
+        return () => clearTimeout(timer);
+      } else {
+        console.log(`🎯 이어듣기 위치가 전체 길이보다 큼: ${position}초 (전체: ${duration / 1000}초) - 처음부터 재생`);
+        pendingInitialPosition.current = null; // 무효한 위치이므로 초기화
+      }
+    } else if (initialPosition === 0) {
+      console.log(`🎯 처음부터 재생 시작`);
+    }
+  }, [duration, seekTo]);
 
   const [barWidth, setBarWidth] = React.useState(0);
   

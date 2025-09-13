@@ -25,7 +25,7 @@ import { Button, ButtonRef } from '../../../components/common/buttons/Button';
 import { ButtonSmall } from '../../../components/common/buttons/ButtonSmall';
 import { useToast } from '../../../contexts/ToastContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
+import { useActivityHistoryStore } from '../../../stores/activityHistoryStore';
 import CatBasic from '../../../assets/images/play/playBreathing/basic.svg';
 import CatHold from '../../../assets/images/play/playBreathing/hold.svg';
 import { useCartStore } from '../../../stores/cartStore';
@@ -493,6 +493,10 @@ const TestScreen = () => {
 
             <Text style={styles.infoLabel}>장바구니</Text>
             <Text style={styles.infoValue}>{JSON.stringify(useCartStore.getState())}</Text>
+            <Surface style={{marginVertical: 10, height: 1}} color={colors.grayScale300}/>
+
+            <Text style={styles.infoLabel}>액티비티 기록</Text>
+            <Text style={styles.infoValue}>{JSON.stringify(useActivityHistoryStore.getState())}</Text>
           </View>
         </View>
       </ScrollView>

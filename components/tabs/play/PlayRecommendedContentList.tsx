@@ -32,7 +32,7 @@ const PlayRecommendedContentList = ({ onRecommendedPress, recommendedActivityDat
         showsHorizontalScrollIndicator={false}
         keyExtractor={(_, index) => index.toString()}
         renderItem={({ item }) => (
-          <TouchableOpacity onPress={() => {navigation.navigate('PlayDetailScreen', { content: item as Activity })}}>
+          <TouchableOpacity onPress={() => {navigation.navigate('PlayDetailScreen', { activityId: item.id, content: item as Activity })}}>
             <View style={styles.card}>
               <Image source={item.thumbnailImageUrl || require('../../../assets/images/play/playFavoriteScreen/default_image_1.png')} style={styles.image} />
               <View style={styles.cardContentContainer}>

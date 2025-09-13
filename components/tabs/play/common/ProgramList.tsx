@@ -20,7 +20,7 @@ const ProgramList = ({ programData }: { programData: Activity[] }) => {
     <View style={styles.container}>
       {
         programData.map((item) => (
-          <TouchableOpacity key={item.id} style={styles.cardContainer} onPress={() => {navigation.navigate('PlayDetailScreen', { content: item })}}> 
+          <TouchableOpacity key={item.id} style={styles.cardContainer} onPress={() => {navigation.navigate('PlayDetailScreen', { activityId: item.id, content: item })}}> 
             <View style={styles.card}>
               <Image source={item.thumbnailImageUrl || require('../../../../assets/images/play/playFavoriteScreen/default_image_1.png')} style={styles.image} resizeMode='contain' />
               <View style={styles.cardContent}>

@@ -17,18 +17,66 @@ import { ButtonSmall } from "../../../components/common/buttons/ButtonSmall";
 import { convertSecondsToMinutesAndSeconds } from "../../../utils/timeUtils";
 import { BreathAction } from "../../../services/contentService";
 import { WINDOW_WIDTH } from "@gorhom/bottom-sheet";
+import { 
+  completeActivity, 
+  updateActivityProgress, 
+  getActivityProgress 
+} from "../../../services/activityLogService";
+import { useToast } from "../../../contexts/ToastContext";
 
 const PlayBreathContentScreen = ({route}: {route: RouteProp<PlayStackParamList, 'PlayBreathContentScreen'>}) => {
     const {content} = route.params;
     const [isPlaying, setIsPlaying] = useState(true);
     const navigation = useNavigation<StackNavigationProp<PlayStackParamList>>();       
     const insets = useSafeAreaInsets();
-    const handleBack = () => {
-        navigation.goBack();
+    const { showToast } = useToast();
+    
+    // 액티비티 진행상황 기록을 위한 상태
+    const [lastPosition, setLastPosition] = useState<number>(0);
+    const [isCompleted, setIsCompleted] = useState<boolean>(false);
+    const progressUpdateInterval = useRef<NodeJS.Timeout | null>(null);
+    const startTime = useRef<number>(Date.now());
+    const pauseTime = useRef<number>(0); // 일시정지된 총 시간
+    const lastPauseTime = useRef<number>(0); // 마지막 일시정지 시작 시간
+    
+    const handleBack = async () => {
+        try {
+            // 1. 진행상황 추적 중지
+            stopProgressTracking();
+            
+            // 2. 액티비티 진행 상황 기록 (실제 재생 시간 사용)
+            const actualPlayTime = getActualPlayTime();
+            await saveProgress(lastPosition, actualPlayTime);
+            
+            // 3. 두 스택 뒤(PlayDetailScreen)로 이동
+            navigation.pop(2);
+        } catch (error) {
+            console.error('뒤로가기 처리 중 오류:', error);
+            navigation.pop(2);
+        }
     }   
-    const goToResultScreen = () => {
-        navigation.navigate('PlayResultScreen');
+    
+    const goToResultScreen = async () => {
+        try {
+            // 1. 진행상황 추적 중지
+            stopProgressTracking();
+            
+            // 2. 액티비티 완료 처리
+            await completeActivity(content.id);
+            setIsCompleted(true);
+            
+            console.log(`🎉 호흡 액티비티 완료 처리: ${content.id}`);
+            navigation.navigate('PlayResultScreen');
+        } catch (error) {
+            console.error('호흡 액티비티 완료 처리 실패:', error);
+            showToast({
+                message: '완료 처리에 실패했어요.',
+                theme: 'dark',
+                iconType: 'brokenHeart',
+            });
+        }
     }
+    
     const [step, setStep] = useState(0);
     const [remainingTime, setRemainingTime] = useState(content.durationInSeconds);
 
@@ -41,6 +89,47 @@ const PlayBreathContentScreen = ({route}: {route: RouteProp<PlayStackParamList, 
     const elapsed = content.durationInSeconds - remainingTime; // 전체 경과 시간
     const currentStepTargetTime = current?.time ?? 0; // 현재 스텝 목표 시간(초)
     const currentStepRemaining = Math.max(0, currentStepTargetTime - elapsed); // 현재 스텝 남은 시간 (음수 방지)
+
+    // 실제 재생 시간 계산 함수 (일시정지 시간 제외)
+    const getActualPlayTime = () => {
+        const currentTime = Date.now();
+        const totalElapsed = Math.floor((currentTime - startTime.current) / 1000);
+        const actualPlayTime = Math.max(0, totalElapsed - pauseTime.current);
+        return actualPlayTime;
+    };
+
+    // 진행상황 기록 함수
+    const saveProgress = async (position: number, playTime: number) => {
+        try {
+            await updateActivityProgress(content.id, {
+                lastPlaybackPosition: position, //호흡에서는 lastPlaybackPosition이 의미 없음(이어듣기 기능이 없기 때문)
+                actualPlayTimeInSeconds: playTime,
+            });
+            console.log(`💾 호흡 진행상황 저장: ${position}초, 재생시간: ${playTime}초`);
+        } catch (error) {
+            console.error('호흡 진행상황 저장 실패:', error);
+        }
+    };
+
+    // 주기적으로 진행상황 저장 (30초마다)
+    const startProgressTracking = () => {
+        if (progressUpdateInterval.current) {
+            clearInterval(progressUpdateInterval.current);
+        }
+        
+        progressUpdateInterval.current = setInterval(() => {
+            const actualPlayTime = getActualPlayTime();
+            saveProgress(elapsed, actualPlayTime);
+        }, 30000); // 30초마다 저장
+    };
+
+    // 진행상황 추적 중지
+    const stopProgressTracking = () => {
+        if (progressUpdateInterval.current) {
+            clearInterval(progressUpdateInterval.current);
+            progressUpdateInterval.current = null;
+        }
+    };
 
     // 이전 단계로 거슬러 올라가며 직전 호흡 액션(INHALE/EXHALE)을 재귀적으로 찾는다.
     const findPreviousBreathAction = (idx: number): 'INHALE' | 'EXHALE' | null => {
@@ -69,6 +158,60 @@ const PlayBreathContentScreen = ({route}: {route: RouteProp<PlayStackParamList, 
         }
         return null; // 아무것도 못 찾으면 기본 SVG
     }, [action, step, content.timeline]);
+
+    // 컴포넌트 마운트 시 이전 진행상황 조회
+    useEffect(() => {
+        const loadPreviousProgress = async () => {
+            try {
+                const progress = await getActivityProgress(content.id);
+                if (progress) {
+                    console.log(`📖 호흡 이전 진행상황 로드: ${progress.progressSeconds}초`);
+                    setLastPosition(progress.progressSeconds);
+                } else {
+                    console.log(`📖 호흡 이전 진행상황 없음 - 처음부터 시작`);
+                    setLastPosition(0);
+                }
+            } catch (error) {
+                console.error('호흡 이전 진행상황 조회 실패:', error);
+                setLastPosition(0);
+            }
+        };
+
+        loadPreviousProgress();
+    }, [content.id]);
+
+    // 재생 상태에 따른 진행상황 추적 시작/중지
+    useEffect(() => {
+        if (isPlaying) {
+            const currentTime = Date.now();
+            
+            // 이전에 일시정지 상태였다면 일시정지 시간 누적
+            if (lastPauseTime.current > 0) {
+                pauseTime.current += Math.floor((currentTime - lastPauseTime.current) / 1000);
+                lastPauseTime.current = 0;
+            }
+            
+            startTime.current = currentTime;
+            startProgressTracking();
+            console.log(`▶️ 호흡 재생 시작 - 일시정지 시간: ${pauseTime.current}초`);
+        } else {
+            lastPauseTime.current = Date.now();
+            stopProgressTracking();
+            console.log(`⏸️ 호흡 재생 일시정지 - 현재 일시정지 시간: ${pauseTime.current}초`);
+        }
+    }, [isPlaying]);
+
+    // elapsed 값이 변경될 때마다 lastPosition 업데이트
+    useEffect(() => {
+        setLastPosition(elapsed);
+    }, [elapsed]);
+
+    // 컴포넌트 언마운트 시 정리
+    useEffect(() => {
+        return () => {
+            stopProgressTracking();
+        };
+    }, []);
 
     // 1초 타이머 (isPlaying일 때만 동작, 0 이하로 내려가지 않음)
     useEffect(() => {
@@ -110,7 +253,6 @@ const PlayBreathContentScreen = ({route}: {route: RouteProp<PlayStackParamList, 
 
     return (
         <>
-        {/* TODO: 중간에 사용자가 나갔을 때를 대비해서 액티비티 로그 저장을 위한 로직 추가 :  */}
             <SafeAreaView style={styles.container}>
                 <SubpageHeader title={content.title} onBack={handleBack} />
                 {/* TODO: 호흡 재생 및 텍스트 매핑 추가 */}

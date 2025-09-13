@@ -10,6 +10,7 @@ interface CurrencyState {
   // 액션들
   addHeartPoints: (amount: number) => void;
   spendHeartPoints: (amount: number) => boolean;
+  setHeartPoints: (amount: number) => void;
   
   // 보상 시스템
   giveDailyReward: () => void;
@@ -41,6 +42,10 @@ export const useCurrencyStore = create<CurrencyState>()(
           return true;
         }
         return false;
+      },
+      
+      setHeartPoints: (amount: number) => {
+        set({ heartPoints: amount });
       },
       
       // 보상 시스템

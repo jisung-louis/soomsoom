@@ -25,6 +25,8 @@ import { MathMission, MultiStepMission, validateMathAnswer } from './utils/mathM
 import { useAlarmStore } from './stores/alarmStore';
 import { setupMissionNotificationCategory } from './services/alarmNotificationService';
 import { NavigationContainerRef } from '@react-navigation/native';
+import { getUserPoints } from './services/userService';
+import { useCurrencyStore } from './stores/currencyStore';
 
 enableScreens(true);
 
@@ -48,9 +50,23 @@ const AppContent = () => {
   const { initOnAppStart } = useAchievementStore();
   const { loadOwnedItems } = useOwnedItems();
   const { updateMissionProgress, dismissAlarm } = useAlarmStore();
+  const { setHeartPoints } = useCurrencyStore();
   
   // Navigation ref for programmatic navigation
   const navigationRef = React.useRef<NavigationContainerRef<any>>(null);
+
+  // 하트포인트 동기화 함수
+  const syncHeartPoints = async () => {
+    try {
+      console.log('💰 서버에서 하트포인트 조회 중...');
+      const response = await getUserPoints();
+      setHeartPoints(response.points);
+      console.log(`✅ 하트포인트 동기화 완료: ${response.points}포인트`);
+    } catch (error) {
+      console.error('❌ 하트포인트 동기화 실패:', error);
+      // 에러가 발생해도 앱은 계속 실행 (로컬 데이터 유지)
+    }
+  };
 
   // 폰트 로딩
   useEffect(() => {
@@ -181,8 +197,9 @@ const AppContent = () => {
             console.log('✅ 자동 로그인 완료!');
             setAuthStatus('logged_in');
             
-            // 로그인 성공 후 소유 아이템 로드
+            // 로그인 성공 후 데이터 동기화
             loadOwnedItems();
+            syncHeartPoints();
           } else {
             // 토큰이 만료되었으면 갱신 시도
             console.log('🔄 토큰 만료, 갱신 시도...');
@@ -203,8 +220,9 @@ const AppContent = () => {
                 console.log('✅ 토큰 갱신 후 자동 로그인 완료!');
                 setAuthStatus('logged_in');
                 
-                // 토큰 갱신 후 소유 아이템 로드
+                // 토큰 갱신 후 데이터 동기화
                 loadOwnedItems();
+                syncHeartPoints();
               } else {
                 // 토큰 갱신 실패
                 console.log('❌ 토큰 갱신 실패, 로그아웃 처리');

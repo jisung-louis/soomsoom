@@ -1,3 +1,5 @@
+// ONLY FOR DEV
+
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { PurchasedItem } from '../services/purchaseService';

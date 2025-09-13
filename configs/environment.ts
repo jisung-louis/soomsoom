@@ -90,7 +90,7 @@ export const environmentConfig = {
 export const initialStates = {
   // 화폐 관련 초기 상태 (프리셋)
   currency: {
-    heartPoints: isDevelopment ? 1000 : 100, // 개발: 1000포인트, 실제: 100포인트
+    heartPoints: 0,
   },
 
   // 방 아이템 관련 초기 상태 (프리셋)

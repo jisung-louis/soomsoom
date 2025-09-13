@@ -30,7 +30,7 @@ const PlayShortActivityList = ({ onShortActivityPress, shortActivityData, isLoad
       keyExtractor={item => item.id.toString()}
       contentContainerStyle={{gap: 10}}
       renderItem={({ item }) => (
-        <TouchableOpacity onPress={() => {navigation.navigate('PlayDetailScreen', { content: item as Activity })}}>
+        <TouchableOpacity onPress={() => {navigation.navigate('PlayDetailScreen', { activityId: item.id, content: item as Activity })}}>
           <View style={styles.card}>
             <View style={styles.cardTitleContainer}>
               <Text style={styles.cardTitle} numberOfLines={2}>{titleLineBreaker(item.title)}</Text>

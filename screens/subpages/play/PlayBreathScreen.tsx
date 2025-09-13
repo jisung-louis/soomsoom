@@ -35,25 +35,22 @@ const PlayBreathScreen = ({route}: {route: RouteProp<PlayStackParamList, 'PlayBr
   
   useEffect(() => {
     if (step === 1) {
-      console.log('bounce start');
       triggerAnimation(); // 이제 이 시점에 애니메이션 실행
     }
   }, [step, triggerAnimation]);
 
   // Step 컴포넌트 핸들러들
   const handleStep0Finish = () => {
-    console.log('fish down animation finished');
     setStep(1);
   };
 
   const handleStep2Finish = () => {
-    console.log('fish up animation finished');
     setStep(3);
   };
 
   const handleStep3Next = () => {
     //setStep(4); //카운트다운은 기획에서 제외됨
-    navigation.navigate('PlayBreathContentScreen', { content: content });
+    navigation.navigate('PlayBreathContentScreen', { content: content }, );
   };
 
   // Render step component based on step state
@@ -112,6 +109,7 @@ const PlayBreathScreen = ({route}: {route: RouteProp<PlayStackParamList, 'PlayBr
     <SafeAreaView style={styles.container}>
       <SubpageHeader 
         onBack={handleBack}
+        style={{zIndex: 1000}}
         />
       <TouchableOpacity style={styles.contentContainer} 
         onPress={() => {
@@ -127,7 +125,9 @@ const PlayBreathScreen = ({route}: {route: RouteProp<PlayStackParamList, 'PlayBr
         {/* Render step-specific component */}
         <View>
           {renderStepComponent()}
-          <Text style={{alignSelf: 'center', marginTop: 50}}>[DEBUG] step: {step}</Text>
+          {__DEV__ && (
+            <Text style={{alignSelf: 'center', marginTop: 50}}>[DEBUG] step: {step}</Text>
+          )}
         </View>
       </TouchableOpacity>
     </SafeAreaView>

@@ -17,11 +17,11 @@ export type PlayStackParamList = {
   PlayTab: undefined;
   PlayFavoriteScreen: undefined;
   PlayHistoryScreen: undefined;
-  PlayDetailScreen: { content: Activity };
+  PlayDetailScreen: { activityId: number; content?: Activity };
   PlayInstructorDetailScreen: { instructorId: number };
   PlayBreathScreen: { content: Activity };
   PlayBreathContentScreen: { content: Activity };
-  PlayMeditationScreen: { content: Activity };
+  PlayMeditationScreen: { content: Activity; initialPosition?: number };
   PlayResultScreen: undefined;
   PlayActivityListScreen: { title: string, content: Activity[] };
 };
@@ -41,9 +41,9 @@ export default function PlayStackNavigator() {
       <Stack.Screen name="PlayHistoryScreen" component={PlayHistoryScreen} />
       <Stack.Screen name="PlayDetailScreen" component={PlayDetailScreen}  />
       <Stack.Screen name="PlayInstructorDetailScreen" component={PlayInstructorDetailScreen} />
-      <Stack.Screen name="PlayBreathScreen" component={PlayBreathScreen} />
+      <Stack.Screen name="PlayBreathScreen" component={PlayBreathScreen} options={{ gestureEnabled: false }} />
       <Stack.Screen name="PlayMeditationScreen" component={PlayMeditationScreen} options={{ gestureEnabled: false }} />
-      <Stack.Screen name="PlayBreathContentScreen" component={PlayBreathContentScreen} />
+      <Stack.Screen name="PlayBreathContentScreen" component={PlayBreathContentScreen} options={{ gestureEnabled: false, animation: 'fade' }} />
       <Stack.Screen name="PlayResultScreen" component={PlayResultScreen} />
       <Stack.Screen name="PlayActivityListScreen" component={PlayActivityListScreen} />
     </Stack.Navigator>
