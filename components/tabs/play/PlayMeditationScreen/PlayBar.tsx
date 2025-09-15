@@ -11,6 +11,9 @@ import { useAudioPlayer } from '../../../../hooks/useAudioPlayer';
 import { playIcons, PlayIcon } from '../../../../constants/icons';
 import { useNavigation } from '@react-navigation/native';
 import FavoriteButton from '../../../../components/common/buttons/FavoriteButton';
+import AdBanner from '../../../../components/common/ads/AdBanner';
+import { AD_SIZES } from '../../../../constants/ads';
+import { BannerAdSize } from 'react-native-google-mobile-ads';
 
 // type 정의는 그대로 유지
 
@@ -254,7 +257,8 @@ const PlayBar = ({
         ))}
       </View> */}
       <View style={styles.adContainer}>
-        <Text style={styles.adText}>광고 영역</Text>
+        {/* <Text style={styles.adText}>광고 영역</Text> */}
+        <AdBanner size={AD_SIZES.ANCHORED_ADAPTIVE_BANNER as BannerAdSize}/>
       </View>
     </View>
   );
@@ -331,12 +335,10 @@ const styles = StyleSheet.create({
     color: colors.grayScale700,
   },
   adContainer: {
-    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: colors.grayScale200,
     marginHorizontal: -20,
-    height: 70,
     marginBottom: -20,
   },
   adText: {

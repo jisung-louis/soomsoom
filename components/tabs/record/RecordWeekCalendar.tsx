@@ -8,6 +8,7 @@ import { radius } from '../../../constants/radius';
 import DayUncheckedIcon from '../../../assets/icons/record/day_unchecked.svg';
 import DayCheckedIcon from '../../../assets/icons/record/day_checked.svg';
 import DayPlusIcon from '../../../assets/icons/record/day_plus.svg';
+import { getLogicalNow as getLogicalNowUtil } from '../../../utils/timeUtils';
 dayjs.extend(isoWeek);
 
 type RecordedItem = {
@@ -26,12 +27,13 @@ const daysOfWeek = ['일', '월', '화', '수', '목', '금', '토'];
 const RecordWeekCalendar: React.FC<RecordWeekCalendarProps> = ({ date, recordedItems, onDayPress }) => {
   const startOfWeek = date.startOf('week');
   const weekDates = Array.from({ length: 7 }, (_, i) => startOfWeek.add(i, 'day'));
+  const logicalNow = getLogicalNowUtil(); // utils의 기본 boundaryHour 사용
 
   return (
     <View style={styles.container}>
       <View style={styles.row}>
         {daysOfWeek.map((day, index) => {
-          const isToday = weekDates[index].isSame(dayjs(), 'day');
+          const isToday = weekDates[index].isSame(logicalNow, 'day');
           const isSunday = day === '일';
           return (
             <Text
@@ -50,7 +52,7 @@ const RecordWeekCalendar: React.FC<RecordWeekCalendarProps> = ({ date, recordedI
 
       <View style={styles.row}>
         {weekDates.map((date) => {
-          const isToday = date.isSame(dayjs(), 'day');
+          const isToday = date.isSame(logicalNow, 'day');
           const isSunday = date.day() === 0;
           const isRecord = recordedItems?.some((item) => item.date === date.format('YYYY-MM-DD'));
 

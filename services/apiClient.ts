@@ -85,6 +85,16 @@ export class ApiClient {
   }
 
   /**
+   * PATCH 요청 - 서버 응답을 직접 반환 (ApiResponse 래퍼 없음)
+   */
+  async patch<T>(endpoint: string, data?: any): Promise<T> {
+    return this.request<T>(endpoint, {
+      method: 'PATCH',
+      body: data ? JSON.stringify(data) : undefined,
+    });
+  }
+
+  /**
    * DELETE 요청 - 서버 응답을 직접 반환 (ApiResponse 래퍼 없음)
    */
   async delete<T>(endpoint: string): Promise<T> {

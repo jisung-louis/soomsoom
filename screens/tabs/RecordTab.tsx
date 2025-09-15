@@ -25,6 +25,7 @@ import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import CustomBottomSheet from '../../components/common/bottomsheet/CustomBottomSheet';
 import { Button } from '../../components/common/buttons/Button';
 import { syongsyongTypography, typography } from '../../constants/typography';
+import { getLogicalNow as getLogicalNowUtil } from '../../utils/timeUtils';
 import { radius } from '../../constants/radius';
 
 type RecordTabNavigationProp = CompositeNavigationProp<
@@ -33,9 +34,12 @@ type RecordTabNavigationProp = CompositeNavigationProp<
 >;
 
 const RecordTab = () => {
+  // 논리적 오늘(now) 유틸 사용: utils에서 설정한 기본 boundaryHour 사용
+  const getLogicalNow = useCallback(() => getLogicalNowUtil(), []);
+
   const [current, setCurrent] = useState({
-    week: dayjs().startOf('week'),
-    month: dayjs().startOf('month')
+    week: getLogicalNow().startOf('week'),
+    month: getLogicalNow().startOf('month')
   });
   const [viewType, setViewType] = useState<'week' | 'month'>('week');
   const { showToast } = useToast();
@@ -70,8 +74,9 @@ const RecordTab = () => {
     if (viewType !== 'week') return false;
     const start = current.week.startOf('week');
     const end = current.week.endOf('week');
-    return dayjs().isBetween(start, end, 'day', '[]');
-  }, [viewType, current.week]);
+    const logicalNow = getLogicalNow();
+    return logicalNow.isBetween(start, end, 'day', '[]');
+  }, [viewType, current.week, getLogicalNow]);
 
   // 일기 데이터 상태
   const [recordedItems, setRecordedItems] = useState<{
@@ -112,7 +117,7 @@ const RecordTab = () => {
   }, [viewType, currentDate, current.week, current.month]);
 
   const handleNext = useCallback(() => {
-    const today = dayjs();
+    const today = getLogicalNow();
 
     if (viewType === 'week') {
       const nextWeek = current.week.add(1, 'week');
@@ -143,7 +148,7 @@ const RecordTab = () => {
         week: nextMonth.startOf('month'),
       }));
     }
-  }, [viewType, currentDate, current.week, current.month, showToast]);
+  }, [viewType, currentDate, current.week, current.month, showToast, getLogicalNow]);
 
   const handleDayPress = useCallback((date: dayjs.Dayjs) => {
     const dateString = date.format('YYYY-MM-DD');
@@ -216,8 +221,8 @@ const RecordTab = () => {
   }, [reportCurrentYear, reportCurrentMonth]);
 
   const onStartRecordPress = useCallback(() => {
-    navigation.navigate('EmotionSelectScreen', { date: dayjs().format('YYYY-MM-DD') });
-  }, [navigation]);
+    navigation.navigate('EmotionSelectScreen', { date: getLogicalNow().format('YYYY-MM-DD') });
+  }, [navigation, getLogicalNow]);
 
   const [index, setIndex] = useState(0);
   const [routes] = useState([
@@ -240,8 +245,8 @@ const RecordTab = () => {
             onStartRecordPress={onStartRecordPress}
             styles={styles}
             containsToday={weekIncludesToday}
-            todayYear={dayjs().year()}
-            todayMonth={dayjs().month() + 1}
+            todayYear={getLogicalNow().year()}
+            todayMonth={getLogicalNow().month() + 1}
           />
         );
       case 'report':

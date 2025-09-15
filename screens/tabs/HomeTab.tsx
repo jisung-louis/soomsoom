@@ -18,6 +18,7 @@ import { ButtonSmall } from '../../components/common/buttons/ButtonSmall';
 import UserRoom from '../../components/common/userroom/UserRoom';
 import { objectPosition, itemStyles } from '../../constants/roomLayout';
 import { useRoomStore } from '../../stores/roomStore';
+import AdBanner from '../../components/common/ads/AdBanner';
 
 type HomeTabNavigationProp = StackNavigationProp<HomeStackParamList, 'HomeTab'>;
 
@@ -56,7 +57,7 @@ const HomeTab = () => {
   };
 
   const handleShopPress = () => {
-    navigation.navigate('ShopScreen');
+    navigation.navigate('ShopScreen', { initialTab: 'item' });
   };
 
   const handleHeartPress = () => {
@@ -156,6 +157,11 @@ const HomeTab = () => {
           />
         </View>
       )}
+
+      {/* 광고 배너 */}
+      <View style={styles.adContainer}>
+        <AdBanner />
+      </View>
     </UserRoom>
   );
 };
@@ -170,6 +176,15 @@ const styles = StyleSheet.create({
     width: 150,
     alignItems: 'center',
     borderRadius: 10,
+  },
+  adContainer: {
+    position: 'absolute',
+    bottom: -350,
+    left: 0,
+    right: 0,
+    zIndex: 9999, 
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
 

@@ -37,6 +37,8 @@ import { useCurrencyStore } from '../../../stores/currencyStore';
 import CustomBottomSheet from '../../../components/common/bottomsheet/CustomBottomSheet';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { Button } from '../../../components/common/buttons/Button';
+import HeartPointIcon from '../../../assets/icons/common/Heart.svg';
+import Badge from '../../../components/common/badge/Badge';
 
 type ShopScreenNavigationProp = StackNavigationProp<HomeStackParamList, 'ShopScreen'>;
 
@@ -356,13 +358,39 @@ const ShopScreen = () => {
     );
   };
 
+  const heartCard = [
+    {
+      id: 1,
+      point: 5,
+    },
+    {
+      id: 2,
+      point: 10,
+    },
+    {
+      id: 3,
+      point: 30,
+    },
+  ]
+
   const renderChargeTab = () => (
     <View style={styles.content}>
-      {/* <Image
-        source={require('../../../assets/images/home/shop/banner_charge.png')}
-        style={[styles.bannerImage, { height: 200 }]}
-      /> */}
-      <BannerChargeImage width={'100%'} />
+      <BannerChargeImage width={layout.width} style={{ marginTop: 30 }}/>
+      <View style={styles.chargeContent}>
+        {/* 서버 API 연결 */}
+        {heartCard.map((item) => (
+          <TouchableOpacity key={item.id} style={styles.heartCard} onPress={() => {}}>
+            <HeartPointIcon width={40} height={40} />
+            <View style={styles.heartCardContent}>
+              <Text style={styles.heartCardText}>{item.point} 하트</Text>
+              <Badge
+                title={'하트 받기'}
+                variant='default'
+              />
+            </View>
+          </TouchableOpacity>
+        ))}
+      </View>
     </View>
   );
 
@@ -465,22 +493,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 20,
   },
-  header: {
-    alignItems: 'center',
-    paddingVertical: 30,
-    paddingHorizontal: 20,
-  },
-  title: {
-    ...typography.heading4,
-    color: colors.grayScale900,
-    textAlign: 'center',
-    marginBottom: 8,
-  },
-  subtitle: {
-    ...typography.body3,
-    color: colors.grayScale600,
-    textAlign: 'center',
-  },
   itemPrice: {
     ...typography.caption1,
     color: colors.grayScale900,
@@ -577,6 +589,29 @@ const styles = StyleSheet.create({
     color: colors.primary400,
   },
   sortOptionContainer: {
+  },
+  chargeContent: {
+    padding: 20,
+    gap: 12,
+  },
+  heartCard: {
+    width: '100%',
+    backgroundColor: colors.grayScale50,
+    borderRadius: radius.r8,
+    padding: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
+  heartCardContent: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  heartCardText: {
+    ...typography.body4,
+    color: colors.grayScale900,
   },
 });
 

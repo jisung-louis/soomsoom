@@ -1,0 +1,20 @@
+// AdMob 광고 상수
+export const AD_UNIT_IDS = {
+  // 실제 광고 단위 ID (프로덕션용)
+  BANNER: 'ca-app-pub-4758709448782249/2360661061',
+  REWARD: 'ca-app-pub-4758709448782249/5717753460',
+  
+  // 앱 ID
+  APP_ID: 'ca-app-pub-4758709448782249~5612676219',
+} as const;
+
+// 광고 크기 옵션
+export const AD_SIZES = {
+  BANNER: 'BANNER', // 320x50
+  FULL_BANNER: 'FULL_BANNER', // 468x60
+  LARGE_BANNER: 'LARGE_BANNER', // 320x100
+  LEADERBOARD: 'LEADERBOARD', // 728x90
+  MEDIUM_RECTANGLE: 'MEDIUM_RECTANGLE', // 300x250
+  ANCHORED_ADAPTIVE_BANNER: 'ANCHORED_ADAPTIVE_BANNER', // dynamic (for full-width content) //이걸 사용하면 될듯?
+  INLINE_ADAPTIVE_BANNER: 'INLINE_ADAPTIVE_BANNER', // dynamic (for scrolling content)
+} as const;

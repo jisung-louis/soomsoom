@@ -85,7 +85,7 @@ export const updateActivityProgress = async (
       return;
     } else {
       // 프로덕션 환경: 실제 API 호출
-      await apiClient.put<void>(`/activities/${activityId}/history`, params);
+      await apiClient.patch<void>(`/activities/${activityId}/history`, params);
     }
   } catch (error) {
     throw createNetworkError(
@@ -121,16 +121,9 @@ export const getActivityProgress = async (
       }
     } else {
       // 프로덕션 환경: 실제 API 호출
-      try {
-        const response = await apiClient.get<ActivityProgressResponse>(`/activities/${activityId}/history`);
-        return response;
-      } catch (error: any) {
-        // 204 No Content 응답인 경우 (기록이 없음)
-        if (error.message?.includes('204') || error.message?.includes('No Content')) {
-          return null;
-        }
-        throw error;
-      }
+      const response = await apiClient.get<ActivityProgressResponse | undefined>(`/activities/${activityId}/history`);
+      // 204 No Content인 경우 apiClient는 undefined를 반환
+      return response ?? null;
     }
   } catch (error) {
     throw createNetworkError(

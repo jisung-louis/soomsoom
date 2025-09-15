@@ -24,7 +24,8 @@
       },
       "associatedDomains": [
         "applinks:auth.expo.io"
-      ]
+      ],
+      "appleTeamId": "W66KG43LUC"
     },
     "android": {
       "adaptiveIcon": {

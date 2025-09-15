@@ -1,3 +1,4 @@
+import dayjs from 'dayjs';
 // 초를 분과 초로 변환하는 함수
 export const convertSecondsToMinutesAndSeconds = (seconds: number): { minutes: number; seconds: number } => {
   const minutes = Math.floor(seconds / 60);
@@ -185,3 +186,12 @@ export const formatDateForServer = (dateString: string): string => {
     return dateString; // 변환 실패 시 원본 반환
   }
 }; 
+
+/**
+ * 논리적 "오늘"을 반환하는 함수
+ * - 기본 기준 시각: 06시 (06:00~다음날 05:59)
+ * - boundaryHour를 바꾸면 기준 시각을 손쉽게 변경 가능 (예: 2시 기준 -> 2)
+ */
+export const getLogicalNow = (boundaryHour: number = 6) => {
+  return dayjs().subtract(boundaryHour, 'hour');
+};

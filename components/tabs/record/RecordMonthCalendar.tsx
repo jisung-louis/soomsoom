@@ -5,6 +5,7 @@ import { colors } from '../../../constants/colors';
 import { typography } from '../../../constants/typography';
 import { radius } from '../../../constants/radius';
 import { characterIconMap } from '../../../utils/iconMap';
+import { getLogicalNow as getLogicalNowUtil } from '../../../utils/timeUtils';
 
 type RecordedItem = {
   date: string;
@@ -41,6 +42,7 @@ const getMonthGrid = (date: dayjs.Dayjs) => {
 
 const RecordMonthCalendar = ({ date, recordedItems }: RecordMonthCalendarProps) => {
   const grid = getMonthGrid(date);
+  const logicalNow = getLogicalNowUtil();
   return (
     <View style={styles.container}>
       <View style={styles.weekHeader}>
@@ -58,8 +60,8 @@ const RecordMonthCalendar = ({ date, recordedItems }: RecordMonthCalendarProps) 
           <View key={rowIdx} style={styles.row}>
             {week.map((day, colIdx) => {
               const isSunday = day?.day() === 0;
-              const isToday = day?.isSame(dayjs(), 'day');
-              const isFuture = day?.isAfter(dayjs(), 'day');
+              const isToday = day?.isSame(logicalNow, 'day');
+              const isFuture = day?.isAfter(logicalNow, 'day');
               return (
               <View key={colIdx} style={styles.cell}>
                 {day ? (

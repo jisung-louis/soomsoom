@@ -253,6 +253,29 @@ export async function postSocialLogin(params: {
   }
 }
 
+// 디바이스 ID로 회원가입/로그인
+export interface DeviceLoginRequest {
+  deviceId: string;
+}
+
+export interface DeviceLoginResponse {
+  accessToken: string;
+  refreshToken: string;
+}
+
+export async function postDeviceLogin(params: DeviceLoginRequest): Promise<DeviceLoginResponse> {
+  try {
+    const res = await axios.post(`${API_BASE_URL}/auth/device`, params, { timeout: 15000 });
+    if (res.status !== 200) {
+      throw new Error('디바이스 로그인에 실패했습니다.');
+    }
+    return res.data as DeviceLoginResponse;
+  } catch (error: any) {
+    console.error('디바이스 로그인 API 에러:', error);
+    throw error;
+  }
+}
+
 // =============================
 // 실제 서버 소셜 로그인 교환 API (명세 반영)
 // =============================
