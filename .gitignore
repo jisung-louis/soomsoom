@@ -126,3 +126,22 @@ temp/
 *.njsproj
 *.sln
 *.sw?
+
+# React Native platform build outputs (keep ios/android sources tracked)
+
+# Android
+android/.gradle/
+android/build/
+android/app/build/
+android/.cxx/
+
+# iOS
+ios/build/
+ios/DerivedData/
+ios/*.xcuserdatad/
+ios/*.xccheckout
+ios/**/*.xcworkspace/xcuserdata/
+ios/**/*.xcworkspace/xcshareddata/WorkspaceSettings.xcsettings
+
+# CocoaPods (optional to ignore in CI/EAS)
+ios/Pods/
