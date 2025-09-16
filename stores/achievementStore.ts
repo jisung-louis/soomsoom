@@ -1,13 +1,14 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { fetchMyAchievements, fetchAchievements, fetchAchievementDetail } from '../services/achievementService';
-import { MyAchievement, Achievement } from '../types';
+import { fetchMyAchievements } from '../services/achievementService';
+import { MyAchievement } from '../types';
 import { initializeMockUserProgress } from '../data/achievementMockData';
+import { useAppConfigStore } from './appConfigStore';
 import { apiClient } from '../services/apiClient';
+import { useAuthStore } from './authStore';
 
 // 백엔드 API 응답 타입은 types/index.ts의 MyAchievement, PagedResponse 사용
-
 
 export interface UserAchievement {
   id: number;
@@ -18,52 +19,41 @@ export interface UserAchievement {
 }
 
 export interface AchievementState {
-  // 업적 정의 데이터 (GET /achievements)
-  achievementDefinitions: Map<number, Achievement>;
-  
   // 사용자 업적 진행도 (GET /users/me/achievements)
   userAchievements: Map<number, UserAchievement>;
-  
   // 팝업 시스템 관련
   cache: Map<number, MyAchievement>;
   shown: Set<number>;
   popupQueue: MyAchievement[];
   isPopupOpen: boolean;
   _checkTimer: any | null;
-  
-  // 액션들 (필요한 것만 유지)
-  getAchievementById: (id: number) => Achievement | undefined;
+
+  // 액션들
   getUserAchievementById: (id: number) => UserAchievement | undefined;
-  getAchievementsByCategory: (category: string) => Achievement[];
+  getAchievementsByCategory: (category: string) => MyAchievement[];
   getAchievedCount: () => number;
   getTotalCount: () => number;
   resetAllAchievements: () => void;
-    
+
   // 팝업 시스템 액션들
   initOnAppStart: () => Promise<void>;
-  loadAchievementDefinitions: () => Promise<void>;
   loadUserAchievements: (statusFilter?: 'ALL' | 'ACHIEVED' | 'NOT_ACHIEVED') => Promise<void>;
-  loadAchievementDetail: (achievementId: number) => Promise<Achievement | null>;
+  loadAchievementDetail?: never; // ADMIN 제거로 미사용
   scheduleCheck: (delayMs?: number) => void;
   _checkNow: () => Promise<void>;
   _enqueue: (list: MyAchievement[]) => void;
   _showNext: () => Promise<void>;
   markShown: (id: number) => Promise<void>;
   enqueueFromServerDiff: (list: MyAchievement[]) => void;
-  resetShownAchievements: () => Promise<void>; // 새로 추가
+  resetShownAchievements: () => Promise<void>;
 }
-
-// API 호출 함수들은 services/achievementService.ts로 이동
-
-
 
 const SHOWN_KEY = 'achievements_shown_ids';
 
 export const useAchievementStore = create<AchievementState>()(
   devtools((set, get) => ({
-    achievementDefinitions: new Map(),
     userAchievements: new Map(),
-    
+
     // 팝업 시스템 초기 상태
     cache: new Map(),
     shown: new Set(),
@@ -71,56 +61,31 @@ export const useAchievementStore = create<AchievementState>()(
     isPopupOpen: false,
     _checkTimer: null,
 
-    // 불필요한 함수들 제거됨 - 팝업 시스템이 서버 데이터를 직접 사용
-
-    getAchievementById: (id: number) => {
-      const { achievementDefinitions } = get();
-      return achievementDefinitions.get(id);
-    },
-
     getUserAchievementById: (id: number) => {
       const { userAchievements } = get();
       return userAchievements.get(id);
     },
 
+    // 카테고리 목록: cache(서버 응답의 MyAchievement)를 기준으로 필터링 반환
     getAchievementsByCategory: (category: string) => {
-      const { achievementDefinitions } = get();
-      return Array.from(achievementDefinitions.values()).filter(a => a.category === category);
+      const { cache } = get();
+      return Array.from(cache.values()).filter(a => a.category === category);
     },
 
     getAchievedCount: () => {
-      const { userAchievements, cache } = get();
-      
-      // cache에 데이터가 있으면 cache 기준으로 계산
-      if (cache.size > 0) {
-        return Array.from(cache.values()).filter(a => a.isAchieved).length;
-      }
-      
-      // cache가 비어있으면 userAchievements 기준으로 계산
-      return Array.from(userAchievements.values()).filter(ua => ua.isAchieved).length;
+      const { cache } = get();
+      return Array.from(cache.values()).filter(a => a.isAchieved).length;
     },
 
     getTotalCount: () => {
-      const { achievementDefinitions } = get();
-      return achievementDefinitions.size;
+      // 사용자에게 노출되는 업적 총 수 = cache 크기
+      const { cache } = get();
+      return cache.size;
     },
 
     resetAllAchievements: () => {
       console.log('🔄 모든 업적 초기화...');
-      const { achievementDefinitions } = get();
-      
-      const resetUserAchievements: UserAchievement[] = Array.from(achievementDefinitions.values()).map(achievement => ({
-        id: achievement.id,
-        completionRate: 0,
-        isAchieved: false,
-        lastUpdated: new Date(),
-      }));
-
-      // cache도 함께 초기화 (팝업 시스템용)
-      set({ 
-        userAchievements: new Map(resetUserAchievements.map(ua => [ua.id, ua])),
-        cache: new Map() // cache 초기화 추가
-      });
+      set({ userAchievements: new Map(), cache: new Map() });
       console.log('✅ 모든 업적 초기화 완료!');
     },
 
@@ -128,91 +93,80 @@ export const useAchievementStore = create<AchievementState>()(
     initOnAppStart: async () => {
       try {
         console.log('🚀 앱 시작 시 업적 시스템 초기화...');
-        
-        // 0. 개발 환경에서 Mock 데이터 초기화
-        if (__DEV__) {
-          initializeMockUserProgress();
+
+        // 0. 모킹 활성 시 1회만 Mock 데이터 초기화
+        const { useMockApi } = useAppConfigStore.getState();
+        if (useMockApi) {
+          const already = (get() as any)._mockInitialized as boolean | undefined;
+          if (!already) {
+            initializeMockUserProgress();
+            (get() as any)._mockInitialized = true;
+          }
         }
-        
+
         // 1. 팝업 기록 로드
         const raw = await AsyncStorage.getItem(SHOWN_KEY);
-        const ids = raw ? JSON.parse(raw) as number[] : [];
+        const ids = raw ? (JSON.parse(raw) as number[]) : [];
         set({ shown: new Set(ids) });
 
-        // 2. 업적 정의 로드
-        await get().loadAchievementDefinitions();
-
-        // 3. 사용자 업적 상태 로드
+        // 2. 사용자 업적 상태 로드 (정의 로드는 제거)
         await get().loadUserAchievements();
 
-        // 4. 첫 체크 실행 (1초 후)
+        // 3. 첫 체크 실행 (1초 후)
         setTimeout(() => {
           get().scheduleCheck(400);
         }, 1000);
-        
+
         console.log('✅ 앱 시작 시 업적 시스템 초기화 완료!');
       } catch (e) {
         console.error('❌ 앱 시작 시 업적 시스템 초기화 실패:', e);
-        // 실패해도 치명적 아님
-      }
-    },
-
-    loadAchievementDefinitions: async () => {
-      try {
-        const response = await fetchAchievements();
-        const definitions = new Map<number, Achievement>();
-        
-        response.content.forEach(achievement => {
-          definitions.set(achievement.id, achievement);
-        });
-
-        set({ achievementDefinitions: definitions });
-        console.log('✅ 업적 정의 로드 완료:', definitions.size);
-      } catch (error) {
-        console.error('❌ 업적 정의 로드 실패:', error);
       }
     },
 
     loadUserAchievements: async (statusFilter: 'ALL' | 'ACHIEVED' | 'NOT_ACHIEVED' = 'ALL') => {
       try {
-        const token = apiClient.getAccessToken();
+        // 스토어 토큰 가드
+        const token = useAuthStore.getState().getAccessToken();
         if (!token) {
           console.log('⚠️ 토큰이 없어서 사용자 업적을 로드할 수 없습니다.');
           return;
         }
 
-        const response = await fetchMyAchievements({ statusFilter, page: 1, size: 12 });
-        const userAchievements = new Map<number, UserAchievement>();
-        
-        response.content.forEach(achievement => {
-          userAchievements.set(achievement.achievementId, {
-            id: achievement.achievementId,
-            completionRate: achievement.progress?.current || 0,
-            isAchieved: achievement.isAchieved,
-            achievedAt: achievement.achievedAt,
-            lastUpdated: new Date(),
-          });
-        });
+        const response = await fetchMyAchievements({ statusFilter, page: 1, size: 50 });
 
-        set({ userAchievements });
-        console.log('✅ 사용자 업적 로드 완료:', userAchievements.size);
+        // 정책: 진행 중(progress.current > 0) 또는 달성(isAchieved)만 노출
+        const cache = new Map<number, MyAchievement>();
+        const userAchievements = new Map<number, UserAchievement>();
+
+        for (const a of response.content) {
+          const isInProgress = (a.progress?.current ?? 0) > 0;
+          if (a.isAchieved || isInProgress) {
+            cache.set(a.achievementId, a);
+            userAchievements.set(a.achievementId, {
+              id: a.achievementId,
+              completionRate: a.progress?.current || 0,
+              isAchieved: a.isAchieved,
+              achievedAt: a.achievedAt,
+              lastUpdated: new Date(),
+            });
+          }
+        }
+
+        set({ userAchievements, cache });
+        console.log('✅ 사용자 업적 로드 완료(필터 적용):', cache.size);
       } catch (error) {
         console.error('❌ 사용자 업적 로드 실패:', error);
       }
     },
 
-    loadAchievementDetail: async (achievementId: number) => {
-      try {
-        const achievement = await fetchAchievementDetail(achievementId);
-        console.log('✅ 업적 상세 정보 로드 완료:', achievementId);
-        return achievement;
-      } catch (error) {
-        console.error('❌ 업적 상세 정보 로드 실패:', error);
-        return null;
-      }
-    },
-
+    // 이하 팝업/체크 로직은 기존 유지
     scheduleCheck: (delayMs = 400) => {
+      // 스토어 토큰 가드
+      const token = useAuthStore.getState().getAccessToken();
+      if (!token) {
+        console.log('⚠️ 토큰 없음으로 업적 체크 예약 스킵');
+        return;
+      }
       console.log(`⏰ 업적 체크 스케줄링: ${delayMs}ms 후`);
       const t = get()._checkTimer;
       if (t) clearTimeout(t);
@@ -223,17 +177,18 @@ export const useAchievementStore = create<AchievementState>()(
     _checkNow: async () => {
       try {
         console.log('🔍 업적 체크 시작...');
-        const token = apiClient.getAccessToken();
+        // 스토어 토큰 가드
+        const token = useAuthStore.getState().getAccessToken();
         if (!token) {
           console.log('❌ 토큰 없음, 업적 체크 스킵');
           return;
         }
         
-        const { content } = await fetchMyAchievements({ statusFilter: 'ALL', page: 1, size: 12 });
+        const { content } = await fetchMyAchievements({ statusFilter: 'ALL', page: 1, size: 50 });
         const byId = get().cache;
         const newly: MyAchievement[] = [];
         const { shown } = get();
-        
+
         console.log('🔍 현재 상태:', {
           cacheSize: byId.size,
           shownSize: shown.size,
@@ -243,10 +198,9 @@ export const useAchievementStore = create<AchievementState>()(
 
         for (const a of content) {
           const prev = byId.get(a.achievementId);
-          // 달성된 업적을 팝업으로 표시 (이전 상태가 없거나 false → true 변화)
           const turnedTrue = !prev ? a.isAchieved : (!prev.isAchieved && a.isAchieved);
           const notShown = !shown.has(a.achievementId);
-          
+
           console.log(`🔍 업적 ${a.achievementId} (${a.name}):`, {
             prev: prev ? { isAchieved: prev.isAchieved } : '없음',
             current: { isAchieved: a.isAchieved },
@@ -254,14 +208,15 @@ export const useAchievementStore = create<AchievementState>()(
             notShown,
             willAdd: turnedTrue && notShown
           });
-          
+
           if (turnedTrue && notShown) {
             newly.push(a);
             console.log(`🎉 새로 달성한 업적 발견: ${a.name} (${a.grade})`);
           }
+          // 캐시는 정책과 관계없이 최신 상태로 유지하되, 노출 정책 필터는 load시 반영
           byId.set(a.achievementId, a);
         }
-        
+
         set({ cache: new Map(byId) });
         if (newly.length > 0) {
           console.log(`📋 ${newly.length}개 업적을 팝업 큐에 추가`);
@@ -271,7 +226,6 @@ export const useAchievementStore = create<AchievementState>()(
         }
       } catch (e) {
         console.error('❌ 업적 체크 실패:', e);
-        // 네트워크 오류 등은 조용히 무시(다음 이벤트 때 다시 체크)
       }
     },
 
@@ -279,10 +233,10 @@ export const useAchievementStore = create<AchievementState>()(
       const q = [...get().popupQueue, ...list];
       set({ popupQueue: q });
       console.log(`📋 팝업 큐에 ${list.length}개 업적 추가, 총 ${q.length}개`);
-      
+
       const { isPopupOpen } = get();
       console.log(`🔍 팝업 상태: isPopupOpen=${isPopupOpen}`);
-      
+
       if (!isPopupOpen) {
         console.log('🎬 팝업 표시 시작...');
         get()._showNext();
@@ -297,15 +251,13 @@ export const useAchievementStore = create<AchievementState>()(
         set({ isPopupOpen: false });
         return;
       }
-      
+
       const next = q[0];
       set({ isPopupOpen: true, popupQueue: q.slice(1) });
       console.log(`🎭 팝업 표시: ${next.name}`);
 
-      // 팝업 표시
       showAchievementPopup(next, async () => {
         await get().markShown(next.achievementId);
-        // 닫힌 뒤 다음
         get()._showNext();
       });
     },
@@ -315,7 +267,7 @@ export const useAchievementStore = create<AchievementState>()(
       shown.add(id);
       set({ shown });
       console.log(`✅ 업적 ${id} 표시 완료 처리`);
-      
+
       try {
         await AsyncStorage.setItem(SHOWN_KEY, JSON.stringify(Array.from(shown)));
         console.log('💾 표시된 업적 ID 저장 완료');
@@ -325,7 +277,6 @@ export const useAchievementStore = create<AchievementState>()(
     },
 
     enqueueFromServerDiff: (list) => {
-      // 서버가 활동/일기 응답에 방금 달성 업적들을 내려주는 경우 즉시 팝업
       if (!list || list.length === 0) return;
       console.log(`🎯 서버에서 즉시 알려준 업적 ${list.length}개 팝업 큐에 추가`);
       get()._enqueue(list);
@@ -334,13 +285,8 @@ export const useAchievementStore = create<AchievementState>()(
     resetShownAchievements: async () => {
       try {
         console.log('🔄 표시된 업적 기록 초기화 중...');
-        
-        // 메모리에서 초기화
         set({ shown: new Set() });
-        
-        // AsyncStorage에서 삭제
         await AsyncStorage.removeItem(SHOWN_KEY);
-        
         console.log('✅ 표시된 업적 기록 초기화 완료!');
       } catch (e) {
         console.error('❌ 표시된 업적 기록 초기화 실패:', e);
@@ -349,10 +295,9 @@ export const useAchievementStore = create<AchievementState>()(
   }))
 );
 
-/**
- * 팝업 띄우기 헬퍼: UI 레이어와 연결
- */
-type PopupHandler = (a: MyAchievement, onClose: () => void) => void;
+// 팝업 띄우기 헬퍼: UI 레이어와 연결
+import type { MyAchievement as _MyAchievement } from '../types';
+type PopupHandler = (a: _MyAchievement, onClose: () => void) => void;
 type NavigationHandler = () => void;
 
 let _popupHandler: PopupHandler | null = null;
@@ -373,7 +318,6 @@ export function navigateToAchievements() {
     _navigationHandler();
   } else {
     console.warn('⚠️ 업적 네비게이션 핸들러가 연결되지 않음 - MyTab이 아직 마운트되지 않았을 수 있습니다');
-    // 핸들러가 없으면 잠시 후 재시도
     setTimeout(() => {
       if (_navigationHandler) {
         console.log('🔄 네비게이션 핸들러 재시도...');
@@ -385,12 +329,11 @@ export function navigateToAchievements() {
   }
 }
 
-function showAchievementPopup(a: MyAchievement, onClose: () => void) {
+function showAchievementPopup(a: _MyAchievement, onClose: () => void) {
   if (_popupHandler) {
     _popupHandler(a, onClose);
   } else {
     console.warn('⚠️ 업적 팝업 핸들러가 연결되지 않음 - UI 컴포넌트가 아직 마운트되지 않았을 수 있습니다');
-    // 핸들러가 없으면 바로 다음으로
     onClose();
   }
 }

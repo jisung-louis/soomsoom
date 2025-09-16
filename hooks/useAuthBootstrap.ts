@@ -13,10 +13,11 @@ import { apiClient } from '../services/apiClient';
  * - 성공 시 apiClient에 토큰 주입 후, 소유 아이템/하트포인트 동기화
  */
 export function useAuthBootstrap() {
-  const { phase, setPhase, getAccessToken, getRefreshToken } = useAuthStore();
+  const { phase, setPhase } = useAuthStore();
   const { deviceLogin } = useAuth();
   const { loadOwnedItems } = useOwnedItems();
   const { setHeartPoints } = useCurrencyStore();
+  const ranOnceRef = React.useRef(false);
 
   const syncHeartPoints = React.useCallback(async () => {
     try {
@@ -27,23 +28,58 @@ export function useAuthBootstrap() {
     }
   }, [setHeartPoints]);
 
-  const accessToken = getAccessToken();
-  const refreshToken = getRefreshToken();
-  const hasTokens = !!accessToken && !!refreshToken;
-
   const run = React.useCallback(async () => {
-    if (hasTokens) {
-       apiClient.setTokens(accessToken!, refreshToken!);
-       setPhase('logged_in'); 
-       await syncHeartPoints();
-       //loadOwnedItems(); // 소유 아이템 목록 동기화 url이 서버 권한설정 오류로 못불러오는 상태임. 임시 비활성화
-       return; 
+    if (ranOnceRef.current) return;
+    ranOnceRef.current = true;
+
+    // 이미 로그인 완료면 종료
+    if (useAuthStore.getState().phase === 'logged_in') {
+      await syncHeartPoints();
+      return;
     }
+
+    // 1) 영속 저장소에서 토큰 먼저 조회 (하이드레이션 레이스 방지)
     try {
-      // 디바이스 로그인으로 시작
+      const AsyncStorage = (await import('@react-native-async-storage/async-storage')).default;
+      const raw = await AsyncStorage.getItem('auth');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        const savedTokens = parsed?.state?.tokens as { accessToken: string; refreshToken?: string | null } | null;
+        if (savedTokens?.accessToken && savedTokens?.refreshToken) {
+          apiClient.setTokens(savedTokens.accessToken, savedTokens.refreshToken);
+          useAuthStore.getState().setSession({
+            accessToken: savedTokens.accessToken,
+            refreshToken: savedTokens.refreshToken || null,
+          } as any);
+          setPhase('logged_in');
+          await syncHeartPoints();
+          loadOwnedItems();
+          return;
+        }
+      }
+    } catch {}
+
+    // 2) 최신 토큰 상태를 런타임에서 확인
+    const a = useAuthStore.getState().getAccessToken();
+    const r = useAuthStore.getState().getRefreshToken();
+    if (a && r) {
+      apiClient.setTokens(a, r);
+      setPhase('logged_in');
+      await syncHeartPoints();
+      loadOwnedItems();
+      return;
+    }
+
+    // 3) 디바이스 로그인 시도 (가드 내장)
+    try {
+      if (useAuthStore.getState().getAccessToken()) {
+        setPhase('logged_in');
+        await syncHeartPoints();
+        return;
+      }
       const result = await deviceLogin();
       if (result.success) {
-        //loadOwnedItems(); // 소유 아이템 목록 동기화 url이 서버 권한설정 오류로 못불러오는 상태임. 임시 비활성화
+        loadOwnedItems();
         await syncHeartPoints();
       } else {
         setPhase('logged_out');
@@ -52,8 +88,7 @@ export function useAuthBootstrap() {
       console.error('디바이스 로그인 에러:', error);
       setPhase('logged_out');
     }
-  }, [ //loadOwnedItems, 
-    hasTokens, accessToken, refreshToken, deviceLogin, syncHeartPoints, setPhase]);
+  }, [loadOwnedItems, deviceLogin, syncHeartPoints, setPhase]);
 
   return { phase, run };
 }

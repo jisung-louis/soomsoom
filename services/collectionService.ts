@@ -1,6 +1,5 @@
 import { apiClient } from './apiClient';
-import { environmentConfig } from '../configs/environment';
-import { mockCollectionData } from '../data/mockCollectionData';
+// DEV 모킹은 apiClient + mockRoutes에서 일괄 처리합니다.
 import { Item } from './itemService';
 
 export type CollectionSort = 'POPULARITY' | 'PRICE_ASC' | 'PRICE_DESC' | 'CREATED';
@@ -73,61 +72,6 @@ export async function getCollections(params: GetCollectionsParams = {}): Promise
     deletionStatus = 'ACTIVE',
   } = params;
 
-  // 개발 환경 모크
-  if (environmentConfig.debug.enabled) {
-    // dev: 외부 목 파일 사용 → Summary 형태로 변환, 간단 정렬/페이지 적용
-    let list = mockCollectionData.map<CollectionSummary>((d) => ({
-      id: d.id,
-      name: d.name,
-      description: d.description,
-      phrase: d.phrase,
-      imageUrl: d.imageUrl,
-      lottieUrl: d.lottieUrl,
-      basePrice: d.basePrice,
-      purchasePrice: d.purchasePrice,
-      ownedItemsCount: d.ownedItemsCount,
-      totalItemsCount: d.totalItemsCount,
-      isOwned: d.isOwned,
-      isEquipped: d.isEquipped,
-      items: null, // 목록 조회에서는 items를 null로 반환
-      createdAt: d.createdAt,
-      modifiedAt: d.modifiedAt,
-      deletedAt: d.deletedAt,
-    }));
-
-    // excludeOwned
-    if (excludeOwned) list = list.filter((c) => !c.isOwned);
-
-    // sort
-    switch (sort) {
-      case 'PRICE_ASC':
-        list.sort((a, b) => a.basePrice - b.basePrice); break;
-      case 'PRICE_DESC':
-        list.sort((a, b) => b.basePrice - a.basePrice); break;
-      case 'POPULARITY':
-        // popularity 지표 없음 → 가격 내림차순을 근사치로 사용
-        list.sort((a, b) => b.basePrice - a.basePrice); break;
-      case 'CREATED':
-      default:
-        list.sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
-    }
-
-    const totalElements = list.length;
-    const start = (page - 1) * size;
-    const end = start + size;
-    const content = list.slice(start, end);
-
-    return {
-      content,
-      page: {
-        size,
-        number: page,
-        totalElements,
-        totalPages: Math.max(1, Math.ceil(totalElements / size)),
-      },
-    };
-  }
-
   const search = new URLSearchParams();
   search.set('sort', sort);
   if (excludeOwned) search.set('excludeOwned', String(excludeOwned));
@@ -141,12 +85,6 @@ export async function getCollections(params: GetCollectionsParams = {}): Promise
 }
 
 export async function getCollectionDetail(collectionId: number, deletionStatus: DeletionStatus = 'ACTIVE'): Promise<CollectionDetail> {
-  if (environmentConfig.debug.enabled) {
-    // dev: 외부 목 데이터에서 해당 id 검색
-    const found = mockCollectionData.find((c) => c.id === collectionId);
-    return found ?? mockCollectionData[0];
-  }
-
   const search = new URLSearchParams();
   if (deletionStatus) search.set('deletionStatus', deletionStatus);
   const endpoint = `/collections/${collectionId}?${search.toString()}`;
@@ -163,40 +101,6 @@ export interface GetOwnedCollectionsParams {
 
 export async function getOwnedCollections(params: GetOwnedCollectionsParams = {}): Promise<PagedCollectionsResponse> {
   const { userId, page = 1, size = 12, sort = 'createdAt,desc' } = params;
-
-  if (environmentConfig.debug.enabled) {
-    // dev: 보유 컬렉션 → 목에서 isOwned가 true인 것만, 없으면 전체를 보유로 간주
-    let list = mockCollectionData.filter((c) => c.isOwned);
-    if (list.length === 0) list = mockCollectionData.map((c) => ({ ...c, isOwned: true }));
-    const summaries: CollectionSummary[] = list.map((d) => ({
-      id: d.id,
-      name: d.name,
-      description: d.description,
-      phrase: d.phrase,
-      imageUrl: d.imageUrl,
-      lottieUrl: d.lottieUrl,
-      basePrice: d.basePrice,
-      purchasePrice: d.purchasePrice,
-      ownedItemsCount: d.ownedItemsCount,
-      totalItemsCount: d.totalItemsCount,
-      isOwned: true,
-      isEquipped: d.isEquipped,
-      items: null, // 목록 조회에서는 items를 null로 반환
-      createdAt: d.createdAt,
-      modifiedAt: d.modifiedAt,
-      deletedAt: d.deletedAt,
-    }));
-
-    const totalElements = summaries.length;
-    const start = (page - 1) * size;
-    const end = start + size;
-    const content = summaries.slice(start, end);
-    return {
-      content,
-      page: { size, number: page, totalElements, totalPages: Math.max(1, Math.ceil(totalElements / size)) },
-    };
-  }
-
   const search = new URLSearchParams();
   if (userId) search.set('userId', String(userId));
   if (page) search.set('page', String(page));

@@ -1,3 +1,4 @@
+import { useAuthStore } from '../stores/authStore';
   type AuthTokens = { accessToken: string; refreshToken?: string | null };
 import { API_CONFIG, ApiResponse, ApiError } from '../configs/api';
 import { AppError, ErrorType, errorHandler } from '../utils/errorHandler';
@@ -149,9 +150,13 @@ export class ApiClient {
       };
 
       // 액세스 토큰이 있으면 Authorization 헤더 추가
-      if (this.accessToken) {
-        headers['Authorization'] = `Bearer ${this.accessToken}`;
-        console.log('🔐 API 요청에 인증 토큰 포함:', endpoint);
+      // NOTE: 콜드스타트/복원 타이밍을 위해 항상 전역 스토어에서 최신 토큰 조회
+      const liveToken = useAuthStore.getState().getAccessToken();
+      if (liveToken) {
+        headers['Authorization'] = `Bearer ${liveToken}`;
+      }
+      else {
+        console.warn('❌ API 요청에 인증 토큰 없음:', endpoint);
       }
 
       let response = await fetch(url, {
@@ -225,6 +230,8 @@ export class ApiClient {
           // 401이 아니거나 리프레시 토큰이 없으면 일반 에러 처리
           await this.handleErrorResponse(response, endpoint);
         }
+      } else {
+        console.log('❗ 서버 API 호출됨:', options.method, endpoint, ', 🗣️ 상태:', response.status);
       }
 
       // 204 No Content 처리

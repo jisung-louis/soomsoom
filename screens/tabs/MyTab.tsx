@@ -32,11 +32,17 @@ import { usePurchase } from '../../hooks/usePurchase';
 import { PurchasedItem } from '../../services/purchaseService';
 import { bindAchievementNavigationHandler, useAchievementStore } from '../../stores/achievementStore';
 import LottieView from 'lottie-react-native';
+import { useAppConfigStore } from '../../stores/appConfigStore';
+import { getCachedInstallUuid } from '../../utils/deviceId';
+import { getUserActivitySummary, UserActivitySummaryResponse } from '../../services/activityLogService';
+import { useAuthStore } from '../../stores/authStore';
+import { useAuth } from '../../hooks/useAuth';
+import { useBackgroundColor } from '../../hooks/useBackgroundColor';
 
 const mockStatusData = [
-    { title: '기록', valueType: '회', value: 0 },
-    { title: '운동', valueType: '회', value: 0 },
-    { title: '시간', valueType: 'mm:ss', value: '00:00' },
+    { title: '기록', valueType: '회', value: null },
+    { title: '운동', valueType: '회', value: null },
+    { title: '시간', valueType: 'mm:ss', value: null },
 ];
 const statusCardContentItemWidth = 100 / mockStatusData.length;
 
@@ -54,8 +60,8 @@ const MyTab = () => {
   // ===== Stores (selectors) =====
   const heartPoints = useCurrencyStore(state => state.heartPoints);
   
-  // 업적 데이터
-  const { achievementDefinitions, cache, userAchievements, scheduleCheck } = useAchievementStore();
+  // 업적 데이터 (정의 의존 제거: cache와 userAchievements만 사용)
+  const { cache, userAchievements, scheduleCheck } = useAchievementStore();
 
   const placedItems = useRoomStore(state => state.placedItems);
   const isOwned = useRoomStore(state => state.isOwned);
@@ -72,9 +78,13 @@ const MyTab = () => {
   const [showSaveAlert, setShowSaveAlert] = useState(false); // 저장 알림 표시 여부
   const [itemMap, setItemMap] = useState<Map<number, { positionType: string }>>(new Map());
   const { loadOwnedItems } = useOwnedItems();
-  
+  const { useMockApi } = useAppConfigStore.getState();
+  const { getAccessToken, role } = useAuthStore();
   // 장바구니 관련 훅
   const { getCartItems, clearAllCartItems } = usePurchase();
+  const { logout } = useAuth();
+  // 요약 데이터 상태
+  const [summary, setSummary] = useState<UserActivitySummaryResponse | null>(null);
 
   // 아이템 데이터 로드
   useEffect(() => {
@@ -99,36 +109,49 @@ const MyTab = () => {
     loadOwnedItems();
   }, [loadOwnedItems]);
 
-  // 달성한 업적들 가져오기
+  // 사용자 요약 데이터 로드 (/users/me/summary)
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        if (!getAccessToken()) return;
+        const res = await getUserActivitySummary();
+        if (!mounted) return;
+        setSummary(res);
+      } catch (e) {
+        // 무시: 비회원/권한 없음 등
+      }
+    })();
+    return () => { mounted = false; };
+  }, [getAccessToken]);
+
+  const formatMmSs = (totalSeconds: number) => {
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    const mm = String(minutes).padStart(2, '0');
+    const ss = String(seconds).padStart(2, '0');
+    return `${mm}:${ss}`;
+  };
+
+  const statusData = useMemo(() => {
+    if (!summary) return mockStatusData;
+    return [
+      { title: '기록', valueType: '회', value: summary.diaryCount },
+      { title: '운동', valueType: '회', value: summary.activityCount },
+      { title: '시간', valueType: 'mm:ss', value: formatMmSs(summary.totalActivitySeconds) },
+    ];
+  }, [summary]);
+
+  // 달성한 업적들 가져오기 (cache 기준)
   const achievedAchievements = useMemo(() => {
     const achieved: Array<{id: number, name: string, grade: string}> = [];
-    
-    // cache 우선, userAchievements 백업
-    Array.from(achievementDefinitions.keys()).forEach(achievementId => {
-      let isAchieved = false;
-      
-      if (cache.has(achievementId)) {
-        const cacheData = cache.get(achievementId);
-        isAchieved = cacheData?.isAchieved ?? false;
-      } else {
-        const userAchievement = userAchievements.get(achievementId);
-        isAchieved = userAchievement?.isAchieved ?? false;
+    for (const a of Array.from(cache.values())) {
+      if (a.isAchieved) {
+        achieved.push({ id: a.achievementId, name: a.name, grade: a.grade });
       }
-      
-      if (isAchieved) {
-        const achievement = achievementDefinitions.get(achievementId);
-        if (achievement) {
-          achieved.push({
-            id: achievementId,
-            name: achievement.name,
-            grade: achievement.grade
-          });
-        }
-      }
-    });
-    
+    }
     return achieved;
-  }, [achievementDefinitions, cache, userAchievements]);
+  }, [cache]);
 
   // 3의 배수로 맞추기 위한 데이터 (placeholder 포함)
   const achievementDataWithPlaceholders = useMemo(() => {
@@ -223,11 +246,6 @@ const MyTab = () => {
         if (mounted) {
           setEditModeSelectedItems(allItems);
           setInitialSelectedItems([...allItems]); // 초기 선택된 아이템 저장
-          console.log('🛒 MyTab - 편집 모드 선택된 아이템 초기화:', {
-            placedItems: placedItemsList,
-            cartItems: cartItemIds,
-            total: allItems
-          });
         }
       } catch (error) {
         console.warn('🛒 MyTab - 장바구니 조회 실패:', error);
@@ -539,8 +557,15 @@ const MyTab = () => {
     }
   };
 
+  const isSocialLogin = useMemo(() => {
+    return role === 'ROLE_USER';
+  }, [role]);
+
+  const [roomBgUri, setRoomBgUri] = useState<string | null>(null);
+  const dynamicBgColor = useBackgroundColor(roomBgUri);
+
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: dynamicBgColor }]}>
         <MyTabTopNavigation
             isEditMode={isEditMode}
             onEditModeToggle={onBackButtonClick}
@@ -548,7 +573,7 @@ const MyTab = () => {
             onHeartPress={() => {}}
             style={styles.topNavigation}
             />
-        {__DEV__ && (
+        {useMockApi && (
           <View style={styles.testContainer}>
               <Text style={styles.test}>모드 : {isEditMode ? '방 꾸미기 모드' : '일반 모드'}</Text>
               <Text style={styles.test}>보유 아이템 : {ownedItems.join(',')}</Text>
@@ -576,6 +601,7 @@ const MyTab = () => {
             scrollViewRef={scrollViewRef as React.RefObject<ScrollView>}
             previewMode={isEditMode}
             previewItemIds={isEditMode ? editModeSelectedItems : []}
+            onBackgroundImageUri={setRoomBgUri}
             >
             <View style={{marginTop: sv(176)}}>{/* 176(figma 기준) 아래로 전체 컨텐츠 이동 */}
                 {!isEditMode && (
@@ -590,19 +616,22 @@ const MyTab = () => {
                     <View style={styles.cardContainer}>
                         <View style={styles.statusCardHeader}>
                             <View style={styles.statusCardHeaderLeft}>
-                            <Text style={styles.cardHeaderNameText}>야옹이님</Text>
-                            <Text style={styles.cardHeaderIdText}>ID : Timestamp</Text>
+                              <Text style={styles.cardHeaderNameText}>야옹이님</Text>
+                              <Text style={styles.cardHeaderIdText}>ID : {getCachedInstallUuid() || '로드 중...'}</Text>
                             </View>
                             {/* TODO: 연동 기능 추가 */}
-                            <ToggleButton
-                              defaultTitle=""
-                              activeTitle="연동하기"
-                              isActive={true}
-                              onPress={() => {}}
-                            />
+                            <View style={styles.statusCardHeaderRight}>
+                              <ToggleButton
+                                defaultTitle=""
+                                activeTitle={isSocialLogin ? "연동완료" : "연동하기"}
+                                isActive
+                                checkIcon={isSocialLogin}
+                                onPress={!isSocialLogin ? logout : () => {}}
+                                />
+                            </View>
                         </View>
                         <View style={styles.statusCardContent}>
-                            {mockStatusData.map((item, index) => (
+                            {statusData.map((item, index) => (
                             <View style={styles.statusCardContentItem} key={index}>
                                 <Text style={styles.statusCardContentItemTitle}>{item.title}</Text>
                                 <Text style={styles.statusCardContentItemValue}>{item.valueType === 'mm:ss' ? item.value : `${item.value}${item.valueType}`}</Text>
@@ -687,7 +716,6 @@ const MyTab = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.grayScale200, //TODO:추후 UserRoom의 배경이미지의 하단 컬러로 변경
   },
   content: {
     flex: 1,
@@ -725,7 +753,10 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   statusCardHeaderLeft: {
+    flexShrink: 1,
     gap: 2,
+  },
+  statusCardHeaderRight: {
   },
   cardHeaderNameText: {
     ...typography.heading9,

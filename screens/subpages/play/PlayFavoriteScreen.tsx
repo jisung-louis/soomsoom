@@ -11,9 +11,10 @@ import { TabMenu } from '../../../components/common/tabmenu/TabMenu';
 import ProgramList from '../../../components/tabs/play/common/ProgramList';
 import FollowInstructorList from '../../../components/tabs/play/PlayFavoriteScreen/FollowInstructorList';
 import { TabView, SceneMap } from 'react-native-tab-view';
-import { Activity, getActivityDetail, getUserFavoriteActivities } from '../../../services/contentService';
+import { Activity } from '../../../services/contentService';
 import { usePlayStore } from '../../../stores/playStore';
-import { toggleFollowInstructor, getInstructorDetail, getFollowedInstructors, Instructor } from '../../../services/instructorService';
+import { Instructor } from '../../../services/instructorService';
+import { useFavorites } from '../../../hooks/useFavorites';
 import { useToast } from '../../../contexts/ToastContext';
 import { catIconMap } from '../../../utils/iconMap';
 import { syongsyongTypography } from '../../../constants/typography';
@@ -50,149 +51,23 @@ const PlayFavoriteScreen = () => {
   // 새로고침 상태 관리
   const [followRefreshing, setFollowRefreshing] = useState(false);  
 
+  const { fetchFavoriteActivitiesList, fetchFollowedInstructorsList, toggleFollow } = useFavorites();
+
   const fetchFavorite = async () => {
     try {
-      if (__DEV__) {
-        // 개발 환경: Store에서 직접 즐겨찾기 상태를 가져와서 상세 정보 조회
-        const activities = await Promise.all(
-          favoriteActivities.map(async (fav) => {
-            try {
-              const activityDetail = await getActivityDetail(fav.activityId);
-              return activityDetail;
-            } catch (error) {
-              console.error(`액티비티 ${fav.activityId} 상세 정보 로드 실패:`, error);
-              // 상세 정보 로드 실패 시 기본 정보만으로 Activity 객체 생성
-              return {
-                id: fav.activityId,
-                title: '알 수 없음',
-                type: 'MEDITATION',
-                thumbnailImageUrl: null,
-                descriptions: ['상세 정보를 불러올 수 없습니다.'],
-                author: { id: 0, name: '알 수 없음', bio: '', profileImageUrl: null },
-                narrator: { id: 0, name: '알 수 없음', bio: '', profileImageUrl: null },
-                durationInSeconds: 0,
-                audioUrl: null,
-                timeline: [],
-                isFavorited: true,
-              } as Activity;
-            }
-          })
-        );
-        
-        setFavoriteActivitiesList(activities);
-      } else {
-        // 프로덕션 환경: 서버에서 가져와서 store 동기화 후 조회
-        const response = await getUserFavoriteActivities({ page: 1, size: 12, sort: 'createdAt,desc' });
-        
-        // Store 동기화
-        usePlayStore.setState({
-          favoriteActivities: response.content.map(fav => ({ activityId: fav.activityId }))
-        });
-        
-        // 상세 정보 조회
-        const activities = await Promise.all(
-          response.content.map(async (fav) => {
-            try {
-              const activityDetail = await getActivityDetail(fav.activityId);
-              return activityDetail;
-            } catch (error) {
-              console.error(`액티비티 ${fav.activityId} 상세 정보 로드 실패:`, error);
-              // 상세 정보 로드 실패 시 기본 정보만으로 Activity 객체 생성
-              return {
-                id: fav.activityId,
-                title: fav.title,
-                type: fav.type,
-                thumbnailImageUrl: fav.thumbnailImageUrl,
-                descriptions: ['상세 정보를 불러올 수 없습니다.'],
-                author: { id: 0, name: '알 수 없음', bio: '', profileImageUrl: null },
-                narrator: { id: 0, name: '알 수 없음', bio: '', profileImageUrl: null },
-                durationInSeconds: fav.durationInSeconds,
-                audioUrl: null,
-                timeline: [],
-                isFavorited: true,
-              } as Activity;
-            }
-          })
-        );
-        
-        setFavoriteActivitiesList(activities);
-      }
+      const activities = await fetchFavoriteActivitiesList();
+      setFavoriteActivitiesList(activities);
     } catch (e) {
-      showToast({
-        message: '네트워크 연결을 확인한 뒤 다시 시도해주세요.',
-        iconType: 'alarm',
-        theme: 'dark',
-      });
+      showToast({ message: '네트워크 연결을 확인한 뒤 다시 시도해주세요.', iconType: 'alarm', theme: 'dark' });
     }
   };
 
   const fetchFollowed = async () => {
     try {
-      if (__DEV__) {
-        // 개발 환경: Store에서 팔로우한 강사 ID 목록을 가져와서 상세 정보 조회
-        const instructorDetails = await Promise.all(
-          followedInstructors.map(async (followed) => {
-            try {
-              const instructorDetail = await getInstructorDetail(followed.instructorId);
-              return instructorDetail;
-            } catch (error) {
-              console.error(`강사 ${followed.instructorId} 상세 정보 로드 실패:`, error);
-              // 상세 정보 로드 실패 시 기본 정보만으로 Instructor 객체 생성
-              return {
-                instructorId: followed.instructorId,
-                name: '알 수 없음',
-                bio: '',
-                profileImageUrl: null,
-                isFollowing: true,
-                createdAt: '',
-                modifiedAt: '',
-                deletedAt: null,
-              } as Instructor;
-            }
-          })
-        );
-        
-        setFollowedInstructorsList(instructorDetails);
-      } else {
-        // 프로덕션 환경: 서버에서 가져와서 store 동기화 후 조회
-        const response = await getFollowedInstructors({ page: 1, size: 12, sort: 'createdAt,desc' });
-        
-        // Store 동기화
-        usePlayStore.setState({
-          followedInstructors: response.content.map(inst => ({ instructorId: inst.instructorId }))
-        });
-        
-        // 상세 정보 조회
-        const instructorDetails = await Promise.all(
-          response.content.map(async (inst) => {
-            try {
-              const instructorDetail = await getInstructorDetail(inst.instructorId);
-              return instructorDetail;
-            } catch (error) {
-              console.error(`강사 ${inst.instructorId} 상세 정보 로드 실패:`, error);
-              // 상세 정보 로드 실패 시 기본 정보만으로 Instructor 객체 생성
-              return {
-                instructorId: inst.instructorId,
-                name: inst.name,
-                bio: '',
-                profileImageUrl: inst.profileImageUrl,
-                isFollowing: true,
-                createdAt: '',
-                modifiedAt: '',
-                deletedAt: null,
-              } as Instructor;
-            }
-          })
-        );
-        
-        setFollowedInstructorsList(instructorDetails);
-      }
+      const list = await fetchFollowedInstructorsList();
+      setFollowedInstructorsList(list);
     } catch (e) {
-      showToast({
-        message: '네트워크 연결을 확인한 뒤 다시 시도해주세요.',
-        iconType: 'alarm',
-        theme: 'dark',
-      });
+      showToast({ message: '네트워크 연결을 확인한 뒤 다시 시도해주세요.', iconType: 'alarm', theme: 'dark' });
     }
   };
 
@@ -251,12 +126,7 @@ const PlayFavoriteScreen = () => {
                 onToggleFollow={async (instructorId: number) => {
                   try {
                     // 서비스 레이어에서 API 호출과 store 동기화를 모두 처리
-                    const { followInstructor, unfollowInstructor } = usePlayStore.getState();
-                    await toggleFollowInstructor(instructorId, {
-                      followInstructor,
-                      unfollowInstructor,
-                      isFollowingInstructor: (id) => followedInstructors.some(inst => inst.instructorId === id)
-                    });
+                    await toggleFollow(instructorId);
                     // 팔로우 상태 변경 후 목록 새로고침
                     await fetchFollowed();
                   } catch (error) {

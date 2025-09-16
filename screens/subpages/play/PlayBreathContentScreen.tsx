@@ -23,6 +23,7 @@ import {
   getActivityProgress 
 } from "../../../services/activityLogService";
 import { useToast } from "../../../contexts/ToastContext";
+import { useAppConfigStore } from "../../../stores/appConfigStore";
 
 const PlayBreathContentScreen = ({route}: {route: RouteProp<PlayStackParamList, 'PlayBreathContentScreen'>}) => {
     const {content} = route.params;
@@ -30,7 +31,7 @@ const PlayBreathContentScreen = ({route}: {route: RouteProp<PlayStackParamList, 
     const navigation = useNavigation<StackNavigationProp<PlayStackParamList>>();       
     const insets = useSafeAreaInsets();
     const { showToast } = useToast();
-    
+    const { useMockApi } = useAppConfigStore.getState();
     // 액티비티 진행상황 기록을 위한 상태
     const [lastPosition, setLastPosition] = useState<number>(0);
     const [isCompleted, setIsCompleted] = useState<boolean>(false);
@@ -261,7 +262,7 @@ const PlayBreathContentScreen = ({route}: {route: RouteProp<PlayStackParamList, 
                     <Text style={styles.contentText}>{text}</Text>
                 </View>
 
-                {__DEV__ && (
+                {useMockApi && (
                     <View style={styles.debugContainer}>
                         <View style={styles.debugButtonContainer}>
                             <ButtonSmall title="초기화" variant="active" style={styles.debugButton} onPress={() => { setStep(0); setRemainingTime(content.durationInSeconds); }} />

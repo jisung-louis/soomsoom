@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, TouchableWithoutFeedback} from 'react-native';
-import Animated, { useSharedValue, useAnimatedStyle, withTiming, Easing } from 'react-native-reanimated';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, TouchableWithoutFeedback, Animated, Easing } from 'react-native';
 import { colors } from '../../../constants/colors';
 import { syongsyongTypography, typography } from '../../../constants/typography';
 import ArrowLeftIcon from '../../../assets/icons/common/arrow_back.svg';
@@ -24,13 +23,12 @@ import { getEmotionTitle, sortEmotionsByCountAndPriority } from '../../../utils/
 import { Button } from '../../common/buttons/Button';
 import BubbleTalk from '../../common/bubbletalk/BubbleTalk';
 import BarChart from '../../common/charts/BarChart';
-import EmptyCatIcon from '../../../assets/icons/charactors/cat-variation/cat_write.svg';
-import EmptyMonthIcon from '../../../assets/icons/charactors/cat-variation/cat_quiet.svg';
-import MakingReportIcon from '../../../assets/icons/charactors/cat-variation/cat_stack.svg';
+import EmptyCatIcon from '../../../assets/icons/record/report/cat_write2.svg';
+import EmptyMonthIcon from '../../../assets/icons/record/report/cat_quiet.svg';
 import { ButtonSmall } from '../../common/buttons/ButtonSmall';
 import LottieView from 'lottie-react-native';
 import { ss, sv } from '../../../utils/scale';
-import { useAppConfigStore } from '../../../stores/appConfigStore';
+
 const windowWidth = Dimensions.get('window').width;
 
 const barWidth =  (windowWidth - 40 - 8) / 3 ;
@@ -40,24 +38,30 @@ const barHeight = {
   third: 100,
 };
 
-// 막대 높이 상승 애니메이션 컴포넌트 (mount 시 0 -> target)
-const HeightRiseBar = ({ style, children }: { style?: any; children: React.ReactNode }) => {
-  const target = React.useMemo(() => {
-    const flat = Array.isArray(style) ? Object.assign({}, ...style.map((s: any) => (s || {}))) : (style || {});
-    return typeof flat.height === 'number' ? flat.height : 120;
-  }, [style]);
-  const h = useSharedValue(0);
-  useEffect(() => {
-    // 마운트 시 0에서 목표 높이까지 부드럽게
-    h.value = withTiming(target, { duration: 600, easing: Easing.out(Easing.cubic) });
-  }, [target]);
-  const animatedStyle = useAnimatedStyle(() => ({ height: h.value }));
-  return (
-    <Animated.View style={[style, animatedStyle]}>
-      {children}
-    </Animated.View>
-  );
-};
+const maxBarHeight = barHeight.first;
+
+// const PodiumBar = ({ height, backgroundColor, delayMs = 0, children }: { height: number; backgroundColor: string; delayMs?: number; children?: React.ReactNode }) => {
+//   const animatedHeight = useRef(new Animated.Value(0)).current;
+
+//   useEffect(() => {
+//     animatedHeight.setValue(0);
+//     Animated.timing(animatedHeight, {
+//       toValue: height,
+//       duration: 700,
+//       delay: delayMs,
+//       easing: Easing.out(Easing.cubic),
+//       useNativeDriver: false,
+//     }).start();
+//   }, [height, delayMs]);
+
+//   return (
+//     <View style={[styles.barWrapper, { height: maxBarHeight }] }>
+//       <Animated.View style={[styles.barCommonStyle, { height: animatedHeight, backgroundColor }]}>
+//         {children}
+//       </Animated.View>
+//     </View>
+//   );
+// };
 
 interface RecordReportTabProps {
   onStartRecordPress: () => void;
@@ -65,7 +69,6 @@ interface RecordReportTabProps {
   reportCurrentYear: number;
   reportCurrentMonth: number;
   onReportMonthChange: (direction: 'prev' | 'next') => void;
-  onGoToDiary: () => void;
 }
 
 const RecordReportTab = ({
@@ -73,8 +76,7 @@ const RecordReportTab = ({
   monthlyStatsData,
   reportCurrentYear,
   reportCurrentMonth,
-  onReportMonthChange,
-  onGoToDiary
+  onReportMonthChange
 }: RecordReportTabProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -89,7 +91,6 @@ const RecordReportTab = ({
   // 주차 관련 상태 (내부에서 관리)
   const [currentWeek, setCurrentWeek] = useState(dayjs().week());
   const [monthlyDataCache, setMonthlyDataCache] = useState<Record<string, DailyDiaryItem[]>>({});
-  const { useMockApi } = useAppConfigStore.getState();
   
   // 파티클 애니메이션 표시
   useEffect(() => {
@@ -206,12 +207,6 @@ const RecordReportTab = ({
       .sort(sortEmotionsByCountAndPriority);
   }, [monthlyStatsData]);
 
-  // 해당 달의 감정기록 총 개수(합계)
-  const monthRecordCount = useMemo(() => {
-    if (!monthlyStatsData || !Array.isArray(monthlyStatsData)) return 0;
-    return monthlyStatsData.reduce((sum, s) => sum + (s.count || 0), 0);
-  }, [monthlyStatsData]);
-
   // API 데이터를 BarChart 형식으로 변환하는 함수
   const convertDailyDataToBarChartFormat = (dailyData: DailyDiaryItem[]): Record<string, Record<string, string>> => {
     const result: Record<string, Record<string, string>> = {};
@@ -235,30 +230,11 @@ const RecordReportTab = ({
   const isCurrentMonthFuture = dayjs().year(reportCurrentYear).month(reportCurrentMonth).isAfter(dayjs(), 'month');
 
   // 상위 3개 감정을 시상대 순서로 정렬 (2등, 1등, 3등)
-  const podiumSlots = useMemo(() => {
-    if (emotionRankingData.length === 1) {
-      // [2등 자리 비움, 1등 실제 데이터, 3등 자리 비움]
-      return [null, emotionRankingData[0], null] as (typeof emotionRankingData[number] | null)[];
-    }
-    return [
-      emotionRankingData[1] || null, // 2등
-      emotionRankingData[0] || null, // 1등
-      emotionRankingData[2] || null, // 3등
-    ] as (typeof emotionRankingData[number] | null)[];
-  }, [emotionRankingData]);
-
-  // 월 변경 시에는 막대 렌더링을 잠시 보류했다가 데이터가 준비되면 애니메이션 시작
-  const [barsReady, setBarsReady] = useState(false);
-  // 월이 바뀌면 준비 상태 초기화
-  useEffect(() => {
-    setBarsReady(false);
-  }, [reportCurrentYear, reportCurrentMonth]);
-  // 데이터가 준비되면 렌더링 시작 → 마운트 애니메이션 1회 실행
-  useEffect(() => {
-    if (emotionRankingData.length > 0) {
-      setBarsReady(true);
-    }
-  }, [emotionRankingData]);
+  const podiumEmotions = [
+    emotionRankingData[1], // 2등
+    emotionRankingData[0], // 1등
+    emotionRankingData[2], // 3등
+  ].filter(Boolean); // undefined 제거
 
   // 로딩 중
   if (isLoading) {
@@ -297,7 +273,7 @@ const RecordReportTab = ({
   };
 
 
-  return monthRecordCount > 6 ? (
+  return emotionRankingData.length > 0 ? (
     <ScrollView style={styles.container}>
       {/* 월 단위 이동 컴포넌트 */}
       <View style={styles.yearMonthContainer}>
@@ -362,38 +338,50 @@ const RecordReportTab = ({
           <View style={styles.emotionRankContentContainer}>
               <View style={styles.emotionRankContentContainer}>
                 <View style={styles.barGraphContainer}>
-                  {podiumSlots.map((emotion, index) => {
+                  {/* {podiumEmotions.map((emotion, index) => {
+                    // 시상대 순서: index 0=2등, 1=1등, 2=3등
                     const actualRank = index === 0 ? 2 : index === 1 ? 1 : 3;
                     const barStyle = actualRank === 1 ? styles.bar1st : 
                                   actualRank === 2 ? styles.bar2nd : styles.bar3rd;
-                    const barWrapperStyle = actualRank === 1 ? {height: barHeight.first, marginTop: 20} : 
-                                  actualRank === 2 ? {height: barHeight.second, marginTop: 16} : {height: barHeight.third, marginTop: 16};
+                    
                     return (
-                      <View key={emotion ? emotion.emotion : `placeholder-${actualRank}`} style={{alignItems: 'center'}}>
+                      <View key={emotion.emotion} style={[styles.rankContainer, index === 1 && {gap: 20}]}>
+                        <View style={styles.emotionContainer}>
+                          <View style={styles.emotionIconAndTitleContainer}>
+                            {index === 1 && (
+                              <KingIcon width={40} height={40} style={{marginBottom: 2}} />
+                            )}
+                            <emotion.icon width={64} height={64} />
+                            <Text style={styles.emotionTitle}>{emotion.title}</Text>
+                          </View>
+                          <Text style={styles.countText}>{emotion.count}번</Text>
+                        </View>
+                        <PodiumBar
+                          height={actualRank === 1 ? barHeight.first : actualRank === 2 ? barHeight.second : barHeight.third}
+                          backgroundColor={actualRank === 1 ? colors.primary300 : actualRank === 2 ? colors.primary200 : colors.primary50}
+                        >
+                          <Text style={[styles.rankText, actualRank === 1 && { color: colors.white }]}>{actualRank}</Text>
+                        </PodiumBar>
+                      </View>
+                    );
+                  })} */}
+                  {podiumEmotions.map((emotion, index) => {
+                    const actualRank = index === 0 ? 2 : index === 1 ? 1 : 3;
+                    const barStyle = actualRank === 1 ? styles.bar1st : 
+                                  actualRank === 2 ? styles.bar2nd : styles.bar3rd;
+                    return (
+                      <View key={emotion.emotion} style={{alignItems: 'center'}}>
                         {actualRank === 1 && (
                           <KingIcon width={40} height={40} style={{marginBottom: 2}} />
                         )}
-                        {emotion ? (
-                          <>
-                            <emotion.icon width={64} height={64} />
-                            <Text style={styles.emotionTitle}>{emotion.title}</Text>
-                            <Text style={styles.countText}>{emotion.count}번</Text>
-                            <View style={[styles.barWrapper, barWrapperStyle]}>
-                              {barsReady && (
-                                <HeightRiseBar style={[barStyle, styles.barCommonStyle]}>
-                                  <Text style={[styles.rankText, actualRank === 1 && { color: colors.white }]}>{actualRank}</Text>
-                                </HeightRiseBar>
-                              )}
-                            </View>
-                          </>
-                        ) : (
-                          <>
-                            {/* 플레이스홀더: 아이콘/텍스트 비우고 막대도 투명 */}
-                            <View style={styles.barWrapper}/>
-                          </>
-                        )}
+                        <emotion.icon width={64} height={64} />
+                        <Text style={styles.emotionTitle}>{emotion.title}</Text>
+                        <Text style={styles.countText}>{emotion.count}번</Text>
+                        <View style={[barStyle, styles.barCommonStyle]}>
+                          <Text style={[styles.rankText, actualRank === 1 && { color: colors.white }]}>{actualRank}</Text>
+                        </View>
                       </View>
- 
+
                     );
                   })}
                 </View>
@@ -582,43 +570,25 @@ const RecordReportTab = ({
           />
         </TouchableOpacity>
       </View>
-      {monthRecordCount === 0 ? (
-        isCurrentMonthFuture ? (
-          <View style={styles.emptyStateContainer}>
-            <View style={styles.emptyStateContentContainer}>
-              <EmptyCatIcon width={100} height={100} />
-              <Text style={styles.emptyStateText}>이 달의 첫 기록, 지금 남겨보세요!</Text>
-            </View>
-            <ButtonSmall
-              title="기록 시작하기"
-              onPress={() => {onStartRecordPress();}}
-              variant="active"
-            />
-          </View>
-          ) : (
-            <View style={[styles.emptyStateContentContainer, {flex: 1}]}>
-              <EmptyMonthIcon width={100} height={100} />
-              <Text style={styles.emptyStateText}>이 달엔 조용했네요!</Text>
-            </View>
-        )
+      {isCurrentMonthFuture ? (
+      <View style={styles.emptyStateContainer}>
+        <View style={styles.emptyStateContentContainer}>
+          <EmptyCatIcon width={100} height={100} />
+          <Text style={styles.emptyStateText}>이 달의 첫 기록, 지금 남겨보세요!</Text>
+        </View>
+        <ButtonSmall
+          title="기록 시작하기"
+          onPress={() => {onStartRecordPress();}}
+          variant="active"
+        />
+      </View>
       ) : (
         <View style={styles.emptyStateContainer}>
-          <View style={styles.emptyStateContentContainer}>
-            <MakingReportIcon width={100} height={100} />
-            <View style={styles.emptyStateTextContainer}>
-              <Text style={styles.emptyStateText}>리포트를 만드는 중이에요!</Text>
-              <Text style={styles.emptyStateText2}>감정 기록 일주일 이상 쌓이면, 리포트가 열려요!</Text>
-            </View>
-          </View>
-          <ButtonSmall
-            title="기록 확인하기"
-            onPress={onGoToDiary}
-            variant="active"
-          />
-          {useMockApi && (
-                <Text>[DEBUG] {monthRecordCount}개의 감정기록 존재</Text>
-              )}
+        <View style={styles.emptyStateContentContainer}>
+          <EmptyMonthIcon width={100} height={100} />
+          <Text style={styles.emptyStateText}>이 달엔 조용했네요!</Text>
         </View>
+      </View>
       )}
     </View>
   );
@@ -908,21 +878,11 @@ const styles = StyleSheet.create({
   },
   emptyStateContentContainer: {
     alignItems: 'center',
-    justifyContent: 'center',
     gap: 20,
   },
   emptyStateText: {
     ...syongsyongTypography.title6,
     color: colors.grayScale900,
-  },
-  emptyStateText2: {
-    ...typography.body5,
-    color: colors.grayScale500,
-  },
-  emptyStateTextContainer: {
-    gap: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
 });
 

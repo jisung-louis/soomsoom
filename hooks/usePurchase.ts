@@ -12,6 +12,7 @@ import {
 } from '../services/purchaseService';
 import { useOwnedItems } from './useOwnedItems';
 import { handlePurchaseError } from '../utils/purchaseErrorHandler';
+import { useAppConfigStore } from '../stores/appConfigStore';
 
 export interface UsePurchaseOptions {
   onSuccess?: () => void;
@@ -51,6 +52,7 @@ export interface UsePurchaseReturn {
 export function usePurchase(options: UsePurchaseOptions = {}): UsePurchaseReturn {
   const { onSuccess, onError } = options;
   const { loadOwnedItems } = useOwnedItems();
+  const { useMockApi } = useAppConfigStore.getState();
   
   // 장바구니 상태 (Dev 환경에서만 사용)
   const cartItems = useCartStore(state => state.items);
@@ -78,8 +80,8 @@ export function usePurchase(options: UsePurchaseOptions = {}): UsePurchaseReturn
         useCurrencyStore.setState({ heartPoints: res.remainingPoints });
       }
       
-      // 구매 후 소유 아이템 목록 동기화 (prod 환경에서만)
-      if (!__DEV__) {
+      // 구매 후 소유 아이템 목록 동기화 (모킹이 아닐 때만)
+      if (!useMockApi) {
         try {
           await loadOwnedItems();
         } catch (error) {
@@ -211,8 +213,8 @@ export function usePurchase(options: UsePurchaseOptions = {}): UsePurchaseReturn
         useCurrencyStore.setState({ heartPoints: response.remainingPoints });
       }
       
-      // 구매 후 소유 아이템 목록 동기화 (prod 환경에서만)
-      if (!__DEV__) {
+      // 구매 후 소유 아이템 목록 동기화 (모킹이 아닐 때만)
+      if (!useMockApi) {
         try {
           await loadOwnedItems();
         } catch (error) {

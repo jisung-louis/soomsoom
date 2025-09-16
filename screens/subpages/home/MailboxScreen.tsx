@@ -13,6 +13,7 @@ import { colors } from '../../../constants/colors';
 import MessageIcon from '../../../assets/icons/navigation/topNavigation/message.svg';
 import EmptyIcon from '../../../assets/images/home/mailbox/mailbox_empty.svg';
 import { radius } from '../../../constants/radius';
+import { useAppConfigStore } from '../../../stores/appConfigStore';
 dayjs.extend(relativeTime);
 dayjs.locale('ko');
 
@@ -51,7 +52,8 @@ const mockMailData: MailData[] = [
 ];
 
 const isMailboxEmpty = () => {
-  if(__DEV__) {
+  const { useMockApi } = useAppConfigStore.getState();
+  if(useMockApi) {
   const isEmpty = mockMailData.length === 0;
   return isEmpty;
   }

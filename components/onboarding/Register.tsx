@@ -1,31 +1,23 @@
 import React from 'react';
-import { View, Text, StyleSheet, Dimensions, TouchableOpacity, Linking, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import Logo from '../../assets/icons/logo.svg';
 import { syongsyongTypography, typography } from '../../constants/typography';
 import { colors } from '../../constants/colors';
-import GoogleIcon from '../../assets/images/onboarding/google_icon.svg';
-import AppleIcon from '../../assets/images/onboarding/apple_icon.svg';
-import { radius } from '../../constants/radius';
 import { sv } from '../../utils/scale';
 import SocialLoginButtons from './SocialLoginButtons';
+import { useOpenExternalLink } from '../../hooks/useOpenExternalLink';
 
-const { width } = Dimensions.get('window');
 const TERMS_URL = 'https://habjungdriking.notion.site/Terms-of-Service-2368c8e0513580f9999ccb7bb901a0d5';
 const PRIVACY_URL = 'https://habjungdriking.notion.site/2378c8e0513580758730fade7689a04a';
 
 const Register = ({onComplete}: {onComplete: () => void}) => {
-  
-  const openExternalLink = async (url: string) => {
-    try {
-      const supported = await Linking.canOpenURL(url);
-      if (supported) {
-        await Linking.openURL(url);
-      } else {
-        Alert.alert('링크를 열 수 없어요', '지원되지 않는 URL 형식입니다.');
-      }
-    } catch (error) {
-      Alert.alert('오류가 발생했어요', '잠시 후 다시 시도해주세요.');
-    }
+  const openExternalLink = useOpenExternalLink();
+  const onGoogleLogin = () => {
+    console.log('Google로 계속하기');
+  }
+  const onAppleLogin = () => {
+    console.log('애플로 계속하기');
+    onComplete();//임시로 완료처리
   }
   return (
     <View style={styles.container}>

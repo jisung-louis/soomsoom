@@ -37,21 +37,6 @@ export function getCurrentAppVersion(): AppVersionInfo {
  * 서버에서 최신 버전 정보를 가져옵니다
  */
 export async function checkLatestVersion(): Promise<VersionInfo> {
-  if (__DEV__) {
-    // Dev 환경: Mock 데이터 반환
-    console.log('🔧 [DEV] 버전 체크 Mock 응답');
-    return {
-      currentVersion: '1.0.0',
-      minSupportedVersion: '1.0.0',
-      forceUpdate: false,
-      updateMessage: '새로운 버전이 있습니다. 업데이트하시겠습니까?',
-      storeUrl: {
-        ios: 'https://apps.apple.com/app/soomsoom/id123456789',
-        android: 'https://play.google.com/store/apps/details?id=com.soomsoom.app',
-      },
-    };
-  }
-
   try {
     // Prod 환경: 실제 서버 API 호출
     const currentApp = getCurrentAppVersion();

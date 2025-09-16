@@ -15,6 +15,7 @@ import { cancelAlarmNotifications, requestNotificationPermissions } from '../../
 import { scheduleDiaryNotification } from '../../../../utils/notificationUtils';
 import { parseNotificationTime } from '../../../../utils/timeUtils';
 import { useToast } from '../../../../hooks/useToast';
+import { useAppConfigStore } from '../../../../stores/appConfigStore';
 
 interface TimeData {
   period: string;
@@ -31,7 +32,7 @@ const NotificationSettingScreen = () => {
     });
 
     const { showToast } = useToast();
-    
+    const { useMockApi } = useAppConfigStore.getState();
     // 마음일기 알림 상태 관리
     const [isDiaryNotificationEnabled, setIsDiaryNotificationEnabled] = useState(false);
     const [isGreetingNotificationEnabled, setIsGreetingNotificationEnabled] = useState(false);
@@ -308,6 +309,7 @@ const NotificationSettingScreen = () => {
             </View>
 
             {/* 개발자 옵션(추후 삭제 예정) */}
+            {useMockApi && (
             <View style={
                 {
                     marginTop: 20,
@@ -318,7 +320,7 @@ const NotificationSettingScreen = () => {
                     padding: 16,
                 }
             }>
-                <Text style={styles.settingItemText}>개발자 옵션(추후 삭제 예정)</Text>
+                <Text style={styles.settingItemText}>개발자 옵션{`\n`}(위험! 건들면 앱 크래시 날 수 있음)</Text>
                 <View style={styles.settingItem}>
                     <Button title="AsyncStorage 내역 로그로 보기" onPress={() => {
                         AsyncStorage.getAllKeys().then((keys) => {
@@ -335,8 +337,9 @@ const NotificationSettingScreen = () => {
                         AsyncStorage.clear();
                         loadNotificationSettings();
                     }} />
+                    </View>
                 </View>
-            </View>
+            )}
         </View>
         {/** 알림 시간 선택 바텀시트 */}    
         <CustomBottomSheet
@@ -373,6 +376,7 @@ const styles = StyleSheet.create({
     settingItemText: {
         ...typography.body1,
         color: colors.grayScale900,
+        textAlign: 'center',
     },
     notificationTimeText: {
         ...typography.body1,

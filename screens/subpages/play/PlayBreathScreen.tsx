@@ -15,6 +15,7 @@ import {
   PlayBreathStep3,
   PlayBreathStep4,
 } from '../../../components/tabs/play/PlayBreathSteps';
+import { useAppConfigStore } from '../../../stores/appConfigStore';
 
 const PlayBreathScreen = ({route}: {route: RouteProp<PlayStackParamList, 'PlayBreathScreen'>}) => {
   const navigation = useNavigation<StackNavigationProp<PlayStackParamList>>();
@@ -104,6 +105,7 @@ const PlayBreathScreen = ({route}: {route: RouteProp<PlayStackParamList, 'PlayBr
         );
     }
   };
+  const { useMockApi } = useAppConfigStore.getState();
 
   return (
     <SafeAreaView style={styles.container}>
@@ -125,7 +127,7 @@ const PlayBreathScreen = ({route}: {route: RouteProp<PlayStackParamList, 'PlayBr
         {/* Render step-specific component */}
         <View>
           {renderStepComponent()}
-          {__DEV__ && (
+          {useMockApi && (
             <Text style={{alignSelf: 'center', marginTop: 50}}>[DEBUG] step: {step}</Text>
           )}
         </View>

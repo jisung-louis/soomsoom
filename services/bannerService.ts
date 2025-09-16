@@ -1,7 +1,6 @@
 import { apiClient } from './apiClient';
 import { createNetworkError } from '../utils/errorHandler';
 import { Banner, GetBannersResponse } from '../types';
-import { bannerMockData } from '../data/bannerMockData';
 
 /**
  * 활성 배너 목록 조회 API
@@ -11,16 +10,10 @@ import { bannerMockData } from '../data/bannerMockData';
  */
 export const getActiveBanners = async (): Promise<GetBannersResponse> => {
   try {
-    if (__DEV__) {
-      // 개발 환경: Mock 데이터 반환
-      console.log('🎯 활성 배너 목록 조회 (개발 모드)');
-      
-      return bannerMockData;
-    } else {
-      // 프로덕션 환경: 실제 API 호출
-      const response = await apiClient.get<GetBannersResponse>('/banners');
-      return response;
-    }
+    // 분기 제거: 항상 apiClient를 통해 호출
+    // useMockApi=true면 apiClient가 mockRoutes로 응답을 반환합니다.
+    const response = await apiClient.get<GetBannersResponse>('/banners');
+    return response;
   } catch (error) {
     throw createNetworkError(
       '활성 배너 목록 조회에 실패했습니다.',

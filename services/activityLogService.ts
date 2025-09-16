@@ -40,15 +40,8 @@ export interface GetUserActivitySummaryParams {
  */
 export const completeActivity = async (activityId: number): Promise<void> => {
   try {
-    if (__DEV__) {
-      // 개발 환경: 로컬 store에 저장
-      console.log(`🎉 액티비티 완료 처리 (개발 모드): ${activityId}`);
-      useActivityHistoryStore.getState().completeActivity(activityId);
-      return;
-    } else {
-      // 프로덕션 환경: 실제 API 호출
-      await apiClient.post<void>(`/activities/${activityId}/history/complete`);
-    }
+    // 실제 API 호출 (모킹은 apiClient에서 처리)
+    await apiClient.post<void>(`/activities/${activityId}/history/complete`);
   } catch (error) {
     throw createNetworkError(
       '액티비티 완료 처리에 실패했습니다.',
@@ -70,23 +63,8 @@ export const updateActivityProgress = async (
   params: UpdateActivityProgressParams
 ): Promise<void> => {
   try {
-    if (__DEV__) {
-      // 개발 환경: 로컬 store에 저장
-      console.log(`📝 액티비티 진행 상황 기록 (개발 모드):`, {
-        activityId,
-        lastPlaybackPosition: params.lastPlaybackPosition,
-        actualPlayTimeInSeconds: params.actualPlayTimeInSeconds,
-      });
-      useActivityHistoryStore.getState().updateActivityProgress(
-        activityId,
-        params.lastPlaybackPosition,
-        params.actualPlayTimeInSeconds
-      );
-      return;
-    } else {
-      // 프로덕션 환경: 실제 API 호출
-      await apiClient.patch<void>(`/activities/${activityId}/history`, params);
-    }
+    // 실제 API 호출 (모킹은 apiClient에서 처리)
+    await apiClient.patch<void>(`/activities/${activityId}/history`, params);
   } catch (error) {
     throw createNetworkError(
       '액티비티 진행 상황 기록에 실패했습니다.',
@@ -106,25 +84,9 @@ export const getActivityProgress = async (
   activityId: number
 ): Promise<ActivityProgressResponse | null> => {
   try {
-    if (__DEV__) {
-      // 개발 환경: 로컬 store에서 조회
-      console.log(`🔍 액티비티 진행 상황 조회 (개발 모드): ${activityId}`);
-      
-      const progress = useActivityHistoryStore.getState().getActivityProgress(activityId);
-      if (progress) {
-        return {
-          activityId: progress.activityId,
-          progressSeconds: progress.lastPlaybackPosition,
-        };
-      } else {
-        return null; // 기록이 없음
-      }
-    } else {
-      // 프로덕션 환경: 실제 API 호출
-      const response = await apiClient.get<ActivityProgressResponse | undefined>(`/activities/${activityId}/history`);
-      // 204 No Content인 경우 apiClient는 undefined를 반환
-      return response ?? null;
-    }
+    // 실제 API 호출 (모킹은 apiClient에서 처리)
+    const response = await apiClient.get<ActivityProgressResponse | undefined>(`/activities/${activityId}/history`);
+    return response ?? null;
   } catch (error) {
     throw createNetworkError(
       '액티비티 진행 상황 조회에 실패했습니다.',
@@ -144,27 +106,19 @@ export const getUserActivitySummary = async (
   params?: GetUserActivitySummaryParams
 ): Promise<UserActivitySummaryResponse> => {
   try {
-    if (__DEV__) {
-      // 개발 환경: 로컬 store에서 계산된 데이터 반환
-      console.log(`📊 내 활동 요약 정보 조회 (개발 모드)`, params);
-      
-      const summary = useActivityHistoryStore.getState().calculateUserSummary();
-      return summary;
-    } else {
-      // 프로덕션 환경: 실제 API 호출
-      const queryParams = new URLSearchParams();
-      if (params?.userId !== undefined) {
-        queryParams.append('userId', String(params.userId));
-      }
-
-      const query = queryParams.toString();
-      const url = query 
-        ? `/users/me/summary?${query}` 
-        : '/users/me/summary';
-
-      const response = await apiClient.get<UserActivitySummaryResponse>(url);
-      return response;
+    // 실제 API 호출 (모킹은 apiClient에서 처리)
+    const queryParams = new URLSearchParams();
+    if (params?.userId !== undefined) {
+      queryParams.append('userId', String(params.userId));
     }
+
+    const query = queryParams.toString();
+    const url = query 
+      ? `/users/me/summary?${query}` 
+      : '/users/me/summary';
+
+    const response = await apiClient.get<UserActivitySummaryResponse>(url);
+    return response;
   } catch (error) {
     throw createNetworkError(
       '내 활동 요약 정보 조회에 실패했습니다.',

@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, Alert } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import TopNavigation from '../../components/common/top-navigation/TopNavigation';
@@ -22,6 +22,7 @@ import AdBanner from '../../components/common/ads/AdBanner';
 import { useAuthStore } from '../../stores/authStore';
 import { useAppConfigStore } from '../../stores/appConfigStore';
 import { useAuth } from '../../hooks/useAuth';
+import { resetAppState } from '../../utils/resetAppState';
 
 type HomeTabNavigationProp = StackNavigationProp<HomeStackParamList, 'HomeTab'>;
 
@@ -69,11 +70,9 @@ const HomeTab = () => {
 
 
   const handleSocialLogin = async () => {
-    if (loginType === 'social') {
+    try {
       await logout();
-      return;
-    }
-    setPhase('logged_out');
+    } catch {}
   };
 
   const handleHeartPress = () => {
@@ -102,8 +101,28 @@ const HomeTab = () => {
     console.log('온보딩이 재시작됩니다!');
   };
 
-  
+  const onModeToggle = async () => {
+    if (useMockApiMode) {
+      Alert.alert('실제 API 연결', '서버 비용이 발생할 수 있으니 조심해주세요!!', [
+        { text: '취소', style: 'cancel' },
+        { text: '연결하기', style: 'destructive', onPress: async () => {
+          await resetAppState();
+          setUseMockApiMode(!useMockApiMode);
+        } },
+      ]);
+    } else {
+      Alert.alert('내부 데이터 사용', '내부 데이터 사용 모드로 변경하시겠습니까?', [
+      { text: '아니요', style: 'cancel' },
+      { text: '고고', style: 'destructive', onPress: async () => {
+        await resetAppState();
+        setUseMockApiMode(!useMockApiMode);
+      } },
+    ]);
+    }
+  };
+
   return (
+    <>
     <UserRoom >
       <TopNavigation 
         shopButtonPress={handleShopPress}
@@ -142,16 +161,16 @@ const HomeTab = () => {
         </TouchableOpacity>
       )}
 
-      <View style={[styles.developerButtons,{marginBottom: 10}]}>
+      <View style={[styles.developerButtons,{marginBottom: 10}]}> 
         <ButtonSmall
-          title={useMockApiMode ? '내부 데이터 사용' : '실제 서버 연결'}
-          onPress={() => setUseMockApiMode(!useMockApiMode)}
+          title={useMockApiMode ? '실제 서버 연결' : '내부 데이터 사용'}
+          onPress={onModeToggle}
           variant="active"
           style={{width: '100%'}}
         />
       </View>
       {/* 개발자용 버튼 (추후 삭제) */}
-      {__DEV__ && (
+      {useMockApiMode && (
       <View style={styles.developerButtons}>
         <Text>개발자용 버튼</Text>
         <ButtonSmall
@@ -189,11 +208,13 @@ const HomeTab = () => {
         </View>
       )}
 
-      {/* 광고 배너 */}
-      <View style={styles.adContainer}>
-        <AdBanner />
-      </View>
+      
     </UserRoom>
+    {/* 광고 배너 */}
+    <View style={styles.adContainer}>
+      <AdBanner />
+    </View>
+  </>
   );
 };
 
@@ -210,7 +231,7 @@ const styles = StyleSheet.create({
   },
   adContainer: {
     position: 'absolute',
-    bottom: -300,
+    bottom: 150,
     left: 0,
     right: 0,
     zIndex: 9999, 

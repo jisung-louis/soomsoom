@@ -79,7 +79,7 @@ const styles = StyleSheet.create({
   deleteIconContainer: {
   },
   alarmItemContainer: {
-    padding: 20,
+    paddingVertical: 20,
     height: 100,
     flexDirection: 'row',
     alignItems: 'center',

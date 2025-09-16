@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { MyAchievement, AchievementGrade } from '../../../types';
-import { bindAchievementPopupHandler, navigateToAchievements, useAchievementStore } from '../../../stores/achievementStore';
+import { bindAchievementPopupHandler, navigateToAchievements } from '../../../stores/achievementStore';
 import CustomAlert from '../alert/CustomAlert';
 
 const animByGrade: Record<AchievementGrade, any> = {
@@ -38,29 +38,11 @@ export default function AchievementUnlockedPopup() {
     navigateToAchievements(); // 전역 함수 사용
   };
 
-  const getRewardText = (achievement: MyAchievement) => {
-    const definitions = useAchievementStore.getState().achievementDefinitions;
-    const definition = definitions.get(achievement.achievementId);
-    
-    if (!definition) return '';
-    
-    const rewards = [];
-    if (definition.rewardPoints) {
-      rewards.push(`${definition.rewardPoints} 포인트`);
-    }
-    if (definition.rewardItemId) {
-      rewards.push('특별 아이템');
-    }
-    
-    return rewards.length > 0 ? `보상: ${rewards.join(', ')}` : '';
-  };
-
   if (!data) return null;
 
   // CustomAlert에 맞는 메시지 구성
   const message = '새로운 업적을 달성했어요!';
   const subMessage = `'${data.name}' 업적 달성!`;
-  const rewardText = getRewardText(data);
 
   return (
     <CustomAlert

@@ -41,7 +41,6 @@ const TestScreen = () => {
   
   // AchievementStore 상태를 실시간으로 구독
   const { 
-    achievementDefinitions,
     userAchievements, 
     getAchievedCount, 
     getTotalCount,

@@ -60,12 +60,6 @@ const PlayResultScreen = () => {
     return (
         <View style={styles.background}>
             <SafeAreaView style={styles.container}>
-                <TopNavigation
-                    isShopButtonVisible={false}
-                    isHeartButtonVisible={true}
-                    isStorageButtonVisible={false}
-                    isMessageButtonVisible={true}
-                />
                 {/* <View style={styles.contentContainer}>
                     <View style={styles.characterWrapper}>
                         <ShadowSVG style={styles.shadow} />

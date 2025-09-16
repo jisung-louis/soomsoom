@@ -1,6 +1,6 @@
 import { apiClient } from './apiClient';
 import { createNetworkError } from '../utils/errorHandler';
-import { mockInstructorsData, mockContentData } from '../data/playContentData';
+// DEV 모킹은 apiClient + mockRoutes에서 일괄 처리합니다.
 
 // 타입 정의 (실제 API 명세에 맞춤)
 export interface Instructor {
@@ -131,29 +131,10 @@ export const getInstructorDetail = async (
   options?: { deletionStatus?: DeletionStatus }
 ): Promise<Instructor> => {
   try {
-    if (__DEV__) {
-      // 개발 환경: mock 데이터 사용
-      const mockInstructor = mockInstructorsData.find(inst => inst.instructorId === instructorId);
-      if (!mockInstructor) {
-        throw new Error('강사를 찾을 수 없습니다.');
-      }
-      
-      return {
-        instructorId: mockInstructor.instructorId,
-        name: mockInstructor.name,
-        bio: mockInstructor.bio,
-        profileImageUrl: mockInstructor.profileImageUrl,
-        isFollowing: false, // UI에서 직접 Store를 확인하도록 변경
-        createdAt: mockInstructor.createdAt,
-        modifiedAt: mockInstructor.modifiedAt,
-        deletedAt: mockInstructor.deletedAt,
-      };
-    } else {
-      // 프로덕션 환경: 실제 API 호출
-      const query = options?.deletionStatus ? `?deletionStatus=${options.deletionStatus}` : '';
-      const response = await apiClient.get<Instructor>(`/instructors/${instructorId}${query}`);
-      return response;
-    }
+    // 실제 API 호출 (모킹은 apiClient에서 처리)
+    const query = options?.deletionStatus ? `?deletionStatus=${options.deletionStatus}` : '';
+    const response = await apiClient.get<Instructor>(`/instructors/${instructorId}${query}`);
+    return response;
   } catch (error) {
     throw createNetworkError(
       '강사 정보를 불러오는데 실패했습니다.',
@@ -170,38 +151,18 @@ export const getFollowedInstructors = async (
   params?: GetFollowedInstructorsParams
 ): Promise<FollowedInstructorsResponse> => {
   try {
-    if (__DEV__) {
-      // 개발 환경: Store에서 직접 팔로우 상태를 관리하므로 빈 응답 반환
-      // UI는 Store의 followedInstructors를 직접 참조하면 됨
-      const response: FollowedInstructorsResponse = {
-        content: [],
-        page: {
-          size: params?.size || 12,
-          number: params?.page || 1,
-          totalElements: 0,
-          totalPages: 1,
-        },
-      };
-      
-      return response;
-      
-    } else {
-      // 프로덕션 환경: 실제 API 호출
-      const queryParams = new URLSearchParams();
-      if (params?.userId !== undefined) queryParams.append('userId', String(params.userId));
-      if (params?.page !== undefined) queryParams.append('page', String(params.page));
-      if (params?.size !== undefined) queryParams.append('size', String(params.size));
-      if (params?.sort) queryParams.append('sort', params.sort);
+    // 실제 API 호출 (모킹은 apiClient에서 처리)
+    const queryParams = new URLSearchParams();
+    if (params?.userId !== undefined) queryParams.append('userId', String(params.userId));
+    if (params?.page !== undefined) queryParams.append('page', String(params.page));
+    if (params?.size !== undefined) queryParams.append('size', String(params.size));
+    if (params?.sort) queryParams.append('sort', params.sort);
 
-      const query = queryParams.toString();
-      const url = query ? `/users/me/following?${query}` : '/users/me/following';
+    const query = queryParams.toString();
+    const url = query ? `/users/me/following?${query}` : '/users/me/following';
 
-      const response = await apiClient.get<FollowedInstructorsResponse>(url);
-      
-      // Store 동기화는 UI에서 처리하도록 변경
-      
-      return response;
-    }
+    const response = await apiClient.get<FollowedInstructorsResponse>(url);
+    return response;
   } catch (error) {
     throw createNetworkError(
       '팔로우한 강사 목록을 불러오는데 실패했습니다.',
@@ -219,44 +180,20 @@ export const getInstructorActivities = async (
   params?: GetInstructorActivitiesParams
 ): Promise<InstructorActivitiesResponse> => {
   try {
-    if (__DEV__) {
-      // 개발 환경: mock 데이터 사용
-      const mockActivities = mockContentData.filter(content => content.author.id === instructorId);
-      
-      const activities = mockActivities.map(content => ({
-        activityId: content.id,
-        title: content.title,
-        durationInSeconds: content.durationInSeconds,
-        thumbnailImageUrl: content.thumbnailImageUrl,
-        type: content.type,
-        isFavorited: content.isFavorited,
-      }));
+    // 실제 API 호출 (모킹은 apiClient에서 처리)
+    const queryParams = new URLSearchParams();
+    if (params?.userId !== undefined) queryParams.append('userId', String(params.userId));
+    if (params?.page !== undefined) queryParams.append('page', String(params.page));
+    if (params?.size !== undefined) queryParams.append('size', String(params.size));
+    if (params?.sort) queryParams.append('sort', params.sort);
 
-      return {
-        content: activities,
-        page: {
-          size: params?.size || 10,
-          number: params?.page || 1,
-          totalElements: activities.length,
-          totalPages: 1,
-        },
-      };
-    } else {
-      // 프로덕션 환경: 실제 API 호출
-      const queryParams = new URLSearchParams();
-      if (params?.userId !== undefined) queryParams.append('userId', String(params.userId));
-      if (params?.page !== undefined) queryParams.append('page', String(params.page));
-      if (params?.size !== undefined) queryParams.append('size', String(params.size));
-      if (params?.sort) queryParams.append('sort', params.sort);
+    const query = queryParams.toString();
+    const url = query 
+      ? `/instructors/${instructorId}/activities?${query}` 
+      : `/instructors/${instructorId}/activities`;
 
-      const query = queryParams.toString();
-      const url = query 
-        ? `/instructors/${instructorId}/activities?${query}` 
-        : `/instructors/${instructorId}/activities`;
-
-      const response = await apiClient.get<InstructorActivitiesResponse>(url);
-      return response;
-    }
+    const response = await apiClient.get<InstructorActivitiesResponse>(url);
+    return response;
   } catch (error) {
     throw createNetworkError(
       '강사 대표 강의를 불러오는데 실패했습니다.',
@@ -279,41 +216,19 @@ export const toggleFollowInstructor = async (
   }
 ): Promise<FollowInstructorResponse> => {
   try {
-    if (__DEV__) {
-      // 개발 환경: Store에서 직접 처리
-      const wasFollowing = storeActions.isFollowingInstructor(instructorId);
-      
-      // 팔로우 상태 토글
-      if (wasFollowing) {
-        storeActions.unfollowInstructor(instructorId);
-      } else {
-        // Store에 instructorId만 전달
+    // 실제 API 호출 후 Store 동기화 (모킹은 apiClient에서 처리)
+    const response = await apiClient.post<FollowInstructorResponse>(
+      `/instructors/${instructorId}/follow`
+    );
+    const wasFollowing = storeActions.isFollowingInstructor(instructorId);
+    if (wasFollowing !== response.isFollowing) {
+      if (response.isFollowing) {
         storeActions.followInstructor(instructorId);
+      } else {
+        storeActions.unfollowInstructor(instructorId);
       }
-      
-      return {
-        followeeId: instructorId,
-        isFollowing: !wasFollowing,
-      };
-    } else {
-      // 프로덕션 환경: API 호출 후 Store 동기화
-      const response = await apiClient.post<FollowInstructorResponse>(
-        `/instructors/${instructorId}/follow`
-      );
-      
-      // API 응답으로 Store 동기화
-      const wasFollowing = storeActions.isFollowingInstructor(instructorId);
-      if (wasFollowing !== response.isFollowing) {
-        if (response.isFollowing) {
-          // Store에 instructorId만 전달
-          storeActions.followInstructor(instructorId);
-        } else {
-          storeActions.unfollowInstructor(instructorId);
-        }
-      }
-      
-      return response;
     }
+    return response;
   } catch (error) {
     throw createNetworkError(
       '강사 팔로우 상태 변경에 실패했습니다.',

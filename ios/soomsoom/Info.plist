@@ -9,7 +9,7 @@
     <key>CFBundleDevelopmentRegion</key>
     <string>$(DEVELOPMENT_LANGUAGE)</string>
     <key>CFBundleDisplayName</key>
-    <string>soomsoom</string>
+    <string>숨숨</string>
     <key>CFBundleExecutable</key>
     <string>$(EXECUTABLE_NAME)</string>
     <key>CFBundleIdentifier</key>
@@ -21,7 +21,7 @@
     <key>CFBundlePackageType</key>
     <string>$(PRODUCT_BUNDLE_PACKAGE_TYPE)</string>
     <key>CFBundleShortVersionString</key>
-    <string>1.0.0</string>
+    <string>0.1.0</string>
     <key>CFBundleSignature</key>
     <string>????</string>
     <key>CFBundleURLTypes</key>
@@ -62,7 +62,9 @@
       <true/>
     </dict>
     <key>NSMicrophoneUsageDescription</key>
-    <string>Allow $(PRODUCT_NAME) to access your microphone</string>
+    <string>음성 녹음 및 호흡/명상 기능을 위해 마이크 접근이 필요합니다.</string>
+    <key>NSUserTrackingUsageDescription</key>
+    <string>더 나은 광고 경험 제공과 앱 성능 분석을 위해 기기 식별자를 사용합니다. 설정에서 언제든 변경할 수 있습니다.</string>
     <key>UIAppFonts</key>
     <array>
       <string>Cafe24Syongsyong-v2.0.ttf</string>

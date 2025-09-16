@@ -9,12 +9,13 @@ import { BreathAction } from '../../services/contentService';
 import { radius } from '../../constants/radius';
 import CatBasic from '../../assets/images/play/playBreathing/basic.svg';
 import { ButtonSmall } from '../common/buttons/ButtonSmall';
+import { useAppConfigStore } from '../../stores/appConfigStore';
 
 
 
 const TOTAL_DURATION = 65;
 export default function BreathingGuide({ onComplete }: { onComplete?: () => void }) {
-
+  const { useMockApi } = useAppConfigStore.getState();
   const [step, setStep] = useState(0);
   const current = breathContentTimeline[step];
   const action: BreathAction = current?.action ?? 'START';
@@ -103,7 +104,7 @@ export default function BreathingGuide({ onComplete }: { onComplete?: () => void
             <Text style={styles.contentText}>{text}</Text>
         </View>
 
-        {__DEV__ && (
+        {useMockApi && (
         <View style={styles.debugContainer}>
             <TouchableOpacity onPress={handleInit}>
                 <Text>초기화</Text>

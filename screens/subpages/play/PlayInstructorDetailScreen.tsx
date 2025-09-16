@@ -18,6 +18,7 @@ import { getInstructorDetail, getInstructorActivities, toggleFollowInstructor, I
 import LoadingSpinner from '../../../components/common/loading/LoadingSpinner';
 import ErrorMessage from '../../../components/common/error/ErrorMessage';
 import { getActivityDetail, Activity } from '../../../services/contentService';
+import { normalizeImageSource } from '../../../utils/textUtils';
 
 const PlayInstructorDetailScreen: React.FC = () => {
     const navigation = useNavigation<StackNavigationProp<PlayStackParamList>>();
@@ -44,7 +45,6 @@ const PlayInstructorDetailScreen: React.FC = () => {
           setIsLoading(true);
           setError(null);
 
-          // 서비스 레이어에서 __DEV__ 분기 처리
           const [instructorData, activitiesData] = await Promise.all([
             getInstructorDetail(instructorId),
             getInstructorActivities(instructorId, { page: 1, size: 10 })
@@ -131,7 +131,8 @@ const PlayInstructorDetailScreen: React.FC = () => {
         <View style={styles.contentHeader}>
             {instructor.profileImageUrl ? (
               <Image 
-                source={__DEV__ ? instructor.profileImageUrl as any : { uri: instructor.profileImageUrl }} 
+                //source={__DEV__ ? instructor.profileImageUrl as any : { uri: instructor.profileImageUrl }}
+                source={normalizeImageSource(instructor.profileImageUrl)}
                 style={styles.contentHeaderTitleImage} 
               />
             ) : (

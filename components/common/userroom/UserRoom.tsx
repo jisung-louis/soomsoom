@@ -14,9 +14,10 @@ export type UserRoomProps = {
   cropTop?: number; // 상단에서 잘라낼 height (figma 기준)
   scrollable?: boolean; // 스크롤 가능 여부 (cropTop이 있으면 자동 true)
   scrollViewRef?: React.RefObject<ScrollView>
+  onBackgroundImageUri?: (uri: string) => void; // 배경 이미지 URI 전달 콜백
 };
 
-const UserRoom = ({children, previewMode = false, previewItemIds = [], cropTop = 0, scrollable, scrollViewRef}: UserRoomProps) => {
+const UserRoom = ({children, previewMode = false, previewItemIds = [], cropTop = 0, scrollable, scrollViewRef, onBackgroundImageUri}: UserRoomProps) => {
   const placedItems = useRoomStore(state => state.placedItems);
   const replayKey = useRef(0);
   const [itemMap, setItemMap] = React.useState<Map<number, { image?: any; lottieJson?: any; positionType?: string }>>(new Map());
@@ -137,6 +138,17 @@ const UserRoom = ({children, previewMode = false, previewItemIds = [], cropTop =
     ? itemMap.get(backgroundPreviewId)?.image
     : itemMap.get(placedItems.background || -1)?.image);
 
+  // 배경 이미지 URI를 부모로 전달
+  useEffect(() => {
+    const src = backgroundImage || require('../../../assets/images/backgrounds/default.png');
+    try {
+      const resolved = typeof src === 'number' ? Image.resolveAssetSource(src)?.uri : (src?.uri ?? src);
+      if (resolved && typeof resolved === 'string') {
+        onBackgroundImageUri?.(resolved);
+      }
+    } catch {}
+  }, [backgroundImage, onBackgroundImageUri]);
+  
   // cropTop이 있으면 자동으로 스크롤 가능
   //const isScrollable = scrollable !== undefined ? scrollable : cropTop > 0;
   

@@ -1,6 +1,6 @@
 import { apiClient } from './apiClient';
 import { createNetworkError } from '../utils/errorHandler';
-import { mockContentData } from '../data/playContentData';
+// DEV 모킹은 apiClient + mockRoutes에서 일괄 처리합니다.
 
 /* API 응답 타입 정의 (실제 API 명세에 맞춤) */
 // 액티비티 저자 타입
@@ -116,41 +116,8 @@ export const getActivities = async (
   params?: GetActivitiesParams
 ): Promise<ActivitiesResponse> => {
   try {
-    if (__DEV__) {
-      // 개발 환경: mock 데이터 사용
-      let filteredContents = [...mockContentData];
-      
-      // 페이지네이션 설정
-      const pageSize = params?.size || 12;
-      const pageNumber = params?.page || 1;
-      const startIndex = (pageNumber - 1) * pageSize;
-      const endIndex = startIndex + pageSize;
-      
-      // 정렬 (기본값: createdAt,desc)
-      const sortBy = params?.sort || 'createdAt,desc';
-      if (sortBy.includes('createdAt,desc')) {
-        filteredContents.sort((a, b) => b.id - a.id); // ID 내림차순
-      } else if (sortBy.includes('createdAt,asc')) {
-        filteredContents.sort((a, b) => a.id - b.id); // ID 오름차순
-      }
-      
-      // 페이지네이션 적용
-      const paginatedContents = filteredContents.slice(startIndex, endIndex);
-      
-      // Activity 타입으로 변환 (이미 Activity 타입이므로 그대로 사용)
-      const activities: Activity[] = paginatedContents;
-      
-      return {
-        content: activities,
-        page: {
-          size: pageSize,
-          number: pageNumber,
-          totalElements: filteredContents.length,
-          totalPages: Math.ceil(filteredContents.length / pageSize),
-        },
-      };
-    } else {
-      // 프로덕션 환경: 실제 API 호출
+    {
+      // 실제 API 호출 (모킹은 apiClient에서 처리)
       const queryParams = new URLSearchParams();
       if (params?.deletionStatus) queryParams.append('deletionStatus', params.deletionStatus);
       if (params?.page !== undefined) queryParams.append('page', String(params.page));
@@ -183,17 +150,8 @@ export const getActivityDetail = async (
   params?: GetActivityDetailParams
 ): Promise<Activity> => {
   try {
-    if (__DEV__) {
-      // 개발 환경: mock 데이터 사용
-      const mockContent = mockContentData.find(content => content.id === activityId);
-      if (!mockContent) {
-        throw new Error('액티비티를 찾을 수 없습니다.');
-      }
-      
-      // mock 데이터는 이미 Activity 타입이므로 그대로 반환
-      return mockContent;
-    } else {
-      // 프로덕션 환경: 실제 API 호출
+    {
+      // 실제 API 호출 (모킹은 apiClient에서 처리)
       const queryParams = new URLSearchParams();
       if (params?.deletionStatus) queryParams.append('deletionStatus', params.deletionStatus);
       if (params?.userId !== undefined) queryParams.append('userId', String(params.userId));
@@ -250,22 +208,8 @@ export const toggleFavoriteActivity = async (
   }
 ): Promise<ActivityFavoriteResponse> => {
   try {
-    if (__DEV__) {
-      // 개발 환경: mock 응답 및 store 업데이트
-      const isCurrentlyFavorite = storeActions.isFavorite(activityId);
-      
-      if (isCurrentlyFavorite) {
-        storeActions.unfavoriteActivity(activityId);
-      } else {
-        storeActions.favoriteActivity(activityId);
-      }
-      
-      return {
-        activityId,
-        isFavorited: !isCurrentlyFavorite,
-      };
-    } else {
-      // 프로덕션 환경: 실제 API 호출 후 store 업데이트
+    {
+      // 실제 API 호출 후 store 업데이트 (모킹은 apiClient에서 처리)
       const response = await apiClient.post<ActivityFavoriteResponse>(`/activities/${activityId}/favorite`);
       
       // API 응답에 따라 store 업데이트
@@ -293,22 +237,8 @@ export const getUserFavoriteActivities = async (
   params?: GetUserFavoritesParams
 ): Promise<FavoriteActivitiesResponse> => {
   try {
-    if (__DEV__) {
-      // 개발 환경: Store에서 직접 즐겨찾기 상태를 관리하므로 빈 응답 반환
-      // UI는 Store의 favoriteActivities를 직접 참조하면 됨
-      const response: FavoriteActivitiesResponse = {
-        content: [],
-        page: {
-          size: params?.size || 12,
-          number: params?.page || 1,
-          totalElements: 0,
-          totalPages: 1,
-        },
-      };
-      
-      return response;
-    } else {
-      // 프로덕션 환경: 실제 API 호출
+    {
+      // 실제 API 호출 (모킹은 apiClient에서 처리)
       const queryParams = new URLSearchParams();
       if (params?.userId !== undefined) queryParams.append('userId', String(params.userId));
       if (params?.page !== undefined) queryParams.append('page', String(params.page));

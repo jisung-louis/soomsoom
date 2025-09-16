@@ -64,6 +64,11 @@ export const useAuth = () => {
       console.log('===============================================');
 
 
+      // 2.5 providerToken 보관 (디버그/추적 또는 추가 연동 용도)
+      try {
+        useAuthStore.getState().setLastProviderToken(providerToken);
+      } catch {}
+
       // 3. postSocialLogin 성공 후 기존 디바이스 세션 로그아웃
       const currentTokens = useAuthStore.getState().tokens;
       if (currentTokens?.refreshToken) {
@@ -120,6 +125,11 @@ export const useAuth = () => {
    * 앱 시작 시 자동으로 호출되는 로그인 방식
    */
   const deviceLogin = React.useCallback(async () => {
+    // 가드: 이미 로그인 상태거나 토큰이 존재하면 디바이스 로그인 시도하지 않음
+    const state = useAuthStore.getState();
+    if (state.phase === 'logged_in' || state.tokens?.accessToken) {
+      return { success: true } as const;
+    }
     try {
       setLoading('DEVICE');
       console.log('🔐 디바이스 로그인 시작...');

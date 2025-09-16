@@ -257,6 +257,7 @@ const RecordTab = () => {
             reportCurrentYear={reportCurrentYear}
             reportCurrentMonth={reportCurrentMonth}
             onReportMonthChange={handleReportMonthChange}
+            onGoToDiary={() => setIndex(0)}
           />
         );
       default:

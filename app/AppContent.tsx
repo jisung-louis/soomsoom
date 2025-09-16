@@ -5,15 +5,12 @@ import { PortalProvider } from '@gorhom/portal';
 import AppNavigator from '../navigations/AppNavigator';
 import CustomToast from '../components/common/toast/CustomToast';
 import AchievementUnlockedPopup from '../components/common/achievement/AchievementUnlockedPopup';
-import * as Notifications from 'expo-notifications';
 import { NavigationContainerRef } from '@react-navigation/native';
 import AuthGate from '../components/auth/AuthGate';
 import { useOnboarding } from '../contexts/OnboardingContext';
 import { useAppBootstrap } from '../hooks/useAppBootstrap';
 import { enableScreens } from 'react-native-screens';
-import { View, Text } from 'react-native';
 import { useAuthStore } from '../stores/authStore';
-import { useOwnedItems } from '../hooks/useOwnedItems';
 import { useNotificationSetup } from '../hooks/useNotificationSetup';
 import { apiClient } from '../services/apiClient';
 import { refreshTokens } from '../services/authService';
@@ -38,10 +35,27 @@ const AppContent = () => {
   const { deviceLogin } = useAuth();
 
   useEffect(() => {
-    (async () => {
-      // 401 자동 리프레시 콜백 등록 (앱 시작 시 1회)
-      apiClient.registerTokenRefresher(refreshTokens);
+    // 401 자동 리프레시 콜백 등록 (앱 시작 시 1회)
+    apiClient.registerTokenRefresher(refreshTokens);
+    // 토큰 갱신 시 스토어에도 반영 (client→store)
+    apiClient.registerOnTokensUpdated(async (t) => {
+      await useAuthStore.getState().setSession({
+        accessToken: t.accessToken,
+        refreshToken: t.refreshToken ?? null,
+      } as any);
+    });
 
+    // 스토어 토큰 변경을 apiClient에 동기화 (store→client)
+    const unsub = useAuthStore.subscribe((state) => {
+      const tokens = state.tokens;
+      if (tokens?.accessToken) {
+        apiClient.setTokens(tokens.accessToken, tokens.refreshToken);
+      } else {
+        apiClient.clearTokens();
+      }
+    });
+
+    (async () => {
       // 폰트 로딩 유틸은 기존 파일에 있으므로 그대로 사용
       try {
         // 1) 앱 시작 시 디바이스 ID 초기화 (최초 1회 생성/캐시)
@@ -53,6 +67,10 @@ const AppContent = () => {
         setFontsLoaded(true);
       }
     })();
+
+    return () => {
+      try { unsub(); } catch {}
+    };
   }, []);
 
 

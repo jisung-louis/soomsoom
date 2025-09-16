@@ -9,8 +9,11 @@
 import { colors } from '../constants/colors';
 import { syongsyongTypography } from '../constants/typography';
 import { ImageSourcePropType } from 'react-native';
+import { useAppConfigStore } from '../stores/appConfigStore';
 
-const dev = __DEV__;
+const { useMockApi } = useAppConfigStore.getState();
+
+const dev = useMockApi;
 
 export interface OnboardingStep {
   id: string;

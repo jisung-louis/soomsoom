@@ -20,32 +20,19 @@ export const getUserPoints = async (
   params?: GetUserPointsParams
 ): Promise<UserPointsResponse> => {
   try {
-    if (__DEV__) {
-      // 개발 환경: Mock 데이터 반환
-      console.log(`💰 사용자 포인트 조회 (개발 모드)`, params);
-      
-      // 개발 환경에서는 현재 currencyStore의 값을 반환
-      const { useCurrencyStore } = await import('../stores/currencyStore');
-      const currentPoints = useCurrencyStore.getState().heartPoints;
-      
-      return {
-        points: currentPoints
-      };
-    } else {
-      // 프로덕션 환경: 실제 API 호출
-      const queryParams = new URLSearchParams();
-      if (params?.userId !== undefined) {
-        queryParams.append('userId', String(params.userId));
-      }
-
-      const query = queryParams.toString();
-      const url = query 
-        ? `/users/me/points?${query}` 
-        : '/users/me/points';
-
-      const response = await apiClient.get<UserPointsResponse>(url);
-      return response;
+    // 실제 API 호출 (모킹은 apiClient에서 처리)
+    const queryParams = new URLSearchParams();
+    if (params?.userId !== undefined) {
+      queryParams.append('userId', String(params.userId));
     }
+
+    const query = queryParams.toString();
+    const url = query 
+      ? `/users/me/points?${query}` 
+      : '/users/me/points';
+
+    const response = await apiClient.get<UserPointsResponse>(url);
+    return response;
   } catch (error) {
     throw createNetworkError(
       '사용자 포인트 조회에 실패했습니다.',

@@ -83,25 +83,7 @@ export const emotionDiaryService = {
   // 감정일기 등록
   createEmotionDiary: async (req: CreateEmotionDiaryRequest): Promise<EmotionDiary> => {
     try {
-      if (__DEV__) {
-        const result = {
-          diaryId: Math.floor(Math.random() * 2) + 1,
-          userId: 1,
-          emotion: req.emotion,
-          memo: req.memo || null,
-          recordDate: req.date,
-          createdAt: new Date().toISOString(),
-          modifiedAt: new Date().toISOString(),
-          deletedAt: null,
-        } as EmotionDiary;
-
-        // 개발 환경에서도 업적 체크
-        useAchievementStore.getState().scheduleCheck(400);
-        console.log('📝 감정일기 등록 성공 (개발), 업적 체크 스케줄링');
-
-        return result;
-      }
-      else {
+      {
         const body: BackendCreateDiaryRequest = {
           emotion: toBackendEmotion(req.emotion),
           memo: req.memo,
@@ -165,28 +147,7 @@ export const emotionDiaryService = {
     params: GetEmotionDiariesParams
   ): Promise<EmotionDiaryListResponse> => {
     try {
-      if (__DEV__) {
-        // 개발 환경에서는 mock 데이터 사용
-        const mockDiaries = getMockDiaryData(params.from, params.to);
-        return {
-          content: mockDiaries.map(d => ({
-            diaryId: Math.floor(Math.random() * 1000), // 임시 ID
-            userId: 1, // 임시 사용자 ID
-            emotion: d.character as EmotionType,
-            memo: d.content || null,
-            recordDate: d.date,
-            createdAt: new Date().toISOString(),
-            modifiedAt: new Date().toISOString(),
-            deletedAt: null,
-          })),
-          page: {
-            size: params.size || 20,
-            number: params.page || 1,
-            totalElements: mockDiaries.length,
-            totalPages: Math.ceil(mockDiaries.length / (params.size || 20)),
-          },
-        };
-      } else {
+      {
         // 프로덕션에서는 실제 API 호출
         const qs = new URLSearchParams();
         qs.append('from', params.from);

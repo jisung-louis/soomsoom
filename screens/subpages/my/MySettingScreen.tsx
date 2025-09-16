@@ -9,11 +9,17 @@ import { colors } from '../../../constants/colors';
 import ArrowRightIcon from '../../../assets/icons/common/arrow_right.svg';
 import { typography } from '../../../constants/typography';
 import { Surface } from '../../../components/common/surface/Surface';
+import { TERMS_URL, PRIVACY_URL } from '../../../constants/externalUrl';
+import { useOpenExternalLink } from '../../../hooks/useOpenExternalLink';
 
 const MySettingScreen = () => {
   const navigation = useNavigation<StackNavigationProp<MyStackParamList>>();
+  const openExternalLink = useOpenExternalLink();
   const handleBack = () => {
     navigation.goBack();
+  };
+  const handleOpenExternalLink = async (url: string) => {
+    await openExternalLink(url);
   };
   return (
     <SafeAreaView style={styles.container}>
@@ -38,14 +44,15 @@ const MySettingScreen = () => {
         </View>
         <Surface style={styles.surface}/>
         <View style={styles.termAndPolicyContainer}>
-            <TouchableOpacity style={styles.settingItem} onPress={() => {navigation.navigate('InformationScreen')}}>
+            {/* TODO: 버전 체크 추가 */}
+            <View style={styles.settingItem}>
                 <Text style={styles.settingItemText}>정보</Text>
                 <Text style={styles.versionText}>최신버전</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.settingItem} onPress={() => {navigation.navigate('TermOfServiceScreen')}}>
+            </View>
+            <TouchableOpacity style={styles.settingItem} onPress={() => {handleOpenExternalLink(TERMS_URL)}}>
                 <Text style={styles.settingItemText}>서비스 이용 약관</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.settingItem} onPress={() => {navigation.navigate('PrivacyPolicyScreen')}}>
+            <TouchableOpacity style={styles.settingItem} onPress={() => {handleOpenExternalLink(PRIVACY_URL)}}>
                 <Text style={styles.settingItemText}>개인정보처리방침</Text>
             </TouchableOpacity>
         </View>
