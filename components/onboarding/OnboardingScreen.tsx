@@ -1,4 +1,7 @@
 import React from 'react';
+import * as Notifications from 'expo-notifications';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { scheduleDiaryNotification } from '../../utils/notificationUtils';
 import { View, StyleSheet, ImageBackground } from 'react-native';
 import { useOnboarding } from '../../hooks/useOnboarding';
 import { OnboardingStep } from './OnboardingStep';
@@ -40,9 +43,37 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, initial
 
   const currentStepData = getCurrentStepData();
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (isLastStep) {
       onComplete();
+    } else if (currentStepData.id === 'onboarding06') {
+      // 알림 권한 요청 후 허용 시 즉시 초기 스케줄링 수행
+      try {
+        const { status } = await Notifications.getPermissionsAsync();
+        let final = status;
+        if (status !== 'granted') {
+          const req = await Notifications.requestPermissionsAsync();
+          final = req.status;
+        }
+        if (final === 'granted') {
+          const diaryNotification = await AsyncStorage.getItem('diaryNotificationEnabled');
+          let diaryNotificationTime = await AsyncStorage.getItem('diaryNotificationTime');
+          if (diaryNotification === null) await AsyncStorage.setItem('diaryNotificationEnabled', 'true');
+          if (diaryNotificationTime === null) {
+            await AsyncStorage.setItem('diaryNotificationTime', '오후 8:30');
+            diaryNotificationTime = '오후 8:30';
+          }
+          const isEnabled = diaryNotification === 'true' || diaryNotification === null;
+          if (isEnabled) {
+            const timeString = diaryNotificationTime || '오후 8:30';
+            await scheduleDiaryNotification(timeString);
+          }
+        }
+      } catch (e) {
+        // 권한 요청/초기화 실패는 온보딩 진행을 막지 않음
+      }
+      // 선택 후(허용/거부 관계없이) 다음 단계로 이동
+      goToNextStep();
     } else {
       goToNextStep();
     }

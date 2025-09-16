@@ -29,6 +29,7 @@ import { useActivityHistoryStore } from '../../../stores/activityHistoryStore';
 import CatBasic from '../../../assets/images/play/playBreathing/basic.svg';
 import CatHold from '../../../assets/images/play/playBreathing/hold.svg';
 import { useCartStore } from '../../../stores/cartStore';
+import { getCachedInstallUuid } from '../../../utils/deviceId';
 
 const TestScreen = () => {
   const navigation = useNavigation<StackNavigationProp<HomeStackParamList>>();
@@ -36,7 +37,7 @@ const TestScreen = () => {
   const { showToast } = useToast();
   
   // AuthStore 상태를 실시간으로 구독
-  const { user, isLoggedIn, tokens, logout } = useAuthStore();
+  const { tokens, isLoggedIn, logout, getAccessToken, getRefreshToken, role, loginType } = useAuthStore();
   
   // AchievementStore 상태를 실시간으로 구독
   const { 
@@ -416,41 +417,20 @@ const TestScreen = () => {
             <Text style={styles.infoLabel}>로그인 상태</Text>
             <Text style={styles.infoValue}>{isLoggedIn ? '✅ 로그인됨' : '❌ 로그아웃됨'}</Text>
           </View>
-          {user && (
-            <>
-              <View style={styles.infoCardInnerCard}>
-                <Text style={styles.infoLabel}>사용자 ID</Text>
-                <Text style={styles.infoValue}>{user.id}</Text>
-              </View>
-              <View style={styles.infoCardInnerCard}>
-                <Text style={styles.infoLabel}>사용자 이름</Text>
-                <Text style={styles.infoValue}>{user.name || '없음'}</Text>
-              </View>
-              <View style={styles.infoCardInnerCard}>
-                <Text style={styles.infoLabel}>이메일</Text>
-                <Text style={styles.infoValue}>{user.email || '없음'}</Text>
-              </View>
-              <View style={styles.infoCardInnerCard}>
-                <Text style={styles.infoLabel}>아바타 URL 이미지</Text>
-                {user.avatarUrl ? 
-                  <Image source={{uri: user.avatarUrl}} style={{width: 100, height: 100, borderRadius: radius.r10}} /> 
-                  : <Text style={styles.infoValue}>없음</Text>
-                }
-              </View>
-            </>
-          )}
-          {tokens && (
-            <>
-              <View style={styles.infoCardInnerCard}>
-                <Text style={styles.infoLabel}>Access Token</Text>
-                <Text style={styles.infoValue}>{tokens.accessToken ? '✅ 있음: ' + tokens.accessToken : '❌ 없음'}</Text>
-              </View>
-              <View style={styles.infoCardInnerCard}>
-                <Text style={styles.infoLabel}>Refresh Token</Text>
-                <Text style={styles.infoValue}>{tokens.refreshToken ? '✅ 있음: ' + tokens.refreshToken : '❌ 없음'}</Text>
-              </View>
-            </>
-          )}
+          <View style={styles.infoCardInnerCard}>
+            <Text style={styles.infoLabel}>로그인 유형</Text>
+            <Text style={styles.infoValue}>{loginType==='social' ? '소셜 로그인 상태' : '디바이스 로그인 상태'}</Text>
+            <Text style={styles.infoValue}>{role}</Text>
+          </View>
+          <DeviceIdRow />
+          <View style={styles.infoCardInnerCard}>
+            <Text style={styles.infoLabel}>Access Token</Text>
+            <Text style={styles.infoValue} selectable>{getAccessToken() ? '✅ 있음: ' + getAccessToken() : '❌ 없음'}</Text>
+          </View>
+          <View style={styles.infoCardInnerCard}>
+            <Text style={styles.infoLabel}>Refresh Token</Text>
+            <Text style={styles.infoValue}>{getRefreshToken() ? '✅ 있음: ' + getRefreshToken() : '❌ 없음'}</Text>
+          </View>
         </View>
 
         <View style={[styles.infoCard, {gap:10}]}>
@@ -593,4 +573,23 @@ const styles = StyleSheet.create({
   },
 });
 
-export default TestScreen;
+export default TestScreen; 
+
+// 내부 컴포넌트: 설치 UUID 표시
+const DeviceIdRow: React.FC = () => {
+  const [uuid, setUuid] = React.useState<string>('');
+  React.useEffect(() => {
+    let mounted = true;
+    (async () => {
+      const id = await getCachedInstallUuid();
+      if (mounted) setUuid(id);
+    })();
+    return () => { mounted = false; };
+  }, []);
+  return (
+    <View style={styles.infoCardInnerCard}>
+      <Text style={styles.infoLabel}>Install UUID</Text>
+      <Text style={styles.infoValue}>{uuid || '로드 중...'}</Text>
+    </View>
+  );
+};

@@ -29,7 +29,7 @@ export const API_CONFIG = {
   // API 요청 시간 제한 (환경별 설정 사용)
   TIMEOUT: environmentConfig.api.timeout,
   
-  // API 엔드포인트들
+  // API 엔드포인트들 (아직 사용중이지 않음(= 아직 중앙에서 관리하지 않음))
   ENDPOINTS: {
     // 구매 관련
     PURCHASE: '/api/room/purchase',

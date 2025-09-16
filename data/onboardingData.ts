@@ -9,6 +9,9 @@
 import { colors } from '../constants/colors';
 import { syongsyongTypography } from '../constants/typography';
 import { ImageSourcePropType } from 'react-native';
+
+const dev = __DEV__;
+
 export interface OnboardingStep {
   id: string;
   title?: any[][] | null; // 복잡한 타입 대신 any 사용 (기존 코드와 호환성 유지)
@@ -143,7 +146,7 @@ export const onboardingSteps: OnboardingStep[] = [
     id: 'onboarding11',//countdown
     //showNext: false,
     backgroundColor: colors.primary50,
-    showNext: false,
+    showNext: dev ? true : false,
   },
   {
     id: 'onboarding12',
@@ -151,7 +154,7 @@ export const onboardingSteps: OnboardingStep[] = [
     //   [["호흡 (미구현) ", normalText]]
     // ],
     backgroundColor: colors.primary50,
-    showNext: false,
+    showNext: dev ? true : false,
   },
   {
     id: 'onboarding13',//playresult

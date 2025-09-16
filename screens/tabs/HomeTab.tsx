@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -19,6 +19,9 @@ import UserRoom from '../../components/common/userroom/UserRoom';
 import { objectPosition, itemStyles } from '../../constants/roomLayout';
 import { useRoomStore } from '../../stores/roomStore';
 import AdBanner from '../../components/common/ads/AdBanner';
+import { useAuthStore } from '../../stores/authStore';
+import { useAppConfigStore } from '../../stores/appConfigStore';
+import { useAuth } from '../../hooks/useAuth';
 
 type HomeTabNavigationProp = StackNavigationProp<HomeStackParamList, 'HomeTab'>;
 
@@ -31,7 +34,10 @@ const HomeTab = () => {
   const { resetOnboarding } = useOnboarding();
   const { giveTestReward } = useCurrencyStore();  
   const { showToast } = useToast();
-
+  const { setPhase, loginType } = useAuthStore();
+  const useMockApiMode = useAppConfigStore(s => s.useMockApi);
+  const setUseMockApiMode = useAppConfigStore(s => s.setUseMockApi);
+  const { logout } = useAuth();
   useFocusEffect(
     useCallback(() => {
       console.log('🏠 HomeTab 완전 재마운트!');
@@ -60,6 +66,16 @@ const HomeTab = () => {
     navigation.navigate('ShopScreen', { initialTab: 'item' });
   };
 
+
+
+  const handleSocialLogin = async () => {
+    if (loginType === 'social') {
+      await logout();
+      return;
+    }
+    setPhase('logged_out');
+  };
+
   const handleHeartPress = () => {
     // 하트 버튼 기능 구현
     console.log('하트 버튼 클릭');
@@ -85,6 +101,7 @@ const HomeTab = () => {
     await resetOnboarding();
     console.log('온보딩이 재시작됩니다!');
   };
+
   
   return (
     <UserRoom >
@@ -125,6 +142,14 @@ const HomeTab = () => {
         </TouchableOpacity>
       )}
 
+      <View style={[styles.developerButtons,{marginBottom: 10}]}>
+        <ButtonSmall
+          title={useMockApiMode ? '내부 데이터 사용' : '실제 서버 연결'}
+          onPress={() => setUseMockApiMode(!useMockApiMode)}
+          variant="active"
+          style={{width: '100%'}}
+        />
+      </View>
       {/* 개발자용 버튼 (추후 삭제) */}
       {__DEV__ && (
       <View style={styles.developerButtons}>
@@ -132,6 +157,12 @@ const HomeTab = () => {
         <ButtonSmall
           title="온보딩 show"
           onPress={() => handleShowOnboarding()}
+          variant="active"
+          style={{width: '100%'}}
+        />
+        <ButtonSmall
+          title={loginType === 'social' ? '소셜로그아웃' : '소셜로그인'}
+          onPress={() => handleSocialLogin()}
           variant="active"
           style={{width: '100%'}}
         />
@@ -179,7 +210,7 @@ const styles = StyleSheet.create({
   },
   adContainer: {
     position: 'absolute',
-    bottom: -350,
+    bottom: -300,
     left: 0,
     right: 0,
     zIndex: 9999, 

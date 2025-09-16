@@ -3,8 +3,8 @@ import { devtools } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { fetchMyAchievements, fetchAchievements, fetchAchievementDetail } from '../services/achievementService';
 import { MyAchievement, Achievement } from '../types';
-import { useAuthStore } from './authStore';
 import { initializeMockUserProgress } from '../data/achievementMockData';
+import { apiClient } from '../services/apiClient';
 
 // 백엔드 API 응답 타입은 types/index.ts의 MyAchievement, PagedResponse 사용
 
@@ -38,7 +38,7 @@ export interface AchievementState {
   getAchievedCount: () => number;
   getTotalCount: () => number;
   resetAllAchievements: () => void;
-  
+    
   // 팝업 시스템 액션들
   initOnAppStart: () => Promise<void>;
   loadAchievementDefinitions: () => Promise<void>;
@@ -175,7 +175,7 @@ export const useAchievementStore = create<AchievementState>()(
 
     loadUserAchievements: async (statusFilter: 'ALL' | 'ACHIEVED' | 'NOT_ACHIEVED' = 'ALL') => {
       try {
-        const token = useAuthStore.getState().tokens?.accessToken;
+        const token = apiClient.getAccessToken();
         if (!token) {
           console.log('⚠️ 토큰이 없어서 사용자 업적을 로드할 수 없습니다.');
           return;
@@ -223,8 +223,8 @@ export const useAchievementStore = create<AchievementState>()(
     _checkNow: async () => {
       try {
         console.log('🔍 업적 체크 시작...');
-        const { tokens } = useAuthStore.getState();
-        if (!tokens?.accessToken) {
+        const token = apiClient.getAccessToken();
+        if (!token) {
           console.log('❌ 토큰 없음, 업적 체크 스킵');
           return;
         }

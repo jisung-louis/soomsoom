@@ -34,7 +34,7 @@ export const environmentConfig = {
           // 개발 서버 고정(사용자 제공)
           return 'http://13.125.237.63:8080';
         })()
-      : 'https://api.soomsoom.com',     // 프로덕션 API 서버
+      : 'http://13.125.237.63:8080',     // 프로덕션 API 서버
     
     timeout: isDevelopment 
       ? 10000  // 개발: 10초 (디버깅 시간 고려)

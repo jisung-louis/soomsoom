@@ -68,7 +68,14 @@
           "iosUrlScheme": "com.googleusercontent.apps.107458236623-0mru63ph97l3va5ru46hravkoo7r2q9q"
         }
       ],
-      "expo-localization"
+      "expo-localization",
+      [
+        "react-native-google-mobile-ads",
+        {
+          "iosAppId": "ca-app-pub-3940256099942544~1458002511",
+          "androidAppId": "ca-app-pub-3940256099942544~3347511713"
+        }
+      ]
     ],
     "scheme": "soomsoom",
     "extra": {

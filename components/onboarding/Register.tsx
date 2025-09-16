@@ -14,13 +14,7 @@ const TERMS_URL = 'https://habjungdriking.notion.site/Terms-of-Service-2368c8e05
 const PRIVACY_URL = 'https://habjungdriking.notion.site/2378c8e0513580758730fade7689a04a';
 
 const Register = ({onComplete}: {onComplete: () => void}) => {
-  const onGoogleLogin = () => {
-    console.log('Google로 계속하기');
-  }
-  const onAppleLogin = () => {
-    console.log('애플로 계속하기');
-    onComplete();//임시로 완료처리
-  }
+  
   const openExternalLink = async (url: string) => {
     try {
       const supported = await Linking.canOpenURL(url);

@@ -1,7 +1,8 @@
+  type AuthTokens = { accessToken: string; refreshToken?: string | null };
 import { API_CONFIG, ApiResponse, ApiError } from '../configs/api';
 import { AppError, ErrorType, errorHandler } from '../utils/errorHandler';
-import { refreshAccessToken, clearTokens } from './authService';
-import type { AuthTokens } from './authService';
+import { useAppConfigStore } from '../stores/appConfigStore';
+import { mockRoutes } from '../utils/mockRoutes';
 
 /**
  * API 요청을 통합 관리하는 클라이언트
@@ -19,11 +20,17 @@ export class ApiClient {
   private refreshToken: string | null = null;
   private refreshInFlight: Promise<AuthTokens | null> | null = null;
   private onTokensUpdated: ((tokens: AuthTokens) => Promise<void> | void) | null = null;
+  private tokenRefresher: ((refreshToken: string) => Promise<AuthTokens>) | null = null;
 
   constructor() {
     this.baseURL = API_CONFIG.BASE_URL;
     this.timeout = API_CONFIG.TIMEOUT;
   }
+
+  /**
+   * 내부 전용 토큰 타입 정의 (의존성 최소화)
+   */
+  
 
   /**
    * 토큰 설정 (로그인 시 호출)
@@ -48,6 +55,11 @@ export class ApiClient {
    */
   registerOnTokensUpdated(callback: (tokens: AuthTokens) => Promise<void> | void) {
     this.onTokensUpdated = callback;
+  }
+
+  // 401 발생 시 사용할 리프레시 토큰 교환 콜백 등록
+  registerTokenRefresher(cb: (refreshToken: string) => Promise<AuthTokens>) {
+    this.tokenRefresher = cb;
   }
 
   /**
@@ -106,6 +118,21 @@ export class ApiClient {
    */
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
+    // MOCK 어댑터: 전역 플래그가 켜져 있으면 라우트 테이블로 목 응답 반환
+    try {
+      const { useMockApi } = useAppConfigStore.getState();
+      if (useMockApi) {
+        const method = (options.method || 'GET').toUpperCase() as any;
+        const route = mockRoutes.find(r => r.method === method && r.match(endpoint));
+        if (route) {
+          const body = typeof options.body === 'string' ? JSON.parse(options.body) : (options.body as any);
+          const result = await route.handler({ url, endpoint, body, headers: options.headers as any });
+          return result as T;
+        }
+      }
+    } catch (e) {
+      // 목 처리 중 에러는 무시하고 실제 호출로 폴백
+    }
     
     const makeController = () => {
       const controller = new AbortController();
@@ -142,7 +169,9 @@ export class ApiClient {
           try {
             // 동시성 제어: 갱신 중이면 기존 Promise 대기
             if (!this.refreshInFlight) {
-              this.refreshInFlight = refreshAccessToken(this.refreshToken);
+              this.refreshInFlight = this.tokenRefresher
+                ? this.tokenRefresher(this.refreshToken)
+                : Promise.resolve(null);
             }
             const newTokens = await this.refreshInFlight;
             this.refreshInFlight = null;
@@ -185,13 +214,11 @@ export class ApiClient {
               // 토큰 갱신 실패, 로그아웃 처리
               console.log('❌ 토큰 갱신 실패, 로그아웃 처리');
               this.clearTokens();
-              await clearTokens(); // SecureStore에서도 삭제
               throw new AppError('인증이 만료되었습니다. 다시 로그인해주세요.', ErrorType.AUTHENTICATION, 'TOKEN_REFRESH_FAILED', 'api-token-refresh');
             }
           } catch (refreshError) {
             console.error('❌ 토큰 갱신 중 에러:', refreshError);
             this.clearTokens();
-            await clearTokens();
             throw new AppError('인증이 만료되었습니다. 다시 로그인해주세요.', ErrorType.AUTHENTICATION, 'TOKEN_REFRESH_ERROR', 'api-token-refresh-error');
           }
         } else {

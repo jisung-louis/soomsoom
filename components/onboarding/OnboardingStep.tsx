@@ -1,21 +1,18 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ImageBackground, Image } from 'react-native';
+import { View, Text, StyleSheet, Image } from 'react-native';
 import { colors } from '../../constants/colors';
-import { syongsyongTypography, typography } from '../../constants/typography';
-import { radius } from '../../constants/radius';
+import { syongsyongTypography } from '../../constants/typography';
 import { Button } from '../common/buttons/Button';
 import { CheckboxList } from '../common/checkbox';
-import { focusOptions, timeOptions, CheckboxOption } from '../../data/onboardingData';
+import { focusOptions, timeOptions } from '../../data/onboardingData';
 import { OnboardingCountdown } from './OnboardingCountdown';
 import PlayResult from '../tabs/play/PlayResultScreen/PlayResult';
 import Register from './Register';
 import { ss, sv } from '../../utils/scale';
 import LottieView from 'lottie-react-native';
 import { itemStyles } from '../../constants/roomLayout';
-import { Dimensions, LayoutChangeEvent } from 'react-native';
+import { LayoutChangeEvent } from 'react-native';
 import BreathingGuide from './BreathingGuide';
-
-const { width: WINDOW_WIDTH, height: WINDOW_HEIGHT } = Dimensions.get('window');
 
 interface OnboardingStepProps {
   stepId: string;
@@ -245,5 +242,6 @@ const styles = StyleSheet.create({
   },
   nextButton: {
     flex: 1,
+    zIndex: 10000000,
   },
 });

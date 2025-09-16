@@ -66,37 +66,37 @@ export interface GetItemsParams {
  * GET /items
  */
 export async function getItems(params: GetItemsParams): Promise<ItemsResponse> {
-  if (__DEV__) {
-    // ===== DEV: 이미 서버 스펙과 동일한 mock(serverItemList) 사용 =====
-    let list = serverItemList.slice();
-    if (params.itemType) {
-      list = list.filter(it => it.itemType === params.itemType);
-    }
-    if (params.excludeOwned) {
-      list = list.filter(it => !it.isOwned);
-    }
-    const sortKey = params.sort ?? 'CREATED';
-    if (sortKey === 'PRICE_ASC') list.sort((a, b) => a.price - b.price);
-    else if (sortKey === 'PRICE_DESC') list.sort((a, b) => b.price - a.price);
-    else if (sortKey === 'POPULARITY') list.sort((a, b) => a.id - b.id);
-    else list.sort((a, b) => b.id - a.id);
+  // if (__DEV__) {
+  //   // ===== DEV: 이미 서버 스펙과 동일한 mock(serverItemList) 사용 =====
+  //   let list = serverItemList.slice();
+  //   if (params.itemType) {
+  //     list = list.filter(it => it.itemType === params.itemType);
+  //   }
+  //   if (params.excludeOwned) {
+  //     list = list.filter(it => !it.isOwned);
+  //   }
+  //   const sortKey = params.sort ?? 'CREATED';
+  //   if (sortKey === 'PRICE_ASC') list.sort((a, b) => a.price - b.price);
+  //   else if (sortKey === 'PRICE_DESC') list.sort((a, b) => b.price - a.price);
+  //   else if (sortKey === 'POPULARITY') list.sort((a, b) => a.id - b.id);
+  //   else list.sort((a, b) => b.id - a.id);
 
-    const page = params.page ?? 1;
-    const size = params.size ?? 12;
-    const start = (page - 1) * size;
-    const end = start + size;
-    const pageItems = list.slice(start, end) as unknown as Item[];
+  //   const page = params.page ?? 1;
+  //   const size = params.size ?? 12;
+  //   const start = (page - 1) * size;
+  //   const end = start + size;
+  //   const pageItems = list.slice(start, end) as unknown as Item[];
 
-    return {
-      content: pageItems,
-      page: {
-        size,
-        number: page,
-        totalElements: list.length,
-        totalPages: Math.max(1, Math.ceil(list.length / size)),
-      },
-    };
-  }
+  //   return {
+  //     content: pageItems,
+  //     page: {
+  //       size,
+  //       number: page,
+  //       totalElements: list.length,
+  //       totalPages: Math.max(1, Math.ceil(list.length / size)),
+  //     },
+  //   };
+  // }
 
   // ===== PROD =====
   const qs = new URLSearchParams();
@@ -145,29 +145,29 @@ export interface GetOwnedItemsParams {
 }
 
 export async function getOwnedItems(params: GetOwnedItemsParams = {}): Promise<ItemsResponse> {
-  if (__DEV__) {
-    // Dev 환경에서는 roomStore의 ownedItems를 직접 사용
-    const { useRoomStore } = await import('../stores/roomStore');
-    const ownedItemIds = useRoomStore.getState().ownedItems;
+  // if (__DEV__) {
+  //   // Dev 환경에서는 roomStore의 ownedItems를 직접 사용
+  //   const { useRoomStore } = await import('../stores/roomStore');
+  //   const ownedItemIds = useRoomStore.getState().ownedItems;
     
-    let list = serverItemList.filter(it => ownedItemIds.includes(it.id));
-    if (params.itemType) list = list.filter(it => it.itemType === params.itemType);
-    list.sort((a, b) => b.id - a.id);
-    const page = params.page ?? 1;
-    const size = params.size ?? 12;
-    const start = (page - 1) * size;
-    const end = start + size;
-    const content = list.slice(start, end) as unknown as Item[];
-    return {
-      content,
-      page: {
-        size,
-        number: page,
-        totalElements: list.length,
-        totalPages: Math.max(1, Math.ceil(list.length / size)),
-      },
-    };
-  }
+  //   let list = serverItemList.filter(it => ownedItemIds.includes(it.id));
+  //   if (params.itemType) list = list.filter(it => it.itemType === params.itemType);
+  //   list.sort((a, b) => b.id - a.id);
+  //   const page = params.page ?? 1;
+  //   const size = params.size ?? 12;
+  //   const start = (page - 1) * size;
+  //   const end = start + size;
+  //   const content = list.slice(start, end) as unknown as Item[];
+  //   return {
+  //     content,
+  //     page: {
+  //       size,
+  //       number: page,
+  //       totalElements: list.length,
+  //       totalPages: Math.max(1, Math.ceil(list.length / size)),
+  //     },
+  //   };
+  // }
 
   const qs = new URLSearchParams();
   if (params.userId !== undefined) qs.append('userId', String(params.userId));

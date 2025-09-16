@@ -34,26 +34,26 @@ export const fetchAchievements = async (
   params: FetchAchievementsParams = {}
 ): Promise<PagedResponse<Achievement>> => {
   try {
-    if (__DEV__) {
-      console.log('🔧 개발 모드: Mock 업적 정의 데이터 사용');
-      await new Promise(resolve => setTimeout(resolve, 300));
+    // if (__DEV__) {
+    //   console.log('🔧 개발 모드: Mock 업적 정의 데이터 사용');
+    //   await new Promise(resolve => setTimeout(resolve, 300));
 
-      const mockResponse: PagedResponse<Achievement> = {
-        content: mockAchievementDefinitions,
-        totalElements: mockAchievementDefinitions.length,
-        totalPages: 1,
-        size: params.size ?? 12,
-        number: (params.page ?? 1) - 1,
-        first: true,
-        last: true,
-        empty: false
-      };
+    //   const mockResponse: PagedResponse<Achievement> = {
+    //     content: mockAchievementDefinitions,
+    //     totalElements: mockAchievementDefinitions.length,
+    //     totalPages: 1,
+    //     size: params.size ?? 12,
+    //     number: (params.page ?? 1) - 1,
+    //     first: true,
+    //     last: true,
+    //     empty: false
+    //   };
 
-      console.log('✅ Mock 업적 정의 데이터 로드 완료!', {
-        totalElements: mockResponse.totalElements
-      });
-      return mockResponse;
-    } else {
+    //   console.log('✅ Mock 업적 정의 데이터 로드 완료!', {
+    //     totalElements: mockResponse.totalElements
+    //   });
+    //   return mockResponse;
+    // } 
       // 프로덕션: apiClient 사용, 서버의 page 객체를 PagedResponse로 매핑
       const qp = new URLSearchParams();
       qp.set('deletionStatus', (params.deletionStatus ?? 'ACTIVE'));
@@ -80,7 +80,6 @@ export const fetchAchievements = async (
       };
 
       return mapped;
-    }
   } catch (error) {
     console.error('❌ 업적 정의 조회 실패:', error);
     throw createNetworkError('업적 정의를 불러오는데 실패했습니다.');
