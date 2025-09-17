@@ -5,6 +5,7 @@ import SubpageHeader from '../../../components/common/top-navigation/SubpageHead
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
+import { useVisitedActivityStore } from '../../../stores/visitedActivityStore';
 import { PlayStackParamList } from '../../../navigations/tabs/PlayStackNavigator';
 import { colors } from '../../../constants/colors';
 import { radius } from '../../../constants/radius';
@@ -97,6 +98,10 @@ const PlayDetailScreen: React.FC = () => {
   // 호흡 액티비티 시작
   const handleStartBreathing = async () => {
     if (!content) return;
+    try {
+      // 방문 기록: 재생 진입 시점에 방문으로 기록
+      useVisitedActivityStore.getState().addVisited(content.id);
+    } catch {}
     navigation.navigate('PlayBreathScreen', { content: content });
   };
 
@@ -108,6 +113,7 @@ const PlayDetailScreen: React.FC = () => {
     try {
       // 명상 타입이 아니면 바로 시작
       if (content.type !== 'MEDITATION') {
+        try { useVisitedActivityStore.getState().addVisited(content.id); } catch {}
         navigation.navigate('PlayMeditationScreen', { content });
         return;
       }
@@ -121,11 +127,13 @@ const PlayDetailScreen: React.FC = () => {
         setShowResumeAlert(true);
       } else {
         // 이전 기록이 없는 경우 바로 시작
+        try { useVisitedActivityStore.getState().addVisited(content.id); } catch {}
         navigation.navigate('PlayMeditationScreen', { content });
       }
     } catch (error) {
       console.error('이전 진행상황 조회 실패:', error);
       // 에러가 발생해도 바로 시작
+      try { useVisitedActivityStore.getState().addVisited(content.id); } catch {}
       navigation.navigate('PlayMeditationScreen', { content });
     }
   };

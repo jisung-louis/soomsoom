@@ -6,6 +6,9 @@ import { View, StyleSheet, ImageBackground } from 'react-native';
 import { useOnboarding } from '../../hooks/useOnboarding';
 import { OnboardingStep } from './OnboardingStep';
 import { colors } from '../../constants/colors';
+/**DEV ONLY*/
+import { ButtonSmall } from '../common/buttons/ButtonSmall';
+/**DEV ONLY*/
 
 interface OnboardingScreenProps {
   onComplete: () => void;
@@ -32,6 +35,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, initial
     canProceedToNext,
     getCurrentStepData,
     goToStep,
+    submitOnboardingAnswers,
   } = useOnboarding();
 
   // initialStep이 제공되면 해당 스텝으로 이동
@@ -106,6 +110,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, initial
           showNext={currentStepData.showNext}
           specialButtonText={currentStepData.specialButtonText}
           canProceed={canProceedToNext()}
+          submitOnboardingAnswers={submitOnboardingAnswers}
         />
       </ImageBackground>
     );
@@ -113,6 +118,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, initial
 
   // 일반적인 온보딩 단계
   return (
+    <>
     <ImageBackground
       source={currentStepData.backgroundImage}
       style={[styles.backgroundImage, { backgroundColor: currentStepData.backgroundColor ? currentStepData.backgroundColor : 'white' }]}
@@ -130,8 +136,18 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, initial
         showNext={currentStepData.showNext}
         specialButtonText={currentStepData.specialButtonText}
         canProceed={canProceedToNext()}
+        submitOnboardingAnswers={submitOnboardingAnswers}
       />
     </ImageBackground>
+
+    {/*DEV ONLY*/}
+    {currentStepData.id !== 'register' && (
+    <View style={{position: 'absolute', top: 50, left: 0, right: 0, alignItems: 'flex-end', padding: 10}}>
+      <ButtonSmall variant="secondary" title="SKIP(DEV ONLY)" onPress={() => goToStep(15)} style={{width: '40%'}} />
+    </View>
+    )}
+    {/*DEV ONLY*/}
+    </>
   );
 };
 

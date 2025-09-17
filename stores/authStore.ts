@@ -3,7 +3,6 @@ import { devtools } from 'zustand/middleware';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type { AuthResponse, AuthPhase } from '../types/auth';
 import { decodeJwt } from '../utils/jwt';
-import { apiClient } from '../services/apiClient';
 
 export interface AuthState {
   tokens: AuthResponse | null;
@@ -37,8 +36,6 @@ export const useAuthStore = create<AuthState>()(
           console.log(tokens.accessToken);
           console.log(tokens.refreshToken);
           console.log(decodeJwt(tokens.accessToken));
-          // ApiClient에 토큰 설정
-          apiClient.setTokens(tokens.accessToken, tokens.refreshToken);
           
           // JWT 파싱하여 role 및 로그인 유형 추출
           const payload = decodeJwt(tokens.accessToken);
@@ -53,8 +50,6 @@ export const useAuthStore = create<AuthState>()(
         },
         logout: async () => {
           console.log('🚪 로그아웃 시작(액세스 토큰, 리프레시 토큰 초기화)...');
-          // ApiClient에서 토큰 초기화
-          apiClient.clearTokens();
           
           set({ tokens: null, isLoggedIn: false, role: undefined, loginType: undefined, lastProviderToken: null, phase: 'logged_out' });
           console.log('✅ 로그아웃 완료(액세스 토큰, 리프레시 토큰 초기화)!');

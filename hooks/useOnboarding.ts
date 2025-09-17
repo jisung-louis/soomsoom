@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
-import { onboardingSteps, CheckboxOption } from '../data/onboardingData';
+import { onboardingSteps, CheckboxOption, focusOptions, timeOptions } from '../data/onboardingData';
+import { onboardingService, OnboardingAnswerRequest } from '../services/onboardingService';
 
 /**
  * 온보딩 상태 관리 커스텀 훅
@@ -28,6 +29,7 @@ export interface UseOnboardingReturn {
   updateFocusSelection: (ids: string[]) => void;
   updateTimeSelection: (ids: string[]) => void;
   resetOnboarding: () => void;
+  submitOnboardingAnswers: () => Promise<boolean>;
   
   // 유틸리티
   canProceedToNext: () => boolean;
@@ -106,6 +108,51 @@ export function useOnboarding(): UseOnboardingReturn {
     return onboardingSteps[currentStep];
   }, [currentStep]);
 
+  // 온보딩 답변을 서버에 전송
+  const submitOnboardingAnswers = useCallback(async (): Promise<boolean> => {
+    try {
+      // 온보딩 답변이 있는지 확인
+      if (!onboardingData.selectedFocusIds.length || !onboardingData.selectedTimeIds.length) {
+        console.log('⚠️ 온보딩 답변이 없어서 전송하지 않습니다 (재로그인 또는 답변 미완료)');
+        return true; // 답변이 없어도 성공으로 처리 (에러가 아님)
+      }
+
+      // 선택된 집중 목표를 API 형식으로 변환
+      const focusGoal = onboardingData.selectedFocusIds[0]; // 첫 번째 선택된 목표
+      const focusGoalMapping: Record<string, OnboardingAnswerRequest['focusGoal']> = {
+        'sleep': 'IMPROVE_SLEEP_QUALITY',
+        'peace': 'HAVE_A_CALM_MIND',
+        'anxiety': 'MANAGE_ANXIETY',
+        'stress': 'MANAGE_STRESS',
+        'focus': 'BE_PRESENT',
+        'other': 'OTHER',
+      };
+
+      // 선택된 시간을 API 형식으로 변환
+      const dailyDuration = onboardingData.selectedTimeIds[0]; // 첫 번째 선택된 시간
+      const dailyDurationMapping: Record<string, OnboardingAnswerRequest['dailyDuration']> = {
+        '3': 'THREE_MINUTES',
+        '10': 'TEN_MINUTES',
+        '20': 'TWENTY_MINUTES',
+        '30': 'THIRTY_MINUTES',
+      };
+
+      const request: OnboardingAnswerRequest = {
+        focusGoal: focusGoalMapping[focusGoal] || 'OTHER',
+        dailyDuration: dailyDurationMapping[dailyDuration] || 'THREE_MINUTES',
+      };
+
+      console.log('📤 온보딩 답변 전송:', request);
+      await onboardingService.submitOnboardingAnswers(request);
+      console.log('✅ 온보딩 답변 전송 완료');
+      
+      return true;
+    } catch (error) {
+      console.error('❌ 온보딩 답변 전송 실패:', error);
+      return false;
+    }
+  }, [onboardingData]);
+
   return {
     // 상태
     currentStep,
@@ -119,6 +166,7 @@ export function useOnboarding(): UseOnboardingReturn {
     updateFocusSelection,
     updateTimeSelection,
     resetOnboarding,
+    submitOnboardingAnswers,
     
     // 유틸리티
     canProceedToNext,

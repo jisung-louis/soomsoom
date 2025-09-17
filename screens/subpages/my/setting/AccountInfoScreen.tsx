@@ -102,7 +102,7 @@ const AccountInfoScreen = () => {
             { text: '로그아웃', onPress: async () => {
                 setConfirmVisible(false);
                 try {
-                  logout();
+                  await logout();
                   showToast({ message: '로그아웃되었습니다.' });
                 } catch {
                   showToast({ message: '로그아웃 중 문제가 발생했어요.' });

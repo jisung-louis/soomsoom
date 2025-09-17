@@ -127,7 +127,7 @@ export const roomItemList: RoomItem[] = [
     title: '산타 얼굴과 수염',
     image: undefined,
     lottieJson: require('../assets/animations/item/eyewear/santaface_beard.json'),
-    price: 0,
+    price: 200,
     positionType: 'eyewear',
     position: { x: 0, y: 0 }, // 동적으로 계산됨
   },
@@ -200,7 +200,7 @@ export const roomItemList: RoomItem[] = [
     title: '리본',
     image: undefined,
     lottieJson: require('../assets/animations/item/hat/ribbon.json'),
-    price: 0,
+    price: 100,
     positionType: 'hat',
     position: { x: 0, y: 0 }, // 동적으로 계산됨
   },

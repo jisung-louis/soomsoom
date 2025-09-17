@@ -200,7 +200,8 @@ const AlarmAddScreen = () => {
         time: timeString,
         repeatDays: initialRepeatData.repeatDays,
         repeatType: initialRepeatData.repeatType,
-        soundName: initialSoundData.soundName,
+        //soundName: initialSoundData.soundName,
+        soundName: 'default_alarm_audio.wav', // 벨소리 테스트
         isVibrationOn: isVibrationOn,
         mission: mission,
       };

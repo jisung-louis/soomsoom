@@ -9,8 +9,8 @@ import {
   postLogout,
   SocialProvider 
 } from '../services/authService';
-import { apiClient } from '../services/apiClient';
 import { getCachedInstallUuid } from '../utils/deviceId';
+import { resetAppState } from '../utils/resetAppState';
 
 /**
  * 인증 관련 로직을 중앙화한 커스텀 훅
@@ -84,7 +84,6 @@ export const useAuth = () => {
 
       // 4. 새 세션 설정
       console.log('🔐 새 세션 설정 중...');
-      apiClient.setTokens(tokens.accessToken, tokens.refreshToken);
       await setSession({
         accessToken: tokens.accessToken,
         refreshToken: tokens.refreshToken,
@@ -138,7 +137,6 @@ export const useAuth = () => {
       const tokens = await postDeviceLogin({ deviceId });
       
       // 세션 설정
-      apiClient.setTokens(tokens.accessToken, tokens.refreshToken);
       await setSession({
         accessToken: tokens.accessToken,
         refreshToken: tokens.refreshToken,
@@ -172,8 +170,10 @@ export const useAuth = () => {
       }
       
       // 로컬 상태 초기화
-      apiClient.clearTokens();
       useAuthStore.getState().logout();
+      
+      // 앱 상태 초기화 (캐시, 스토어 등)
+      await resetAppState();
       
       console.log('✅ 로그아웃 완료');
       showToast({ message: '로그아웃되었어요.' });
@@ -183,8 +183,10 @@ export const useAuth = () => {
       console.error('로그아웃 에러:', error);
       setPhase('logged_out');
       // 서버 로그아웃 실패해도 로컬 상태는 초기화
-      apiClient.clearTokens();
       useAuthStore.getState().logout();
+      
+      // 앱 상태 초기화 (캐시, 스토어 등)
+      await resetAppState();
       
       showToast({ message: '로그아웃되었어요.' });
       return { success: true }; // 로컬 초기화는 성공으로 처리

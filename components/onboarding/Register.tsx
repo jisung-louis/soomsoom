@@ -10,15 +10,26 @@ import { useOpenExternalLink } from '../../hooks/useOpenExternalLink';
 const TERMS_URL = 'https://habjungdriking.notion.site/Terms-of-Service-2368c8e0513580f9999ccb7bb901a0d5';
 const PRIVACY_URL = 'https://habjungdriking.notion.site/2378c8e0513580758730fade7689a04a';
 
-const Register = ({onComplete}: {onComplete: () => void}) => {
+interface RegisterProps {
+  onComplete: () => void;
+  submitOnboardingAnswers?: () => Promise<boolean>;
+}
+
+const Register = ({onComplete, submitOnboardingAnswers}: RegisterProps) => {
   const openExternalLink = useOpenExternalLink();
-  const onGoogleLogin = () => {
-    console.log('Google로 계속하기');
-  }
-  const onAppleLogin = () => {
-    console.log('애플로 계속하기');
-    onComplete();//임시로 완료처리
-  }
+  
+  const handleLoginSuccess = async () => {
+    // 온보딩 답변 전송
+    if (submitOnboardingAnswers) {
+      const success = await submitOnboardingAnswers();
+      if (success) {
+        console.log('✅ 온보딩 답변 전송 완료');
+      } else {
+        console.warn('⚠️ 온보딩 답변 전송 실패 (계속 진행)');
+      }
+    }
+    onComplete();
+  };
   return (
     <View style={styles.container}>
         <View style={styles.titleContainer}>
@@ -26,9 +37,9 @@ const Register = ({onComplete}: {onComplete: () => void}) => {
             <Text style={styles.subtitle}>숨숨</Text>
         </View>
         <View style={styles.socialLoginContainer}>
-          <SocialLoginButtons onSuccess={onComplete} />
+          <SocialLoginButtons onSuccess={handleLoginSuccess} />
         </View>
-        <TouchableOpacity style={styles.noLoginContainer} onPress={onComplete}>
+        <TouchableOpacity style={styles.noLoginContainer} onPress={handleLoginSuccess}>
           <Text style={styles.noLoginText}>비회원으로 계속하기</Text>
         </TouchableOpacity>
         <View style={styles.termContainer}>

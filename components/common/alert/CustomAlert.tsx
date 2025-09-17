@@ -22,9 +22,10 @@ type CustomAlertProps = {
   subMessage?: string;
   buttons: AlertButton[];
   onClose?: () => void;
+  closeButton?: boolean;
 };
 
-const CustomAlert = ({ visible, image, message, subMessage, buttons, onClose }: CustomAlertProps) => {
+const CustomAlert = ({ visible, image, message, subMessage, buttons, onClose, closeButton = true }: CustomAlertProps) => {
   const handleBackdropPress = () => {
     if (onClose) {
       onClose();
@@ -41,6 +42,27 @@ const CustomAlert = ({ visible, image, message, subMessage, buttons, onClose }: 
       return 'active';
     }
   }
+
+  // 간단한 강조(빨간색) 렌더러: **텍스트** 부분만 빨간색 처리
+  const renderHighlightedText = (text: string, baseStyle: any) => {
+    // '**...**' 토큰을 보존하여 분리
+    const parts = text.split(/(\*\*.+?\*\*)/g);
+    return (
+      <Text style={baseStyle}>
+        {parts.map((part, idx) => {
+          const match = part.match(/^\*\*(.+)\*\*$/);
+          if (match) {
+            return (
+              <Text key={idx} style={{ color: 'red', textShadowColor: 'red'  }}>
+                {match[1]}
+              </Text>
+            );
+          }
+          return <Text key={idx}>{part}</Text>;
+        })}
+      </Text>
+    );
+  };
 
   return (
     <Modal
@@ -60,9 +82,11 @@ const CustomAlert = ({ visible, image, message, subMessage, buttons, onClose }: 
           onPress={() => {}} // 내부 터치 시 닫히지 않도록
         >
           {/* X 버튼 */}
-          <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-            <XButton width={24} height={24} />
-          </TouchableOpacity>
+          {closeButton && (
+            <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+              <XButton width={24} height={24} />
+            </TouchableOpacity>
+          )}
 
           {/* 이미지 */}
           {image && (
@@ -83,13 +107,21 @@ const CustomAlert = ({ visible, image, message, subMessage, buttons, onClose }: 
 
           {/* 메시지 */}
           <View style={styles.messageContainer}>
-            <Text style={styles.message}>{message}</Text>
+            {typeof message === 'string' ? (
+              renderHighlightedText(message, styles.message)
+            ) : (
+              <Text style={styles.message}>{message}</Text>
+            )}
           </View>
 
           {/* 서브메시지 */}
           {subMessage && (
           <View style={styles.subMessageContainer}>
-            <Text style={styles.subMessage}>{subMessage}</Text>
+            {typeof subMessage === 'string' ? (
+              renderHighlightedText(subMessage, styles.subMessage)
+            ) : (
+              <Text style={styles.subMessage}>{subMessage}</Text>
+            )}
           </View>
           )}
           {/* 버튼들 */}

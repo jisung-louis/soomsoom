@@ -26,6 +26,7 @@ interface OnboardingStepProps {
   showNext?: boolean;
   specialButtonText?: '알림받기' | '마음운동 시작' | '확인'; 
   canProceed: boolean;
+  submitOnboardingAnswers?: () => Promise<boolean>;
 }
 
 /**
@@ -48,6 +49,7 @@ export const OnboardingStep: React.FC<OnboardingStepProps> = ({
   showNext = false,
   specialButtonText,
   canProceed,
+  submitOnboardingAnswers,
 }) => {
   // 제목 렌더링 함수
   const renderTitle = () => {
@@ -159,7 +161,7 @@ export const OnboardingStep: React.FC<OnboardingStepProps> = ({
 
 
       case 'register':
-        return <Register onComplete={() => {onNext()}} />;
+        return <Register onComplete={() => {onNext()}} submitOnboardingAnswers={submitOnboardingAnswers} />;
 
       default:
         return null;

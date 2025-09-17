@@ -91,7 +91,6 @@ const ShopItemDetailScreen = () => {
         if (isCollection) {
             if (!collection) {
                 console.warn('컬렉션 데이터 없음');
-                // TODO: 사용자에게 데이터 로딩 실패 알림
                 Alert.alert('컬렉션 데이터 로딩 실패');
                 return;
             }
@@ -101,17 +100,14 @@ const ShopItemDetailScreen = () => {
             }
             if (!hasValidPrice) {
                 console.log('가격 정보 없음:', collection.name);
-                // TODO: 가격 정보 없음 에러 표시
                 Alert.alert('가격 정보 없음');
                 return;
             }
             console.log('컬렉션 구매 시도:', collection.name, collection.purchasePrice);
-            // TODO: 컬렉션 구매 로직 구현 (전체 컬렉션 구매)
             await purchaseSingleItem(itemId, collection.purchasePrice ?? 0);
         } else {
             if (!item) {
                 console.warn('아이템 데이터 없음');
-                // TODO: 사용자에게 데이터 로딩 실패 알림
                 Alert.alert('아이템 데이터 로딩 실패');
                 return;
             }
@@ -121,7 +117,6 @@ const ShopItemDetailScreen = () => {
             }
             if (!hasValidPrice) {
                 console.log('가격 정보 없음:', item.name);
-                // TODO: 가격 정보 없음 에러 표시
                 Alert.alert('가격 정보 없음');
                 return;
             }

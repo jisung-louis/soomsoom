@@ -4,6 +4,7 @@ import { EmotionType } from '../types';
 import { BackendEmotion, toBackendEmotion, toFrontendEmotion } from '../utils/emotionMap';
 import { getMockDiaryData } from '../data/emotionReportMockData';
 import { useAchievementStore } from '../stores/achievementStore';
+import { useTodayMissionStore } from '../stores/todayMissionStore';
 
 // Request/Response 타입
 export interface CreateEmotionDiaryRequest {
@@ -106,6 +107,11 @@ export const emotionDiaryService = {
         // 감정일기 등록 성공 후 업적 체크
         useAchievementStore.getState().scheduleCheck(400);
         console.log('📝 감정일기 등록 성공, 업적 체크 스케줄링');
+
+        // 오늘 미션 상태 갱신 (NEED_DIARY → NEED_ACTIVITY/ALL_DONE 등)
+        try {
+          await useTodayMissionStore.getState().refresh();
+        } catch {}
 
         return result;
       }

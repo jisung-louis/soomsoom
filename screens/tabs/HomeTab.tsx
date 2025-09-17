@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, Alert } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, Alert, AppState, AppStateStatus } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import TopNavigation from '../../components/common/top-navigation/TopNavigation';
@@ -23,6 +23,8 @@ import { useAuthStore } from '../../stores/authStore';
 import { useAppConfigStore } from '../../stores/appConfigStore';
 import { useAuth } from '../../hooks/useAuth';
 import { resetAppState } from '../../utils/resetAppState';
+import { useHomeTimeLogger } from '../../hooks/useHomeTimeLogger';
+import { useTodayMissionStore } from '../../stores/todayMissionStore';
 
 type HomeTabNavigationProp = StackNavigationProp<HomeStackParamList, 'HomeTab'>;
 
@@ -39,17 +41,60 @@ const HomeTab = () => {
   const useMockApiMode = useAppConfigStore(s => s.useMockApi);
   const setUseMockApiMode = useAppConfigStore(s => s.setUseMockApi);
   const { logout } = useAuth();
+  
+  // 홈 화면 체류 시간 추적 (1분마다 배치 전송)
+  const { startTracking, stopTracking, flushNow } = useHomeTimeLogger();
+  
+  // 오늘 미션 상태 (캐시 + 조건부 갱신)
+  const {
+    status: todayStatus,
+    shouldFetchNow,
+    refresh: refreshTodayMission,
+    invalidateIfCrossedBoundary,
+  } = useTodayMissionStore();
   useFocusEffect(
     useCallback(() => {
       console.log('🏠 HomeTab 완전 재마운트!');
       setShowInnerContainer(false);
       setBubbleTalkKey(prev => prev + 1);
+      
+      // 홈 화면 진입 시 체류 시간 추적 시작
+      startTracking();
+      
+      // 오늘 미션 상태: 일경계 체크 및 필요 시 갱신
+      try {
+        invalidateIfCrossedBoundary();
+        if (shouldFetchNow({ ttlMs: 10 * 60 * 1000 })) {
+          refreshTodayMission();
+        }
+      } catch {}
+      
       // 애니메이션 재시작을 위한 지연
       setTimeout(() => {
       }, 100);
       
-    }, [])
+      // 홈 화면 이탈 시 체류 시간 추적 중지
+      return () => {
+        stopTracking();
+      };
+    }, [startTracking, stopTracking])
   );
+
+  // 앱이 포어그라운드로 돌아올 때 일경계 교차 감지 및 조건부 갱신
+  useEffect(() => {
+    const handler = (state: AppStateStatus) => {
+      if (state === 'active') {
+        try {
+          invalidateIfCrossedBoundary();
+          if (shouldFetchNow({ ttlMs: 10 * 60 * 1000 })) {
+            refreshTodayMission();
+          }
+        } catch {}
+      }
+    };
+    const sub = AppState.addEventListener('change', handler);
+    return () => sub.remove();
+  }, [invalidateIfCrossedBoundary, shouldFetchNow, refreshTodayMission]);
 
   const handleTestReward = () => {
     
@@ -121,6 +166,17 @@ const HomeTab = () => {
     }
   };
 
+  const onBubbleTalkPress = () => {
+    if (todayStatus === 'NEED_DIARY') {
+      navigation.getParent()?.navigate('record', { screen: 'RecordTab' });
+      return;
+    }
+    if (todayStatus === 'NEED_ACTIVITY') {
+      navigation.getParent()?.navigate('play', { screen: 'PlayTab' });
+      return;
+    }
+  };
+
   return (
     <>
     <UserRoom >
@@ -131,34 +187,40 @@ const HomeTab = () => {
         messageButtonPress={handleMessagePress}
       />
 
-      {/* 버블톡 애니메이션 */}
-      <LottieView
-        key={`bubbleTalk-${bubbleTalkKey}`}
-        source={require('../../assets/animations/bubble_talk.json')}
-        autoPlay
-        loop={false}
-        style={[itemStyles.bubbleTalk, {
-          top: objectPosition.bubbleTalk.y,
-          left: objectPosition.bubbleTalk.x,
-        }]}
-        onAnimationFinish={() => {
-          setShowInnerContainer(true);
-        }}
-      />
+      {/* 버블톡: 오늘 미션 상태에 따른 조건부 표시 */}
+      {(todayStatus === 'NEED_DIARY' || todayStatus === 'NEED_ACTIVITY') && (
+        <>
+          <LottieView
+            key={`bubbleTalk-${bubbleTalkKey}`}
+            source={require('../../assets/animations/bubble_talk.json')}
+            autoPlay
+            loop={false}
+            style={[itemStyles.bubbleTalk, {
+              top: objectPosition.bubbleTalk.y,
+              left: objectPosition.bubbleTalk.x,
+            }]}
+            onAnimationFinish={() => {
+              setShowInnerContainer(true);
+            }}
+          />
 
-      {showInnerContainer && (
-        <TouchableOpacity 
-          style={[itemStyles.bubbleTalkInnerContainer, {
-            top: objectPosition.bubbleTalk.y + 20,
-            left: objectPosition.bubbleTalk.x + 64,
-          }]}
-          onPress={() => {
-            // TODO: 기록 화면으로 이동
-          }}
-        >
-          <BubbleRecordIcon width={48} height={48} />
-          <Text style={{...syongsyongTypography.title4}}>!</Text>
-        </TouchableOpacity>
+          {showInnerContainer && (
+            <TouchableOpacity 
+              style={[itemStyles.bubbleTalkInnerContainer, {
+                top: objectPosition.bubbleTalk.y + 20,
+                left: objectPosition.bubbleTalk.x + 64,
+              }]}
+              onPress={onBubbleTalkPress}
+            >
+              {todayStatus === 'NEED_DIARY' ? (
+                <BubbleRecordIcon width={48} height={48} />
+              ) : (
+                <BubblePlayIcon width={48} height={48} />
+              )}
+              <Text style={{...syongsyongTypography.title4}}>!</Text>
+            </TouchableOpacity>
+          )}
+        </>
       )}
 
       <View style={[styles.developerButtons,{marginBottom: 10}]}> 

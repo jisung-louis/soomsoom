@@ -1,6 +1,7 @@
 import { apiClient } from './apiClient';
 import { createNetworkError } from '../utils/errorHandler';
 import { useActivityHistoryStore } from '../stores/activityHistoryStore';
+import { useTodayMissionStore } from '../stores/todayMissionStore';
 
 /**
  * 액티비티 로그 기록 관련 API 서비스
@@ -42,6 +43,10 @@ export const completeActivity = async (activityId: number): Promise<void> => {
   try {
     // 실제 API 호출 (모킹은 apiClient에서 처리)
     await apiClient.post<void>(`/activities/${activityId}/history/complete`);
+    // 오늘 미션 상태 갱신 (NEED_ACTIVITY → ALL_DONE 등)
+    try {
+      await useTodayMissionStore.getState().refresh();
+    } catch {}
   } catch (error) {
     throw createNetworkError(
       '액티비티 완료 처리에 실패했습니다.',

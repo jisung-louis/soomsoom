@@ -243,7 +243,7 @@ export function parseError(error: any): ErrorDetails {
         const needed = parseInt(match[2]);
         const shortage = needed - current;
         return {
-          title: `하트 ${shortage}개가 부족해요`,
+          title: `하트 **${shortage}**개가 부족해요`,
           message: '', // 메시지는 없음
           type: ErrorType.VALIDATION,
           code: 'INSUFFICIENT_POINTS'

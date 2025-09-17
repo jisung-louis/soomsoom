@@ -43,11 +43,21 @@ export function useNotificationSetup(navigationRef: React.RefObject<any>) {
   const setupResponseListener = React.useCallback(() => {
     const sub = Notifications.addNotificationResponseReceivedListener(response => {
       const { actionIdentifier, notification } = response;
-      const { alarmId } = notification.request.content.data as { alarmId: string };
+      const { alarmId, missionType, missionData, missionPack } = notification.request.content.data as { 
+        alarmId: string;
+        missionType?: string;
+        missionData?: any;
+        missionPack?: any;
+      };
       if (!actionIdentifier || actionIdentifier === Notifications.DEFAULT_ACTION_IDENTIFIER) {
         navigationRef.current?.navigate('alarm', {
           screen: 'AlarmDismissScreen',
-          params: { alarmId },
+          params: { 
+            alarmId,
+            missionType,
+            missionData,
+            missionPack
+          },
         });
       }
     });

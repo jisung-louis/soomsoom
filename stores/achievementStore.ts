@@ -125,13 +125,6 @@ export const useAchievementStore = create<AchievementState>()(
 
     loadUserAchievements: async (statusFilter: 'ALL' | 'ACHIEVED' | 'NOT_ACHIEVED' = 'ALL') => {
       try {
-        // 스토어 토큰 가드
-        const token = useAuthStore.getState().getAccessToken();
-        if (!token) {
-          console.log('⚠️ 토큰이 없어서 사용자 업적을 로드할 수 없습니다.');
-          return;
-        }
-
         const response = await fetchMyAchievements({ statusFilter, page: 1, size: 50 });
 
         // 정책: 진행 중(progress.current > 0) 또는 달성(isAchieved)만 노출
@@ -161,12 +154,6 @@ export const useAchievementStore = create<AchievementState>()(
 
     // 이하 팝업/체크 로직은 기존 유지
     scheduleCheck: (delayMs = 400) => {
-      // 스토어 토큰 가드
-      const token = useAuthStore.getState().getAccessToken();
-      if (!token) {
-        console.log('⚠️ 토큰 없음으로 업적 체크 예약 스킵');
-        return;
-      }
       console.log(`⏰ 업적 체크 스케줄링: ${delayMs}ms 후`);
       const t = get()._checkTimer;
       if (t) clearTimeout(t);
@@ -177,12 +164,6 @@ export const useAchievementStore = create<AchievementState>()(
     _checkNow: async () => {
       try {
         console.log('🔍 업적 체크 시작...');
-        // 스토어 토큰 가드
-        const token = useAuthStore.getState().getAccessToken();
-        if (!token) {
-          console.log('❌ 토큰 없음, 업적 체크 스킵');
-          return;
-        }
         
         const { content } = await fetchMyAchievements({ statusFilter: 'ALL', page: 1, size: 50 });
         const byId = get().cache;

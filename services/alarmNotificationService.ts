@@ -3,6 +3,15 @@ import { parseAlarmTime } from '../utils/timeUtils';
 import { MathMission, MultiStepMission } from '../utils/mathMissionGenerator';
 import { buildAlarmNotificationContent } from '../utils/notificationContentBuilder';
 
+// iOS/alarm 사운드 정규화 (확장자 중복 방지 및 기본음 처리)
+const normalizeIosSoundName = (soundName: string): 'default' | string => {
+  if (!soundName) return 'default';
+  const raw = String(soundName).trim();
+  if (raw === '기본' || raw.toLowerCase() === 'default') return 'default';
+  const base = raw.toLowerCase().replace(/\.(wav|mp3|caf)$/i, '');
+  return `${base}.wav`;
+};
+
 // 알림 권한 요청
 export const requestNotificationPermissions = async (): Promise<boolean> => {
   try {
@@ -86,7 +95,7 @@ const scheduleBurstPerMinute = async (params: {
         content: {
           title,
           body,
-          sound: soundName === '기본' ? 'default' : `${soundName}.wav`,
+          sound: normalizeIosSoundName(soundName),
           data: { alarmId, ...data },
           ...(categoryIdentifier ? { categoryIdentifier } : {}),
         },
@@ -264,7 +273,7 @@ const scheduleWeeklyRegularAlarm = async (alarmData: {
             content: {
               title,
               body,
-              sound: alarmData.soundName === '기본' ? 'default' : `${alarmData.soundName}.wav`,
+              sound: normalizeIosSoundName(alarmData.soundName),
               data: { alarmId: alarmData.id, time: alarmData.time, day: day },
             },
             trigger: {
@@ -465,6 +474,19 @@ export const cancelAlarmNotifications = async (alarmId: string): Promise<boolean
     return true;
   } catch (error) {
     console.error('알람 알림 취소 실패:', error);
+    return false;
+  }
+};
+
+// 모든 스케줄된 알림 취소 (로그아웃 시 사용)
+export const cancelAllScheduledNotifications = async (): Promise<boolean> => {
+  try {
+    console.log('🔕 모든 스케줄된 알림 취소 시작...');
+    await Notifications.cancelAllScheduledNotificationsAsync();
+    console.log('✅ 모든 스케줄된 알림 취소 완료');
+    return true;
+  } catch (error) {
+    console.error('❌ 모든 알림 취소 실패:', error);
     return false;
   }
 };

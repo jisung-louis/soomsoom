@@ -17,8 +17,6 @@ import { mockRoutes } from '../utils/mockRoutes';
 export class ApiClient {
   private baseURL: string;
   private timeout: number;
-  private accessToken: string | null = null;
-  private refreshToken: string | null = null;
   private refreshInFlight: Promise<AuthTokens | null> | null = null;
   private onTokensUpdated: ((tokens: AuthTokens) => Promise<void> | void) | null = null;
   private tokenRefresher: ((refreshToken: string) => Promise<AuthTokens>) | null = null;
@@ -33,23 +31,7 @@ export class ApiClient {
    */
   
 
-  /**
-   * 토큰 설정 (로그인 시 호출)
-   */
-  setTokens(accessToken: string, refreshToken?: string | null) {
-    this.accessToken = accessToken;
-    this.refreshToken = refreshToken ?? null;
-    console.log('🔐 ApiClient에 토큰 설정 완료');
-  }
-
-  /**
-   * 토큰 초기화 (로그아웃 시 호출)
-   */
-  clearTokens() {
-    this.accessToken = null;
-    this.refreshToken = null;
-    console.log('🗑️ ApiClient에서 토큰 초기화 완료');
-  }
+  // 토큰 관리 메서드 제거 - authStore에서 직접 관리
 
   /**
    * 토큰 갱신 시 호출될 콜백 등록 (스토어/영속화 동기화 용도)
@@ -63,12 +45,7 @@ export class ApiClient {
     this.tokenRefresher = cb;
   }
 
-  /**
-   * 현재 액세스 토큰 가져오기
-   */
-  getAccessToken(): string | null {
-    return this.accessToken;
-  }
+  // getAccessToken 메서드 제거 - authStore에서 직접 조회
 
   /**
    * GET 요청 - 서버 응답을 직접 반환 (ApiResponse 래퍼 없음)
@@ -120,19 +97,22 @@ export class ApiClient {
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
     // MOCK 어댑터: 전역 플래그가 켜져 있으면 라우트 테이블로 목 응답 반환
-    try {
-      const { useMockApi } = useAppConfigStore.getState();
-      if (useMockApi) {
-        const method = (options.method || 'GET').toUpperCase() as any;
-        const route = mockRoutes.find(r => r.method === method && r.match(endpoint));
-        if (route) {
+    const { useMockApi } = useAppConfigStore.getState();
+    if (useMockApi) {
+      const method = (options.method || 'GET').toUpperCase() as any;
+      const route = mockRoutes.find(r => r.method === method && r.match(endpoint));
+      if (route) {
+        try {
           const body = typeof options.body === 'string' ? JSON.parse(options.body) : (options.body as any);
           const result = await route.handler({ url, endpoint, body, headers: options.headers as any });
           return result as T;
+        } catch (mockError: any) {
+          // 모킹 라우트를 찾은 경우에는 실서버로 폴백하지 않고 에러를 그대로 전달
+          console.error('[MOCK] 핸들러 오류:', mockError);
+          throw mockError;
         }
       }
-    } catch (e) {
-      // 목 처리 중 에러는 무시하고 실제 호출로 폴백
+      // useMockApi=true이지만 매칭되는 라우트가 없으면 실제 서버 호출로 진행
     }
     
     const makeController = () => {
@@ -168,22 +148,23 @@ export class ApiClient {
       // 응답이 성공적이지 않으면 에러 처리
       if (!response.ok) {
         // 401 Unauthorized 에러이고 리프레시 토큰이 있으면 토큰 갱신 시도
-        if (response.status === 401 && this.refreshToken) {
+        const refreshToken = useAuthStore.getState().getRefreshToken();
+        if (response.status === 401 && refreshToken) {
           console.log('🔄 401 에러 발생, 토큰 갱신 시도...');
           
           try {
             // 동시성 제어: 갱신 중이면 기존 Promise 대기
             if (!this.refreshInFlight) {
               this.refreshInFlight = this.tokenRefresher
-                ? this.tokenRefresher(this.refreshToken)
+                ? this.tokenRefresher(refreshToken)
                 : Promise.resolve(null);
             }
             const newTokens = await this.refreshInFlight;
             this.refreshInFlight = null;
             
             if (newTokens) {
-              // 토큰 갱신 성공, 새로운 토큰으로 재요청
-              this.setTokens(newTokens.accessToken, newTokens.refreshToken);
+              // 토큰 갱신 성공, authStore에 새로운 토큰 저장
+              await useAuthStore.getState().setSession(newTokens);
               // 스토어/영속화 동기화 콜백 호출 (있으면)
               if (this.onTokensUpdated) {
                 try { await this.onTokensUpdated(newTokens); } catch (e) { console.warn('onTokensUpdated 실패:', e); }
@@ -218,12 +199,12 @@ export class ApiClient {
             } else {
               // 토큰 갱신 실패, 로그아웃 처리
               console.log('❌ 토큰 갱신 실패, 로그아웃 처리');
-              this.clearTokens();
+              await useAuthStore.getState().logout();
               throw new AppError('인증이 만료되었습니다. 다시 로그인해주세요.', ErrorType.AUTHENTICATION, 'TOKEN_REFRESH_FAILED', 'api-token-refresh');
             }
           } catch (refreshError) {
             console.error('❌ 토큰 갱신 중 에러:', refreshError);
-            this.clearTokens();
+            await useAuthStore.getState().logout();
             throw new AppError('인증이 만료되었습니다. 다시 로그인해주세요.', ErrorType.AUTHENTICATION, 'TOKEN_REFRESH_ERROR', 'api-token-refresh-error');
           }
         } else {

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert, FlatList } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { useAlarmStore } from '../../../stores/alarmStore';
@@ -14,6 +14,10 @@ import { colors } from '../../../constants/colors';
 import { WINDOW_WIDTH } from '@gorhom/bottom-sheet';
 import CheckIcon from '../../../assets/icons/common/check.svg';
 import BackIcon from '../../../assets/icons/common/back_icon.svg';
+import AdBanner from '../../../components/common/ads/AdBanner';
+import CustomAlert from '../../../components/common/alert/CustomAlert';
+import { AD_SIZES } from '../../../constants/ads';
+import { BannerAdSize } from 'react-native-google-mobile-ads';
 
 interface MissionAccomplishmentScreenProps {
   route: {
@@ -37,6 +41,8 @@ function MissionAccomplishmentScreen({ route }: MissionAccomplishmentScreenProps
   const [currentIndex, setCurrentIndex] = useState(0);
   
   const [wrongState, setWrongState] = useState(false);
+  const [completeAlertVisible, setCompleteAlertVisible] = useState(false);
+  const [skipConfirmVisible, setSkipConfirmVisible] = useState(false);
 
   const handleAnswer = (answer: string) => {
     if (isCompleted) return;
@@ -68,9 +74,7 @@ function MissionAccomplishmentScreen({ route }: MissionAccomplishmentScreenProps
           setWrongState(false);
         } else {
           setIsCompleted(true);
-          Alert.alert('정답!', '미션을 완료했습니다!', [
-            { text: '확인', onPress: handleMissionComplete }
-          ]);
+          setCompleteAlertVisible(true);
         }
       } else {
         setWrongState(true);
@@ -85,8 +89,7 @@ function MissionAccomplishmentScreen({ route }: MissionAccomplishmentScreenProps
       await cancelAlarmNotifications(alarmId);
       // 알람 상태 비활성화
       dismissAlarm(alarmId);
-      
-      Alert.alert('알림 해제', '미션 완료로 알람이 해제되었습니다.');
+      console.log('[MissionAccomplishmentScreen] 알람 취소 및 알람 상태 비활성화 완료!');
       // 알람 탭 스택 초기화 후 홈 탭으로 이동
       navigation.getParent()?.reset({
         index: 0,
@@ -100,25 +103,20 @@ function MissionAccomplishmentScreen({ route }: MissionAccomplishmentScreenProps
       });
     } catch (error) {
       console.error('미션 완료 처리 실패:', error);
-      Alert.alert('오류', '미션 완료 처리에 실패했습니다.');
+      setCompleteAlertVisible(false);
     }
   };
 
   const handleSkip = () => {
-    Alert.alert(
-      '미션 건너뛰기',
-      '미션을 건너뛰고 알람을 해제하시겠습니까?',
-      [
-        { text: '취소', style: 'cancel' },
-        { text: '해제', onPress: handleMissionComplete }
-      ]
-    );
+    setSkipConfirmVisible(true);
   };
 
   return (
+    <>
     <SafeAreaView style={styles.container}>
         <View style={styles.adContainer}>
-            <Text>AD</Text>
+            {/* <Text>AD</Text> */}
+            <AdBanner size={AD_SIZES.ANCHORED_ADAPTIVE_BANNER as BannerAdSize} />
         </View>
         <View style={styles.missionCountContainer}>
             <Text style={styles.missionCountText}>
@@ -161,11 +159,32 @@ function MissionAccomplishmentScreen({ route }: MissionAccomplishmentScreenProps
                 />
             </View>
 
-            <View style={[styles.adContainer, { marginTop: 8, marginBottom: 25, height: 86 }]}>
-                <Text>AD</Text>
+            <View style={[styles.adContainer, { marginVertical: 25 }]}>
+                {/* <Text>AD</Text> */}
+                <AdBanner size={AD_SIZES.ANCHORED_ADAPTIVE_BANNER as BannerAdSize} />
             </View>
         </View>
     </SafeAreaView>
+    
+    <CustomAlert
+      visible={completeAlertVisible}
+      message="미션 클리어!"
+      subMessage="알람을 종료할게요."
+      buttons={[{ text: '확인', onPress: () => { setCompleteAlertVisible(false); handleMissionComplete(); } }]}
+      closeButton={false}
+    />
+
+    <CustomAlert
+      visible={skipConfirmVisible}
+      message="미션 건너뛰기"
+      subMessage="미션을 건너뛰고 알람을 해제하시겠습니까?"
+      buttons={[
+        { text: '취소', onPress: () => setSkipConfirmVisible(false) },
+        { text: '해제', onPress: () => { setSkipConfirmVisible(false); handleMissionComplete(); } },
+      ]}
+      onClose={() => setSkipConfirmVisible(false)}
+    />
+    </>
   );
 }
 
@@ -177,7 +196,6 @@ const styles = StyleSheet.create({
   adContainer: {
     backgroundColor: colors.grayScale200,
     width: '100%',
-    height: 45,
     alignItems: 'center',
     justifyContent: 'center',
   },

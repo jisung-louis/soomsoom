@@ -1,8 +1,6 @@
 import React from 'react';
 import { useAuth } from './useAuth';
-import { useOwnedItems } from './useOwnedItems';
-import { getUserPoints } from '../services/userService';
-import { useCurrencyStore } from '../stores/currencyStore';
+import { useUserDataSync } from './useUserDataSync';
 import { useAuthStore } from '../stores/authStore';
 import { apiClient } from '../services/apiClient';
 
@@ -15,26 +13,23 @@ import { apiClient } from '../services/apiClient';
 export function useAuthBootstrap() {
   const { phase, setPhase } = useAuthStore();
   const { deviceLogin } = useAuth();
-  const { loadOwnedItems } = useOwnedItems();
-  const { setHeartPoints } = useCurrencyStore();
+  const { syncAllUserData } = useUserDataSync();
   const ranOnceRef = React.useRef(false);
-
-  const syncHeartPoints = React.useCallback(async () => {
-    try {
-      const response = await getUserPoints();
-      setHeartPoints(response.points);
-    } catch (error) {
-      // 서버 미연결 등 에러는 앱 플로우에 치명적이지 않으므로 무시
-    }
-  }, [setHeartPoints]);
 
   const run = React.useCallback(async () => {
     if (ranOnceRef.current) return;
     ranOnceRef.current = true;
 
-    // 이미 로그인 완료면 종료
+    // 이미 로그인 완료면 토큰 확인 후 데이터 동기화 (재실행 시 - 최신 데이터 보장)
     if (useAuthStore.getState().phase === 'logged_in') {
-      await syncHeartPoints();
+      const token = useAuthStore.getState().getAccessToken();
+      if (token) {
+        console.log('🔄 앱 재실행: 토큰 확인 완료, 최신 데이터 동기화');
+        await syncAllUserData();
+      } else {
+        console.log('⚠️ 앱 재실행: 토큰 없음, 로그아웃 상태로 전환');
+        setPhase('logged_out');
+      }
       return;
     }
 
@@ -46,14 +41,13 @@ export function useAuthBootstrap() {
         const parsed = JSON.parse(raw);
         const savedTokens = parsed?.state?.tokens as { accessToken: string; refreshToken?: string | null } | null;
         if (savedTokens?.accessToken && savedTokens?.refreshToken) {
-          apiClient.setTokens(savedTokens.accessToken, savedTokens.refreshToken);
+          // apiClient는 이제 authStore를 직접 참조하므로 setTokens 불필요
           useAuthStore.getState().setSession({
             accessToken: savedTokens.accessToken,
             refreshToken: savedTokens.refreshToken || null,
           } as any);
           setPhase('logged_in');
-          await syncHeartPoints();
-          loadOwnedItems();
+          await syncAllUserData();
           return;
         }
       }
@@ -63,10 +57,9 @@ export function useAuthBootstrap() {
     const a = useAuthStore.getState().getAccessToken();
     const r = useAuthStore.getState().getRefreshToken();
     if (a && r) {
-      apiClient.setTokens(a, r);
+      // apiClient는 이제 authStore를 직접 참조하므로 setTokens 불필요
       setPhase('logged_in');
-      await syncHeartPoints();
-      loadOwnedItems();
+      await syncAllUserData();
       return;
     }
 
@@ -74,13 +67,12 @@ export function useAuthBootstrap() {
     try {
       if (useAuthStore.getState().getAccessToken()) {
         setPhase('logged_in');
-        await syncHeartPoints();
+        await syncAllUserData();
         return;
       }
       const result = await deviceLogin();
       if (result.success) {
-        loadOwnedItems();
-        await syncHeartPoints();
+        await syncAllUserData();
       } else {
         setPhase('logged_out');
       }
@@ -88,7 +80,7 @@ export function useAuthBootstrap() {
       console.error('디바이스 로그인 에러:', error);
       setPhase('logged_out');
     }
-  }, [loadOwnedItems, deviceLogin, syncHeartPoints, setPhase]);
+  }, [deviceLogin, syncAllUserData, setPhase]);
 
   return { phase, run };
 }

@@ -13,7 +13,7 @@ export const useAppConfigStore = create<AppConfigState>()(
   devtools(
     persist(
       (set) => ({
-        useMockApi: true,
+        useMockApi: false,
         setUseMockApi: (value: boolean) => set({ useMockApi: value }),
       }),
       {

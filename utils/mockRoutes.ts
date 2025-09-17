@@ -12,7 +12,6 @@ export type MockRoute = {
   match: (endpoint: string) => boolean;
   handler: (ctx: MockHandlerContext) => any | Promise<any>;
 };
-
 // 데이터 소스
 import { serverItemList } from '../data/roomItemData';
 import { bannerMockData } from '../data/bannerMockData';
@@ -38,6 +37,23 @@ export const mockRoutes: MockRoute[] = [
     method: 'GET',
     match: (e) => e === '/banners',
     handler: () => bannerMockData,
+  },
+
+  // 오늘 미션 상태
+  // GET /users/me/today-missions
+  {
+    method: 'GET',
+    match: (e) => e === '/users/me/today-missions',
+    handler: async () => {
+      const { useTodayMissionStore } = await import('../stores/todayMissionStore');
+      const store = useTodayMissionStore.getState();
+      // 캐시에 값이 있으면 그대로 반환, 없으면 기본값 NEED_DIARY로 초기화
+      const status = (store.status ?? 'NEED_DIARY') as 'NEED_DIARY' | 'NEED_ACTIVITY' | 'ALL_DONE';
+      try {
+        store.setFromServer({ status });
+      } catch {}
+      return { status };
+    },
   },
 
   // 강사 목록
@@ -675,31 +691,41 @@ export const mockRoutes: MockRoute[] = [
     method: 'POST',
     match: (e) => e === '/purchase/items',
     handler: async ({ body }) => {
-      const { roomItemList } = await import('../data/roomItemData');
+      // 서버 스펙과 동일한 데이터 소스를 사용하여 일관성 유지
+      const { serverItemList } = await import('../data/roomItemData');
       const { useCurrencyStore } = await import('../stores/currencyStore');
       const { useRoomStore } = await import('../stores/roomStore');
       const itemIds: number[] = body?.itemIds ?? [];
       const expectedTotalPrice = Number(body?.expectedTotalPrice ?? 0);
       const currentHeartPoints = useCurrencyStore.getState().heartPoints;
-      const itemsToPurchase = (roomItemList as any[]).filter((item: any) => itemIds.includes(item.id));
+      // 존재하는 아이템만 구매 대상으로 선정
+      const itemsToPurchase = (serverItemList as any[]).filter((item: any) => itemIds.includes(item.id));
+      if (itemsToPurchase.length !== itemIds.length) {
+        const missing = itemIds.filter((id: number) => !(serverItemList as any[]).some((it: any) => it.id === id));
+        console.warn('[MOCK]/purchase/items: 존재하지 않는 아이템 ID가 포함되어 무시됩니다:', missing);
+      }
       const totalPrice = itemsToPurchase.reduce((sum: number, item: any) => sum + (item.price || 0), 0);
-      if (totalPrice !== expectedTotalPrice) throw new Error(`가격 불일치: 예상 ${expectedTotalPrice}, 실제 ${totalPrice}`);
+      // 모킹에서는 총액 불일치 시에도 실패로 만들지 않고 경고만 출력해 개발 편의성 보장
+      if (totalPrice !== expectedTotalPrice) {
+        console.warn(`[MOCK]/purchase/items: 가격 불일치(예상 ${expectedTotalPrice}, 실제 ${totalPrice}) → 실제 합계로 처리합니다.`);
+      }
       if (currentHeartPoints < totalPrice) throw new Error(`하트 포인트 부족: 현재 ${currentHeartPoints}, 필요 ${totalPrice}`);
       const remainingPoints = currentHeartPoints - totalPrice;
       useCurrencyStore.setState({ heartPoints: remainingPoints });
       const { addOwnedItem } = useRoomStore.getState();
-      itemIds.forEach((itemId: number) => addOwnedItem(itemId));
+      // 실제 존재하는 아이템만 소유 처리
+      itemsToPurchase.forEach((item: any) => addOwnedItem(item.id));
       const purchasedItems: PurchasedItem[] = itemsToPurchase.map((item: any) => ({
         id: item.id,
-        name: item.title,
-        description: Array.isArray(item.description) ? item.description.join('\n') : (item.description || ''),
+        name: item.name,
+        description: item.description || '',
         phrase: null,
-        itemType: (item.type === '악세사리' ? 'ACCESSORY' : item.type === '모자' ? 'HAT' : item.type === '배경' ? 'BACKGROUND' : item.type === '러그' ? 'FLOOR' : item.type === '선반' ? 'SHELF' : 'FRAME') as ItemType,
-        equipSlot: (item.positionType === 'eyewear' ? 'EYEWEAR' : item.positionType === 'hat' ? 'HAT' : item.positionType === 'background' ? 'BACKGROUND' : item.positionType === 'frame' ? 'FRAME' : item.positionType === 'floor' ? 'FLOOR' : 'SHELF') as EquipSlot,
+        itemType: item.itemType as ItemType,
+        equipSlot: item.equipSlot as EquipSlot,
         acquisitionType: 'PURCHASE',
         price: item.price || 0,
-        imageUrl: typeof item.image === 'string' ? item.image : null,
-        lottieUrl: item.lottieJson || null,
+        imageUrl: item.imageUrl || null,
+        lottieUrl: item.lottieUrl || null,
         isSoldOut: false,
         isOwned: true,
         isEquipped: false,
@@ -831,6 +857,37 @@ export const mockRoutes: MockRoute[] = [
         }
       }
       return bySlot;
+    },
+  },
+
+  // 홈 화면 체류 시간 로그 저장
+  // POST /user-activities/screen-time
+  {
+    method: 'POST',
+    match: (e) => e === '/user-activities/screen-time',
+    handler: ({ body }) => {
+      console.log(`[MOCK] 홈 화면 체류 시간 로그 저장:`, {
+        durationInSeconds: body?.durationInSeconds,
+      });
+      
+      // 204 No Content 응답 (응답 없음)
+      return undefined;
+    },
+  },
+
+  // 온보딩 답변 저장
+  // POST /users/me/onboarding-answers
+  {
+    method: 'POST',
+    match: (e) => e === '/users/me/onboarding-answers',
+    handler: ({ body }) => {
+      console.log(`[MOCK] 온보딩 답변 저장:`, {
+        focusGoal: body?.focusGoal,
+        dailyDuration: body?.dailyDuration,
+      });
+      
+      // 204 No Content 응답 (응답 없음)
+      return undefined;
     },
   },
 ];

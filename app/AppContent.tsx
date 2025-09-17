@@ -45,15 +45,7 @@ const AppContent = () => {
       } as any);
     });
 
-    // 스토어 토큰 변경을 apiClient에 동기화 (store→client)
-    const unsub = useAuthStore.subscribe((state) => {
-      const tokens = state.tokens;
-      if (tokens?.accessToken) {
-        apiClient.setTokens(tokens.accessToken, tokens.refreshToken);
-      } else {
-        apiClient.clearTokens();
-      }
-    });
+    // 토큰 동기화 로직 제거 - apiClient가 authStore를 직접 참조하므로 불필요
 
     (async () => {
       // 폰트 로딩 유틸은 기존 파일에 있으므로 그대로 사용
@@ -68,9 +60,7 @@ const AppContent = () => {
       }
     })();
 
-    return () => {
-      try { unsub(); } catch {}
-    };
+    // unsub 제거 - 동기화 로직이 없으므로 불필요
   }, []);
 
 

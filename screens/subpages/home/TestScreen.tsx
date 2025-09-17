@@ -26,6 +26,7 @@ import { ButtonSmall } from '../../../components/common/buttons/ButtonSmall';
 import { useToast } from '../../../contexts/ToastContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useActivityHistoryStore } from '../../../stores/activityHistoryStore';
+import { useTodayMissionStore } from '../../../stores/todayMissionStore';
 import CatBasic from '../../../assets/images/play/playBreathing/basic.svg';
 import CatHold from '../../../assets/images/play/playBreathing/hold.svg';
 import { useCartStore } from '../../../stores/cartStore';
@@ -476,6 +477,11 @@ const TestScreen = () => {
 
             <Text style={styles.infoLabel}>액티비티 기록</Text>
             <Text style={styles.infoValue}>{JSON.stringify(useActivityHistoryStore.getState())}</Text>
+            <Surface style={{marginVertical: 10, height: 1}} color={colors.grayScale300}/>
+
+            <Text style={styles.infoLabel}>오늘 미션</Text>
+            <Text style={styles.infoValue}>{JSON.stringify(useTodayMissionStore.getState())}</Text>
+            <Surface style={{marginVertical: 10, height: 1}} color={colors.grayScale300}/>
           </View>
         </View>
       </ScrollView>

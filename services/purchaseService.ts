@@ -1,5 +1,5 @@
 import { apiClient } from './apiClient';
-import { roomItemList } from '../data/roomItemData';
+// 서비스 레이어는 모킹 여부를 알지 못하도록 유지
 import { useCurrencyStore } from '../stores/currencyStore';
 import { useRoomStore } from '../stores/roomStore';
 import { useCartStore } from '../stores/cartStore';
@@ -61,8 +61,11 @@ export interface PurchaseItemsResponse {
  * POST /purchase/items
  */
 export async function purchaseItemsApi(params: PurchaseItemsRequest): Promise<PurchaseItemsResponse> {
+  // 최소한의 정합성: 중복 제거만 수행
+  const uniqueIds = Array.from(new Set(params.itemIds));
+  const bodyToSend: PurchaseItemsRequest = { itemIds: uniqueIds, expectedTotalPrice: params.expectedTotalPrice };
   // 실제 서버 API 호출 (모킹은 apiClient에서 처리)
-  const response = await apiClient.post<PurchaseItemsResponse>(`/purchase/items`, params);
+  const response = await apiClient.post<PurchaseItemsResponse>(`/purchase/items`, bodyToSend);
   return response;
 }
 

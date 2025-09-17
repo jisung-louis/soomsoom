@@ -21,6 +21,7 @@ import {
   checkPermissions
 } from '../../utils/notificationUtils';
 import NoAlarm from '../../components/tabs/alarm/NoAlarm';
+import { useAppConfigStore } from '../../stores/appConfigStore';
 
 const AlarmTab = () => {
   const navigation = useNavigation<StackNavigationProp<AlarmStackParamList>>();
@@ -30,7 +31,7 @@ const AlarmTab = () => {
   
   //test
   const [isTestMode, setIsTestMode] = useState(false);
-
+  const { useMockApi } = useAppConfigStore.getState();
   // Zustand store 사용
   const { alarmList, toggleAlarm, deleteAlarm, updateAlarmList } = useAlarmStore();
   
@@ -139,42 +140,44 @@ const AlarmTab = () => {
 
   return (
   <SafeAreaView style={styles.container}>
-    {/* 테스트 버튼들 */}
-    {isTestMode && (
-    <View style={styles.testButtonContainer}>
-      <TouchableOpacity style={styles.testButton} onPress={handleCheckPermissions}>
-        <Text style={styles.testButtonText}>권한 확인</Text>
-      </TouchableOpacity>
-      
-      <TouchableOpacity style={styles.testButton} onPress={handleTestBasic}>
-        <Text style={styles.testButtonText}>1초 후 알림</Text>
-      </TouchableOpacity>
-      
-      <TouchableOpacity style={styles.testButton} onPress={handleTestScheduled}>
-        <Text style={styles.testButtonText}>10초 후 알림</Text>
-      </TouchableOpacity>
-      
-      <TouchableOpacity style={styles.testButton} onPress={handleTestRepeating1Minute}>
-        <Text style={styles.testButtonText}>1분 마다 알림</Text>
-      </TouchableOpacity>
-      
-      <TouchableOpacity style={styles.testButton} onPress={handleTestRepeating}>
-        <Text style={styles.testButtonText}>반복 알림</Text>
-      </TouchableOpacity>
-      
-      <TouchableOpacity style={styles.testButton} onPress={handleCheckScheduled}>
-        <Text style={styles.testButtonText}>예약 확인</Text>
-      </TouchableOpacity>
-      
-      <TouchableOpacity style={styles.testButton} onPress={handleClearAll}>
-        <Text style={styles.testButtonText}>모두 취소</Text>
-      </TouchableOpacity>
-    </View>
+    {useMockApi && (
+      <>
+      {isTestMode && (
+        <View style={styles.testButtonContainer}>
+          <TouchableOpacity style={styles.testButton} onPress={handleCheckPermissions}>
+            <Text style={styles.testButtonText}>권한 확인</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity style={styles.testButton} onPress={handleTestBasic}>
+            <Text style={styles.testButtonText}>1초 후 알림</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity style={styles.testButton} onPress={handleTestScheduled}>
+            <Text style={styles.testButtonText}>10초 후 알림</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity style={styles.testButton} onPress={handleTestRepeating1Minute}>
+            <Text style={styles.testButtonText}>1분 마다 알림</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity style={styles.testButton} onPress={handleTestRepeating}>
+            <Text style={styles.testButtonText}>반복 알림</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity style={styles.testButton} onPress={handleCheckScheduled}>
+            <Text style={styles.testButtonText}>예약 확인</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity style={styles.testButton} onPress={handleClearAll}>
+            <Text style={styles.testButtonText}>모두 취소</Text>
+          </TouchableOpacity>
+        </View>
+        )}
+        <TouchableOpacity onPress={() => setIsTestMode(!isTestMode)} style={styles.testButton}>
+          <Text style={{fontSize: 12}}>{isTestMode ? '테스트 모드 해제하기' : '테스트 모드 켜기'}</Text>
+        </TouchableOpacity>
+      </>
     )}
-    {/* 테스트 모드 버튼 (추후 삭제) */}
-    <TouchableOpacity onPress={() => setIsTestMode(!isTestMode)} style={styles.testButton}>
-        <Text style={{fontSize: 12}}>{isTestMode ? '테스트 모드 해제하기' : '테스트 모드 켜기'}</Text>
-      </TouchableOpacity>
     {displayAlarmList.length === 0 && !isEditMode ? (
         <NoAlarm onAddAlarmPress={() => {navigation.navigate('AlarmAddScreen', { isCreateMode: true })}} />
       ) : (

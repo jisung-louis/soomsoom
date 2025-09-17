@@ -2,7 +2,7 @@
   "expo": {
     "name": "숨숨",
     "slug": "soomsoom",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "orientation": "portrait",
     "icon": "./assets/app-icons/icon.png",
     "userInterfaceStyle": "light",
@@ -15,7 +15,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.soomsoom.app",
-      "buildNumber": "1",
+      "buildNumber": "2",
       "usesAppleSignIn": true,
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
@@ -28,7 +28,7 @@
       "associatedDomains": [
         "applinks:auth.expo.io"
       ],
-      "appleTeamId": "W66KG43LUC"
+      "appleTeamId": "H9NJP64CUZ"
     },
     "android": {
       "adaptiveIcon": {
@@ -45,6 +45,9 @@
     "web": {
       "favicon": "./assets/app-icons/favicon.png"
     },
+    "assetBundlePatterns": [
+      "assets/**/*"
+    ],
     "plugins": [
       "expo-audio",
       [

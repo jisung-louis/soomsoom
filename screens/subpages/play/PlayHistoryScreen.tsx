@@ -8,7 +8,8 @@ import { PlayStackParamList } from '../../../navigations/tabs/PlayStackNavigator
 import { colors } from '../../../constants/colors';
 import { TabView } from 'react-native-tab-view';
 import { TabMenu } from '../../../components/common/tabmenu/TabMenu';
-import { Activity, getActivities } from '../../../services/contentService';
+import { Activity, getActivityDetail } from '../../../services/contentService';
+import { useVisitedActivityStore } from '../../../stores/visitedActivityStore';
 import ProgramList from '../../../components/tabs/play/common/ProgramList';
 import { catIconMap } from '../../../utils/iconMap';
 import { syongsyongTypography, typography } from '../../../constants/typography';
@@ -26,15 +27,24 @@ const PlayHistoryScreen = () => {
 
 
   const [historyActivitiesList, setHistoryActivitiesList] = useState<Activity[]>([]);
+  const visits = useVisitedActivityStore(state => state.visits);
 
   const fetchHistoryActivities = async () => {
-    const activities = await getActivities(); //TODO: 히스토리 액티비티 조회 API로 변경 (지금은 모든 액티비티 조회)
-    setHistoryActivitiesList(activities.content);
+    // rear → front 순서로 최신부터 보여주기 위해 뒤에서부터 순회
+    const ids = visits.map(v => v.activityId);
+    const orderedIds = [...ids];
+    // rear(마지막 요소)가 최신이므로 뒤에서 앞으로
+    const reversed = orderedIds.reverse();
+    // 상세 병렬 로드
+    const results = await Promise.allSettled(reversed.map(id => getActivityDetail(id)));
+    const list: Activity[] = [];
+    results.forEach((r) => { if (r.status === 'fulfilled' && r.value) list.push(r.value); });
+    setHistoryActivitiesList(list);
   };
 
   useEffect(() => {
     fetchHistoryActivities();
-  }, []);
+  }, [visits]);
 
   const renderScene = ({ route }: { route: { key: string } }) => {
     switch (route.key) {

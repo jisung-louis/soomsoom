@@ -9,7 +9,7 @@ export const testBasicNotification = async () => {
       content: {
         title: "기본 테스트",
         body: "1초 후 알림이 옵니다!",
-        sound: 'default',
+        sound: 'default_alarm_audio.wav',
       },
       trigger: {
         type: Notifications.SchedulableTriggerInputTypes.DATE,
@@ -39,7 +39,7 @@ export const testScheduledNotification = async () => {
       content: {
         title: "예약 테스트",
         body: "10초 후 알림이 옵니다!",
-        sound: 'default',
+        sound: 'default_alarm_audio.wav',
       },
       trigger: {
         type: Notifications.SchedulableTriggerInputTypes.DATE,
@@ -65,7 +65,7 @@ export const testRepeatingNotification1Minute = async () => {
       content: {
         title: "반복 테스트",
         body: "1분 마다 알림이 옵니다!",
-        sound: 'default',
+        sound: 'default_alarm_audio.wav',
       },
       trigger: {
         type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
@@ -91,7 +91,7 @@ export const testRepeatingNotification = async () => {
       content: {
         title: "반복 테스트",
         body: "매일 이 시간에 알림이 옵니다!",
-        sound: 'default',
+        sound: 'default_alarm_audio.wav',
       },
       trigger: {
         type: Notifications.SchedulableTriggerInputTypes.WEEKLY,

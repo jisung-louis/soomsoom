@@ -58,7 +58,7 @@ const MyRoomDecorationPurchaseScreen = () => {
         let mounted = true;
         (async () => {
             try {
-                const res = await getItems({ sort: 'CREATED', page: 1, size: 200 });
+                const res = await getItems({ sort: 'CREATED', page: 1, size: 1000 });
                 const mapped = res.content.map((it) => ({
                     id: it.id,
                     title: it.name,
@@ -79,18 +79,21 @@ const MyRoomDecorationPurchaseScreen = () => {
         return m;
     }, [items]);
 
+    // 아이템 목록 로드 후, 목록에 존재하지 않는 선택 항목 정리
+    useEffect(() => {
+        if (items.length === 0) return;
+        setIsCheckedItems(prev => prev.filter(id => itemMap.has(id)));
+        setPurchaseItemsState(prev => prev.filter(id => itemMap.has(id)));
+    }, [items, itemMap]);
+
     const itemIdToItem = useCallback((id: number) => itemMap.get(id), [itemMap]);
 
-    const sumPrice = useMemo(() => {
-        return isCheckedItems.reduce((acc, id) => {
-            const item = itemIdToItem(id);
-            if (!item) {
-                console.warn(`아이템 데이터 없음: ${id}`);
-                return acc; // 데이터 없는 아이템은 가격 계산에서 제외
-            }
-            return acc + (item.price || 0);
-        }, 0);
-    }, [isCheckedItems, itemIdToItem]);
+  const invalidSelectedIds = useMemo(() => isCheckedItems.filter((id) => !itemMap.has(id)), [isCheckedItems, itemMap]);
+  const sumPrice = useMemo(() => {
+        // 존재하는 아이템만 합산하여 경고 로그 제거
+        const validIds = isCheckedItems.filter((id) => itemMap.has(id));
+        return validIds.reduce((acc, id) => acc + (itemMap.get(id)?.price || 0), 0);
+    }, [isCheckedItems, itemMap]);
 
     const formattedSumPrice = useMemo(() => sumPrice.toLocaleString(), [sumPrice]);
 
@@ -120,10 +123,27 @@ const MyRoomDecorationPurchaseScreen = () => {
         else navigation.popToTop();
     }, [navigation, isPurchasing, resetLocalState]);
     
-    const handlePurchase = useCallback(async () => {
-        const sum = isCheckedItems.reduce((acc, id) => acc + (itemMap.get(id)?.price || 0), 0);
-        await purchaseItems(isCheckedItems, sum);
-    }, [isCheckedItems, purchaseItems, itemMap]);
+  const handlePurchase = useCallback(async () => {
+        // 아이템 목록이 아직 로드되지 않은 경우 방어
+        if (items.length === 0) {
+            console.warn('아이템 목록이 아직 로드되지 않았습니다. 잠시 후 다시 시도해주세요.');
+            return;
+        }
+        // 유효한 아이템(id→item 맵에 존재)만 구매 대상으로 사용
+        const missingIds = isCheckedItems.filter((id) => !itemMap.has(id));
+        if (missingIds.length > 0) {
+            console.warn('선택한 아이템 중 목록에 없는 항목이 있어 구매를 중단합니다:', missingIds);
+            return;
+        }
+        const validIds = isCheckedItems.filter((id) => itemMap.has(id));
+        if (validIds.length === 0) {
+            console.warn('구매 대상으로 사용할 유효 아이템이 없습니다.');
+            return;
+        }
+        const sum = validIds.reduce((acc, id) => acc + (itemMap.get(id)?.price || 0), 0);
+        console.log('🧾 구매 요청 파라미터:', { itemIds: validIds, expectedTotalPrice: sum });
+        await purchaseItems(validIds, sum);
+    }, [isCheckedItems, purchaseItems, itemMap, items.length]);
 
     const goToChargeTab = useCallback(async () => {
         try {
@@ -209,7 +229,7 @@ const MyRoomDecorationPurchaseScreen = () => {
                   variant={isPurchasing ? 'default' : 'active'}
                   size='large'
                   style={{width: '100%'}}
-                  disabled={isPurchasing || sumPrice === 0}
+                  disabled={isPurchasing || sumPrice === 0 || invalidSelectedIds.length > 0 || items.length === 0}
                   loading={isPurchasing}
                   onPress={handlePurchase}
                 />
