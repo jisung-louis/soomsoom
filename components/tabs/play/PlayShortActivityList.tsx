@@ -17,6 +17,8 @@ interface PlayShortActivityListProps {
   isLoading: boolean;
 }
 
+const CARD_WIDTH = 140;
+
 const PlayShortActivityList = ({ onShortActivityPress, shortActivityData, isLoading }: PlayShortActivityListProps) => {
   const navigation = useNavigation<StackNavigationProp<PlayStackParamList>>();
   
@@ -29,6 +31,9 @@ const PlayShortActivityList = ({ onShortActivityPress, shortActivityData, isLoad
       showsHorizontalScrollIndicator={false}
       keyExtractor={item => item.id.toString()}
       contentContainerStyle={{gap: 10}}
+      snapToInterval={CARD_WIDTH + 10} // 카드 너비 + 간격(20)
+      snapToAlignment="start"
+      decelerationRate="fast"
       renderItem={({ item }) => (
         <TouchableOpacity onPress={() => {navigation.navigate('PlayDetailScreen', { activityId: item.id, content: item as Activity })}}>
           <View style={styles.card}>
@@ -58,8 +63,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   card: {
-    width: 140,
-    height: 140,
+    width: CARD_WIDTH,
+    height: CARD_WIDTH,
     borderRadius: radius.r8,
     backgroundColor: colors.grayScale50,
     padding: 16,

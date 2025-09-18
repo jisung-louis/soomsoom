@@ -88,7 +88,7 @@ export const mockRoutes: MockRoute[] = [
   // GET /instructors/{id}
   {
     method: 'GET',
-    match: (e) => /^\/instructors\/(\d+)/.test(e.split('?')[0]),
+    match: (e) => /^\/instructors\/(\d+)$/.test(e.split('?')[0]),
     handler: ({ endpoint }) => {
       const path = endpoint.split('?')[0];
       const id = Number(path.split('/')[2]);
@@ -103,6 +103,37 @@ export const mockRoutes: MockRoute[] = [
         createdAt: mock.createdAt,
         modifiedAt: mock.modifiedAt,
         deletedAt: mock.deletedAt,
+      };
+    },
+  },
+
+  // 강사 대표 강의 목록
+  // GET /instructors/{instructorId}/activities
+  {
+    method: 'GET',
+    match: (e) => /^\/instructors\/(\d+)\/activities/.test(e.split('?')[0]),
+    handler: ({ endpoint }) => {
+      const path = endpoint.split('?')[0];
+      const id = Number(path.split('/')[2]);
+      const q = parseQuery(endpoint);
+      const page = Number(q.page ?? 1);
+      const size = Number(q.size ?? 10);
+      // mockContentData에서 author.id가 instructorId인 항목 필터
+      const all = (mockContentData as any[]).filter((c: any) => c.author?.id === id);
+      const start = (page - 1) * size;
+      const end = start + size;
+      const sel = all.slice(start, end);
+      const content = sel.map((c: any) => ({
+        activityId: c.id,
+        title: c.title,
+        type: c.type,
+        thumbnailImageUrl: c.thumbnailImageUrl ?? null,
+        durationInSeconds: c.durationInSeconds ?? 0,
+        isFavorited: false,
+      }));
+      return {
+        content,
+        page: { size, number: page, totalElements: all.length, totalPages: Math.max(1, Math.ceil(all.length / size)) },
       };
     },
   },
@@ -428,12 +459,12 @@ export const mockRoutes: MockRoute[] = [
       const path = endpoint.split('?')[0];
       const id = Number(path.split('/')[2]);
       // DEV: store의 즐겨찾기 상태를 실제로 토글하여 일관성 유지
-      const { favoriteActivities, addFavoriteActivity, removeFavoriteActivity } = usePlayStore.getState() as any;
+      const { favoriteActivities, favoriteActivity, unfavoriteActivity } = usePlayStore.getState() as any;
       const isFav = (favoriteActivities || []).some((f: any) => f.activityId === id);
       if (isFav) {
-        removeFavoriteActivity(id);
+        unfavoriteActivity(id);
       } else {
-        addFavoriteActivity({ activityId: id });
+        favoriteActivity(id);
       }
       return { activityId: id, isFavorited: !isFav };
     },
@@ -505,6 +536,51 @@ export const mockRoutes: MockRoute[] = [
     },
   },
 
+  // 감정일기 단건 조회
+  // GET /diaries/{diaryId}
+  {
+    method: 'GET',
+    match: (e) => /^\/diaries\/(\d+)$/.test(e.split('?')[0]),
+    handler: ({ endpoint }) => {
+      const path = endpoint.split('?')[0];
+      const id = Number(path.split('/')[2]);
+      // 간단한 더미 응답 (목 데이터 일관성 유지 목적)
+      const emotions = ['JOY', 'SADNESS', 'ANGER', 'FEAR', 'DISGUST'];
+      const emotion = emotions[id % emotions.length];
+      return {
+        diaryId: id,
+        userId: 1,
+        emotion,
+        memo: `mock diary ${id}`,
+        recordDate: new Date().toISOString().slice(0, 10),
+        createdAt: new Date().toISOString(),
+        modifiedAt: new Date().toISOString(),
+        deletedAt: null,
+      };
+    },
+  },
+
+  // 감정일기 수정
+  // PATCH /diaries/{diaryId}
+  {
+    method: 'PATCH',
+    match: (e) => /^\/diaries\/(\d+)$/.test(e.split('?')[0]),
+    handler: ({ endpoint, body }) => {
+      const path = endpoint.split('?')[0];
+      const id = Number(path.split('/')[2]);
+      return {
+        diaryId: id,
+        userId: 1,
+        emotion: body?.emotion ?? 'JOY',
+        memo: body?.memo ?? null,
+        recordDate: new Date().toISOString().slice(0, 10),
+        createdAt: new Date().toISOString(),
+        modifiedAt: new Date().toISOString(),
+        deletedAt: null,
+      };
+    },
+  },
+
   // 감정일기 등록
   // POST /diaries
   {
@@ -512,7 +588,7 @@ export const mockRoutes: MockRoute[] = [
     match: (e) => e === '/diaries',
     handler: ({ body }) => {
       return {
-        diaryId: Math.floor(Math.random() * 1000) + 1,
+        diaryId: 2,
         userId: 1,
         emotion: body?.emotion ?? 'JOY',
         memo: body?.memo ?? null,

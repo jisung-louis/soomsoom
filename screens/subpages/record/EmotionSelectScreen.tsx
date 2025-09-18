@@ -46,22 +46,23 @@ const EmotionSelectScreen: React.FC = () => {
     <SafeAreaView style={styles.container}>
       {/* 헤더 */}
       <SubpageHeader onBack={handleBack} />
-      {/* 타이틀 */}
-      <Text style={{...syongsyongTypography.title5, ...styles.title}}>오늘, 어떤 감정이 가장 가까운가요?</Text>
+      <View style={styles.contentContainer}>
+        {/* 타이틀 */}
+        <Text style={styles.title}>오늘, 어떤 감정이 가장 가까운가요?</Text>
 
-      {/* 감정 선택 그리드 */}
-      <EmotionGrid 
-        onEmotionSelect={handleEmotionSelect} 
-        selectedEmotionId={selectedEmotion?.id}
-      />
+        {/* 감정 선택 그리드 */}
+        <EmotionGrid 
+          onEmotionSelect={handleEmotionSelect} 
+          selectedEmotionId={selectedEmotion?.id}
+        />
 
-      {/* 버튼 */}
-      <View style={styles.buttonContainer}>
+        {/* 버튼 */}
         <Button 
           title="감정 선택하기" 
           variant={selectedEmotion ? "active" : "default"} 
-          size="medium"
+          size="large"
           onPress={handleConfirmSelection} 
+          style={styles.button}
         />
       </View>
     </SafeAreaView>
@@ -73,29 +74,20 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.white,
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  contentContainer: {
+    flex: 1,
     justifyContent: 'space-between',
+    paddingBottom: 10,
     paddingHorizontal: 20,
-    paddingVertical: 16,
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  placeholder: {
-    width: 40,
   },
   title: {
     alignSelf: 'center',
+    ...syongsyongTypography.title5,
   },
   buttonContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingBottom: 40,
+  },
+  button: {
+    width: '100%',
   },
 });
 

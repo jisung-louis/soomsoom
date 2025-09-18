@@ -161,8 +161,8 @@ const PlayDetailScreen: React.FC = () => {
     setResumeProgress(null);
   };
 
-  // 로딩 중이거나 content가 없으면 로딩 화면 표시
-  if (isLoading || !content) {
+  // 컨텐츠가 없을 때만 로딩 화면 표시 (작은 액션 로딩으로 화면 전체를 교체하지 않음)
+  if (!content) {
     return (
       <SafeAreaView style={styles.container}>
         <SubpageHeader onBack={handleBack} />

@@ -134,9 +134,9 @@ export const OnboardingStep: React.FC<OnboardingStepProps> = ({
                         left: itemStyles.cat.left - contentContainerX,
                     }]} 
                 />
-                <Image source={require('../../assets/icons/items/default-background/shadow_default.png')} style={[itemStyles.shadow, {
-                    top: itemStyles.shadow.top - contentContainerY,
-                    left: itemStyles.shadow.left - contentContainerX,
+                <Image source={require('../../assets/icons/items/default-background/shadow_default.png')} style={[itemStyles.shadowStyle, itemStyles.shadowSize, {
+                    top: itemStyles.shadowStyle.top - contentContainerY,
+                    left: itemStyles.shadowStyle.left - contentContainerX,
                 }]} />
             </>
         );

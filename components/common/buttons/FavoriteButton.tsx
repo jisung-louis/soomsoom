@@ -19,7 +19,7 @@ const FavoriteButton = ({ onPress, isFavorite, isLoading }: FavoriteButtonProps)
         onPress();
       }
     return (
-        <View>
+        <View style={{ position: 'relative' }}>
             <TouchableOpacity onPress={onPressLocal} disabled={isLoading}>
                 <StarIcon width={32} height={32} color={isFavorite ? colors.primary300 : colors.grayScale500} />
             </TouchableOpacity>
@@ -40,10 +40,11 @@ const FavoriteButton = ({ onPress, isFavorite, isLoading }: FavoriteButtonProps)
 const styles = StyleSheet.create({
     lottie: {
         position: 'absolute',
-        top: -60,
+        top: -16,
         left: -14,
         width: 60,
         height: 60,
+        zIndex: 2,
     },
 });
 

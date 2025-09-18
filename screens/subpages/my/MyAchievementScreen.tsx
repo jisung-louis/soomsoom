@@ -13,6 +13,10 @@ import CircleTabMenu from "../../../components/common/tabmenu/CircleTabMenu";
 import AchievementList from "../../../components/tabs/my/AchievementList";
 import { useAchievementStore } from "../../../stores/achievementStore";
 import { MyAchievement } from "../../../types";
+import BadgeBronze from "../../../assets/icons/my/badge_bronze.svg";
+import BadgeSilver from "../../../assets/icons/my/badge_silver.svg";
+import BadgeGold from "../../../assets/icons/my/badge_gold.svg";
+import BadgeHidden from "../../../assets/icons/my/badge_hidden.svg";
 
 const MyAchievementScreen = () => {
   const [selectedTab, setSelectedTab] = useState<string>('전체');
@@ -74,30 +78,15 @@ const MyAchievementScreen = () => {
             </View>
             <View style={styles.systemBadge}>
                 <View style={styles.badgeAndTextContainer}>
-                    <LottieView
-                      source={require('../../../assets/animations/badge/bronze_action.json')}
-                      autoPlay
-                      loop
-                      style={{ width: 64, height: 64 }}
-                    />
+                    <BadgeBronze width={64} height={64} />
                     <Text style={[styles.bronzeTextColor, styles.badgeTextTypography]}>브론즈 뱃지</Text>
                 </View>
                 <View style={styles.badgeAndTextContainer}>
-                    <LottieView
-                      source={require('../../../assets/animations/badge/silver_action.json')}
-                      autoPlay
-                      loop
-                      style={{ width: 64, height: 64 }}
-                    />
+                    <BadgeSilver width={64} height={64} />
                     <Text style={[styles.silverTextColor, styles.badgeTextTypography]}>실버 뱃지</Text>
                 </View>
                 <View style={styles.badgeAndTextContainer}>
-                    <LottieView
-                      source={require('../../../assets/animations/badge/gold_action.json')}
-                      autoPlay
-                      loop
-                      style={{ width: 64, height: 64 }}
-                    />
+                    <BadgeGold width={64} height={64} />
                     <Text style={[styles.goldTextColor, styles.badgeTextTypography]}>골드 뱃지</Text>
                 </View>
             </View>

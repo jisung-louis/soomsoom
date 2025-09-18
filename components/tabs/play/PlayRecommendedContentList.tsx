@@ -13,6 +13,8 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { PlayStackParamList } from '../../../navigations/tabs/PlayStackNavigator';
 import { titleLineBreaker } from '../../../utils/textUtils';
 
+const CARD_WIDTH = 280;
+
 interface PlayRecommendedContentListProps {
   onRecommendedPress: () => void;
   recommendedActivityData: Activity[];
@@ -31,6 +33,10 @@ const PlayRecommendedContentList = ({ onRecommendedPress, recommendedActivityDat
         horizontal
         showsHorizontalScrollIndicator={false}
         keyExtractor={(_, index) => index.toString()}
+        snapToInterval={CARD_WIDTH + 14} // 카드 너비 + 간격(14)
+        snapToAlignment="start"
+        decelerationRate="fast"
+        contentContainerStyle={styles.containerStyle}
         renderItem={({ item }) => (
           <TouchableOpacity onPress={() => {navigation.navigate('PlayDetailScreen', { activityId: item.id, content: item as Activity })}}>
             <View style={styles.card}>
@@ -76,11 +82,13 @@ const styles = StyleSheet.create({
 
     elevation: 1, // Android용. 1~2 정도가 4% 불투명한 그림자 느낌
   },
+  containerStyle: {
+    gap: 14,
+  },
   card: {
     backgroundColor:colors.white,
-    width: 280,
+    width: CARD_WIDTH,
     borderRadius: 16,
-    marginRight: 14,
     overflow: 'hidden',
   },
   image: {

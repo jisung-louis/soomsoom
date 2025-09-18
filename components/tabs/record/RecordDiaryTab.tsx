@@ -1,5 +1,5 @@
-import React from 'react';
-import { ScrollView, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { CompositeNavigationProp } from '@react-navigation/native';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -18,6 +18,7 @@ type RecordDiaryTabNavigationProp = CompositeNavigationProp<
 >;
 
 type RecordedItem = {
+  diaryId: number;
   date: string;
   character: string;
   content: string;
@@ -36,7 +37,10 @@ type RecordDiaryTabProps = {
   containsToday?: boolean;
   todayYear?: number;
   todayMonth?: number;
+  onItemPress?: (diaryId: number) => void;
 };
+
+
 
 const RecordDiaryTab = ({
   currentDate,
@@ -50,10 +54,21 @@ const RecordDiaryTab = ({
   styles,
   containsToday,
   todayYear,
-  todayMonth
+  todayMonth,
+  onItemPress,
 }: RecordDiaryTabProps) => {
+
+  const [hasThisMonthRecords, setHasThisMonthRecords] = useState(false);
+  const [isThisCurrentMonth, setIsThisCurrentMonth] = useState(false);
+  const handleHasRecordsChange = (hasRecords: boolean) => {
+    setHasThisMonthRecords(hasRecords);
+  };
+  const handleIsThisCurrentMonthChange = (isThisCurrentMonth: boolean) => {
+    setIsThisCurrentMonth(isThisCurrentMonth);
+  };
+
   return (
-    <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
+    <ScrollView contentContainerStyle={{ paddingBottom: 100 }} scrollEnabled={hasThisMonthRecords || viewType === 'month'}>
       <RecordCalenderHeader
         year={currentDate.year()}
         month={currentDate.month() + 1}
@@ -77,7 +92,21 @@ const RecordDiaryTab = ({
         <RecordMonthCalendar date={currentDate} recordedItems={recordedItems} />
       )}
       <Surface/>
-      <RecordList date={currentDate} recordedItems={recordedItems} onStartRecordPress={onStartRecordPress} />
+      <View style={[ 
+        !hasThisMonthRecords && { justifyContent: 'center'}, 
+        !hasThisMonthRecords && (viewType === 'week') && { height: '100%'},
+        !hasThisMonthRecords && (viewType === 'week') && { transform: isThisCurrentMonth ? [{translateY: -60}] : [{translateY: -30}]},
+        !hasThisMonthRecords && (viewType === 'month') && isThisCurrentMonth && { marginTop: 25 },
+        ]}>
+        <RecordList 
+          date={currentDate} 
+          recordedItems={recordedItems} 
+          onStartRecordPress={onStartRecordPress} 
+          onHasRecordsChange={handleHasRecordsChange} 
+          onIsThisCurrentMonthChange={handleIsThisCurrentMonthChange}
+          onItemPress={onItemPress}
+        />
+      </View>
     </ScrollView>
   );
 };

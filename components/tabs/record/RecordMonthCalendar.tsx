@@ -43,6 +43,12 @@ const getMonthGrid = (date: dayjs.Dayjs) => {
 const RecordMonthCalendar = ({ date, recordedItems }: RecordMonthCalendarProps) => {
   const grid = getMonthGrid(date);
   const logicalNow = getLogicalNowUtil();
+  
+  // 빈 row 필터링
+  const filteredGrid = grid.filter(week => 
+    week.some(day => day !== null)
+  );
+  
   return (
     <View style={styles.container}>
       <View style={styles.weekHeader}>
@@ -56,7 +62,7 @@ const RecordMonthCalendar = ({ date, recordedItems }: RecordMonthCalendarProps) 
         })}
       </View>
       <View style={styles.grid}>
-        {grid.map((week, rowIdx) => (
+        {filteredGrid.map((week, rowIdx) => (
           <View key={rowIdx} style={styles.row}>
             {week.map((day, colIdx) => {
               const isSunday = day?.day() === 0;
@@ -116,6 +122,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     marginTop: 16,
     gap: 30,
+    marginBottom: 30,
   },
   grid: {
     flexDirection: 'column',

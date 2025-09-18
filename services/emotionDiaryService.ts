@@ -196,7 +196,7 @@ export const emotionDiaryService = {
         emotion: toBackendEmotion(req.emotion),
         memo: req.memo,
       };
-      const res = await apiClient.put<BackendDiaryResponse>(`/diaries/${diaryId}`, body);
+      const res = await apiClient.patch<BackendDiaryResponse>(`/diaries/${diaryId}`, body);
       return {
         diaryId: res.diaryId,
         userId: res.userId,

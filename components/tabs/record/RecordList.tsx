@@ -1,13 +1,17 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import dayjs from 'dayjs';
 import { characterIconMap, characterTitleMap } from '../../../utils/iconMap';
 import { syongsyongTypography, typography } from '../../../constants/typography';
 import { colors } from '../../../constants/colors';
 import EmptyMonth from '../../../assets/images/record/month_empty.svg';
 import RecordEmptyStateWithButton from './RecordEmptyStateWithButton';
+import CatQuietIcon from '../../../assets/icons/charactors/cat-variation/cat_quiet.svg';
+import CatWriteIcon from '../../../assets/icons/charactors/cat-variation/cat_write.svg';
+import { ButtonSmall } from '../../common/buttons/ButtonSmall';
 
 type RecordedItem = {
+  diaryId: number;
   date: string;
   character: string;
   content: string;
@@ -16,8 +20,11 @@ interface RecordListProps {
   date: dayjs.Dayjs;
   recordedItems: RecordedItem[];
   onStartRecordPress: () => void;
+  onHasRecordsChange: (hasRecords: boolean) => void;
+  onIsThisCurrentMonthChange: (isThisCurrentMonth: boolean) => void;
+  onItemPress?: (diaryId: number) => void;
 }
-const RecordList: React.FC<RecordListProps> = ({ date, recordedItems, onStartRecordPress }) => {
+const RecordList: React.FC<RecordListProps> = ({ date, recordedItems, onStartRecordPress, onHasRecordsChange, onIsThisCurrentMonthChange, onItemPress}) => {
   const currentMonth = date.month(); // 커서가 위치한 달
   const nowMonth = dayjs().month(); // 현재 달
   const hasThisMonthRecords = recordedItems.some(
@@ -25,15 +32,32 @@ const RecordList: React.FC<RecordListProps> = ({ date, recordedItems, onStartRec
       dayjs(item.date).month() === currentMonth &&
       dayjs(item.date).year() === date.year()
   );
+  const isThisCurrentMonth = nowMonth === currentMonth && dayjs().year() === date.year();
+
+  useEffect(() => {
+    onHasRecordsChange(hasThisMonthRecords);
+    onIsThisCurrentMonthChange(isThisCurrentMonth);
+  }, [hasThisMonthRecords, isThisCurrentMonth]);
   return (
     <View style={styles.container}>
       {!hasThisMonthRecords ? (
-        nowMonth === currentMonth && dayjs().year() === date.year() ? (
-          <RecordEmptyStateWithButton
-            onButtonPress={onStartRecordPress}
-          />
+        isThisCurrentMonth ? (
+          
+          <View style={styles.emptyIcon}>
+            <CatWriteIcon width={100} height={100} />
+            <Text style={styles.emptyText}>이 달의 첫 기록, 지금 남겨보세요!</Text>
+            <ButtonSmall 
+              title="기록 시작하기" 
+              variant="active" 
+              onPress={onStartRecordPress}
+              style={{marginTop: 10}}
+            />
+          </View>
         ) : (
-            <EmptyMonth style={{ alignSelf: 'center', marginTop: 30 }}/>
+          <View style={styles.emptyIcon}>
+            <CatQuietIcon width={100} height={100} />
+            <Text style={styles.emptyText}>이 달엔 조용했네요!</Text>
+          </View>
         )
       ) : (
         <>
@@ -48,7 +72,7 @@ const RecordList: React.FC<RecordListProps> = ({ date, recordedItems, onStartRec
               const IconComponent = characterIconMap.active[item.character as keyof typeof characterIconMap.active];
               if (!IconComponent) return null;
               return (
-                <View key={`${item.date}-${item.character}`} style={styles.recordItem}>
+                <TouchableOpacity key={`${item.diaryId}`} style={styles.recordItem} activeOpacity={0.7} onPress={() => onItemPress?.(item.diaryId)}>
                   <Text style={styles.date}>{recordDate.format('YY.MM.DD')}</Text>
                   <View style={styles.contentRow}>
                     <IconComponent width={48} height={48} style={styles.icon} />
@@ -57,7 +81,7 @@ const RecordList: React.FC<RecordListProps> = ({ date, recordedItems, onStartRec
                       <Text numberOfLines={2} style={styles.content}>{item.content}</Text>
                     </View>
                   </View>
-                </View>
+                </TouchableOpacity>
               );
             })}
         </>
@@ -71,6 +95,14 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     paddingHorizontal: 20,
     paddingBottom: 40,
+  },
+  emptyIcon: {
+    alignItems: 'center',
+    gap: 20,
+  },
+  emptyText: {
+    ...syongsyongTypography.title6,
+    color: colors.grayScale900,
   },
   header: {
     marginVertical: 30,

@@ -1,7 +1,9 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Text } from 'react-native';
 import { ButtonSmall } from '../../common/buttons/ButtonSmall';
-import EmptyCurrentMonth from '../../../assets/images/record/currentMonth_empty.svg';
+import CatWriteIcon from '../../../assets/icons/charactors/cat-variation/cat_write.svg';
+import { syongsyongTypography } from '../../../constants/typography';
+import { colors } from '../../../constants/colors';
 
 interface RecordEmptyStateWithButtonProps {
   onButtonPress: () => void;
@@ -12,7 +14,8 @@ const RecordEmptyStateWithButton: React.FC<RecordEmptyStateWithButtonProps> = ({
 }) => {
   return (
     <View style={styles.container}>
-      <EmptyCurrentMonth style={styles.emptyIcon}/>
+      <CatWriteIcon width={100} height={100} />
+      <Text style={styles.emptyText}>이 달의 첫 기록, 지금 남겨보세요!</Text>
       <ButtonSmall 
         title="기록 시작하기" 
         variant="active" 
@@ -24,13 +27,12 @@ const RecordEmptyStateWithButton: React.FC<RecordEmptyStateWithButtonProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'column',
     alignItems: 'center',
     gap: 30,
   },
-  emptyIcon: {
-    alignSelf: 'center',
-    marginTop: 30,
+  emptyText: {
+    ...syongsyongTypography.title6,
+    color: colors.grayScale900,
   },
 }); 
 

@@ -75,14 +75,18 @@ export const itemStyles = {
     width: ss(290),
     height: sv(112),
   },
-  shadow: {
+  shadowStyle: {
     position: 'absolute' as const,
     zIndex: zIndex.shadow,
-    width: ss(130),
-    height: sv(30),
     top: objectPosition.shadow.y,
     left: objectPosition.shadow.x,
   },
+  shadowSize: {
+    width: ss(130),
+    height: sv(30),
+  },
+  shadowOpacity: 0.5,
+  shadowColor: 'black',
   shelfContainer: {
     position: 'absolute' as const,
     zIndex: zIndex.shelf,

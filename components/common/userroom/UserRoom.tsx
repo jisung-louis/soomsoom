@@ -6,6 +6,8 @@ import { useRoomStore } from '../../../stores/roomStore';
 import { getItems } from '../../../services/itemService';
 import { objectPosition, itemStyles } from '../../../constants/roomLayout';
 import { ss, sv } from '../../../utils/scale';
+import Shadow from '../../../assets/icons/items/default-background/shadow.svg'
+import { colors } from '../../../constants/colors';
 
 export type UserRoomProps = {
   children: React.ReactNode;
@@ -180,10 +182,11 @@ const UserRoom = ({children, previewMode = false, previewItemIds = [], cropTop =
                 loop
                 style={itemStyles.cat}
               />
-              <Image
+              {/* <Image
                 source={require('../../../assets/icons/items/default-background/shadow_default.png')}
                 style={itemStyles.shadow}
-              />
+              /> */}
+              <Shadow width={itemStyles.shadowSize.width} height={itemStyles.shadowSize.height} style={itemStyles.shadowStyle} color={itemStyles.shadowColor} opacity={itemStyles.shadowOpacity} />
 
               {/* 아이템 배치 (프리뷰 우선, 없으면 배치 아이템) */}
               {renderLottieItem(eyewearPreviewId ?? (previewMode ? null : placedItems.eyewear), objectPosition.eyewear, itemStyles.eyewear, 'eyewear')}
@@ -217,10 +220,11 @@ const UserRoom = ({children, previewMode = false, previewItemIds = [], cropTop =
             loop
             style={itemStyles.cat}
           />
-          <Image
+          {/* <Image
             source={require('../../../assets/icons/items/default-background/shadow_default.png')}
             style={itemStyles.shadow}
-          />
+          /> */}
+          <Shadow width={itemStyles.shadowSize.width} height={itemStyles.shadowSize.height} style={itemStyles.shadowStyle} color={itemStyles.shadowColor} opacity={itemStyles.shadowOpacity} />
 
           {/* 아이템 배치 (프리뷰 우선, 없으면 배치 아이템) */}
           {renderLottieItem(eyewearPreviewId ?? placedItems.eyewear, objectPosition.eyewear, itemStyles.eyewear, 'eyewear')}

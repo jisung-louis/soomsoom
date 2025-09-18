@@ -31,7 +31,6 @@ import CustomAlert from '../../components/common/alert/CustomAlert';
 import { usePurchase } from '../../hooks/usePurchase';
 import { PurchasedItem } from '../../services/purchaseService';
 import { bindAchievementNavigationHandler, useAchievementStore } from '../../stores/achievementStore';
-import LottieView from 'lottie-react-native';
 import { useAppConfigStore } from '../../stores/appConfigStore';
 import { getCachedInstallUuid } from '../../utils/deviceId';
 import { getUserActivitySummary, UserActivitySummaryResponse } from '../../services/activityLogService';
@@ -163,7 +162,7 @@ const MyTab = () => {
       for (let i = 0; i < placeholdersNeeded; i++) {
         data.push({
           id: `placeholder-${i}`, // 고유한 키를 위한 placeholder ID
-          name: '',
+          name: '-',
           grade: 'PLACEHOLDER'
         });
       }
@@ -176,35 +175,14 @@ const MyTab = () => {
   const renderBadgeIcon = (grade: string, width: number = 60, height: number = 60) => {
     switch (grade) {
       case 'BRONZE':
-        return <LottieView
-          source={require('../../assets/animations/badge/bronze_action.json')}
-          autoPlay
-          loop
-          style={{ width, height }}
-        />;
+        return <BadgeBronze width={width} height={height} />;
       case 'SILVER':
-        return <LottieView
-          source={require('../../assets/animations/badge/silver_action.json')}
-          autoPlay
-          loop
-          style={{ width, height }}
-        />;
+        return <BadgeSilver width={width} height={height} />;
       case 'GOLD':
-        return <LottieView
-          source={require('../../assets/animations/badge/gold_action.json')}
-          autoPlay
-          loop
-          style={{ width, height }}
-        />;
+        return <BadgeGold width={width} height={height} />;
       case 'SPECIAL':
-        return <LottieView
-          source={require('../../assets/animations/badge/hidden_action.json')}
-          autoPlay
-          loop
-          style={{ width, height }}
-        />;
+        return <BadgeHidden width={width} height={height} />;
       case 'PLACEHOLDER':
-        return <View style={{ width, height }} />; // 투명 placeholder
       default:
         return <BadgeEmpty width={width} height={height} />;
     }
@@ -652,11 +630,9 @@ const MyTab = () => {
                               renderItem={({ item: achievement }) => (
                                 <View style={styles.achievementItem}>
                                   {renderBadgeIcon(achievement.grade, 48, 48)}
-                                  {achievement.grade !== 'PLACEHOLDER' && (
-                                    <Text style={styles.achievementName} numberOfLines={2}>
-                                      {achievement.name}
-                                    </Text>
-                                  )}
+                                  <Text style={styles.achievementName} numberOfLines={2}>
+                                    {achievement.name}
+                                  </Text>
                                 </View>
                               )}
                               keyExtractor={(item) => item.id.toString()}

@@ -27,6 +27,7 @@ import { Button } from '../../components/common/buttons/Button';
 import { syongsyongTypography, typography } from '../../constants/typography';
 import { getLogicalNow as getLogicalNowUtil } from '../../utils/timeUtils';
 import { radius } from '../../constants/radius';
+import { ss, sv } from '../../utils/scale';
 
 type RecordTabNavigationProp = CompositeNavigationProp<
   BottomTabNavigationProp<RootTabParamList, 'record'>,
@@ -49,14 +50,19 @@ const RecordTab = () => {
   const [isCelebrationParticle, setIsCelebrationParticle] = useState(false);
 
   const celebrationSheetRef = useRef<BottomSheetModal>(null);
+  const activityInducingSheetRef = useRef<BottomSheetModal>(null);
 
   // 첫 기록 축하 바텀시트 표시
   useEffect(() => {
-    if (route.params?.isFirstRecord) {
+    if (route.params?.isFirstRecord === true) {
       // 약간의 지연을 두고 바텀시트 열기
       setTimeout(() => {
         setIsCelebrationParticle(true);
         celebrationSheetRef.current?.expand();
+      }, 100);
+    } else if (route.params?.isFirstRecord === false) {
+      setTimeout(() => {
+        activityInducingSheetRef.current?.expand();
       }, 100);
     }
   }, [route.params?.isFirstRecord]);
@@ -65,6 +71,11 @@ const RecordTab = () => {
   const handleCelebrationClose = () => {
     setIsCelebrationParticle(false);
     celebrationSheetRef.current?.close();
+  };
+
+  // 활동 유도 바텀시트 닫기
+  const handleActivityInducingClose = () => {
+    activityInducingSheetRef.current?.close();
   };
 
   // 현재 선택된 날짜 범위 계산
@@ -80,6 +91,7 @@ const RecordTab = () => {
 
   // 일기 데이터 상태
   const [recordedItems, setRecordedItems] = useState<{
+    diaryId: number;
     date: string;
     character: string;
     content: string;
@@ -171,6 +183,7 @@ const RecordTab = () => {
         });
         setRecordedItems(
           response.content.map(d => ({
+            diaryId: d.diaryId,
             date: d.recordDate,
             character: d.emotion, // 프론트 키로 변환됨
             content: d.memo || '', // 실제 일기 내용 (null인 경우 빈 문자열)
@@ -220,6 +233,12 @@ const RecordTab = () => {
     }
   }, [reportCurrentYear, reportCurrentMonth]);
 
+  const onToActivityPress = useCallback(() => {
+    // 하단 탭 네비게이터로 올라가 Play 탭으로 전환
+    handleActivityInducingClose();
+    setTimeout(() => navigation.getParent()?.navigate('play' as never), 120);
+  }, [navigation, handleActivityInducingClose]);
+
   const onStartRecordPress = useCallback(() => {
     navigation.navigate('EmotionSelectScreen', { date: getLogicalNow().format('YYYY-MM-DD') });
   }, [navigation, getLogicalNow]);
@@ -247,6 +266,9 @@ const RecordTab = () => {
             containsToday={weekIncludesToday}
             todayYear={getLogicalNow().year()}
             todayMonth={getLogicalNow().month() + 1}
+            onItemPress={(diaryId) => {
+              navigation.navigate('EmotionRecordScreen', { diaryId });
+            }}
           />
         );
       case 'report':
@@ -286,12 +308,12 @@ const RecordTab = () => {
         <CustomBottomSheet
           children={
             <View style={styles.celebrationContainer}>
-              <View style={styles.celebrationTextContainer}>
-                <Text style={styles.celebrationTitle}>첫 기록을 남겼어요!</Text>
-                <Text style={styles.celebrationMessage}>마음도, 꾸준히 움직이면 달라져요!</Text>
+              <View style={styles.bottomSheetTextContainer}>
+                <Text style={styles.bottomSheetTitle}>첫 기록을 남겼어요!</Text>
+                <Text style={styles.bottomSheetMessage}>마음도, 꾸준히 움직이면 달라져요!</Text>
               </View>
-              <View style={styles.celebrationImageContainer}>
-                <Image source={require('../../assets/images/common/cat_writing.png')} style={styles.celebrationImage} />
+              <View style={styles.bottomSheetImageContainer}>
+                <Image source={require('../../assets/images/common/cat_writing.png')} style={styles.bottomSheetImage} />
               </View>
               <Button
                 title="확인"
@@ -311,6 +333,42 @@ const RecordTab = () => {
           onClose={handleCelebrationClose}
           hasCelebrationParticle={isCelebrationParticle}
         />
+      <CustomBottomSheet
+        children={
+          <View style={styles.activityInducingContainer}>
+            <View style={styles.bottomSheetTextContainer}>
+              <Text style={styles.bottomSheetTitle}>마음을 풀어주는 시간,{'\n'}함께 해볼까요?</Text>
+              <Text style={styles.bottomSheetMessage}>마음도, 꾸준히 움직이면 달라져요!</Text>
+            </View>
+            <View style={styles.bottomSheetImageContainer}>
+              <Image source={require('../../assets/images/common/cat_meditating.png')} style={styles.bottomSheetImage} />
+            </View>
+            <View style={styles.bottomSheetButtonContainer}>
+              <Button
+                title="다음에 하기"
+                variant="default"
+                size="medium"
+                onPress={handleActivityInducingClose}
+                style={{flexShrink: 1}}
+              />
+              <Button
+                title="마음 운동 하러가기"
+                variant="active"
+                size="medium"
+                onPress={onToActivityPress}
+                style={{flexShrink: 1}}
+              />
+            </View>
+          </View>
+        }
+        bottomSheetModalRef={activityInducingSheetRef}
+        hasBackDrop={true}
+        enablePanDownToClose={false}
+        hasXButton
+        enableOverDrag={false}
+        hasTopButton={false}
+        onClose={handleActivityInducingClose}
+      />
     </SafeAreaView>
   );
 };
@@ -336,19 +394,20 @@ const styles = StyleSheet.create({
   celebrationContent: {
     gap: 20,
   },
-  celebrationTextContainer: {
+  bottomSheetTextContainer: {
     gap: 12,
   },
-  celebrationTitle: {
+  bottomSheetTitle: {
     ...syongsyongTypography.title4,
+    lineHeight: 26*1.3,
   },
-  celebrationMessage: {
+  bottomSheetMessage: {
     ...typography.body2,
     color: colors.grayScale500,
   },
-  celebrationImageContainer: {
-    width: 335,
-    height: 191,
+  bottomSheetImageContainer: {
+    width: ss(335),
+    height: sv(191),
     backgroundColor: colors.grayScale100,
     alignSelf: 'center',
     alignItems: 'center',
@@ -356,13 +415,28 @@ const styles = StyleSheet.create({
     borderRadius: radius.r12,
     overflow: 'hidden',
   },
-  celebrationImage: {
+  bottomSheetImage: {
     width: '100%',
     height: '100%',
     resizeMode: 'cover',
   },
   celebrationButton: {
     width: '100%',
+    marginTop: 30,
+  },
+  activityInducingContainer: {
+    paddingBottom: 50,
+    paddingHorizontal: 20,
+    marginTop: -10
+  },
+  activityInducingTitle: {
+    ...syongsyongTypography.title4,
+    
+  },
+  bottomSheetButtonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 8,
     marginTop: 30,
   },
 });

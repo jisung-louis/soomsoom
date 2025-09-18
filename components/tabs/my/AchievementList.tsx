@@ -4,7 +4,10 @@ import { radius } from "../../../constants/radius";
 import { colors } from "../../../constants/colors";
 import { typography } from "../../../constants/typography";
 import BadgeEmpty from "../../../assets/icons/my/badge_empty.svg";
-import LottieView from "lottie-react-native";
+import BadgeBronze from "../../../assets/icons/my/badge_bronze.svg";
+import BadgeSilver from "../../../assets/icons/my/badge_silver.svg";
+import BadgeGold from "../../../assets/icons/my/badge_gold.svg";
+import BadgeHidden from "../../../assets/icons/my/badge_hidden.svg";
 import { MyAchievement } from "../../../types";
 import Badge from "../../../components/common/badge/Badge";
 
@@ -16,33 +19,13 @@ const renderBadgeIcon = (grade: string, isAchieved: boolean, width: number = 48,
 
   switch (grade) {
     case 'BRONZE':  
-      return <LottieView
-                source={require('../../../assets/animations/badge/bronze_action.json')}
-                autoPlay
-                loop
-                style={{ width, height }}
-              />;
+      return <BadgeBronze width={width} height={height} />;
     case 'SILVER':
-      return <LottieView
-              source={require('../../../assets/animations/badge/silver_action.json')}
-              autoPlay
-              loop
-              style={{ width, height }}
-            />;
+      return <BadgeSilver width={width} height={height} />;
     case 'GOLD':
-      return <LottieView
-              source={require('../../../assets/animations/badge/gold_action.json')}
-              autoPlay
-              loop
-              style={{ width, height }}
-            />;
+      return <BadgeGold width={width} height={height} />;
     case 'SPECIAL':
-      return <LottieView
-              source={require('../../../assets/animations/badge/hidden_action.json')}
-              autoPlay
-              loop
-              style={{ width, height }}
-            />;
+      return <BadgeHidden width={width} height={height} />;
     default:
       return <BadgeEmpty width={width} height={height} />;
   }
