@@ -16,20 +16,25 @@ import HelpButton from '../../../assets/icons/common/help.svg';
 import { KeyboardEvent, Dimensions } from 'react-native';
 import { SUBPAGE_HEADER_HEIGHT } from '../../../components/common/top-navigation/SubpageHeader';
 
+type ScreenMode = 'create' | 'view' | 'edit';
+
 const EmotionRecordScreen = () => {
   const route = useRoute();
   const navigation = useNavigation<StackNavigationProp<RecordStackParamList>>();
   const { showToast } = useToast();
   const params = route.params as ({ date: string; emotion: string } | { diaryId: number });
-  const isDetailMode = (params as any).diaryId !== undefined;
-  const [emotionKey, setEmotionKey] = useState<string | null>(isDetailMode ? null : (params as any).emotion);
-  const [recordDate, setRecordDate] = useState<string | null>(isDetailMode ? null : (params as any).date);
+  
+  // 화면 모드 결정
+  const isDetail = (params as any).diaryId !== undefined;
+  const [screenMode, setScreenMode] = useState<ScreenMode>(isDetail ? 'view' : 'create');
+  
+  const [emotionKey, setEmotionKey] = useState<string | null>(isDetail ? null : (params as any).emotion);
+  const [recordDate, setRecordDate] = useState<string | null>(isDetail ? null : (params as any).date);
   const IconComponent = emotionKey ? characterIconMap.active[emotionKey as keyof typeof characterIconMap.active] : characterIconMap.active.happy;
   const layout = Dimensions.get('window');
   const { top: safeAreaInsetsTop } = useSafeAreaInsets();
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
-  const [isEditMode, setIsEditMode] = useState(false);
   const inputRef = useRef<TextInput>(null);
 
   useEffect(() => {
@@ -56,10 +61,10 @@ const EmotionRecordScreen = () => {
     formattedDate,
   } = useEmotionRecord(recordDate || '', emotionKey || '');
 
-  // 수정 모드일 경우, 기존 데이터를 불러와서 프리필
+  // 상세보기/수정 모드일 경우, 기존 데이터를 불러와서 프리필
   useEffect(() => {
     const loadDiaryIfNeeded = async () => {
-      if (!isDetailMode) return;
+      if (screenMode === 'create') return;
       try {
         const d = await emotionDiaryService.getEmotionDiaryById((params as any).diaryId);
         setEmotionKey(d.emotion);
@@ -71,7 +76,7 @@ const EmotionRecordScreen = () => {
       }
     };
     loadDiaryIfNeeded();
-  }, []);
+  }, [screenMode]);
 
   // UI 처리 함수들
   const handleBack = () => {
@@ -85,7 +90,7 @@ const EmotionRecordScreen = () => {
   
   const handleSave = async () => {
     // 수정 모드 분기
-    if (isDetailMode) {
+    if (screenMode === 'edit') {
       try {
         if (!emotionKey || !recordDate) {
           showToast({ message: '수정할 데이터를 불러오지 못했어요.', theme: 'dark', iconType: 'brokenHeart' });
@@ -102,28 +107,31 @@ const EmotionRecordScreen = () => {
       return;
     }
 
-    const result = await saveEmotionRecord();
-    if (result.success) {
-      // 정책상 토스트 메시지는 띄우지 않음 (주석 처리)
-      // // 첫 기록이 아닌 경우에만 토스트 표시
-      // if (!result.firstRecord) {
-      //   showToast({
-      //     message: result.message,
-      //     theme: 'light',
-      //     iconType: 'alarm',
-      //   });
-      // }
+    // 새로 작성 모드
+    if (screenMode === 'create') {
+      const result = await saveEmotionRecord();
+      if (result.success) {
+        // 정책상 토스트 메시지는 띄우지 않음 (주석 처리)
+        // // 첫 기록이 아닌 경우에만 토스트 표시
+        // if (!result.firstRecord) {
+        //   showToast({
+        //     message: result.message,
+        //     theme: 'light',
+        //     iconType: 'alarm',
+        //   });
+        // }
 
-      // 홈으로 이동 (첫 기록 여부와 함께)
-      navigation.reset({
-        index: 0,
-        routes: [{ 
-          name: 'RecordTab', 
-          params: { isFirstRecord: result.firstRecord } 
-        }],
-      });
-    } else {
-      showToast({ message: result.message, theme: 'dark', iconType: 'brokenHeart' });
+        // 홈으로 이동 (첫 기록 여부와 함께)
+        navigation.reset({
+          index: 0,
+          routes: [{ 
+            name: 'RecordTab', 
+            params: { isFirstRecord: result.firstRecord } 
+          }],
+        });
+      } else {
+        showToast({ message: result.message, theme: 'dark', iconType: 'brokenHeart' });
+      }
     }
   };
 
@@ -140,44 +148,35 @@ const EmotionRecordScreen = () => {
         {/* 상단 네비게이션 */}
         <SubpageHeader 
           onBack={handleBack}
-          right={
-            !isValidContent ? (
-            <TouchableOpacity 
-              onPress={navigateToHelp}
-              style={{ 
-                width: 36, 
-                height: 36, 
-                alignItems: 'center', 
-                justifyContent: 'center',
-                opacity: isSaving ? 0.7 : 1 
-              }}
-            >
-              <View style={styles.helpButtonContainer}>
-                <HelpButton width={36} height={36} />
-              </View>
-            </TouchableOpacity>
-          ) : (
-            isDetailMode && !isEditMode && (
-            <TouchableOpacity 
-              onPress={() => {
-                setIsEditMode(true);
-                requestAnimationFrame(() => {
-                  inputRef.current?.focus();
-                });
-              }}
-              style={{ 
-                width: 36, 
-                height: 36, 
-                alignItems: 'center', 
-                justifyContent: 'center',
-              }}
-            >
-              <View style={styles.helpButtonContainer}>
-                <EditButton width={36} height={36} />
-              </View>
-            </TouchableOpacity>
-          ))
-        }
+            right={
+              screenMode === 'view' ? (
+                <TouchableOpacity 
+                  onPress={() => {
+                    setScreenMode('edit');
+                    requestAnimationFrame(() => {
+                      inputRef.current?.focus();
+                    });
+                  }}
+                >
+                  <EditButton width={36} height={36} />
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity 
+                  onPress={navigateToHelp}
+                  style={{ 
+                    width: 36, 
+                    height: 36, 
+                    alignItems: 'center', 
+                    justifyContent: 'center',
+                    opacity: isSaving ? 0.7 : 1 
+                  }}
+                >
+                  <View style={styles.helpButtonContainer}>
+                    <HelpButton width={36} height={36} />
+                  </View>
+                </TouchableOpacity>
+              )
+            }
         />
         <View style={styles.contentContainer}>
           {/* 날짜/감정 */}
@@ -205,7 +204,7 @@ const EmotionRecordScreen = () => {
                 onChangeText={setContent}
                 cursorColor={colors.primary300}//안드로이드만 커서 컬러 변경 가능하다고 함
                 scrollEnabled
-                editable={!isDetailMode || isEditMode}
+                editable={screenMode === 'create' || screenMode === 'edit'}
                 autoFocus
               />
             </View>

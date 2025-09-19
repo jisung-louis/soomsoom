@@ -13,6 +13,7 @@ import { EmotionGrid, Emotion } from '../../../components/tabs/record/EmotionSel
 import { Button } from '../../../components/common/buttons/Button';
 import SubpageHeader from '../../../components/common/top-navigation/SubpageHeader';
 import { syongsyongTypography } from '../../../constants/typography';
+import { sv, sy } from '../../../utils/scale';
 
 type RecordScreenNavigationProp = StackNavigationProp<RecordStackParamList, 'EmotionSelectScreen'>;
 
@@ -83,6 +84,7 @@ const styles = StyleSheet.create({
   title: {
     alignSelf: 'center',
     ...syongsyongTypography.title5,
+    marginTop: 20,
   },
   buttonContainer: {
   },

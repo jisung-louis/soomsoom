@@ -255,7 +255,7 @@ const PlayBreathContentScreen = ({route}: {route: RouteProp<PlayStackParamList, 
     return (
         <>
             <SafeAreaView style={styles.container}>
-                <SubpageHeader title={content.title} onBack={handleBack} />
+                <SubpageHeader onBack={handleBack} />
                 {/* TODO: 호흡 재생 및 텍스트 매핑 추가 */}
                 <View style={[styles.contentContainer, {marginTop: Math.max(0, sy(277) - insets.top - SUBPAGE_HEADER_HEIGHT)}]}>
                     <Text style={styles.contentText}>{currentStepRemaining}</Text>

@@ -36,7 +36,7 @@ import { getCachedInstallUuid } from '../../utils/deviceId';
 import { getUserActivitySummary, UserActivitySummaryResponse } from '../../services/activityLogService';
 import { useAuthStore } from '../../stores/authStore';
 import { useAuth } from '../../hooks/useAuth';
-import { useBackgroundColor } from '../../hooks/useBackgroundColor';
+import { useBackgroundColor, useBgTopColor } from '../../hooks/useBackgroundColor';
 
 const mockStatusData = [
     { title: '기록', valueType: '회', value: null },
@@ -542,6 +542,8 @@ const MyTab = () => {
   const [roomBgUri, setRoomBgUri] = useState<string | null>(null);
   const dynamicBgColor = useBackgroundColor(roomBgUri);
 
+  const isBGColorDark = useBgTopColor(roomBgUri);
+
   return (
     <View style={[styles.container, { backgroundColor: dynamicBgColor }]}>
         <MyTabTopNavigation
@@ -550,6 +552,7 @@ const MyTab = () => {
             onSettingPress={() => {navigation.navigate('MySettingScreen')}}
             onHeartPress={() => {}}
             style={styles.topNavigation}
+            isBGColorDark={isBGColorDark}
             />
         {useMockApi && (
           <View style={styles.testContainer}>

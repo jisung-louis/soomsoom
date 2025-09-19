@@ -9,7 +9,7 @@ import { colors } from '../../../../constants/colors';
 import { sx, sy, sv } from '../../../../utils/scale';
 import { radius } from '../../../../constants/radius';
 import Badge from '../../../../components/common/badge/Badge';
-import HeartIcon from '../../../../assets/icons/common/Heart.svg';
+import HeartIcon from '../../../../assets/icons/common/emotion.svg';
 import { useCurrencyStore } from '../../../../stores/currencyStore';
 import { typography, syongsyongTypography } from '../../../../constants/typography';
 import { getItems } from '../../../../services/itemService';
@@ -325,7 +325,7 @@ const styles = StyleSheet.create({
         gap: 4,
     },
     heartPointHeldValueText: {
-        ...typography.body4,
+        ...typography.body1,
         color: colors.grayScale900,
     },
     contentItemListContainer: {

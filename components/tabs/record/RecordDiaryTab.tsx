@@ -11,6 +11,8 @@ import RecordWeekCalendar from './RecordWeekCalendar';
 import RecordMonthCalendar from './RecordMonthCalendar';
 import { Surface } from '../../common/surface/Surface';
 import RecordList from './RecordList';
+import { sv } from '../../../utils/scale';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type RecordDiaryTabNavigationProp = CompositeNavigationProp<
   BottomTabNavigationProp<RootTabParamList, 'record'>,
@@ -57,7 +59,7 @@ const RecordDiaryTab = ({
   todayMonth,
   onItemPress,
 }: RecordDiaryTabProps) => {
-
+  const { bottom: safeAreaInsetsBottom } = useSafeAreaInsets();
   const [hasThisMonthRecords, setHasThisMonthRecords] = useState(false);
   const [isThisCurrentMonth, setIsThisCurrentMonth] = useState(false);
   const handleHasRecordsChange = (hasRecords: boolean) => {
@@ -67,6 +69,7 @@ const RecordDiaryTab = ({
     setIsThisCurrentMonth(isThisCurrentMonth);
   };
 
+  const RECORDLIST_STATIC_HEIGHT = sv(466) - safeAreaInsetsBottom - 92; // 전체 높이에서 리스트 위쪽의 높이를 뺀 높이(sv(466)) - 하단 안전영역 높이(safeAreaInsetsBottom) - 하단 네비게이션 높이(92)
   return (
     <ScrollView contentContainerStyle={{ paddingBottom: 100 }} scrollEnabled={hasThisMonthRecords || viewType === 'month'}>
       <RecordCalenderHeader
@@ -94,9 +97,8 @@ const RecordDiaryTab = ({
       <Surface/>
       <View style={[ 
         !hasThisMonthRecords && { justifyContent: 'center'}, 
-        !hasThisMonthRecords && (viewType === 'week') && { height: '100%'},
-        !hasThisMonthRecords && (viewType === 'week') && { transform: isThisCurrentMonth ? [{translateY: -60}] : [{translateY: -30}]},
-        !hasThisMonthRecords && (viewType === 'month') && isThisCurrentMonth && { marginTop: 25 },
+        !hasThisMonthRecords && (viewType === 'week') && { height: RECORDLIST_STATIC_HEIGHT},
+        !hasThisMonthRecords && (viewType === 'month') && { marginVertical: 50 },
         ]}>
         <RecordList 
           date={currentDate} 

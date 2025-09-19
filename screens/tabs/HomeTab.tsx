@@ -25,6 +25,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { resetAppState } from '../../utils/resetAppState';
 import { useHomeTimeLogger } from '../../hooks/useHomeTimeLogger';
 import { useTodayMissionStore } from '../../stores/todayMissionStore';
+import { useBackgroundColor, useBgTopColor } from '../../hooks/useBackgroundColor';
 
 type HomeTabNavigationProp = StackNavigationProp<HomeStackParamList, 'HomeTab'>;
 
@@ -177,14 +178,19 @@ const HomeTab = () => {
     }
   };
 
+  const [roomBgUri, setRoomBgUri] = useState<string | null>(null);
+
+  const isBGColorDark = useBgTopColor(roomBgUri);
+
   return (
     <>
-    <UserRoom >
+    <UserRoom onBackgroundImageUri={setRoomBgUri}>
       <TopNavigation 
         shopButtonPress={handleShopPress}
         heartButtonPress={handleHeartPress}
         storageButtonPress={handleStoragePress}
         messageButtonPress={handleMessagePress}
+        isBGColorDark={isBGColorDark}
       />
 
       {/* 버블톡: 오늘 미션 상태에 따른 조건부 표시 */}

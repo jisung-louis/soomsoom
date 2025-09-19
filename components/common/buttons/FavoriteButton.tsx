@@ -21,7 +21,7 @@ const FavoriteButton = ({ onPress, isFavorite, isLoading }: FavoriteButtonProps)
     return (
         <View style={{ position: 'relative' }}>
             <TouchableOpacity onPress={onPressLocal} disabled={isLoading}>
-                <StarIcon width={32} height={32} color={isFavorite ? colors.primary300 : colors.grayScale500} />
+                <StarIcon width={32} height={32} color={isFavorite ? '#FFDB58' : colors.grayScale500} />
             </TouchableOpacity>
             {showLottie && (
                 <LottieView

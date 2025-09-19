@@ -81,6 +81,27 @@ export const mockDiaryData: Array<{
   { diaryId: 52, userId: 1, emotion: 'good', memo: '괜찮은 하루였어요.', recordDate: '2025-08-10', createdAt: '2025-08-10T09:00:00', modifiedAt: '2025-08-10T09:00:00', deletedAt: null },
   { diaryId: 53, userId: 1, emotion: 'depressed', memo: '기분이 많이 안 좋았습니다.', recordDate: '2025-08-11', createdAt: '2025-08-11T09:00:00', modifiedAt: '2025-08-11T09:00:00', deletedAt: null },
   { diaryId: 54, userId: 1, emotion: 'angry', memo: '화가 났던 하루였어요.', recordDate: '2025-08-12', createdAt: '2025-08-12T09:00:00', modifiedAt: '2025-08-12T09:00:00', deletedAt: null },
+
+  // 2025년 9월 데이터
+  { diaryId: 55, userId: 1, emotion: 'happy', memo: '9월의 시작이 좋았어요!', recordDate: '2025-09-01', createdAt: '2025-09-01T09:00:00', modifiedAt: '2025-09-01T09:00:00', deletedAt: null },
+  { diaryId: 56, userId: 1, emotion: 'sad', memo: '조금 우울한 하루였습니다.', recordDate: '2025-09-02', createdAt: '2025-09-02T09:00:00', modifiedAt: '2025-09-02T09:00:00', deletedAt: null },
+  { diaryId: 57, userId: 1, emotion: 'happy', memo: '평범한 하루였어요.', recordDate: '2025-09-03', createdAt: '2025-09-03T09:00:00', modifiedAt: '2025-09-03T09:00:00', deletedAt: null },
+  { diaryId: 58, userId: 1, emotion: 'good', memo: '괜찮은 하루였습니다.', recordDate: '2025-09-04', createdAt: '2025-09-04T09:00:00', modifiedAt: '2025-09-04T09:00:00', deletedAt: null },
+  { diaryId: 59, userId: 1, emotion: 'happy', memo: '기분이 안 좋았어요.', recordDate: '2025-09-05', createdAt: '2025-09-05T09:00:00', modifiedAt: '2025-09-05T09:00:00', deletedAt: null },
+  { diaryId: 60, userId: 1, emotion: 'angry', memo: '화가 났던 하루였어요.', recordDate: '2025-09-06', createdAt: '2025-09-06T09:00:00', modifiedAt: '2025-09-06T09:00:00', deletedAt: null },
+  { diaryId: 61, userId: 1, emotion: 'happy', memo: '정말 좋은 하루!', recordDate: '2025-09-07', createdAt: '2025-09-07T09:00:00', modifiedAt: '2025-09-07T09:00:00', deletedAt: null },
+  { diaryId: 62, userId: 1, emotion: 'sad', memo: '조금 슬펐던 하루였어요.', recordDate: '2025-09-08', createdAt: '2025-09-08T09:00:00', modifiedAt: '2025-09-08T09:00:00', deletedAt: null },
+  { diaryId: 63, userId: 1, emotion: 'soso', memo: '평범한 하루였습니다.', recordDate: '2025-09-09', createdAt: '2025-09-09T09:00:00', modifiedAt: '2025-09-09T09:00:00', deletedAt: null },
+  { diaryId: 64, userId: 1, emotion: 'happy', memo: '괜찮은 하루였어요.', recordDate: '2025-09-10', createdAt: '2025-09-10T09:00:00', modifiedAt: '2025-09-10T09:00:00', deletedAt: null },
+  { diaryId: 65, userId: 1, emotion: 'depressed', memo: '기분이 많이 안 좋았습니다.', recordDate: '2025-09-11', createdAt: '2025-09-11T09:00:00', modifiedAt: '2025-09-11T09:00:00', deletedAt: null },
+  { diaryId: 66, userId: 1, emotion: 'angry', memo: '화가 났던 하루였어요.', recordDate: '2025-09-12', createdAt: '2025-09-12T09:00:00', modifiedAt: '2025-09-12T09:00:00', deletedAt: null },
+  { diaryId: 67, userId: 1, emotion: 'happy', memo: '정말 좋은 하루!', recordDate: '2025-09-13', createdAt: '2025-09-13T09:00:00', modifiedAt: '2025-09-13T09:00:00', deletedAt: null },
+  { diaryId: 68, userId: 1, emotion: 'sad', memo: '조금 슬펐던 하루였어요.', recordDate: '2025-09-14', createdAt: '2025-09-14T09:00:00', modifiedAt: '2025-09-14T09:00:00', deletedAt: null },
+  { diaryId: 69, userId: 1, emotion: 'happy', memo: '평범한 하루였습니다.', recordDate: '2025-09-15', createdAt: '2025-09-15T09:00:00', modifiedAt: '2025-09-15T09:00:00', deletedAt: null },
+  { diaryId: 70, userId: 1, emotion: 'happy', memo: '괜찮은 하루였어요.', recordDate: '2025-09-16', createdAt: '2025-09-16T09:00:00', modifiedAt: '2025-09-16T09:00:00', deletedAt: null },
+  { diaryId: 71, userId: 1, emotion: 'angry', memo: '기분이 많이 안 좋았습니다.', recordDate: '2025-09-17', createdAt: '2025-09-17T09:00:00', modifiedAt: '2025-09-17T09:00:00', deletedAt: null },
+  { diaryId: 72, userId: 1, emotion: 'angry', memo: '화가 났던 하루였어요.', recordDate: '2025-09-18', createdAt: '2025-09-18T09:00:00', modifiedAt: '2025-09-18T09:00:00', deletedAt: null },
+  { diaryId: 73, userId: 1, emotion: 'happy', memo: '정말 좋은 하루!', recordDate: '2025-09-19', createdAt: '2025-09-19T09:00:00', modifiedAt: '2025-09-19T09:00:00', deletedAt: null },
 ];
 
 // 날짜 범위에 맞는 일기 데이터 필터링 (공통 로직)

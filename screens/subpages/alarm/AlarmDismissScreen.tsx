@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import * as Notifications from 'expo-notifications';
 import { REPEAT_WINDOW_MINUTES } from '../../../services/alarmNotificationService';
-import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, ImageBackground } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useAlarmStore } from '../../../stores/alarmStore';
@@ -14,6 +14,9 @@ import { typography } from '../../../constants/typography';
 import { sy } from '../../../utils/scale';
 import { AlarmStackParamList } from '../../../navigations/tabs/AlarmStackNavigator';
 import { MultiStepMission } from '../../../utils/mathMissionGenerator';
+import { AD_SIZES } from '../../../constants/ads';
+import { BannerAdSize } from 'react-native-google-mobile-ads';
+import AdBanner from '../../../components/common/ads/AdBanner';
 
 interface AlarmDismissScreenProps {
   route: {
@@ -32,6 +35,18 @@ export default function AlarmDismissScreen({ route }: AlarmDismissScreenProps) {
   const navigation = useNavigation<AlarmDismissScreenNavigationProp>();
   const { dismissAlarm } = useAlarmStore();
   const { alarmId, missionType, missionData, missionPack } = route.params;
+
+  // 랜덤 배경 이미지 선택
+  const backgroundImages = [
+    require('../../../assets/images/backgrounds/AlarmDismiss/Alarm_BG1.png'),
+    require('../../../assets/images/backgrounds/AlarmDismiss/Alarm_BG2.png'),
+    require('../../../assets/images/backgrounds/AlarmDismiss/Alarm_BG3.png'),
+  ];
+  
+  const [selectedBackground] = useState(() => {
+    const randomIndex = Math.floor(Math.random() * backgroundImages.length);
+    return backgroundImages[randomIndex];
+  });
 
   const handleDismiss = async () => {
     try {
@@ -114,23 +129,27 @@ export default function AlarmDismissScreen({ route }: AlarmDismissScreenProps) {
   };
 
   return (
-    <View style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.date}>{dateText}</Text>
-          <Text style={styles.time}>{timeText}</Text>
-          <ButtonSmall title="5분 후 다시 알림" variant="active" style={styles.againButton} onPress={handleSnooze} />
-        </View>
-        <View style={styles.footer}>
-            {missionType ? (
-                <Button title="미션 시작" variant="active" style={styles.button} onPress={()=>{handleMissionStart()}} />
-            ) : (
-                <Button title="알림 해제" size="large" variant="active" style={styles.button} onPress={handleDismiss} />
-            )}
-            <View style={styles.adContainer}>
-                <Text>AD</Text>
-            </View>
-        </View>
-    </View>
+    <>
+      <ImageBackground
+        source={selectedBackground}
+        style={styles.container}>
+          <View style={styles.header}>
+            <Text style={styles.date}>{dateText}</Text>
+            <Text style={styles.time}>{timeText}</Text>
+            <ButtonSmall title="5분 후 다시 알림" variant="active" style={styles.againButton} onPress={handleSnooze} />
+          </View>
+          <View style={styles.footer}>
+              {missionType ? (
+                  <Button title="미션 시작" variant="active" style={styles.button} onPress={()=>{handleMissionStart()}} />
+              ) : (
+                  <Button title="알림 해제" size="large" variant="active" style={styles.button} onPress={handleDismiss} />
+              )}
+          </View>
+      </ImageBackground>
+      <View style={styles.adContainer}>
+        <AdBanner size={AD_SIZES.ANCHORED_ADAPTIVE_BANNER as BannerAdSize} />
+      </View>
+    </>
   );
 }
 
@@ -138,6 +157,7 @@ const styles = StyleSheet.create({
   container: {
     padding: 20,
     flex: 1,
+    backgroundColor: colors.white,
   },
   header: {
     alignItems: 'center',
@@ -170,8 +190,8 @@ const styles = StyleSheet.create({
   },
   adContainer: {
     backgroundColor: colors.grayScale400,
-    height: 67,
     alignItems: 'center',
     justifyContent: 'center',
+    marginBottom: 25,
   },
 });

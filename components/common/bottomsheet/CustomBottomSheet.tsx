@@ -72,7 +72,7 @@ const CustomBottomSheet: React.FC<CustomBottomSheetProps> = ({
     <View pointerEvents="box-none" style={styles.handleContainer}>
       {hasTopButton && (
         <View style={[styles.topButtonWrapper, topButtonContainerStyle, {top: -(topButtonOffset+BUTTON_SIZE.height)}]}>
-          <ButtonSmall title={topButtonTitle} variant='active' onPress={onTopButtonPress} />
+          <ButtonSmall title={topButtonTitle} variant='active' onPress={onTopButtonPress} style={{width: ss(94)}} />
         </View>
       )}
     </View>

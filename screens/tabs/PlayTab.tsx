@@ -3,7 +3,7 @@ import { FlatList, StyleSheet, View, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import PlayHeader from '../../components/tabs/play/PlayHeader';
 import PlayBanner from '../../components/tabs/play/PlayBanner';
-import PlayShortContentList from '../../components/tabs/play/PlayShortActivityList';
+import PlayShortActivityList from '../../components/tabs/play/PlayShortActivityList';
 import PlayRecommendedContentList from '../../components/tabs/play/PlayRecommendedContentList';
 import PlayCategoryList from '../../components/tabs/play/PlayCategoryList';
 import { useNavigation } from '@react-navigation/native';
@@ -87,7 +87,7 @@ const PlayTab = () => {
               banners={bannerData}
               isLoading={isLoading}
             />
-            <PlayShortContentList 
+            <PlayShortActivityList 
               onShortActivityPress={onShortActivityPress}
               shortActivityData={shortActivityData}
               isLoading={isLoading}

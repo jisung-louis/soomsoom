@@ -18,6 +18,7 @@ interface TopNavigationProps {
   heartButtonPress?: () => void;
   storageButtonPress?: () => void;
   messageButtonPress?: () => void;
+  isBGColorDark?: boolean;
 }
 
 const TopNavigation = ({
@@ -29,34 +30,37 @@ const TopNavigation = ({
   shopButtonPress, 
   heartButtonPress, 
   storageButtonPress, 
-  messageButtonPress
+  messageButtonPress,
+  isBGColorDark = false
 }: TopNavigationProps) => {
   const { heartPoints } = useCurrencyStore();
+  const textColor = isBGColorDark ? colors.grayScale100 : colors.grayScale900;
+  const iconFill = isBGColorDark ? colors.grayScale100 : colors.grayScale800;
   return (
       <View style={[styles.container, style]}>
         <View style={styles.group}>
           <View style={styles.leftGroup}>
             {isShopButtonVisible && (
               <TouchableOpacity onPress={() => {shopButtonPress && shopButtonPress()}}>
-                <ShopIcon width={40} height={40}/>
+                <ShopIcon width={40} height={40} style={styles.iconShadow}/>
               </TouchableOpacity>
             )}
             {isHeartButtonVisible && (
               <TouchableOpacity style={styles.heartContainer} onPress={() => {heartButtonPress && heartButtonPress()}}>
-              <HeartIcon width={40} height={40}/>
-              <Text style={styles.label}>{heartPoints}</Text>
-            </TouchableOpacity>
+                <HeartIcon width={40} height={40} style={styles.iconShadow}/>
+                <Text style={[styles.label, {color: textColor}]}>{heartPoints}</Text>
+              </TouchableOpacity>
             )}
           </View>
           <View style={styles.rightGroup}>
             {isStorageButtonVisible && (
             <TouchableOpacity onPress={() => {storageButtonPress && storageButtonPress()}}>
-                <StorageIcon width={40} height={40}/>
+                <StorageIcon width={40} height={40} style={styles.iconShadow}/>
               </TouchableOpacity>
             )}
             {isMessageButtonVisible && (
               <TouchableOpacity onPress={() => {messageButtonPress && messageButtonPress()}}>
-                <MessageIcon width={40} height={40}/>
+                <MessageIcon width={40} height={40} style={styles.iconShadow}/>
             </TouchableOpacity>
             )}
           </View>
@@ -95,6 +99,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 2,
+  },
+  iconShadow: {
+    shadowColor: colors.black,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 3,
   },
 });
 

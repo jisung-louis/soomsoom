@@ -13,7 +13,7 @@ interface SubpageHeaderProps {
   style?: StyleProp<ViewStyle>;
 }
 
-export const SUBPAGE_HEADER_HEIGHT = 68;
+export const SUBPAGE_HEADER_HEIGHT = 48;
 
 const SubpageHeader: React.FC<SubpageHeaderProps> = ({
   onBack,
@@ -41,9 +41,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
     height: SUBPAGE_HEADER_HEIGHT,
+    //backgroundColor: 'red',
   },
   backButton: {
     width: 36,

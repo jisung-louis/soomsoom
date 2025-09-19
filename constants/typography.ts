@@ -69,7 +69,7 @@ export const syongsyongTypography: { [key: string]: TextStyle } = {
   },
   title4: { 
     fontSize: 26, 
-    lineHeight: 26, 
+    lineHeight: 26 * 1.1, 
     fontFamily: fontFamily.syongsyong,
     textShadowColor: colors.grayScale900,
     textShadowOffset: { width: 0.3, height: 0.3 },

@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, StyleSheet, Dimensions, Text } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { colors } from '../../../constants/colors';
 import { radius } from '../../../constants/radius';
 import { typography } from '../../../constants/typography';
@@ -127,6 +128,13 @@ const BarChart = ({ currentYear, currentMonth, currentWeek, emotionReportData }:
     const opacities: number[] = [];
     
     weekDates.forEach(date => {
+      // 오늘 이후 날짜면 무조건 희미하게 (0.4)
+      const isFuture = date.isAfter(dayjs(), 'day');
+      if (isFuture) {
+        opacities.push(0.4);
+        return;
+      }
+
       // 현재 선택된 월과 비교하여 투명도 결정
       const isCurrentMonth = date.month() === currentMonth - 1;
       opacities.push(isCurrentMonth ? 1.0 : 0.4); // 현재 월: 100%, 다른 월: 40%
@@ -158,16 +166,38 @@ const BarChart = ({ currentYear, currentMonth, currentWeek, emotionReportData }:
               const config = barConfigByEmotion[emotion as keyof typeof barConfigByEmotion];
               if (!config) return <View key={index} style={styles.emptyBar} />;
               
+              const isToday = getCurrentWeekDates()[index].isSame(dayjs(), 'day');
+
+              // 오늘 막대는 그라디언트, 그 외는 기본 막대
+              if (isToday) {
+                return (
+                  <LinearGradient
+                    key={index}
+                    colors={[colors.primary300, colors.primary100]}
+                    start={{ x: 0.5, y: 0 }}
+                    end={{ x: 0.5, y: 1 }}
+                    style={[
+                      styles.bar,
+                      {
+                        height: config.height,
+                        marginTop: config.marginTop,
+                        opacity: currentWeekOpacities[index],
+                      },
+                    ]}
+                  />
+                );
+              }
+
               return (
-                <View 
-                  key={index} 
+                <View
+                  key={index}
                   style={[
                     styles.bar,
                     {
                       height: config.height,
                       marginTop: config.marginTop,
-                      opacity: currentWeekOpacities[index], // 투명도 적용
-                    }
+                      opacity: currentWeekOpacities[index],
+                    },
                   ]}
                 />
               );
@@ -210,16 +240,21 @@ const BarChart = ({ currentYear, currentMonth, currentWeek, emotionReportData }:
             })}
         </View>
         <View style={styles.weekdayTextContainer}>
-            {getCurrentWeekDates().map((date, index) => (
-              <View key={index} style={styles.weekdayTextItem}>
-                <Text style={[styles.weekdayText, { opacity: currentWeekOpacities[index] }]}>
-                  {['일', '월', '화', '수', '목', '금', '토'][index]}
-                </Text>
-                <Text style={[styles.weekdayNumberText, { opacity: currentWeekOpacities[index] }]}>
-                  {date.date()}
-                </Text>
-              </View>
-            ))}
+            {getCurrentWeekDates().map((date, index) => {
+              const isToday = date.isSame(dayjs(), 'day');
+              return (
+                <View key={index} style={styles.weekdayTextItem}>
+                  <Text style={[styles.weekdayText, { opacity: currentWeekOpacities[index] }, isToday && { color: colors.grayScale900 }]}>
+                    {['일', '월', '화', '수', '목', '금', '토'][index]}
+                  </Text>
+                  <View style={[styles.weekdayNumberTextCircle, isToday && { backgroundColor: colors.grayScale900 }]}>
+                    <Text style={[styles.weekdayNumberText, { opacity: currentWeekOpacities[index] }, isToday && { color: colors.white }]}>
+                      {date.date()}
+                    </Text>
+                  </View>
+                </View>
+              );
+            })}
         </View>
       </View>
     </View>
@@ -288,14 +323,20 @@ const styles = StyleSheet.create({
     ...typography.caption2,
     color: colors.grayScale500,
   },
+  weekdayNumberTextCircle: {
+    width: '100%',
+    borderRadius: radius.max,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   weekdayNumberText: {
-    ...typography.body4,
+    ...typography.body5,
     color: colors.grayScale600,
   },
   emptyIconPlaceholder: {
     width: 32,
     height: 32,
-    backgroundColor: colors.grayScale100,
+    //backgroundColor: colors.grayScale100,
     borderRadius: radius.r8,
   },
 });

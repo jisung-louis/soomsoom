@@ -336,7 +336,7 @@ const RecordReportTab = ({
         <LottieView
           source={require('../../../assets/animations/particle.json')}
           autoPlay
-          loop={false}
+          loop
           style={styles.particle}
           onAnimationFinish={() => {
             setShowParticle(false);

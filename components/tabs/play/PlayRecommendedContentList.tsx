@@ -126,8 +126,8 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   time: {
-    fontSize: 13,
-    color: '#999',
+    ...typography.caption2,
+    color: colors.grayScale700,
   },
 });
 

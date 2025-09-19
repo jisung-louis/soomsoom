@@ -71,11 +71,11 @@ const styles = StyleSheet.create({
     opacity: 0.3,
   },
   tabMenuTitle: {
-    ...typography.body5,
+    ...typography.body4,
     color: colors.grayScale900,
   },
   tabMenuTitleUnselected: {
-    ...typography.body5,
+    ...typography.body4,
     color: colors.grayScale500,
   },
 });

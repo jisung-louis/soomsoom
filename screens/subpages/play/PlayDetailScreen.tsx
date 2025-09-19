@@ -176,7 +176,7 @@ const PlayDetailScreen: React.FC = () => {
   return (
     <SafeAreaView style={styles.container}>
       <SubpageHeader onBack={handleBack} />
-      <ScrollView contentContainerStyle={{flexGrow: 1, paddingBottom: 100}}>
+      <View style={{flexGrow: 1, paddingBottom: 100}}>
         <View style={styles.imageContainer}>
           <Image source={content.thumbnailImageUrl || require('../../../assets/images/play/playFavoriteScreen/default_image_1.png')} style={styles.image} />
         </View>
@@ -227,7 +227,7 @@ const PlayDetailScreen: React.FC = () => {
             style={styles.button}
           />
         </View>
-      </ScrollView>
+      </View>
       
       {/* 이어듣기 CustomAlert */}
       <CustomAlert
@@ -268,6 +268,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     height: 193,
     borderRadius: radius.r16,
+    marginTop: 30,
   },
   image: {
     width: '100%',

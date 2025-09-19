@@ -38,11 +38,8 @@ const RecordList: React.FC<RecordListProps> = ({ date, recordedItems, onStartRec
     onHasRecordsChange(hasThisMonthRecords);
     onIsThisCurrentMonthChange(isThisCurrentMonth);
   }, [hasThisMonthRecords, isThisCurrentMonth]);
-  return (
-    <View style={styles.container}>
-      {!hasThisMonthRecords ? (
+  return !hasThisMonthRecords ? (
         isThisCurrentMonth ? (
-          
           <View style={styles.emptyIcon}>
             <CatWriteIcon width={100} height={100} />
             <Text style={styles.emptyText}>이 달의 첫 기록, 지금 남겨보세요!</Text>
@@ -60,7 +57,7 @@ const RecordList: React.FC<RecordListProps> = ({ date, recordedItems, onStartRec
           </View>
         )
       ) : (
-        <>
+        <View style={styles.container}>
           <Text style={{...syongsyongTypography.title5, ...styles.header}}>기록</Text>
           {recordedItems
             .filter(item =>
@@ -84,11 +81,9 @@ const RecordList: React.FC<RecordListProps> = ({ date, recordedItems, onStartRec
                 </TouchableOpacity>
               );
             })}
-        </>
-      )}
-    </View>
-  );
-};
+        </View>
+      );
+    };
 
 const styles = StyleSheet.create({
   container: {
@@ -98,6 +93,7 @@ const styles = StyleSheet.create({
   },
   emptyIcon: {
     alignItems: 'center',
+    justifyContent: 'center',
     gap: 20,
   },
   emptyText: {

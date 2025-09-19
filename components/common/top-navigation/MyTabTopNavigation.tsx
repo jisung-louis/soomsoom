@@ -13,18 +13,21 @@ interface MyTabTopNavigationProps {
   onSettingPress: () => void;
   onHeartPress: () => void;
   style?: ViewStyle;
+  isBGColorDark?: boolean;
 }
 
-const MyTabTopNavigation = ({isEditMode, onEditModeToggle, onSettingPress, onHeartPress, style}: MyTabTopNavigationProps) => {
+const MyTabTopNavigation = ({isEditMode, onEditModeToggle, onSettingPress, onHeartPress, style, isBGColorDark = false}: MyTabTopNavigationProps) => {
+  const textColor = isBGColorDark ? colors.grayScale100 : colors.grayScale900;
+  const iconFill = isBGColorDark ? colors.grayScale100 : colors.grayScale800;
   return (
     isEditMode ? (
       <View style={[styles.container, style]}>
         <TouchableOpacity style={styles.leftButton} onPress={() => {onEditModeToggle()}}>
-          <ArrowLeft width={40} height={40} fill={colors.grayScale800} />
+          <ArrowLeft width={40} height={40} fill={iconFill} />
         </TouchableOpacity>
         <TouchableOpacity style={styles.rightButton} onPress={() => {onHeartPress()}}>
           <HeartIcon width={40} height={40} />
-          <Text style={styles.moneyText}>{useCurrencyStore.getState().heartPoints}</Text>
+          <Text style={[styles.moneyText, {color: textColor}]}>{useCurrencyStore.getState().heartPoints}</Text>
         </TouchableOpacity>
       </View>
     ) : (

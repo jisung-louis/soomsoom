@@ -79,8 +79,8 @@ const RecordMonthCalendar = ({ date, recordedItems }: RecordMonthCalendarProps) 
                         const IconComponent = characterIconMap.active[item.character as keyof typeof characterIconMap.active];
                         return IconComponent ? (
                           <IconComponent
-                            width={30}
-                            height={30}
+                            width={41}
+                            height={41}
                             style={styles.recordIcon}
                           />
                         ) : null;
@@ -136,6 +136,7 @@ const styles = StyleSheet.create({
   cell: {
     flex: 1,
     alignItems: 'center',
+    justifyContent: 'center',
     width: 41,
     height: 41,
   },

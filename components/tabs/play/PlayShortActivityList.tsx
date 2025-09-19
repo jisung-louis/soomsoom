@@ -91,7 +91,7 @@ const styles = StyleSheet.create({
   },
   time: {
     ...typography.caption2,
-    color: colors.grayScale500,
+    color: colors.grayScale700,
   },
 });
 
