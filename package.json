@@ -14,6 +14,8 @@
     "@quidone/react-native-wheel-picker": "^1.5.2",
     "@react-native-async-storage/async-storage": "^2.2.0",
     "@react-native-community/slider": "4.5.6",
+    "@react-native-firebase/app": "^23.3.1",
+    "@react-native-firebase/messaging": "^23.3.1",
     "@react-native-google-signin/google-signin": "^16.0.0",
     "@react-navigation/bottom-tabs": "^7.3.14",
     "@react-navigation/native": "^7.1.10",
@@ -31,6 +33,7 @@
     "expo-dev-client": "~5.2.4",
     "expo-device": "~7.1.4",
     "expo-font": "~13.3.2",
+    "expo-image-manipulator": "~13.1.7",
     "expo-linear-gradient": "^14.1.5",
     "expo-localization": "~16.1.6",
     "expo-notifications": "^0.31.4",
@@ -51,8 +54,7 @@
     "react-native-svg": "^15.11.2",
     "react-native-tab-view": "^4.1.2",
     "react-native-vector-icons": "^10.2.0",
-    "zustand": "^5.0.6",
-    "expo-image-manipulator": "~13.1.7"
+    "zustand": "^5.0.6"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

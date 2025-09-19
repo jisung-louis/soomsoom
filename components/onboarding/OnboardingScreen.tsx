@@ -2,6 +2,9 @@ import React from 'react';
 import * as Notifications from 'expo-notifications';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { scheduleDiaryNotification } from '../../utils/notificationUtils';
+import { registerDevice } from '../../services/notificationService';
+import { getFcmTokenAsync } from '../../services/authService';
+import { Platform } from 'react-native';
 import { View, StyleSheet, ImageBackground } from 'react-native';
 import { useOnboarding } from '../../hooks/useOnboarding';
 import { OnboardingStep } from './OnboardingStep';
@@ -60,18 +63,44 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, initial
           final = req.status;
         }
         if (final === 'granted') {
+          // FCM 토큰 등록
+          console.log('📱 온보딩 06단계 - FCM 토큰 등록 중...');
+          try {
+            const fcmToken = await getFcmTokenAsync();
+            if (fcmToken) {
+              const osType = Platform.OS === 'ios' ? 'IOS' : 'ANDROID';
+              await registerDevice(fcmToken, osType);
+              console.log('✅ FCM 토큰 등록 완료');
+            }
+          } catch (fcmError) {
+            console.error('❌ FCM 토큰 등록 실패:', fcmError);
+          }
+          
+          // 알림 권한 허용 시 모든 알림 설정을 true로 초기화
           const diaryNotification = await AsyncStorage.getItem('diaryNotificationEnabled');
+          const greetingNotification = await AsyncStorage.getItem('greetingNotificationEnabled');
+          const newsNotification = await AsyncStorage.getItem('newsNotificationEnabled');
           let diaryNotificationTime = await AsyncStorage.getItem('diaryNotificationTime');
+          
           if (diaryNotification === null) await AsyncStorage.setItem('diaryNotificationEnabled', 'true');
+          if (greetingNotification === null) await AsyncStorage.setItem('greetingNotificationEnabled', 'true');
+          if (newsNotification === null) await AsyncStorage.setItem('newsNotificationEnabled', 'true');
           if (diaryNotificationTime === null) {
             await AsyncStorage.setItem('diaryNotificationTime', '오후 8:30');
             diaryNotificationTime = '오후 8:30';
           }
+          
           const isEnabled = diaryNotification === 'true' || diaryNotification === null;
           if (isEnabled) {
             const timeString = diaryNotificationTime || '오후 8:30';
             await scheduleDiaryNotification(timeString);
           }
+        } else {
+          // 알림 권한 불허 시 모든 알림 설정을 false로 초기화
+          console.log('📱 알림 권한 불허 - 모든 알림 설정을 false로 초기화');
+          await AsyncStorage.setItem('diaryNotificationEnabled', 'false');
+          await AsyncStorage.setItem('greetingNotificationEnabled', 'false');
+          await AsyncStorage.setItem('newsNotificationEnabled', 'false');
         }
       } catch (e) {
         // 권한 요청/초기화 실패는 온보딩 진행을 막지 않음

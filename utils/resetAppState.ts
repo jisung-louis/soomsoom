@@ -8,6 +8,7 @@ import { useCartStore } from '../stores/cartStore';
 import { useAlarmStore } from '../stores/alarmStore';
 import { useHomeTimeLogStore } from '../stores/homeTimeLogStore';
 import { useTodayMissionStore } from '../stores/todayMissionStore';
+import { useAuthStore } from '../stores/authStore';
 import { INITIAL_CURRENCY_STATE } from '../constants/initialStates';
 import { cancelAllScheduledNotifications } from '../services/alarmNotificationService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -15,13 +16,20 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 // 초기화가 필요한 persist 키 목록 (필요 시 확장)
 const PERSIST_KEYS = [
   'app_config',           // 앱 설정 (유지)
+  'auth',                 // 인증 토큰 (초기화)
   'currency-storage',     // 화폐 데이터 (초기화)
   'activity-history-storage', // 액티비티 기록 (초기화)
   'play-storage',         // 즐겨찾기/팔로우 (초기화)
 ];
 
-export async function resetAppState(): Promise<void> {
+export async function resetAppState(clearAuth: boolean = false): Promise<void> {
   try {
+    // 0) 인증 상태 초기화 (선택적)
+    if (clearAuth) {
+      useAuthStore.getState().logout();
+      console.log('🔐 인증 상태 초기화 완료');
+    }
+
     // 1) 즐겨찾기/팔로우 등 플레이 상태 초기화
     usePlayStore.setState({ favoriteActivities: [], followedInstructors: [] } as any);
 

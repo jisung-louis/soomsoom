@@ -4,11 +4,12 @@ import { useRoomStore } from '../stores/roomStore';
 import { usePlayStore } from '../stores/playStore';
 import { useAchievementStore } from '../stores/achievementStore';
 import { getUserPoints } from '../services/userService';
-import { getOwnedItems } from '../services/itemService';
+import { getOwnedItems, getEquippedItems } from '../services/itemService';
 import { getUserFavoriteActivities } from '../services/contentService';
 import { getFollowedInstructors } from '../services/instructorService';
 import { getUserActivitySummary } from '../services/activityLogService';
 import { useTodayMissionStore } from '../stores/todayMissionStore';
+import { useMailboxStore } from '../stores/mailboxStore';
 
 /**
  * 사용자 데이터 동기화 훅
@@ -16,10 +17,11 @@ import { useTodayMissionStore } from '../stores/todayMissionStore';
  */
 export const useUserDataSync = () => {
   const { setHeartPoints } = useCurrencyStore();
-  const { setOwnedItems } = useRoomStore();
+  const { setOwnedItems, updatePlacedItems } = useRoomStore();
   const { setFavoritedActivities, setFollowedInstructors } = usePlayStore();
   const { loadUserAchievements } = useAchievementStore();
   const { refresh: refreshTodayMission } = useTodayMissionStore();
+  const { loadUnreadCount } = useMailboxStore();
 
   const syncAllUserData = useCallback(async () => {
     try {
@@ -29,19 +31,23 @@ export const useUserDataSync = () => {
       const [
         pointsResponse,
         ownedItemsResponse,
+        equippedItemsResponse,
         favoriteActivitiesResponse,
         followedInstructorsResponse,
         activitySummaryResponse,
         achievementsResponse,
-        todayMissionResponse
+        todayMissionResponse,
+        mailboxResponse
       ] = await Promise.allSettled([
         getUserPoints(), // 하트포인트 동기화
         getOwnedItems({ page: 1, size: 1000 }),
+        getEquippedItems(), // 장착 아이템 동기화
         getUserFavoriteActivities({ page: 1, size: 12, sort: 'createdAt,desc' }), // 즐겨찾기 액티비티 동기화
         getFollowedInstructors({ page: 1, size: 12, sort: 'createdAt,desc' }), // 팔로우한 강사 동기화
         getUserActivitySummary(), // 사용자 활동 요약 동기화
         loadUserAchievements(), // 업적 데이터 병렬 처리
         refreshTodayMission(),  // 오늘 미션 상태 병렬 처리
+        loadUnreadCount(), // 안 읽은 메일 개수 동기화
       ]);
 
       // 각 결과 처리
@@ -54,6 +60,20 @@ export const useUserDataSync = () => {
         const itemIds = ownedItemsResponse.value.content.map(item => item.id);
         setOwnedItems(itemIds);
         console.log('✅✔✅ 소유 아이템 동기화 완료:', itemIds.length, '♥️');
+      }
+
+      if (equippedItemsResponse.status === 'fulfilled') {
+        const equippedItems = equippedItemsResponse.value;
+        const placedItems = {
+          background: equippedItems.background?.id || null,
+          eyewear: equippedItems.eyewear?.id || null,
+          hat: equippedItems.hat?.id || null,
+          frame: equippedItems.frame?.id || null,
+          floor: equippedItems.floor?.id || null,
+          shelf: equippedItems.shelf?.id || null,
+        };
+        updatePlacedItems(placedItems);
+        console.log('✅✔✅ 장착 아이템 동기화 완료:', placedItems);
       }
 
       if (favoriteActivitiesResponse.status === 'fulfilled') {
@@ -84,6 +104,12 @@ export const useUserDataSync = () => {
         console.warn('⚠️ 오늘 미션 상태 동기화 실패:', todayMissionResponse.reason);
       }
 
+      if (mailboxResponse.status === 'fulfilled') {
+        console.log('✅✔✅ 안 읽은 메일 개수 동기화 완료');
+      } else if (mailboxResponse.status === 'rejected') {
+        console.warn('⚠️ 안 읽은 메일 개수 동기화 실패:', mailboxResponse.reason);
+      }
+
       console.log('🎉✔🎉 사용자 데이터 전체 동기화 완료!');
       
     } catch (error) {
@@ -93,10 +119,12 @@ export const useUserDataSync = () => {
   }, [
     setHeartPoints,
     setOwnedItems,
+    updatePlacedItems,
     setFavoritedActivities,
     setFollowedInstructors,
     loadUserAchievements,
     refreshTodayMission,
+    loadUnreadCount,
   ]);
 
   return {

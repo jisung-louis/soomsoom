@@ -26,6 +26,7 @@ import { resetAppState } from '../../utils/resetAppState';
 import { useHomeTimeLogger } from '../../hooks/useHomeTimeLogger';
 import { useTodayMissionStore } from '../../stores/todayMissionStore';
 import { useBackgroundColor, useBgTopColor } from '../../hooks/useBackgroundColor';
+import { useMailboxStore } from '../../stores/mailboxStore';
 
 type HomeTabNavigationProp = StackNavigationProp<HomeStackParamList, 'HomeTab'>;
 
@@ -41,7 +42,7 @@ const HomeTab = () => {
   const { setPhase, loginType } = useAuthStore();
   const useMockApiMode = useAppConfigStore(s => s.useMockApi);
   const setUseMockApiMode = useAppConfigStore(s => s.setUseMockApi);
-  const { logout } = useAuth();
+  const { logout, deviceLogin } = useAuth();
   
   // 홈 화면 체류 시간 추적 (1분마다 배치 전송)
   const { startTracking, stopTracking, flushNow } = useHomeTimeLogger();
@@ -53,6 +54,9 @@ const HomeTab = () => {
     refresh: refreshTodayMission,
     invalidateIfCrossedBoundary,
   } = useTodayMissionStore();
+  
+  // 우편함 안 읽은 메일 개수
+  const { loadUnreadCount } = useMailboxStore();
   useFocusEffect(
     useCallback(() => {
       console.log('🏠 HomeTab 완전 재마운트!');
@@ -70,6 +74,9 @@ const HomeTab = () => {
         }
       } catch {}
       
+      // 안 읽은 메일 개수 새로고침
+      loadUnreadCount();
+      
       // 애니메이션 재시작을 위한 지연
       setTimeout(() => {
       }, 100);
@@ -78,7 +85,7 @@ const HomeTab = () => {
       return () => {
         stopTracking();
       };
-    }, [startTracking, stopTracking])
+    }, [startTracking, stopTracking, loadUnreadCount])
   );
 
   // 앱이 포어그라운드로 돌아올 때 일경계 교차 감지 및 조건부 갱신
@@ -152,16 +159,52 @@ const HomeTab = () => {
       Alert.alert('실제 API 연결', '서버 비용이 발생할 수 있으니 조심해주세요!!', [
         { text: '취소', style: 'cancel' },
         { text: '연결하기', style: 'destructive', onPress: async () => {
-          await resetAppState();
-          setUseMockApiMode(!useMockApiMode);
+          try {
+            await resetAppState(true); // 인증 상태도 초기화
+            setUseMockApiMode(!useMockApiMode);
+            
+            // 실제 API 모드로 전환 시 재로그인 시도
+            console.log('🔄 실제 API 모드로 전환 중... 재로그인 시도');
+            
+            // 상태 초기화 후 약간의 지연을 두고 로그인 시도
+            setTimeout(async () => {
+              try {
+                await deviceLogin();
+              } catch (loginError) {
+                console.error('재로그인 실패:', loginError);
+                showToast({
+                  message: '재로그인에 실패했습니다.',
+                  theme: 'dark',
+                  iconType: 'brokenHeart',
+                });
+              }
+            }, 100);
+          } catch (error) {
+            console.error('모드 전환 중 오류:', error);
+            showToast({
+              message: '모드 전환 중 오류가 발생했습니다.',
+              theme: 'dark',
+              iconType: 'brokenHeart',
+            });
+          }
         } },
       ]);
     } else {
       Alert.alert('내부 데이터 사용', '내부 데이터 사용 모드로 변경하시겠습니까?', [
       { text: '아니요', style: 'cancel' },
       { text: '고고', style: 'destructive', onPress: async () => {
-        await resetAppState();
-        setUseMockApiMode(!useMockApiMode);
+        try {
+          await resetAppState(true); // 인증 상태도 초기화
+          setUseMockApiMode(!useMockApiMode);
+          console.log('🔄 Mock API 모드로 전환 완료');
+        } catch (error) {
+          console.error('모드 전환 중 오류:', error);
+          showToast({
+            message: '모드 전환 중 오류가 발생했습니다.',
+            theme: 'dark',
+            iconType: 'brokenHeart',
+          });
+        }
       } },
     ]);
     }

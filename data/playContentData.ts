@@ -73,14 +73,14 @@ export const mockContentData: Activity[] = [
     ],
     author: {
       id: 0,
-      name: 'DEFAULT NAME',
-      bio: 'DEFAULT BIO',
+      name: '야웅이',
+      bio: '이름 : 야웅이\n나이 : 2살\n특징 : 사람 좋아하는 개냥이\n\n마음운동은 명상을 통해 감정을 다스리고 건강한 마음을 키워나가는 운동이다냥! 숨숨은 감정이 조용히 숨을 내뱉는 공간이다옹! 야웅이가 오늘 당신이 뱉은 한숨을, 내일의 나를 안아주는 숨으로 바꿔주겠다냥! ',
       profileImageUrl: null,
     },
     narrator: {
       id: 0,
-      name: 'DEFAULT GUIDE',
-      bio: 'DEFAULT GUIDE BIO',
+      name: '야웅이',
+      bio: '이름 : 야웅이\n나이 : 2살\n특징 : 사람 좋아하는 개냥이\n\n마음운동은 명상을 통해 감정을 다스리고 건강한 마음을 키워나가는 운동이다냥! 숨숨은 감정이 조용히 숨을 내뱉는 공간이다옹! 야웅이가 오늘 당신이 뱉은 한숨을, 내일의 나를 안아주는 숨으로 바꿔주겠다냥! ',
       profileImageUrl: null,
     },
     durationInSeconds: 300, // 5분
@@ -204,14 +204,14 @@ export const mockContentData: Activity[] = [
     ],
     author: {
       id: 0,
-      name: 'DEFAULT NAME',
-      bio: 'DEFAULT BIO',
+      name: '야웅이',
+      bio: '이름 : 야웅이\n나이 : 2살\n특징 : 사람 좋아하는 개냥이\n\n마음운동은 명상을 통해 감정을 다스리고 건강한 마음을 키워나가는 운동이다냥! 숨숨은 감정이 조용히 숨을 내뱉는 공간이다옹! 야웅이가 오늘 당신이 뱉은 한숨을, 내일의 나를 안아주는 숨으로 바꿔주겠다냥! ',
       profileImageUrl: null,
     },
     narrator: {
       id: 0,
-      name: 'DEFAULT GUIDE',
-      bio: 'DEFAULT GUIDE BIO',
+      name: '야웅이',
+      bio: '이름 : 야웅이\n나이 : 2살\n특징 : 사람 좋아하는 개냥이\n\n마음운동은 명상을 통해 감정을 다스리고 건강한 마음을 키워나가는 운동이다냥! 숨숨은 감정이 조용히 숨을 내뱉는 공간이다옹! 야웅이가 오늘 당신이 뱉은 한숨을, 내일의 나를 안아주는 숨으로 바꿔주겠다냥! ',
       profileImageUrl: null,
     },
     durationInSeconds: 300, // 5분
@@ -246,14 +246,14 @@ export const mockContentData: Activity[] = [
     ],
     author: {
       id: 0,
-      name: 'DEFAULT NAME',
-      bio: 'DEFAULT BIO',
+      name: '야웅이',
+      bio: '이름 : 야웅이\n나이 : 2살\n특징 : 사람 좋아하는 개냥이\n\n마음운동은 명상을 통해 감정을 다스리고 건강한 마음을 키워나가는 운동이다냥! 숨숨은 감정이 조용히 숨을 내뱉는 공간이다옹! 야웅이가 오늘 당신이 뱉은 한숨을, 내일의 나를 안아주는 숨으로 바꿔주겠다냥! ',
       profileImageUrl: null,
     },
     narrator: {
       id: 0,
-      name: 'DEFAULT GUIDE',
-      bio: 'DEFAULT GUIDE BIO',
+      name: '야웅이',
+      bio: '이름 : 야웅이\n나이 : 2살\n특징 : 사람 좋아하는 개냥이\n\n마음운동은 명상을 통해 감정을 다스리고 건강한 마음을 키워나가는 운동이다냥! 숨숨은 감정이 조용히 숨을 내뱉는 공간이다옹! 야웅이가 오늘 당신이 뱉은 한숨을, 내일의 나를 안아주는 숨으로 바꿔주겠다냥! ',
       profileImageUrl: null,
     },
     durationInSeconds: 300, // 5분
@@ -282,9 +282,9 @@ export const mockContentData: Activity[] = [
 export const mockInstructorsData: Instructor[] = [
   {
     instructorId: 0,
-    name: 'DEFAULT NAME',
-    profileImageUrl: require('../assets/images/play/playFavoriteScreen/default_image_1.png'),
-    bio: 'DEFAULT BIO',
+    name: '야웅이',
+    profileImageUrl: require('../assets/images/common/default_profile_image.png'),
+    bio: '이름 : 야웅이\n나이 : 2살\n특징 : 사람 좋아하는 개냥이\n\n마음운동은 명상을 통해 감정을 다스리고 건강한 마음을 키워나가는 운동이다냥! 숨숨은 감정이 조용히 숨을 내뱉는 공간이다옹! 야웅이가 오늘 당신이 뱉은 한숨을, 내일의 나를 안아주는 숨으로 바꿔주겠다냥! ',
     isFollowing: false,
     createdAt: '2024-01-01T00:00:00Z',
     modifiedAt: '2024-01-01T00:00:00Z',

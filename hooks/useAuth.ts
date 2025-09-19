@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Platform } from 'react-native';
 import { useToast } from '../contexts/ToastContext';
 import { useAuthStore } from '../stores/authStore';
 import { 
@@ -7,8 +8,11 @@ import {
   postSocialLogin, 
   postDeviceLogin, 
   postLogout,
-  SocialProvider 
+  SocialProvider,
+  getFcmTokenAsync,
+  onFcmTokenRefresh
 } from '../services/authService';
+import { registerDevice, unregisterDevice } from '../services/notificationService';
 import { getCachedInstallUuid } from '../utils/deviceId';
 import { resetAppState } from '../utils/resetAppState';
 
@@ -26,6 +30,53 @@ export const useAuth = () => {
   const setSession = useAuthStore(s => s.setSession);
   const [loading, setLoading] = useState<'GOOGLE' | 'APPLE' | 'DEVICE' | 'LOGOUT' | null>(null);
   const { setPhase } = useAuthStore();
+
+
+  /**
+   * FCM 토큰 등록
+   * 로그인 성공 후 호출되는 헬퍼 함수
+   */
+  const registerFcmToken = async () => {
+    try {
+      const fcmToken = await getFcmTokenAsync();
+      if (fcmToken) {
+        const osType = Platform.OS === 'ios' ? 'IOS' : 'ANDROID';
+        await registerDevice(fcmToken, osType);
+        console.log('✅ FCM 토큰 등록 완료');
+        
+        // 토큰 갱신 구독 설정
+        onFcmTokenRefresh(async (newToken) => {
+          try {
+            const osType = Platform.OS === 'ios' ? 'IOS' : 'ANDROID';
+            await registerDevice(newToken, osType);
+            console.log('✅ FCM 토큰 갱신 등록 완료');
+          } catch (error) {
+            console.error('❌ FCM 토큰 갱신 등록 실패:', error);
+          }
+        });
+      }
+    } catch (error) {
+      console.error('❌ FCM 토큰 등록 실패:', error);
+      // FCM 토큰 등록 실패해도 로그인은 계속 진행
+    }
+  };
+
+  /**
+   * FCM 토큰 해지
+   * 로그아웃 시 호출되는 헬퍼 함수
+   */
+  const unregisterFcmToken = async () => {
+    try {
+      const fcmToken = await getFcmTokenAsync();
+      if (fcmToken) {
+        await unregisterDevice(fcmToken);
+        console.log('✅ FCM 토큰 해지 완료');
+      }
+    } catch (error) {
+      console.error('❌ FCM 토큰 해지 실패:', error);
+      // FCM 토큰 해지 실패해도 로그아웃은 계속 진행
+    }
+  };
 
   /**
    * 소셜 로그인 (구글 또는 애플)
@@ -90,6 +141,10 @@ export const useAuth = () => {
       });
       setPhase('logged_in');
 
+      // 5. FCM 토큰 등록 (소셜 로그인 시에는 즉시 등록)
+      console.log('📱 FCM 토큰 등록 중...');
+      await registerFcmToken();
+
       console.log(`✅ ${provider} 로그인 완료`);
       showToast({ message: `${provider === 'GOOGLE' ? '구글' : '애플'} 로그인에 성공했어요!` });
       
@@ -127,6 +182,13 @@ export const useAuth = () => {
     // 가드: 이미 로그인 상태거나 토큰이 존재하면 디바이스 로그인 시도하지 않음
     const state = useAuthStore.getState();
     if (state.phase === 'logged_in' || state.tokens?.accessToken) {
+      console.log('🔐 이미 로그인된 상태입니다. 디바이스 로그인 스킵');
+      return { success: true } as const;
+    }
+    
+    // 로딩 중이면 대기
+    if (loading === 'DEVICE') {
+      console.log('🔐 디바이스 로그인 진행 중입니다. 중복 호출 방지');
       return { success: true } as const;
     }
     try {
@@ -141,6 +203,10 @@ export const useAuth = () => {
         accessToken: tokens.accessToken,
         refreshToken: tokens.refreshToken,
       });
+      
+      // FCM 토큰 등록은 온보딩 06단계에서만 수행
+      // console.log('📱 FCM 토큰 등록 중...');
+      // await registerFcmToken();
       
       console.log('✅ 디바이스 로그인 완료');
       setPhase('logged_in');
@@ -163,6 +229,14 @@ export const useAuth = () => {
       setLoading('LOGOUT');
       console.log('🔐 로그아웃 시작...');
       
+      // FCM 토큰 해지 (서버 로그아웃 전에 시도, 실패해도 계속 진행)
+      console.log('📱 FCM 토큰 해지 중...');
+      try {
+        await unregisterFcmToken();
+      } catch (fcmError) {
+        console.warn('⚠️ FCM 토큰 해지 실패 (무시하고 계속):', fcmError);
+      }
+      
       const currentTokens = useAuthStore.getState().tokens;
       if (currentTokens?.refreshToken) {
         // 서버에서 토큰 무효화
@@ -172,8 +246,8 @@ export const useAuth = () => {
       // 로컬 상태 초기화
       useAuthStore.getState().logout();
       
-      // 앱 상태 초기화 (캐시, 스토어 등)
-      await resetAppState();
+      // 앱 상태 초기화 (캐시, 스토어 등) - 인증은 이미 초기화됨
+      await resetAppState(false);
       
       console.log('✅ 로그아웃 완료');
       showToast({ message: '로그아웃되었어요.' });
@@ -182,11 +256,20 @@ export const useAuth = () => {
     } catch (error: any) {
       console.error('로그아웃 에러:', error);
       setPhase('logged_out');
+      
+      // FCM 토큰 해지 (에러 상황에서도 시도)
+      try {
+        console.log('📱 FCM 토큰 해지 중...');
+        await unregisterFcmToken();
+      } catch (fcmError) {
+        console.error('❌ FCM 토큰 해지 실패 (에러 상황):', fcmError);
+      }
+      
       // 서버 로그아웃 실패해도 로컬 상태는 초기화
       useAuthStore.getState().logout();
       
-      // 앱 상태 초기화 (캐시, 스토어 등)
-      await resetAppState();
+      // 앱 상태 초기화 (캐시, 스토어 등) - 인증은 이미 초기화됨
+      await resetAppState(false);
       
       showToast({ message: '로그아웃되었어요.' });
       return { success: true }; // 로컬 초기화는 성공으로 처리
@@ -200,6 +283,7 @@ export const useAuth = () => {
     socialLogin,
     deviceLogin,
     logout,
+    registerFcmToken, // FCM 토큰 등록 함수 노출
     
     // 상태
     loading,

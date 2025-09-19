@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl } from 'react-native';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
@@ -13,78 +13,68 @@ import { colors } from '../../../constants/colors';
 import MessageIcon from '../../../assets/icons/navigation/topNavigation/message.svg';
 import EmptyIcon from '../../../assets/images/home/mailbox/mailbox_empty.svg';
 import { radius } from '../../../constants/radius';
-import { useAppConfigStore } from '../../../stores/appConfigStore';
+import { useMailboxStore } from '../../../stores/mailboxStore';
+import { UserAnnouncement, getAnnouncementDetail } from '../../../services/mailboxService';
 dayjs.extend(relativeTime);
 dayjs.locale('ko');
 
-export type MailData = {
-  id: number;
-  type: 'news'; //추후 추가(유저끼리의 쪽지, 친구추가 알림 등)
-  title: string;
-  content: string;
-  imageUrl?: string;
-  sendDate: string; //yyyy-MM-ddTHH:mm:ss.SSSSSS
-  isRead: boolean; //읽었는지 여부
-  isDeleted: boolean; //삭제된 것인지 여부
-};
-
-const mockMailData: MailData[] = [
-  {
-    id: 1,
-    type: 'news',
-    title: '업데이트 진행 소식!',
-    content: '메일함',
-    imageUrl: undefined,
-    sendDate: '2025-08-10T18:35:55.741664',
-    isRead: false,
-    isDeleted: false,
-  },
-  {
-    id: 2,
-    type: 'news',
-    title: '일주일간 진행되는 감정기록 이벤트!',
-    content: '안녕하세요 집사님들! 이번에 출시를 앞두고 저희를사랑 추첨하여 소정의선물을 드립니다. 추첨에는 개인정보가 활용되지 않습니다.숨숨을 많이 사랑해주세요! 감사합니다!',
-    imageUrl: undefined,
-    sendDate: '2025-09-05T15:00:00.000000',
-    isRead: false,
-    isDeleted: false,
-  },
-];
-
-const isMailboxEmpty = () => {
-  const { useMockApi } = useAppConfigStore.getState();
-  if(useMockApi) {
-  const isEmpty = mockMailData.length === 0;
-  return isEmpty;
-  }
-  else {
-    //TODO: 백엔드 API 연동 
-    return true;
-  }
+const isMailboxEmpty = (announcements: UserAnnouncement[]) => {
+  return announcements.length === 0;
 };
 
 export const typeMap = {
   news: '새로운 소식',
 };
 
-const sortMailData = (mailData: MailData[]) => {
-  return mailData.sort((a, b) => {
-    return dayjs(b.sendDate).diff(dayjs(a.sendDate));
+const sortAnnouncements = (announcements: UserAnnouncement[]) => {
+  return announcements.sort((a, b) => {
+    return dayjs(b.receivedAt).diff(dayjs(a.receivedAt));
   });
 };
 
 const MailboxScreen = () => {
   const navigation = useNavigation<StackNavigationProp<HomeStackParamList>>();
   const [refreshing, setRefreshing] = useState(false);
+  
+  // 우편함 스토어
+  const { 
+    announcements, 
+    announcementsLoading, 
+    loadAnnouncements 
+  } = useMailboxStore();
+
+  // 화면 진입 시 공지사항 로드
+  useEffect(() => {
+    loadAnnouncements({ page: 0, size: 20, sort: ['receivedAt,desc'] });
+  }, [loadAnnouncements]);
+
   const handleBack = () => {
     navigation.goBack();
   };
-  const handleMailboxItemPress = (item: MailData) => {
-    navigation.navigate('MailboxDetailScreen', { content: item });
+  
+  const handleMailboxItemPress = async (item: UserAnnouncement) => {
+    try {
+      console.log('공지사항 클릭:', item);
+      
+      // 메일 상세 조회 및 읽음 처리
+      const detail = await getAnnouncementDetail(item.userAnnouncementId);
+      console.log('메일 상세 조회 완료:', detail);
+      
+      // TODO: 공지사항 상세 화면으로 네비게이션
+      navigation.navigate('MailboxDetailScreen', { content: detail });
+      
+      // 읽음 처리 후 목록 새로고침 (읽음 상태 업데이트)
+      await loadAnnouncements({ page: 0, size: 20, sort: ['receivedAt,desc'] });
+      
+    } catch (error) {
+      console.error('메일 상세 조회 실패:', error);
+    }
   };
-  const handleRefresh = () => {
+  
+  const handleRefresh = async () => {
     console.log('MailboxScreen Refresh');
     setRefreshing(true);
+    await loadAnnouncements({ page: 0, size: 20, sort: ['receivedAt,desc'] });
     setRefreshing(false);
   };
   
@@ -94,22 +84,22 @@ const MailboxScreen = () => {
       <SubpageHeader onBack={handleBack} />
       <View style={styles.contentContainer}>
         <Text style={styles.title}>우편함</Text>
-        {!isMailboxEmpty() ? (
+        {!isMailboxEmpty(announcements) ? (
           <FlatList
-            data={sortMailData(mockMailData)}
-            keyExtractor={(item) => item.id.toString()}
+            data={sortAnnouncements(announcements)}
+            keyExtractor={(item) => item.userAnnouncementId.toString()}
             style={styles.mailboxList}
             contentContainerStyle={styles.mailboxListContentContainer}
             refreshing={refreshing}
             onRefresh={handleRefresh}
             renderItem={({ item }) => (
-              <TouchableOpacity key={item.id} style={styles.mailboxItem} onPress={() => handleMailboxItemPress(item)}>
+              <TouchableOpacity key={item.userAnnouncementId} style={styles.mailboxItem} onPress={() => handleMailboxItemPress(item)}>
                 <View style={styles.mailboxItemHeaderContainer}>
                   <MessageIcon width={32} height={32} />
                   <View style={styles.mailboxItemRightContainer}>
-                    <Text style={styles.mailboxItemType}>{typeMap[item.type as keyof typeof typeMap]}</Text>
+                    <Text style={styles.mailboxItemType}>새로운 소식</Text>
                     <View style={styles.mailboxItemDateAndReadBadgeContainer}>
-                      <Text style={styles.mailboxItemDate}>{dayjs(item.sendDate).fromNow()}</Text>
+                      <Text style={styles.mailboxItemDate}>{dayjs(item.receivedAt).fromNow()}</Text>
                       {!item.isRead && (
                         <View style={styles.mailboxItemReadBadge}/>
                       )}

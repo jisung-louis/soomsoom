@@ -1,8 +1,7 @@
+import '@react-native-firebase/app';
 import { registerRootComponent } from 'expo';
-
 import App from './App';
+// RNFirebase는 iOS/Android 설정 파일로 자동 초기화됩니다.
+// 기본 앱 모듈을 가장 먼저 로드해야 App.tsx에서 messaging() 호출 전 초기화가 보장됩니다.
 
-// registerRootComponent calls AppRegistry.registerComponent('main', () => App);
-// It also ensures that whether you load the app in Expo Go or in a native build,
-// the environment is set up appropriately
 registerRootComponent(App);

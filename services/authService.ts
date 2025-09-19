@@ -3,6 +3,10 @@ import * as Notifications from 'expo-notifications';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { environmentConfig } from '../configs/environment';
+import { Platform, PermissionsAndroid } from 'react-native';
+import { getMessaging, getToken, onTokenRefresh as onTokenRefreshMod } from '@react-native-firebase/messaging';
+import { getApp } from '@react-native-firebase/app';
+import { requestNotificationPermissions } from './alarmNotificationService';
 
 export type SocialProvider = 'GOOGLE' | 'APPLE';
 
@@ -120,19 +124,43 @@ export async function refreshTokens(refreshToken: string): Promise<AuthTokens> {
   return await apiClient.post<AuthTokens>('/auth/refresh', { refreshToken });
 }
 
-// Push Token 획득 (푸시 토큰 획득)
-export async function getPushTokenAsync(): Promise<string | null> { // Push Token 획득
+// ✅ FCM 토큰 획득 (직접 FCM 서버 사용 시)
+export async function getFcmTokenAsync(): Promise<string | null> {
   try {
-    const { status } = await Notifications.requestPermissionsAsync();
-    if (status !== 'granted') return null;
-    const token = await Notifications.getExpoPushTokenAsync({
-      projectId: '7f902b97-4f3d-48af-9a0a-1a71a63f49d6',
-    });
-    return token.data ?? null;
+    const ok = await requestNotificationPermissions();
+    if (!ok) {
+      console.log('🚫 알림 권한 거부됨');
+      return null;
+    }
+    
+    // firebase.json에서 자동 등록이 활성화되어 있으므로 registerDeviceForRemoteMessages() 불필요
+    // iOS에서도 자동으로 등록됨
+    
+    const app = getApp();
+    const token = await getToken(getMessaging(app));
+    console.log('✅ FCM Token:', token);
+    return token || null;
   } catch (error) {
-    console.error('❌ Push Token 획득 실패:', error);
+    console.error('❌ FCM Token 획득 실패:', error);
     return null;
   }
+}
+
+// (선택) 토큰 갱신 구독: 앱 실행 중 토큰 변경 시 서버에 업데이트
+export function onFcmTokenRefresh(handler: (token: string) => void) {
+  return onTokenRefreshMod(getMessaging(getApp()), (newToken) => {
+    try {
+      handler(newToken);
+    } catch (e) {
+      console.warn('[onFcmTokenRefresh] handler error:', e);
+    }
+  });
+}
+
+// ⚠️ (이전) Expo 토큰 함수: Expo 중계 사용 시에만 유효. 이제는 FCM 직접 사용을 권장.
+// 기존 호출부 호환을 위해 남겨두고, 내부에서 FCM 토큰을 반환하도록 변경.
+export async function getPushTokenAsync(): Promise<string | null> { // DEPRECATED: FCM 직접 사용 권장
+  return await getFcmTokenAsync();
 }
 
 // 로그아웃

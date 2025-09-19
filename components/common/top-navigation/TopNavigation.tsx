@@ -7,6 +7,8 @@ import { colors } from '../../../constants/colors';
 import { typography } from '../../../constants/typography';
 import StorageIcon from '../../../assets/icons/navigation/topNavigation/storage.svg';
 import { useCurrencyStore } from '../../../stores/currencyStore';
+import { useMailboxStore } from '../../../stores/mailboxStore';
+import { radius } from '../../../constants/radius';
 
 interface TopNavigationProps {
   style?: ViewStyle;
@@ -34,6 +36,7 @@ const TopNavigation = ({
   isBGColorDark = false
 }: TopNavigationProps) => {
   const { heartPoints } = useCurrencyStore();
+  const { unreadCount } = useMailboxStore();
   const textColor = isBGColorDark ? colors.grayScale100 : colors.grayScale900;
   const iconFill = isBGColorDark ? colors.grayScale100 : colors.grayScale800;
   return (
@@ -54,14 +57,19 @@ const TopNavigation = ({
           </View>
           <View style={styles.rightGroup}>
             {isStorageButtonVisible && (
-            <TouchableOpacity onPress={() => {storageButtonPress && storageButtonPress()}}>
+              <TouchableOpacity onPress={() => {storageButtonPress && storageButtonPress()}}>
                 <StorageIcon width={40} height={40} style={styles.iconShadow}/>
               </TouchableOpacity>
             )}
             {isMessageButtonVisible && (
               <TouchableOpacity onPress={() => {messageButtonPress && messageButtonPress()}}>
+                {unreadCount > 0 && (
+                  <View style={styles.badge}>
+                    <Text style={styles.badgeText}>{unreadCount}</Text>
+                  </View>
+                )}
                 <MessageIcon width={40} height={40} style={styles.iconShadow}/>
-            </TouchableOpacity>
+              </TouchableOpacity>
             )}
           </View>
         </View>
@@ -106,6 +114,24 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.06,
     shadowRadius: 8,
     elevation: 3,
+  },
+  badge: {
+    position: 'absolute',
+    top: 3.3,
+    right: 3.3,
+    width: 15,
+    height: 15,
+    zIndex: 10,
+    backgroundColor: '#F15F5F',
+    borderRadius: radius.max,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  badgeText: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    lineHeight: 10 * 1.3,
+    color: colors.white,
   },
 });
 

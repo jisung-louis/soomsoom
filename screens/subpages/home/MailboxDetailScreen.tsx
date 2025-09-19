@@ -7,7 +7,7 @@ import { StackNavigationProp } from "@react-navigation/stack";
 import { HomeStackParamList } from "../../../navigations/tabs/HomeStackNavigator";
 import { syongsyongTypography, typography } from "../../../constants/typography";
 import { colors } from "../../../constants/colors";
-import { MailData, typeMap } from "./MailboxScreen";
+import { typeMap } from "./MailboxScreen";
 import { ss, sv } from "../../../utils/scale";
 
 const MailboxDetailScreen = ({route}: {route: RouteProp<HomeStackParamList, 'MailboxDetailScreen'>}) => {
@@ -18,10 +18,10 @@ const MailboxDetailScreen = ({route}: {route: RouteProp<HomeStackParamList, 'Mai
   };
   return (
     <SafeAreaView style={styles.container}>
-      <SubpageHeader title={typeMap[content.type]} onBack={handleBack} />
+      <SubpageHeader title={'새로운 소식'} onBack={handleBack} />
       <ScrollView style={styles.contentContainer}>
         <View style={styles.imageContainer}>
-            <Image source={content.imageUrl ? { uri: content.imageUrl } : require('../../../assets/images/common/placeholder.png')} style={styles.image} />
+            <Image source={require('../../../assets/images/common/placeholder.png')} style={styles.image} />
         </View>
         <View style={styles.mainContainer}>
             <Text style={styles.title}>{content.title}</Text>

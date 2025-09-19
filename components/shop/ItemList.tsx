@@ -157,7 +157,7 @@ const ItemList: React.FC<Props> = ({ filteredItems, onItemPress, isOutOfStock, i
               <>
                 <View style={styles.itemImageContainer}>
                   {item.image !== null && (
-                    <Image source={item.image as any} style={styles.itemImage} resizeMode="contain" />
+                    <Image source={item.image as any} style={[styles.itemImage, item.type === '배경' ? {width: '100%', height: '100%'} : {}]} resizeMode={item.type === '배경' ? "cover" : "contain"} />
                   )}
                 </View>
                 <View style={styles.itemInfo}>

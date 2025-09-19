@@ -89,6 +89,7 @@ function padToThreeColumns(data: ItemList[], isCollection: boolean) {
       __isPlaceholder: true,
       id: 0,
       image: undefined,
+      type: '',
       title: '',
       price: null,
       isCollection: false,
@@ -104,6 +105,7 @@ function padToThreeColumns(data: ItemList[], isCollection: boolean) {
         __isPlaceholder: true,
         id: 0,
         image: undefined,
+        type: '',
         title: '',
         price: null,
         isCollection: false,
@@ -345,7 +347,7 @@ const MyRoomDecoration = ({
                             </View>
                         )}
                         <View style={styles.itemImageContainer}>
-                          <Image source={normalizeImageSource(item.image)} style={styles.itemImage} resizeMode='contain'/>
+                          <Image source={normalizeImageSource(item.image)} style={[styles.itemImage, item.type === '배경' ? {width: '100%', height: '100%'} : {}]} resizeMode={item.type === '배경' ? "cover" : "contain"}/>
                         </View>
                         <View style={styles.itemInfo}>
                           <Text style={styles.itemTitle}>{item.title}</Text>
@@ -387,6 +389,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.grayScale50,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
   },
   collectionItemImageContainer: {
     width: COLLECTION_IMAGE_WIDTH,

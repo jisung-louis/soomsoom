@@ -122,6 +122,32 @@ const PlayInstructorDetailScreen: React.FC = () => {
       </SafeAreaView>
     );
   }
+  if (instructor.instructorId === 0) { //야웅이일경우
+    return (
+      <SafeAreaView style={styles.container}>
+        <SubpageHeader onBack={handleBack} />
+        <View style={styles.contentContainer}>
+          <View style={styles.contentHeader}>
+            <Image source={require('../../../assets/images/common/default_profile_image.png')} style={styles.contentHeaderTitleImage} />
+            <Text style={styles.contentHeaderTitle}>{instructor.name}</Text>
+          </View>
+          <Text style={styles.bio}>{instructor.bio}</Text>
+        </View>
+        <View style={[styles.buttonContainer, styles.defaultButtonContainer]}>
+          <Button 
+            title="하트 보상받기"
+            variant="active"
+            size="large"
+            icon="heart"
+            style={styles.button}
+            onPress={() => {
+              // 하트 보상받기 API 호출
+            }}
+          />
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -149,6 +175,7 @@ const PlayInstructorDetailScreen: React.FC = () => {
             variant={instructor.isFollowing ? 'secondary' : 'active'}  
             size='large'
             showIconMotion
+            style={styles.button}
             onPress={async () => {
                 try {
                   const wasFollowing = instructor.isFollowing;
@@ -236,6 +263,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     marginTop: 30,
     alignItems: 'center',
+  },
+  defaultButtonContainer: {
+    position: 'absolute',
+    bottom: 50,
+    left: 0,
+    right: 0,
+  },
+  button: {
+    width: '100%',
   },
   representativeContentContainer: {
     paddingHorizontal: 20,

@@ -16,6 +16,10 @@ import { apiClient } from '../services/apiClient';
 import { refreshTokens } from '../services/authService';
 import { initInstallUuid } from '../utils/deviceId';
 import { useAuth } from '../hooks/useAuth';
+import { usePushNotification } from '../hooks/usePushNotification';
+import { registerDevice } from '../services/notificationService';
+import { getFcmTokenAsync } from '../services/authService';
+import { Platform } from 'react-native';
 
 enableScreens(true);
 
@@ -33,6 +37,9 @@ const AppContent = () => {
   const { setupResponseListener } = useNotificationSetup(navigationRef);
   const { phase } = useAuthStore();
   const { deviceLogin } = useAuth();
+  
+  // 푸시 알림 리스너 설정
+  usePushNotification();
 
   useEffect(() => {
     // 401 자동 리프레시 콜백 등록 (앱 시작 시 1회)
@@ -80,6 +87,21 @@ const AppContent = () => {
       if (phase === 'logged_out') {
         await deviceLogin();
       }
+      
+      // 온보딩 완료 후 FCM 토큰 등록 (재로그인 시에만 실행됨)
+      console.log('📱 온보딩 완료 - FCM 토큰 등록 중...');
+      try {
+        const fcmToken = await getFcmTokenAsync();
+        if (fcmToken) {
+          const osType = Platform.OS === 'ios' ? 'IOS' : 'ANDROID';
+          await registerDevice(fcmToken, osType);
+          console.log('✅ FCM 토큰 등록 완료');
+        }
+      } catch (error) {
+        console.error('❌ FCM 토큰 등록 실패:', error);
+        // FCM 등록 실패해도 온보딩은 계속 진행
+      }
+      
       await AsyncStorage.setItem('hasSeenOnboarding', 'true');
       setHasSeenOnboarding(true);
     } catch {

@@ -249,6 +249,79 @@ export const mockRoutes: MockRoute[] = [
     },
   },
 
+  // 안 읽은 메일 개수 조회
+  // GET /mailbox/announcements/unread-count
+  {
+    method: 'GET',
+    match: (e) => e === '/mailbox/announcements/unread-count',
+    handler: async ({ endpoint }) => {
+      const { getDynamicMockMailData } = await import('../data/mailboxMockData');
+      const mock = getDynamicMockMailData();
+      
+      // 읽지 않은 메일 개수 계산 (isRead가 false인 것들)
+      const unreadCount = mock.filter((item: any) => !item.isRead).length;
+      
+      return {
+        unreadCount: unreadCount,
+      };
+    },
+  },
+
+  // 우편함 공지사항 목록
+  // GET /mailbox/announcements
+  {
+    method: 'GET',
+    match: (e) => e.startsWith('/mailbox/announcements') && !/^\/mailbox\/announcements\/(\d+)$/.test(e.split('?')[0]) && e !== '/mailbox/announcements/unread-count',
+    handler: async ({ endpoint }) => {
+      const { getDynamicMockMailData } = await import('../data/mailboxMockData');
+      const mock = getDynamicMockMailData();
+      
+      // 서버 포맷과 유사하게 반환
+      return mock.map((item: any) => ({
+        userAnnouncementId: item.id,
+        announcementId: item.id,
+        title: item.title,
+        receivedAt: item.sentAt,
+        isRead: item.isRead, // 실제 Mock 데이터의 isRead 상태 반영
+      }));
+    },
+  },
+
+  // 우편함 공지사항 상세 조회 및 읽음 처리
+  // POST /mailbox/announcements/{userAnnouncementId}
+  {
+    method: 'POST',
+    match: (e) => /^\/mailbox\/announcements\/(\d+)$/.test(e.split('?')[0]),
+    handler: async ({ endpoint }) => {
+      const { getDynamicMockMailData, updateMockMailReadStatus } = await import('../data/mailboxMockData');
+      const mock = getDynamicMockMailData();
+      
+      // URL에서 userAnnouncementId 추출
+      const match = endpoint.match(/^\/mailbox\/announcements\/(\d+)$/);
+      const userAnnouncementId = match ? parseInt(match[1], 10) : 0;
+      
+      // 해당 ID의 메일 찾기
+      const mailItem = mock.find((item: any) => item.id === userAnnouncementId);
+      
+      if (!mailItem) {
+        throw new Error(`메일을 찾을 수 없습니다. ID: ${userAnnouncementId}`);
+      }
+      
+      // 읽음 처리 (isRead를 true로 변경)
+      updateMockMailReadStatus(userAnnouncementId, true);
+      
+      // 서버 포맷과 유사하게 반환 (읽음 처리 완료)
+      return {
+        id: mailItem.id,
+        title: mailItem.title,
+        content: mailItem.content,
+        sentAt: mailItem.sentAt,
+        createdAt: mailItem.createdAt,
+        modifiedAt: mailItem.modifiedAt,
+      };
+    },
+  },
+
   // 컬렉션 목록
   // GET /collections
   {

@@ -369,7 +369,7 @@ const ShopScreen = () => {
     },
     {
       id: 3,
-      point: 30,
+      point: 15,
     },
   ]
 

@@ -30,6 +30,7 @@ Notifications.setNotificationHandler({
 
 export default function App() {
   const { useMockApi } = useAppConfigStore();
+  
   return (
     <OnboardingProvider>
       <ToastProvider>

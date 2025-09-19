@@ -117,6 +117,15 @@ const NotificationSettingScreen = () => {
 
             const { period, hour, minute } = parseNotificationTime(diaryNotificationTime || '오후 8:30');
 
+            // null인 경우 AsyncStorage에 false로 저장
+            if (greetingNotification === null) {
+                await AsyncStorage.setItem('greetingNotificationEnabled', 'false');
+            }
+            if (newsNotification === null) {
+                await AsyncStorage.setItem('newsNotificationEnabled', 'false');
+            }
+            
+            // AsyncStorage에서 읽어온 값으로 state 설정
             setIsDiaryNotificationEnabled(diaryNotification === 'true');
             setIsGreetingNotificationEnabled(greetingNotification === 'true');
             setIsNewsNotificationEnabled(newsNotification === 'true');
