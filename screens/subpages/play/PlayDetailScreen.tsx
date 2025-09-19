@@ -201,9 +201,10 @@ const PlayDetailScreen: React.FC = () => {
               />
               <View style={styles.instructorAndAudioContainer}>
                 <AudioIcon width={24} height={24} color={colors.grayScale600} />
-                <TouchableOpacity onPress={() => {}}>
-                  <Text style={styles.contentInfo}>{content.type} • {Math.floor(content.durationInSeconds / 60)}min</Text>
-                </TouchableOpacity>
+                <View>
+                  {/* <Text style={styles.contentInfo}>{content.type} • {Math.floor(content.durationInSeconds / 60)}min</Text> */}
+                  <Text style={styles.contentInfo}>마음운동 • {Math.floor(content.durationInSeconds / 60)}min</Text>
+                </View>
               </View>
             </View>
           </View>

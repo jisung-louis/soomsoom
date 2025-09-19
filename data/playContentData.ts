@@ -59,7 +59,7 @@ export const mockContentData: Activity[] = [
       profileImageUrl: null,
     },
     durationInSeconds: 300, // 5분
-    audioUrl: require('../assets/audios/test_audio.mp3'),
+    audioUrl: require('../assets/audios/alarm-sound/default_alarm_audio.wav'),
     timeline: null,
     isFavorited: false,
   },

@@ -231,8 +231,7 @@ const TestScreen = () => {
           </View>
           <View style={styles.infoCard}>
             <Text style={styles.infoLabel}>프레임 아이템</Text>
-            <Text style={styles.infoValue}>{useRoomStore.getState().placedItems.frame ? itemIdToName(useRoomStore.getState().placedItems.frame[0]) : '없음'}</Text>
-            <Text style={styles.infoValue}>{useRoomStore.getState().placedItems.frame ? itemIdToName(useRoomStore.getState().placedItems.frame[1]) : '없음'}</Text>
+            <Text style={styles.infoValue}>{useRoomStore.getState().placedItems.frame ? itemIdToName(useRoomStore.getState().placedItems.frame) : '없음'}</Text>
           </View>
           <View style={styles.infoCard}>
             <Text style={styles.infoLabel}>배경 아이템</Text>

@@ -103,7 +103,7 @@ export const initialStates = {
       background: 6,
       eyewear: null,
       hat: null,
-      frame: [null, null] as [number | null, number | null],
+      frame: null,
       floor: null,
       shelf: null,
     },

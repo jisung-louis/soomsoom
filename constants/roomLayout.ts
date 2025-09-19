@@ -26,8 +26,8 @@ export const objectPosition = {
   // 아이템 관련
   floor: { x: sx(41), y: sy(460) },
   shelf: { x: sx(228), y: sy(322.5) },
-  frame0: { x: sx(250), y: sy(264) }, // frame[0]
-  frame1: { x: sx(308), y: sy(264) }, // frame[1]
+  frame: { x: sx(250), y: sy(264) },
+  //frame1: { x: sx(308), y: sy(264) },
   eyewear: { x: sx(135), y: sy(356) },
   hat: { x: sx(122), y: sy(339) },
 };
@@ -100,7 +100,7 @@ export const itemStyles = {
     zIndex: zIndex.frame,
   },
   frame: {
-    width: ss(50),
+    width: ss(50+8+50),
     height: sv(60),
   },
 };

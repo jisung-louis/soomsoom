@@ -198,13 +198,7 @@ const MyTab = () => {
         // 1. 현재 배치된 아이템들 수집
         const placedItemsList: number[] = [];
         Object.entries(placedItems).forEach(([key, value]) => {
-          if (key === 'frame' && Array.isArray(value)) {
-            // frame 배열의 경우 각 요소를 개별적으로 처리
-            value.forEach(item => {
-              if (item !== null) placedItemsList.push(item);
-            });
-          } else if (value !== null && value !== undefined) {
-            // 다른 카테고리는 기존 로직
+          if (value !== null && value !== undefined) {
             placedItemsList.push(value as number);
           }
         });
@@ -230,13 +224,7 @@ const MyTab = () => {
         // 장바구니 조회 실패 시 기존 로직으로 폴백
         const items: number[] = [];
         Object.entries(placedItems).forEach(([key, value]) => {
-          if (key === 'frame' && Array.isArray(value)) {
-            value.forEach(item => {
-              if (item !== null) items.push(item);
-            });
-          } else if (value !== null && value !== undefined) {
-            items.push(value as number);
-          }
+          if (value !== null && value !== undefined) items.push(value as number);
         });
         if (mounted) {
           setEditModeSelectedItems(items);
@@ -284,42 +272,13 @@ const MyTab = () => {
     if (!itemData) return;
 
     setEditModeSelectedItems(prev => {
-      // frame의 경우 특별 처리 (2개까지 선택 가능)
-      if (itemData.positionType === 'frame') {
-        const isAlreadySelected = prev.includes(itemId);
-        
-        if (isAlreadySelected) {
-          // 이미 선택된 경우 제거
-          return prev.filter(id => id !== itemId);
-        } else {
-          // 선택되지 않은 경우 추가 (최대 2개 제한)
-            const currentFrameItems = prev.filter(id => {
-              const existingItem = itemMap.get(id);
-              return existingItem?.positionType === 'frame';
-            });
-          
-          if (currentFrameItems.length < 2) {
-            return [...prev, itemId];
-          } else {
-            // 이미 2개가 선택된 경우 첫 번째 것을 제거하고 새 것으로 교체
-            const otherItems = prev.filter(id => {
-              const existingItem = itemMap.get(id);
-              return existingItem?.positionType !== 'frame';
-            });
-            return [...otherItems, currentFrameItems[1], itemId];
-          }
-        }
-      } else {
-        // 다른 카테고리의 경우 기존 로직 (1개만 선택 가능)
-        const filteredItems = prev.filter(id => {
-          const existingItem = itemMap.get(id);
-          return existingItem?.positionType !== itemData.positionType;
-        });
-
-        // 현재 아이템이 이미 선택되어 있다면 제거, 아니면 추가
-        const isAlreadySelected = prev.includes(itemId);
-        return isAlreadySelected ? filteredItems : [...filteredItems, itemId];
-      }
+      // 카테고리당 1개 유지
+      const filteredItems = prev.filter(id => {
+        const existingItem = itemMap.get(id);
+        return existingItem?.positionType !== itemData.positionType;
+      });
+      const isAlreadySelected = prev.includes(itemId);
+      return isAlreadySelected ? filteredItems : [...filteredItems, itemId];
     });
   }, [itemMap]);
 
@@ -361,24 +320,8 @@ const MyTab = () => {
           return existingItem?.positionType !== itemData.positionType;
         });
         
-        // frame의 경우 특별 처리 (2개까지 선택 가능)
-        if (itemData.positionType === 'frame') {
-          const currentFrameItems = newItems.filter(id => {
-            const existingItem = itemMap.get(id);
-            return existingItem?.positionType === 'frame';
-          });
-          
-          // frame 아이템을 추가 (최대 2개 제한)
-          const frameItemsToAdd = itemIds.filter(id => {
-            const item = itemMap.get(id);
-            return item?.positionType === 'frame';
-          }).slice(0, 2 - currentFrameItems.length);
-          
-          newItems = [...newItems, ...frameItemsToAdd];
-        } else {
-          // 다른 카테고리는 1개만 선택 가능
-          newItems = [...newItems, itemId];
-        }
+        // 카테고리는 1개만 선택 가능
+        newItems = [...newItems, itemId];
       });
       
       console.log('✅ 최종 선택된 아이템들:', newItems);
@@ -443,23 +386,13 @@ const MyTab = () => {
 
     // 2) positionType별 nextMap 구성
     const nextMap: Record<string, number | number[]> = {};
-    const frameItems: number[] = [];
     
     editModeSelectedItems.forEach((itemId) => {
       const itemData = itemMap.get(itemId);
       if (itemData) {
-        if (itemData.positionType === 'frame') {
-          frameItems.push(itemId);
-        } else {
-          nextMap[itemData.positionType as string] = itemId;
-        }
+        nextMap[itemData.positionType as string] = itemId;
       }
     });
-    
-    // frame 배열 처리
-    if (frameItems.length > 0) {
-      nextMap.frame = frameItems;
-    }
 
     // 3) 현재 배치와 비교해 변경분만 추출 (제거는 null로 표시)
     const updates: Record<string, number | [number | null, number | null] | null> = {};
@@ -474,17 +407,8 @@ const MyTab = () => {
     // 업서트 대상 (값이 다르거나 새로 생긴 키)
     Object.entries(nextMap).forEach(([pt, value]) => {
       const currentValue = placedItems[pt as keyof typeof placedItems];
-      if (pt === 'frame') {
-        const currentFrame = Array.isArray(currentValue) ? currentValue : [null, null];
-        const newFrame = Array.isArray(value) ? value : [null, null];
-        // 배열 비교
-        if (JSON.stringify(currentFrame) !== JSON.stringify(newFrame)) {
-          updates[pt] = newFrame as [number | null, number | null];
-        }
-      } else {
-        if (currentValue !== value) {
-          updates[pt] = value as number;
-        }
+      if (currentValue !== value) {
+        updates[pt] = value as number;
       }
     });
 

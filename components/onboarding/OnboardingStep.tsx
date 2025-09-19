@@ -189,7 +189,7 @@ export const OnboardingStep: React.FC<OnboardingStepProps> = ({
       </View>
 
       {/* 버튼 */}
-        {showNext && (
+      {showNext && (
         <View style={styles.buttonContainer}>
             <Button
                 title={specialButtonText ?  specialButtonText : '다음'}
@@ -199,7 +199,7 @@ export const OnboardingStep: React.FC<OnboardingStepProps> = ({
                 style={styles.nextButton}
             />
         </View>
-        )}
+      )}
     </View>
   );
 };

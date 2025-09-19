@@ -29,7 +29,7 @@ export interface PlacedItems {
   background: number | null;
   eyewear: number | null;
   hat: number | null;
-  frame: [number | null, number | null];
+  frame: number | null;
   // frame1: number | null;    // frame_1 → frame1
   // frame2: number | null;    // frame_2 → frame2
   floor: number | null;

@@ -88,15 +88,15 @@ const PlayInstructorDetailScreen: React.FC = () => {
     }, [followedInstructors, instructorId]);
 
 
-  // 로딩 중
-  if (isLoading) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <SubpageHeader onBack={handleBack} />
-        <LoadingSpinner />
-      </SafeAreaView>
-    );
-  }
+  // // 로딩 중
+  // if (isLoading) {
+  //   return (
+  //     <SafeAreaView style={styles.container}>
+  //       <SubpageHeader onBack={handleBack} />
+  //       <LoadingSpinner />
+  //     </SafeAreaView>
+  //   );
+  // }
 
   // 에러 발생
   if (error) {

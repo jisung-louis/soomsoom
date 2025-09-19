@@ -21,8 +21,8 @@ export const roomItemList: RoomItem[] = [
   {
     id: 2,
     type: '장식품',
-    title: '풍경 액자(산)',
-    image: require('../assets/icons/items/default-background/frame_default_1.png'),
+    title: '풍경 액자(산과 꽃)',
+    image: require('../assets/icons/items/default-background/frame_default.png'),
     lottieJson: null,
     price: 300,
     positionType: 'frame',
@@ -32,8 +32,8 @@ export const roomItemList: RoomItem[] = [
   {
     id: 3,
     type: '장식품',
-    title: '장미 액자',
-    image: require('../assets/icons/items/default-background/frame_default_2.png'),
+    title: '테스트 액자1',
+    image: require('../assets/icons/items/default-background/frame_second.png'),
     lottieJson: null,
     price: 300,
     positionType: 'frame',
@@ -259,7 +259,7 @@ export const roomItemList: RoomItem[] = [
   {
     id: 25,
     type: '장식품',
-    title: '테스트 액자',
+    title: '테스트 액자2',
     image: require('../assets/images/backgrounds/default.png'),
     lottieJson: null,
     price: 0,

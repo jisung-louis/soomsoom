@@ -46,16 +46,11 @@ const UserRoom = ({children, previewMode = false, previewItemIds = [], cropTop =
   // 프리뷰 아이템을 positionType별로 매핑
   const previewByCategory = useMemo(() => {
     const map: Record<string, number | null> = {};
-    const frameItems: number[] = [];
     
     previewItemIds.forEach((id) => {
       const item = itemMap.get(id);
       if (item?.positionType) {
-        if (item.positionType === 'frame') {
-          frameItems.push(id);
-        } else {
-          map[item.positionType] = id;
-        }
+        map[item.positionType] = id; // 카테고리당 1개만 유지
       }
     });
     
@@ -65,7 +60,7 @@ const UserRoom = ({children, previewMode = false, previewItemIds = [], cropTop =
       hat: map.hat ?? null,
       floor: map.floor ?? null,
       shelf: map.shelf ?? null,
-      frameItems 
+      frame: map.frame ?? null,
     };
   }, [previewItemIds, itemMap]);
 
@@ -124,17 +119,7 @@ const UserRoom = ({children, previewMode = false, previewItemIds = [], cropTop =
   const shelfPreviewId = previewByCategory.shelf;
   
   // frame 프리뷰 아이템 처리
-  const framePreviewIds = (() => {
-    const frameItems = previewByCategory.frameItems || [];
-    // frame 배열이 있는 경우, 2개 슬롯에 맞춰 배치
-    return [
-      frameItems[0] ?? null,
-      frameItems[1] ?? null
-    ];
-  })();
-  
-  // frame 배열 안전하게 접근
-  const frameItems = placedItems.frame || [null, null];
+  const framePreviewId = previewByCategory.frame;
 
   const backgroundImage = (backgroundPreviewId
     ? itemMap.get(backgroundPreviewId)?.image
@@ -193,8 +178,7 @@ const UserRoom = ({children, previewMode = false, previewItemIds = [], cropTop =
               {renderLottieItem(hatPreviewId ?? (previewMode ? null : placedItems.hat), objectPosition.hat, itemStyles.hat, 'hat')}
               {renderImageItem(floorPreviewId ?? (previewMode ? null : placedItems.floor), objectPosition.floor, itemStyles.floorContainer, itemStyles.floor, 'floor')}
               {renderImageItem(shelfPreviewId ?? (previewMode ? null : placedItems.shelf), objectPosition.shelf, itemStyles.shelfContainer, itemStyles.shelf, 'shelf')}
-              {renderImageItem(framePreviewIds[0] ?? (previewMode ? null : frameItems[0]), objectPosition.frame0, itemStyles.frameContainer, itemStyles.frame, 'frame0')}
-              {renderImageItem(framePreviewIds[1] ?? (previewMode ? null : frameItems[1]), objectPosition.frame1, itemStyles.frameContainer, itemStyles.frame, 'frame1')}
+              {renderImageItem(framePreviewId ?? (previewMode ? null : placedItems.frame), objectPosition.frame, itemStyles.frameContainer, itemStyles.frame, 'frame')}
             </View>
           </ImageBackground>
         </ScrollView>
@@ -231,8 +215,7 @@ const UserRoom = ({children, previewMode = false, previewItemIds = [], cropTop =
           {renderLottieItem(hatPreviewId ?? placedItems.hat, objectPosition.hat, itemStyles.hat, 'hat')}
           {renderImageItem(floorPreviewId ?? placedItems.floor, objectPosition.floor, itemStyles.floorContainer, itemStyles.floor, 'floor')}
           {renderImageItem(shelfPreviewId ?? placedItems.shelf, objectPosition.shelf, itemStyles.shelfContainer, itemStyles.shelf, 'shelf')}
-          {renderImageItem(framePreviewIds[0] ?? frameItems[0], objectPosition.frame0, itemStyles.frameContainer, itemStyles.frame, 'frame0')}
-          {renderImageItem(framePreviewIds[1] ?? frameItems[1], objectPosition.frame1, itemStyles.frameContainer, itemStyles.frame, 'frame1')}
+          {renderImageItem(framePreviewId ?? placedItems.frame, objectPosition.frame, itemStyles.frameContainer, itemStyles.frame, 'frame')}
         </SafeAreaView>
       </ImageBackground>
     </View>
