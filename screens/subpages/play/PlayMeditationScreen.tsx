@@ -36,7 +36,7 @@ const PlayMeditationScreen = ({route}: {route: RouteProp<PlayStackParamList, 'Pl
 
   // lastPosition 상태 변경 디버깅
   useEffect(() => {
-    console.log(`📍 lastPosition 상태 변경: ${lastPosition}초`);
+    console.log(`📍 lastPosition 상태 변경: ${lastPosition/1000}초`);
   }, [lastPosition]);
 
   // 컴포넌트 마운트 시 이전 진행상황 조회
@@ -45,7 +45,7 @@ const PlayMeditationScreen = ({route}: {route: RouteProp<PlayStackParamList, 'Pl
       try {
         // initialPosition이 있으면 그것을 사용 (이어듣기)
         if (initialPosition !== undefined) {
-          console.log(`📖 이어듣기 위치 설정: ${initialPosition}초`);
+          console.log(`📖 이어듣기 위치 설정: ${initialPosition/1000}초`);
           setLastPosition(initialPosition);
           return;
         }
@@ -53,7 +53,7 @@ const PlayMeditationScreen = ({route}: {route: RouteProp<PlayStackParamList, 'Pl
         // initialPosition이 없으면 이전 진행상황 조회
         const progress = await getActivityProgress(content.id);
         if (progress) {
-          console.log(`📖 이전 진행상황 로드: ${progress.progressSeconds}초`);
+          console.log(`📖 이전 진행상황 로드: ${progress.progressSeconds/1000}초`);
           setLastPosition(progress.progressSeconds);
         } else {
           console.log(`📖 이전 진행상황 없음 - 처음부터 시작`);
@@ -76,7 +76,7 @@ const PlayMeditationScreen = ({route}: {route: RouteProp<PlayStackParamList, 'Pl
         lastPlaybackPosition: lastPlaybackPositionInSeconds,
         actualPlayTimeInSeconds: playTime,
       });
-      console.log(`💾 진행상황 저장: ${lastPlaybackPositionInSeconds}초, 재생시간: ${playTime}초`);
+      console.log(`💾 진행상황 저장: ${lastPlaybackPositionInSeconds/1000}초, 재생시간: ${playTime/1000}초`);
     } catch (error) {
       console.error('진행상황 저장 실패:', error);
     }
@@ -179,7 +179,7 @@ const PlayMeditationScreen = ({route}: {route: RouteProp<PlayStackParamList, 'Pl
 
   // PlayBar에서 position이 변경될 때 호출되는 콜백
   const handlePositionChange = (position: number) => {
-    console.log(`🎵 Position 변경: ${position}초`);
+    console.log(`🎵 Position 변경: ${position/1000}초`);
     setLastPosition(position);
   };
 

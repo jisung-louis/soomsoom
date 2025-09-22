@@ -101,8 +101,15 @@ export const useEmotionRecord = (date: string, emotion: string) => {
       // 백엔드에 저장 요청 (신규 서비스)
       const diary = await emotionDiaryService.createEmotionDiary(payload);
 
-      // 첫 기록일 체크 
-      const isFirstRecord = diary.diaryId === 1;
+      // 첫 기록일 체크 - 사용자의 기존 기록 개수 확인
+      const existingDiaries = await emotionDiaryService.getEmotionDiaries({
+        from: '2020-01-01',
+        to: '2030-12-31',
+        page: 1,
+      });
+      const isFirstRecord = existingDiaries.content.length === 1; // 방금 생성한 기록이 첫 번째
+
+      console.log(JSON.stringify(existingDiaries, null, 2));
 
       return {
         success: true,

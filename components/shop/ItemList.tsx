@@ -21,6 +21,7 @@ export type RoomItemLike = {
   ownedItemsCount?: number;
   totalItemsCount?: number;
   collectionOwned?: boolean;
+  
 };
 
 type Placeholder = {
@@ -94,9 +95,10 @@ type Props = {
   isOutOfStock: (itemId: number) => boolean;
   isOwned: (itemId: number) => boolean;
   isCollection: boolean;
+  isBackground?: boolean;
 };
 
-const ItemList: React.FC<Props> = ({ filteredItems, onItemPress, isOutOfStock, isOwned, isCollection }) => {
+const ItemList: React.FC<Props> = ({ filteredItems, onItemPress, isOutOfStock, isOwned, isCollection, isBackground=false }) => {
   return (
     <FlatList<RoomItemLike | Placeholder>
       style={isCollection ? styles.collectionListContainer : styles.itemListContainer}
@@ -147,9 +149,11 @@ const ItemList: React.FC<Props> = ({ filteredItems, onItemPress, isOutOfStock, i
                       </View>
                     )}
                   <View style={styles.collectionOwnedCountContainer}>
+                    {!isBackground && (
                     <Text style={styles.collectionOwnedCount}>
                       ({(item as RoomItemLike).ownedItemsCount ?? 0}/{(item as RoomItemLike).totalItemsCount ?? 0})
                     </Text>
+                    )}
                   </View>
                 </View>
               </>

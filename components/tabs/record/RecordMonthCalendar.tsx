@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import dayjs from 'dayjs';
 import { colors } from '../../../constants/colors';
@@ -6,6 +6,8 @@ import { typography } from '../../../constants/typography';
 import { radius } from '../../../constants/radius';
 import { characterIconMap } from '../../../utils/iconMap';
 import { getLogicalNow as getLogicalNowUtil } from '../../../utils/timeUtils';
+import Animated, { useSharedValue, useAnimatedStyle, withTiming, runOnJS } from 'react-native-reanimated';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 
 type RecordedItem = {
   date: string;
@@ -15,6 +17,7 @@ type RecordedItem = {
 interface RecordMonthCalendarProps {
   date: dayjs.Dayjs;
   recordedItems?: RecordedItem[];
+  onMonthSwipe?: (direction: 'prev' | 'next') => void;
 }
 
 // 월 그리드 구성 함수
@@ -40,7 +43,7 @@ const getMonthGrid = (date: dayjs.Dayjs) => {
   return grid;
 };
 
-const RecordMonthCalendar = ({ date, recordedItems }: RecordMonthCalendarProps) => {
+const RecordMonthCalendar = ({ date, recordedItems, onMonthSwipe }: RecordMonthCalendarProps) => {
   const grid = getMonthGrid(date);
   const logicalNow = getLogicalNowUtil();
   
@@ -49,8 +52,34 @@ const RecordMonthCalendar = ({ date, recordedItems }: RecordMonthCalendarProps) 
     week.some(day => day !== null)
   );
   
+  // --- Swipe gesture to change month (left/right) ---
+  const SWIPE_THRESHOLD = 60; // px
+  const swipeX = useSharedValue(0);
+
+  const pan = useMemo(() =>
+    Gesture.Pan()
+      .onUpdate((e) => {
+        swipeX.value = e.translationX;
+      })
+      .onEnd(() => {
+        const dx = swipeX.value;
+        if (Math.abs(dx) > SWIPE_THRESHOLD) {
+          if (onMonthSwipe) {
+            // Left swipe => next month, Right swipe => prev month
+            runOnJS(onMonthSwipe)(dx < 0 ? 'next' : 'prev');
+          }
+        }
+        swipeX.value = withTiming(0, { duration: 180 });
+      })
+  , [onMonthSwipe]);
+
+  const swipeStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: swipeX.value * 0.15 }], // subtle follow effect
+  }));
+
   return (
-    <View style={styles.container}>
+    <GestureDetector gesture={pan}>
+      <Animated.View style={[styles.container, swipeStyle]}>
       <View style={styles.weekHeader}>
         {['일', '월', '화', '수', '목', '금', '토'].map((day, idx) => {
           const isSunday = day === '일';
@@ -113,7 +142,8 @@ const RecordMonthCalendar = ({ date, recordedItems }: RecordMonthCalendarProps) 
           </View>
         ))}
       </View>
-    </View>
+    </Animated.View>
+  </GestureDetector>
   );
 };
 

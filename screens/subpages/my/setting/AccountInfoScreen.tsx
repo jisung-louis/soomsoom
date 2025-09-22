@@ -12,6 +12,7 @@ import { useOnboarding } from '../../../../contexts/OnboardingContext';
 import { decodeJwt } from '../../../../utils/jwt';
 import { useAuth } from '../../../../hooks/useAuth';
 import CustomAlert from '../../../../components/common/alert/CustomAlert';
+import { useSocialLogin } from '../../../../contexts/SocialLoginContext';
 
 const AccountInfoScreen = () => {
     const navigation = useNavigation();
@@ -19,6 +20,7 @@ const AccountInfoScreen = () => {
     const { lastProviderToken, role } = useAuthStore();
     const { logout } = useAuth();
     const { resetOnboarding } = useOnboarding();
+    const { showSocialLoginModal } = useSocialLogin();
     const [confirmVisible, setConfirmVisible] = React.useState(false);
     
     const handleBack = () => {
@@ -41,11 +43,8 @@ const AccountInfoScreen = () => {
         if (isSocialLogin) {
             setConfirmVisible(true);
         } else {
-            try {
-                await logout();
-            } catch {
-                showToast({ message: '로그인 중 문제가 발생했어요.' });
-            }
+            // 로그인 버튼 클릭 시 소셜 로그인 팝업 표시
+            showSocialLoginModal();
         }
     };
 
@@ -95,20 +94,23 @@ const AccountInfoScreen = () => {
         {/* 확인 모달 */}
         <CustomAlert
           visible={confirmVisible}
-          message="로그아웃"
-          subMessage="정말 로그아웃하시겠어요?"
+          message="정말 로그아웃하시겠어요?"
+          subMessage=""
           buttons={[
-            { text: '취소', onPress: () => setConfirmVisible(false) },
             { text: '로그아웃', onPress: async () => {
                 setConfirmVisible(false);
                 try {
+                  // 로그아웃 후 일반 상태로 설정
                   await logout();
+                  //showSocialLoginModal();
                   showToast({ message: '로그아웃되었습니다.' });
                 } catch {
                   showToast({ message: '로그아웃 중 문제가 발생했어요.' });
                 }
               }
-            }
+            },
+            { text: '취소', onPress: () => setConfirmVisible(false) },
+            
           ]}
           onClose={() => setConfirmVisible(false)}
           />

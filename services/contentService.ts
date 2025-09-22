@@ -36,6 +36,7 @@ export interface Activity {
   title: string;
   type: 'BREATHING' | 'MEDITATION' | 'SLEEP' | 'REST' ;
   thumbnailImageUrl: string | null;
+  //miniThumbnailImageUrl: string | null;  //!아직 api에 추가 안 됨
   descriptions: string[];
   author: ActivityAuthor;
   narrator: ActivityNarrator;

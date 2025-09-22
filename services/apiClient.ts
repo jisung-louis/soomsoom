@@ -18,6 +18,7 @@ export class ApiClient {
   private baseURL: string;
   private timeout: number;
   private refreshInFlight: Promise<AuthTokens | null> | null = null;
+  private isRefreshing: boolean = false;
   private onTokensUpdated: ((tokens: AuthTokens) => Promise<void> | void) | null = null;
   private tokenRefresher: ((refreshToken: string) => Promise<AuthTokens>) | null = null;
 
@@ -152,8 +153,9 @@ export class ApiClient {
       if (!response.ok) {
         // 401 Unauthorized 에러이고 리프레시 토큰이 있으면 토큰 갱신 시도
         const refreshToken = useAuthStore.getState().getRefreshToken();
-        if (response.status === 401 && refreshToken) {
+        if (response.status === 401 && refreshToken && !this.isRefreshing) {
           console.log('🔄 401 에러 발생, 토큰 갱신 시도...');
+          this.isRefreshing = true;
           
           try {
             // 동시성 제어: 갱신 중이면 기존 Promise 대기
@@ -165,50 +167,52 @@ export class ApiClient {
             const newTokens = await this.refreshInFlight;
             this.refreshInFlight = null;
             
-            if (newTokens) {
-              // 토큰 갱신 성공, authStore에 새로운 토큰 저장
-              await useAuthStore.getState().setSession(newTokens);
-              // 스토어/영속화 동기화 콜백 호출 (있으면)
-              if (this.onTokensUpdated) {
-                try { await this.onTokensUpdated(newTokens); } catch (e) { console.warn('onTokensUpdated 실패:', e); }
-              }
-              
-              // 원래 요청을 새로운 토큰으로 재시도 (새 컨트롤러/타이머 생성)
-              clearTimeout(timer);
-              ({ controller, timer } = makeController());
-              const retryHeaders = {
-                ...headers,
-                'Authorization': `Bearer ${newTokens.accessToken}`,
-              };
-              
-              const retryResponse = await fetch(url, {
-                ...options,
-                headers: retryHeaders,
-                signal: controller.signal,
-              });
-              
-              if (retryResponse.ok) {
-                console.log('✅ 토큰 갱신 후 재요청 성공');
-                if (retryResponse.status === 204) {
-                  return undefined as unknown as T;
-                }
-                const contentType = retryResponse.headers.get('content-type') || '';
-                const retryData = contentType.includes('application/json') ? await retryResponse.json() : (undefined as unknown as T);
-                return retryData as T;
-              } else {
-                // 재요청도 실패하면 에러 처리
-                await this.handleErrorResponse(retryResponse, endpoint);
-              }
-            } else {
-              // 토큰 갱신 실패, 로그아웃 처리
+            // 토큰 갱신 실패 시 로그아웃 처리
+            if (!newTokens) {
               console.log('❌ 토큰 갱신 실패, 로그아웃 처리');
               await useAuthStore.getState().logout();
               throw new AppError('인증이 만료되었습니다. 다시 로그인해주세요.', ErrorType.AUTHENTICATION, 'TOKEN_REFRESH_FAILED', 'api-token-refresh');
+            }
+            
+            // 토큰 갱신 성공, authStore에 새로운 토큰 저장
+            await useAuthStore.getState().setSession(newTokens);
+            // 스토어/영속화 동기화 콜백 호출 (있으면)
+            if (this.onTokensUpdated) {
+              try { await this.onTokensUpdated(newTokens); } catch (e) { console.warn('onTokensUpdated 실패:', e); }
+            }
+            
+            // 원래 요청을 새로운 토큰으로 재시도 (새 컨트롤러/타이머 생성)
+            clearTimeout(timer);
+            ({ controller, timer } = makeController());
+            const retryHeaders = {
+              ...headers,
+              'Authorization': `Bearer ${newTokens.accessToken}`,
+            };
+            
+            const retryResponse = await fetch(url, {
+              ...options,
+              headers: retryHeaders,
+              signal: controller.signal,
+            });
+            
+            if (retryResponse.ok) {
+              console.log('✅ 토큰 갱신 후 재요청 성공');
+              if (retryResponse.status === 204) {
+                return undefined as unknown as T;
+              }
+              const contentType = retryResponse.headers.get('content-type') || '';
+              const retryData = contentType.includes('application/json') ? await retryResponse.json() : (undefined as unknown as T);
+              return retryData as T;
+            } else {
+              // 재요청도 실패하면 에러 처리
+              await this.handleErrorResponse(retryResponse, endpoint);
             }
           } catch (refreshError) {
             console.error('❌ 토큰 갱신 중 에러:', refreshError);
             await useAuthStore.getState().logout();
             throw new AppError('인증이 만료되었습니다. 다시 로그인해주세요.', ErrorType.AUTHENTICATION, 'TOKEN_REFRESH_ERROR', 'api-token-refresh-error');
+          } finally {
+            this.isRefreshing = false;
           }
         } else {
           // 401이 아니거나 리프레시 토큰이 없으면 일반 에러 처리

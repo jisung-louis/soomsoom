@@ -24,6 +24,7 @@ import {
 } from "../../../services/activityLogService";
 import { useToast } from "../../../contexts/ToastContext";
 import { useAppConfigStore } from "../../../stores/appConfigStore";
+import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 
 const PlayBreathContentScreen = ({route}: {route: RouteProp<PlayStackParamList, 'PlayBreathContentScreen'>}) => {
     const {content} = route.params;
@@ -83,13 +84,16 @@ const PlayBreathContentScreen = ({route}: {route: RouteProp<PlayStackParamList, 
 
     // 안전한 현재 스텝/타임라인 접근 및 파생 값
     const current = content.timeline?.[step];
+    const next = content.timeline?.[step + 1];
     const action: BreathAction = current?.action ?? 'START';
     const text = current?.text ?? '';
     const duration = current?.duration ?? 1;
 
     const elapsed = content.durationInSeconds - remainingTime; // 전체 경과 시간
-    const currentStepTargetTime = current?.time ?? 0; // 현재 스텝 목표 시간(초)
-    const currentStepRemaining = Math.max(0, currentStepTargetTime - elapsed); // 현재 스텝 남은 시간 (음수 방지)
+    const currentStepStartTime = current?.time ?? 0; // 현재 스텝 시작 시간
+    const currentStepDuration = next ? next.time - currentStepStartTime : (content.durationInSeconds - currentStepStartTime); // 현재 스텝 지속 시간
+    const currentStepElapsed = Math.max(0, elapsed - currentStepStartTime); // 현재 스텝에서 경과된 시간
+    const currentStepRemaining = Math.max(0, currentStepDuration - currentStepElapsed); // 현재 스텝 남은 시간
 
     // 실제 재생 시간 계산 함수 (일시정지 시간 제외)
     const getActualPlayTime = () => {
@@ -181,7 +185,7 @@ const PlayBreathContentScreen = ({route}: {route: RouteProp<PlayStackParamList, 
         loadPreviousProgress();
     }, [content.id]);
 
-    // 재생 상태에 따른 진행상황 추적 시작/중지
+    // 재생 상태에 따른 진행상황 추적 시작/중지 및 화면 꺼짐 방지
     useEffect(() => {
         if (isPlaying) {
             const currentTime = Date.now();
@@ -194,10 +198,18 @@ const PlayBreathContentScreen = ({route}: {route: RouteProp<PlayStackParamList, 
             
             startTime.current = currentTime;
             startProgressTracking();
+            
+            // 화면 꺼짐 방지 활성화
+            activateKeepAwakeAsync('breathing-session');
+            
             console.log(`▶️ 호흡 재생 시작 - 일시정지 시간: ${pauseTime.current}초`);
         } else {
             lastPauseTime.current = Date.now();
             stopProgressTracking();
+            
+            // 화면 꺼짐 방지 해제
+            deactivateKeepAwake('breathing-session');
+            
             console.log(`⏸️ 호흡 재생 일시정지 - 현재 일시정지 시간: ${pauseTime.current}초`);
         }
     }, [isPlaying]);
@@ -211,6 +223,8 @@ const PlayBreathContentScreen = ({route}: {route: RouteProp<PlayStackParamList, 
     useEffect(() => {
         return () => {
             stopProgressTracking();
+            // 화면 꺼짐 방지 해제
+            deactivateKeepAwake('breathing-session');
         };
     }, []);
 
@@ -220,6 +234,12 @@ const PlayBreathContentScreen = ({route}: {route: RouteProp<PlayStackParamList, 
         if (remainingTime <= 0) return;
         const timer = setTimeout(() => {
             setRemainingTime((t) => Math.max(0, t - 1));
+
+            console.log('currentStepStartTime', currentStepStartTime);
+            console.log('currentStepDuration', currentStepDuration);
+            console.log('currentStepElapsed', currentStepElapsed);
+            console.log('currentStepRemaining', currentStepRemaining);
+            console.log('elapsed', elapsed);
         }, 1000);
         return () => clearTimeout(timer);
     }, [isPlaying, remainingTime]);
@@ -232,14 +252,14 @@ const PlayBreathContentScreen = ({route}: {route: RouteProp<PlayStackParamList, 
         }
     }, [remainingTime]);
 
-    // 경과 시간이 현재 스텝 목표 시간을 지나면 다음 스텝으로
+    // 경과 시간이 현재 스텝을 완료하면 다음 스텝으로
     useEffect(() => {
         if (!content.timeline?.length) return;
         if (step >= content.timeline.length - 1) return; // 마지막 스텝이면 진행 안함
-        if (elapsed >= currentStepTargetTime) {
+        if (next && elapsed > next.time) {
             setStep((s) => Math.min(s + 1, content.timeline!.length - 1));
         }
-    }, [elapsed, step, currentStepTargetTime, content.timeline]);
+    }, [elapsed, step, next, content.timeline]);
 
     // Lottie 재생/일시정지 제어
     const lottieRef = useRef<any>(null);
@@ -258,7 +278,7 @@ const PlayBreathContentScreen = ({route}: {route: RouteProp<PlayStackParamList, 
                 <SubpageHeader onBack={handleBack} />
                 {/* TODO: 호흡 재생 및 텍스트 매핑 추가 */}
                 <View style={[styles.contentContainer, {marginTop: Math.max(0, sy(277) - insets.top - SUBPAGE_HEADER_HEIGHT)}]}>
-                    <Text style={styles.contentText}>{currentStepRemaining}</Text>
+                    {/* <Text style={styles.contentText}>{currentStepRemaining}</Text> */}
                     <Text style={styles.contentText}>{text}</Text>
                 </View>
 

@@ -8,10 +8,11 @@ interface AuthorInfoProps {
   instructorName: string;
   guide: string;
   onPressInstructor?: () => void;
+  onPressGuide?: () => void;
   style?: ViewStyle;
 }
 
-const AuthorInfo: React.FC<AuthorInfoProps> = ({ instructorName, guide, onPressInstructor, style }) => {
+const AuthorInfo: React.FC<AuthorInfoProps> = ({ instructorName, guide, onPressInstructor, onPressGuide, style }) => {
   return (
     <View style={[styles.instructorAndAudioContainer, style]}>
       <PersonIcon width={24} height={24} color={colors.grayScale600} />
@@ -22,7 +23,7 @@ const AuthorInfo: React.FC<AuthorInfoProps> = ({ instructorName, guide, onPressI
           </Text>
         </TouchableOpacity>
         <Text style={styles.contentInfo}>|</Text>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={onPressGuide}>
           <Text style={styles.contentInfo}>안내자 : {guide}</Text>
         </TouchableOpacity>
       </View>

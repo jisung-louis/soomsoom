@@ -217,20 +217,111 @@ export const mockContentData: Activity[] = [
     durationInSeconds: 300, // 5분
     audioUrl: null,
     timeline: [
-      {
-        id: 1,
-        time: 0.0,
-        action: 'START',
-        text: '호흡을 시작합니다.',
-        duration: null,
-      },
-      {
-        id: 2,
-        time: 5.0,
-        action: 'INHALE',
-        text: '숨을 들이쉬세요.',
-        duration: 4.0,
-      },
+        {
+            id: 1,
+            time: 0.0,
+            action: "INHALE",
+            text: "ss",
+            duration: 2
+        },
+        {
+            id: 2,
+            time: 2.0,
+            action: "EXHALE",
+            text: "fsfs",
+            duration: 2
+        },
+        {
+            id: 3,
+            time: 4.0,
+            action: "INHALE",
+            text: "깊게 숨을 들이키세요!",
+            duration: 4.0
+        },
+        {
+            id: 4,
+            time: 8.0,
+            action: "EXHALE",
+            text: "길게 숨을 내뱉으세요!",
+            duration: 4.0
+        },
+        {
+            id: 5,
+            time: 12.0,
+            action: "INHALE",
+            text: "깊게 숨을 들이키세요!",
+            duration: 4.0
+        },
+        {
+            id: 6,
+            time: 16.0,
+            action: "EXHALE",
+            text: "길게 숨을 내뱉으세요!",
+            duration: 4.0
+        },
+        {
+            id: 7,
+            time: 20.0,
+            action: "INHALE",
+            text: "깊게 숨을 들이키세요!",
+            duration: 4.0
+        },
+        {
+            id: 8,
+            time: 24.0,
+            action: "EXHALE",
+            text: "길게 숨을 내뱉으세요!",
+            duration: 4.0
+        },
+        {
+            id: 9,
+            time: 28.0,
+            action: "INHALE",
+            text: "깊게 숨을 들이키세요!",
+            duration: 4.0
+        },
+        {
+            id: 10,
+            time: 32.0,
+            action: "EXHALE",
+            text: "길게 숨을 내뱉으세요!",
+            duration: 4.0
+        },
+        {
+            id: 11,
+            time: 36.0,
+            action: "INHALE",
+            text: "깊게 숨을 들이키세요!",
+            duration: 4.0
+        },
+        {
+            id: 12,
+            time: 40.0,
+            action: "EXHALE",
+            text: "길게 숨을 내뱉으세요!",
+            duration: 4.0
+        },
+        {
+            id: 13,
+            time: 44.0,
+            action: "INHALE",
+            text: "깊게 숨을 들이키세요!",
+            duration: 4.0
+        },
+        {
+            id: 14,
+            time: 48.0,
+            action: "EXHALE",
+            text: "길게 숨을 내뱉으세요!",
+            duration: 4.0
+        },
+        {
+            id: 15,
+            time: 52.0,
+            action: "INHALE",
+            text: "깊게 숨을 들이키세요!",
+            duration: 4.0
+        },
     ],
     isFavorited: false,
   },

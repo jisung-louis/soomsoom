@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAuth } from './useAuth';
-import { useUserDataSync } from './useUserDataSync';
+import { syncAllUserData } from './useUserDataSync';
 import { useAuthStore } from '../stores/authStore';
 import { apiClient } from '../services/apiClient';
 
@@ -13,7 +13,6 @@ import { apiClient } from '../services/apiClient';
 export function useAuthBootstrap() {
   const { phase, setPhase } = useAuthStore();
   const { deviceLogin } = useAuth();
-  const { syncAllUserData } = useUserDataSync();
   const ranOnceRef = React.useRef(false);
 
   const run = React.useCallback(async () => {
@@ -80,7 +79,7 @@ export function useAuthBootstrap() {
       console.error('디바이스 로그인 에러:', error);
       setPhase('logged_out');
     }
-  }, [deviceLogin, syncAllUserData, setPhase]);
+  }, [deviceLogin, setPhase]);
 
   return { phase, run };
 }

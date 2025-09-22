@@ -26,6 +26,18 @@ interface AlarmSettingProps {
 const AlarmSetting = ({ onRepeatPress, onMissionPress, onSoundPress, onVibrationToggle, repeatData, missionData, soundData, isVibrationOn }: AlarmSettingProps) => {
   const dayText = getDayDisplayText(repeatData.repeatDays);
 
+  // missionType 텍스트 변환
+  const missionTypeText = (missionType: string) => {
+    switch (missionType) {
+      case 'math':
+        return '수학 문제';
+      // case 'english':
+      //   return '영어';
+      // default:
+      //   return '미션 없음';
+    };
+  };
+
   return (
     <View style={styles.container}>
         <TouchableOpacity style={styles.settingItemContainer} onPress={() => {onRepeatPress()}}>
@@ -39,7 +51,11 @@ const AlarmSetting = ({ onRepeatPress, onMissionPress, onSoundPress, onVibration
         <TouchableOpacity style={styles.settingItemContainer} onPress={() => {onMissionPress()}}>
             <Text style={styles.title}>미션</Text>
             <View style={styles.settingItemRightContent}>
-                <Text style={styles.settingItemRightContentText}>{missionData.missionType} {missionData.missionCount}회</Text>
+              {missionData.missionType !== 'none' ? (
+                <Text style={styles.settingItemRightContentText}>{missionTypeText(missionData.missionType)} {missionData.missionCount}회</Text>
+              ) : (
+                <Text style={styles.settingItemRightContentText}>미션 없음</Text>
+              )}
                 <ArrowRightIcon width={24} height={24} color={colors.grayScale900} />
             </View>
         </TouchableOpacity>

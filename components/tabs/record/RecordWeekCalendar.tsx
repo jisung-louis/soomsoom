@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import dayjs from 'dayjs';
 import isoWeek from 'dayjs/plugin/isoWeek';
@@ -10,6 +10,8 @@ import DayCheckedIcon from '../../../assets/icons/record/day_checked.svg';
 import DayPlusIcon from '../../../assets/icons/record/day_plus.svg';
 import { getLogicalNow as getLogicalNowUtil } from '../../../utils/timeUtils';
 dayjs.extend(isoWeek);
+import Animated, { useSharedValue, useAnimatedStyle, withTiming, runOnJS } from 'react-native-reanimated';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 
 type RecordedItem = {
   date: string;
@@ -20,17 +22,44 @@ interface RecordWeekCalendarProps {
   date: dayjs.Dayjs;
   recordedItems?: RecordedItem[];
   onDayPress?: (date: dayjs.Dayjs) => void;
+  onWeekSwipe?: (direction: 'prev' | 'next') => void;
 }
 
 const daysOfWeek = ['일', '월', '화', '수', '목', '금', '토'];
 
-const RecordWeekCalendar: React.FC<RecordWeekCalendarProps> = ({ date, recordedItems, onDayPress }) => {
+const RecordWeekCalendar: React.FC<RecordWeekCalendarProps> = ({ date, recordedItems, onDayPress, onWeekSwipe }) => {
   const startOfWeek = date.startOf('week');
   const weekDates = Array.from({ length: 7 }, (_, i) => startOfWeek.add(i, 'day'));
   const logicalNow = getLogicalNowUtil(); // utils의 기본 boundaryHour 사용
 
+  // --- Swipe gesture to change week (left/right) ---
+  const SWIPE_THRESHOLD = 60; // px
+  const swipeX = useSharedValue(0);
+
+  const pan = useMemo(() =>
+    Gesture.Pan()
+      .onUpdate((e) => {
+        swipeX.value = e.translationX;
+      })
+      .onEnd(() => {
+        const dx = swipeX.value;
+        if (Math.abs(dx) > SWIPE_THRESHOLD) {
+          if (onWeekSwipe) {
+            // Left swipe => next week, Right swipe => prev week
+            runOnJS(onWeekSwipe)(dx < 0 ? 'next' : 'prev');
+          }
+        }
+        swipeX.value = withTiming(0, { duration: 180 });
+      })
+  , [onWeekSwipe]);
+
+  const swipeStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: swipeX.value * 0.15 }], // subtle follow effect
+  }));
+
   return (
-    <View style={styles.container}>
+    <GestureDetector gesture={pan}>
+      <Animated.View style={[styles.container, swipeStyle]}>
       <View style={styles.row}>
         {daysOfWeek.map((day, index) => {
           const isToday = weekDates[index].isSame(logicalNow, 'day');
@@ -90,7 +119,8 @@ const RecordWeekCalendar: React.FC<RecordWeekCalendarProps> = ({ date, recordedI
           );
         })}
       </View>
-    </View>
+      </Animated.View>
+    </GestureDetector>
   );
 };
 

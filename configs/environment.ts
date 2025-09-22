@@ -32,9 +32,9 @@ export const environmentConfig = {
     baseUrl: isDevelopment 
       ? (() => {
           // 개발 서버 고정(사용자 제공)
-          return 'http://13.125.237.63:8080';
+          return 'http://13.209.96.72:8080';
         })()
-      : 'http://13.125.237.63:8080',     // 프로덕션 API 서버
+      : 'http://13.209.96.72:8080',     // 프로덕션 API 서버
     
     timeout: isDevelopment 
       ? 10000  // 개발: 10초 (디버깅 시간 고려)
@@ -61,6 +61,7 @@ export const environmentConfig = {
     enableCrashReporting: isProduction,   // 프로덕션에서만 크래시 리포팅
     enableLocalPurchaseSimulator: isDevelopment, // 개발에서만 로컬 구매 시뮬레이터
     showDebugInfo: isDevelopment,         // 개발에서만 디버그 정보 표시
+    enableSSVTesting: isDevelopment,      // 개발에서만 SSV 테스트 활성화
   },
 
   // 소셜 로그인 설정
@@ -73,6 +74,17 @@ export const environmentConfig = {
         ? '107458236623-0mru63ph97l3va5ru46hravkoo7r2q9q.apps.googleusercontent.com'  // 개발용 iOS Client ID
         : '107458236623-0mru63ph97l3va5ru46hravkoo7r2q9q.apps.googleusercontent.com', // 프로덕션용 iOS Client ID (동일)
     },
+  },
+
+  // 광고 설정
+  ads: {
+    // SSV 콜백 URL (서버 엔드포인트)
+    ssvCallbackUrl:'https://185c348d8980.ngrok-free.app/callbacks/admob/ssv',  // 개발 서버 (ngrok)
+    
+    // 광고 단위 ID 설정
+    rewardedAdUnitId: isDevelopment
+      ? 'ca-app-pub-3940256099942544/5224354917'  // Google 테스트 광고 ID (SSV 지원)
+      : 'ca-app-pub-4758709448782249/4206373001', // 실제 광고 ID
   },
 } as const;
 

@@ -15,6 +15,8 @@ import { useToast } from '../../../hooks/useToast';
 import HelpButton from '../../../assets/icons/common/help.svg';
 import { KeyboardEvent, Dimensions } from 'react-native';
 import { SUBPAGE_HEADER_HEIGHT } from '../../../components/common/top-navigation/SubpageHeader';
+import dayjs from 'dayjs';
+import { getLogicalNow } from '../../../utils/timeUtils';
 
 type ScreenMode = 'create' | 'view' | 'edit';
 
@@ -61,6 +63,8 @@ const EmotionRecordScreen = () => {
     formattedDate,
   } = useEmotionRecord(recordDate || '', emotionKey || '');
 
+  const [isTodayRecord, setIsTodayRecord] = useState(false);
+
   // 상세보기/수정 모드일 경우, 기존 데이터를 불러와서 프리필
   useEffect(() => {
     const loadDiaryIfNeeded = async () => {
@@ -70,13 +74,21 @@ const EmotionRecordScreen = () => {
         setEmotionKey(d.emotion);
         setRecordDate(d.recordDate);
         setContent(d.memo || '');
+        const isToday = dayjs(d.recordDate).isSame(dayjs(), 'day');
+        setIsTodayRecord(isToday);
+        console.log('📅 기록 날짜:', d.recordDate, '오늘인가?', isToday);
       } catch (e) {
         showToast({ message: '기존 기록을 불러오지 못했어요.', theme: 'dark', iconType: 'brokenHeart' });
         navigation.goBack();
       }
     };
     loadDiaryIfNeeded();
-  }, [screenMode]);
+  }, [screenMode, params]);
+
+  // isTodayRecord 상태 변경 디버깅
+  useEffect(() => {
+    console.log('🔍 isTodayRecord 상태 변경:', isTodayRecord);
+  }, [isTodayRecord]);
 
   // UI 처리 함수들
   const handleBack = () => {
@@ -87,7 +99,6 @@ const EmotionRecordScreen = () => {
     navigation.navigate('EmotionRecordHelpScreen');
   };
 
-  
   const handleSave = async () => {
     // 수정 모드 분기
     if (screenMode === 'edit') {
@@ -135,6 +146,8 @@ const EmotionRecordScreen = () => {
     }
   };
 
+
+
   const EMOTIONROW_HEIGHT = 48;
   const GAP_HEIGHT = 24;
   const QUESTION_GAP_HEIGHT = 16;
@@ -149,6 +162,15 @@ const EmotionRecordScreen = () => {
         <SubpageHeader 
           onBack={handleBack}
             right={
+              <>
+              {/* 삭제버튼 임시 비활성화 */}
+              {/* <TouchableOpacity onPress={() => {
+                emotionDiaryService.deleteEmotionDiary((params as any).diaryId);
+                navigation.reset({ index: 0, routes: [{ name: 'RecordTab' }] });
+              }}>
+                <Text style={{marginRight: 20, ...typography.body2, color: 'red',}}>삭제</Text>
+              </TouchableOpacity> */}
+              {
               screenMode === 'view' ? (
                 <TouchableOpacity 
                   onPress={() => {
@@ -176,6 +198,8 @@ const EmotionRecordScreen = () => {
                   </View>
                 </TouchableOpacity>
               )
+              }
+              </>
             }
         />
         <View style={styles.contentContainer}>

@@ -53,13 +53,19 @@ const AlarmListItem = ({ item, toggleSwitch, isEditMode, onDeleteAlarm, onEditAl
                 {isEditMode ? (
                   <RightArrowIcon width={28} height={28} color={colors.grayScale800} />
                 ) : (
-                  <Switch
-                    value={isActive}
-                    onValueChange={() => {toggleSwitch(item.id)}}
-                    trackColor={{ false: colors.primary200, true: colors.primary300 }}
-                    ios_backgroundColor={colors.primary200}
-                    style={styles.alarmItemSwitch}
-                />  
+                  <TouchableOpacity
+                    activeOpacity={1}
+                    onPress={() => toggleSwitch(item.id)}
+                    style={styles.switchWrapper}
+                  >
+                    <Switch
+                      value={isActive}
+                      onValueChange={() => {toggleSwitch(item.id)}}
+                      trackColor={{ false: colors.primary200, true: colors.primary300 }}
+                      ios_backgroundColor={colors.primary200}
+                      style={styles.alarmItemSwitch}
+                    />
+                  </TouchableOpacity>
                 )}
             </View>
         </TouchableOpacity>
@@ -79,7 +85,6 @@ const styles = StyleSheet.create({
   deleteIconContainer: {
   },
   alarmItemContainer: {
-    paddingVertical: 20,
     height: 100,
     flexDirection: 'row',
     alignItems: 'center',
@@ -121,11 +126,10 @@ const styles = StyleSheet.create({
   inactiveDayText: {
     color: colors.grayScale300,
   },
+  switchWrapper: {
+    padding: 30, // expands touchable area visually & functionally
+    paddingRight:0,
+  },
 });
 
 export default AlarmListItem;
-
-
-
-
-

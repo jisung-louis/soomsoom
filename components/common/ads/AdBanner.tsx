@@ -16,7 +16,11 @@ const AdBanner: React.FC<AdBannerProps> = ({
   // const adUnitId = __DEV__ ? TestIds.BANNER : AD_UNIT_IDS.BANNER;
 
   // 출시 전 까지는 테스트 광고 ID 사용
-  const adUnitId = TestIds.BANNER;
+  const adUnitId = 
+  //__DEV__ ? 
+   TestIds.BANNER 
+  // : 
+  //AD_UNIT_IDS.BANNER;
 
   return (
     <View style={[styles.container, style]}>

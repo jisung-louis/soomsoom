@@ -120,8 +120,22 @@ export async function postSocialLogin(
 }
 
 // 리프레시 토큰 사용하여 액세스 토큰 재발급 (토큰 갱신)
-export async function refreshTokens(refreshToken: string): Promise<AuthTokens> { // 리프레시 토큰 사용하여 액세스 토큰 재발급
-  return await apiClient.post<AuthTokens>('/auth/refresh', { refreshToken });
+export async function refreshTokens(refreshToken: string): Promise<AuthTokens> {
+  // 토큰 갱신 API 호출 시에는 액세스 토큰 헤더를 포함하지 않음
+  // (만료된 토큰이 헤더에 포함되면 서버에서 401 에러 반환)
+  const response = await fetch(`${environmentConfig.api.baseUrl}/auth/refresh`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ refreshToken }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`토큰 갱신 실패: ${response.status}`);
+  }
+
+  return await response.json();
 }
 
 // ✅ FCM 토큰 획득 (직접 FCM 서버 사용 시)

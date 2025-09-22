@@ -103,7 +103,7 @@ export const emotionDiaryService = {
           modifiedAt: res.modifiedAt,
           deletedAt: res.deletedAt,
         } as EmotionDiary;
-
+        console.log(result);
         // 감정일기 등록 성공 후 업적 체크
         useAchievementStore.getState().scheduleCheck(400);
         console.log('📝 감정일기 등록 성공, 업적 체크 스케줄링');

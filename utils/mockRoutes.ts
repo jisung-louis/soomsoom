@@ -614,22 +614,20 @@ export const mockRoutes: MockRoute[] = [
   {
     method: 'GET',
     match: (e) => /^\/diaries\/(\d+)$/.test(e.split('?')[0]),
-    handler: ({ endpoint }) => {
+    handler: async ({ endpoint }) => {
+      const { getMockDiaryDataForAPI } = await import('../data/emotionReportMockData');
       const path = endpoint.split('?')[0];
       const id = Number(path.split('/')[2]);
-      // 간단한 더미 응답 (목 데이터 일관성 유지 목적)
-      const emotions = ['JOY', 'SADNESS', 'ANGER', 'FEAR', 'DISGUST'];
-      const emotion = emotions[id % emotions.length];
-      return {
-        diaryId: id,
-        userId: 1,
-        emotion,
-        memo: `mock diary ${id}`,
-        recordDate: new Date().toISOString().slice(0, 10),
-        createdAt: new Date().toISOString(),
-        modifiedAt: new Date().toISOString(),
-        deletedAt: null,
-      };
+      
+      // 전체 기간의 데이터에서 해당 diaryId 찾기
+      const allData = getMockDiaryDataForAPI('2025-01-01', '2025-12-31');
+      const foundDiary = allData.find(diary => diary.diaryId === id);
+      
+      if (!foundDiary) {
+        throw new Error(`Diary not found: ${id}`);
+      }
+      
+      return foundDiary;
     },
   },
 
@@ -1039,6 +1037,42 @@ export const mockRoutes: MockRoute[] = [
       return undefined;
     },
   },
+
+        // 보상형 광고 목록 조회
+        // GET /rewarded-ads/me
+        {
+          method: 'GET',
+          match: (e) => e === '/rewarded-ads/me',
+          handler: () => {
+            console.log(`[MOCK] 보상형 광고 목록 조회`);
+
+            const mockRewardedAds = [
+              {
+                id: 1,
+                title: '하트 포인트 받기',
+                adUnitId: 'ca-app-pub-4758709448782249/5717753460',
+                rewardAmount: 10,
+                watchedToday: false,
+              },
+              {
+                id: 2,
+                title: '추가 하트 포인트',
+                adUnitId: 'ca-app-pub-4758709448782249/9283934708',
+                rewardAmount: 20,
+                watchedToday: false,
+              },
+              {
+                id: 3,
+                title: '특별 보상',
+                adUnitId: 'ca-app-pub-4758709448782249/4206373001',
+                rewardAmount: 50,
+                watchedToday: true,
+              },
+            ];
+
+            return mockRewardedAds;
+          },
+        },
 ];
 
 

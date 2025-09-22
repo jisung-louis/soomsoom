@@ -182,35 +182,33 @@ const AlarmTab = () => {
         <NoAlarm onAddAlarmPress={() => {navigation.navigate('AlarmAddScreen', { isCreateMode: true })}} />
       ) : (
         <>
-    <AlarmHeader
-      onBackPress={handleEditModeCancel}
-      onEditAlarmPress={handleEditModeStart}
-      onSuccessAlarmPress={handleEditModeSuccess}
-      isEditMode={isEditMode}
-    />
-    
-    
-    <View style={styles.textContainer}>
-      <Text style={{...syongsyongTypography.title4}}>{hour}시간 {minute}분 {"\n"}후에 깨워 드릴게요!</Text>
-    </View>
-    <View style={styles.alarmListContainer}>
-        <FlatList
-          data={displayAlarmList.sort((a, b) => a.time.localeCompare(b.time))}
-          renderItem={({ item }) => (
-            <AlarmListItem item={item} 
-              toggleSwitch={handleAlarmToggle} 
-              isEditMode={isEditMode} 
-              onDeleteAlarm={handleEditModeDelete}
-              onEditAlarmPress={() => {navigation.navigate('AlarmAddScreen', { isCreateMode: false, alarmId: item.id })}}
-            />
-          )}
-          keyExtractor={(item) => item.id.toString()}
-          ItemSeparatorComponent={() => <View style={{height: 1, backgroundColor: colors.grayScale100,}} />}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 150 }}
-        />
-    </View>
-    </>
+          <AlarmHeader
+            onBackPress={handleEditModeCancel}
+            onEditAlarmPress={handleEditModeStart}
+            onSuccessAlarmPress={handleEditModeSuccess}
+            isEditMode={isEditMode}
+          />
+          <View style={styles.textContainer}>
+            <Text style={{...syongsyongTypography.title4}}>{hour}시간 {minute}분 {"\n"}후에 깨워 드릴게요!</Text>
+          </View>
+          <View style={styles.alarmListContainer}>
+              <FlatList
+                data={displayAlarmList.sort((a, b) => a.time.localeCompare(b.time))}
+                renderItem={({ item }) => (
+                  <AlarmListItem item={item} 
+                    toggleSwitch={handleAlarmToggle} 
+                    isEditMode={isEditMode} 
+                    onDeleteAlarm={handleEditModeDelete}
+                    onEditAlarmPress={() => {navigation.navigate('AlarmAddScreen', { isCreateMode: false, alarmId: item.id })}}
+                  />
+                )}
+                keyExtractor={(item) => item.id.toString()}
+                ItemSeparatorComponent={() => <View style={{height: 1, backgroundColor: colors.grayScale100,}} />}
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={{ paddingBottom: 150 }}
+              />
+          </View>
+        </>
     )}
     <TouchableOpacity style={styles.floatingAddButtonContainer} onPress={() => {navigation.navigate('AlarmAddScreen', { isCreateMode: true })}}>
       <FloatingAddIcon width={64} height={64} />

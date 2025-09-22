@@ -11,7 +11,8 @@ export const titleLineBreaker = (title: string): string => {
   // ', '와 '! '를 찾아서 줄바꿈으로 변경
   return title
     .replace(/, /g, ',\n')
-    .replace(/! /g, '!\n');
+    .replace(/! /g, '!\n')
+    .replace(/: /g, ':\n');
 };
 
 /**

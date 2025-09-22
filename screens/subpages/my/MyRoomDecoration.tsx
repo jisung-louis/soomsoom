@@ -219,8 +219,9 @@ const MyRoomDecoration = ({
     }
 
     const isCollection = selectedTab === 1;
+    const isBackground = selectedTab === 4;
     
-    const paddedData = padToThreeColumns(filteredData, isCollection);
+    const paddedData = padToThreeColumns(filteredData, isCollection || isBackground);
 
     // 컬렉션이 선택되었는지 확인하는 함수
     const isCollectionSelected = (collectionId: number) => {
@@ -295,11 +296,11 @@ const MyRoomDecoration = ({
                 onTabPress={handleTabPress}
             />
             <FlatList 
-            key={isCollection ? 'collection' : 'items'}
+            key={isCollection || isBackground ? 'collection' : 'items'}
             style={styles.itemListContainer}
             data={paddedData} 
-            numColumns={isCollection ? 2 : 3}
-            columnWrapperStyle={isCollection ? styles.collectionRow : styles.row}
+            numColumns={isCollection || isBackground ? 2 : 3}
+            columnWrapperStyle={isCollection || isBackground ? styles.collectionRow : styles.row}
             showsVerticalScrollIndicator={false}
             renderItem={({item, index}) => (
                 item.__isPlaceholder ? (
@@ -334,7 +335,33 @@ const MyRoomDecoration = ({
                           )}
                         </View>
                       </TouchableOpacity>
-                    ):(
+                    ):
+                    isBackground ? (
+                      <TouchableOpacity style={styles.item} key={item.id} onPress={() => handleItemPress(item.id)}>
+                        {isOwned(item.id) && (
+                            <View style={styles.itemBadgeContainer}>
+                              <Badge title='보유중' variant='small' />
+                            </View>
+                        )}
+                        {selectedItems.includes(item.id) && (  
+                            <View style={styles.collectionYellowDimmedContainer}>
+                                <CheckIcon width={56} height={56} color={colors.white} />
+                            </View>
+                        )}
+                        <View style={styles.collectionItemImageContainer}>
+                          <Image source={normalizeImageSource(item.image)} style={styles.collectionItemImage} resizeMode="cover"/>
+                        </View>
+                        <View style={styles.itemInfo}>
+                          <Text style={styles.itemTitle}>{item.title}</Text>
+                          {!isOwned(item.id) && (
+                            <View style={styles.itemPriceContainer}>
+                              <EmotionIcon width={16} height={16} />
+                              <Text style={styles.itemPrice}>{item.price}</Text>
+                            </View>
+                          )}
+                        </View>
+                      </TouchableOpacity>
+                    ) : (
                       <TouchableOpacity style={styles.item} key={item.id} onPress={() => handleItemPress(item.id)}>
                         {isOwned(item.id) && (
                             <View style={styles.itemBadgeContainer}>
@@ -347,7 +374,7 @@ const MyRoomDecoration = ({
                             </View>
                         )}
                         <View style={styles.itemImageContainer}>
-                          <Image source={normalizeImageSource(item.image)} style={[styles.itemImage, item.type === '배경' ? {width: '100%', height: '100%'} : {}]} resizeMode={item.type === '배경' ? "cover" : "contain"}/>
+                          <Image source={normalizeImageSource(item.image)} style={styles.itemImage} resizeMode="contain"/>
                         </View>
                         <View style={styles.itemInfo}>
                           <Text style={styles.itemTitle}>{item.title}</Text>

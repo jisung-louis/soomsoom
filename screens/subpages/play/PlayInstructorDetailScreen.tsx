@@ -45,22 +45,25 @@ const PlayInstructorDetailScreen: React.FC = () => {
           setIsLoading(true);
           setError(null);
 
-          const [instructorData, activitiesData] = await Promise.all([
-            getInstructorDetail(instructorId),
-            getInstructorActivities(instructorId, { page: 1, size: 10 })
-          ]);
-
+          // 강사 정보만 먼저 로드
+          const instructorData = await getInstructorDetail(instructorId);
+          
           // UI에서 실제 팔로우 상태를 확인하여 설정
           const isFollowing = followedInstructors.some(inst => inst.instructorId === instructorId);
           setInstructor({ ...instructorData, isFollowing });
 
-          // 각 액티비티의 상세 정보를 가져와서 representativeContentData 설정
-          const activityDetails = await Promise.all(
-            activitiesData.content.map(activity => 
-              getActivityDetail(activity.activityId)
-            )
-          );
-          setRepresentativeContentData(activityDetails);
+          // '야웅이'가 아닌 경우에만 대표 강의 데이터 로드
+          if (instructorData.name !== '야웅이') {
+            const activitiesData = await getInstructorActivities(instructorId, { page: 1, size: 10 });
+            
+            // 각 액티비티의 상세 정보를 가져와서 representativeContentData 설정
+            const activityDetails = await Promise.all(
+              activitiesData.content.map(activity => 
+                getActivityDetail(activity.activityId)
+              )
+            );
+            setRepresentativeContentData(activityDetails);
+          }
         } catch (err) {
           console.error('강사 데이터 로드 실패:', err);
           setError('강사 정보를 불러오는데 실패했습니다.');
@@ -122,7 +125,7 @@ const PlayInstructorDetailScreen: React.FC = () => {
       </SafeAreaView>
     );
   }
-  if (instructor.instructorId === 0) { //야웅이일경우
+  if (instructor.name === '야웅이') { //야웅이일경우
     return (
       <SafeAreaView style={styles.container}>
         <SubpageHeader onBack={handleBack} />

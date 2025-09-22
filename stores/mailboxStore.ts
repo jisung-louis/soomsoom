@@ -78,6 +78,9 @@ export const useMailboxStore = create<MailboxState>()(
           set({ announcementsLoading: true });
           const response = await getAnnouncements(params);
           get().setAnnouncements(response);
+          
+          // 읽음 상태가 변경되었을 수 있으므로 unread count도 업데이트
+          await get().loadUnreadCount();
         } catch (error) {
           console.error('❌ 공지사항 목록 조회 실패:', error);
           // 에러 시에도 로딩 상태는 해제

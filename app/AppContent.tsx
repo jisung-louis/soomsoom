@@ -4,7 +4,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { PortalProvider } from '@gorhom/portal';
 import AppNavigator from '../navigations/AppNavigator';
 import CustomToast from '../components/common/toast/CustomToast';
-import AchievementUnlockedPopup from '../components/common/achievement/AchievementUnlockedPopup';
+import UniversalPopup from '../components/common/popup/UniversalPopup';
 import { NavigationContainerRef } from '@react-navigation/native';
 import AuthGate from '../components/auth/AuthGate';
 import { useOnboarding } from '../contexts/OnboardingContext';
@@ -123,7 +123,7 @@ const AppContent = () => {
           <AppNavigator ref={navigationRef} />
           <StatusBar style="auto" />
           <CustomToast />
-          <AchievementUnlockedPopup />
+          <UniversalPopup />
         </AuthGate>
       </PortalProvider>
     </GestureHandlerRootView>

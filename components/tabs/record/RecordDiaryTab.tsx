@@ -69,6 +69,13 @@ const RecordDiaryTab = ({
     setIsThisCurrentMonth(isThisCurrentMonth);
   };
 
+  const onSwipe = (direction: 'prev' | 'next') => {
+    if (direction === 'prev') {
+      onPrev();
+    } else {
+      onNext();
+    }
+  };
   const RECORDLIST_STATIC_HEIGHT = sv(466) - safeAreaInsetsBottom - 92; // 전체 높이에서 리스트 위쪽의 높이를 뺀 높이(sv(466)) - 하단 안전영역 높이(safeAreaInsetsBottom) - 하단 네비게이션 높이(92)
   return (
     <ScrollView contentContainerStyle={{ paddingBottom: 100 }} scrollEnabled={hasThisMonthRecords || viewType === 'month'}>
@@ -89,10 +96,11 @@ const RecordDiaryTab = ({
           date={currentDate}
           recordedItems={recordedItems}
           onDayPress={onDayPress}
+          onWeekSwipe={onSwipe}
         />
       )}
       {viewType === 'month' && (
-        <RecordMonthCalendar date={currentDate} recordedItems={recordedItems} />
+        <RecordMonthCalendar date={currentDate} recordedItems={recordedItems} onMonthSwipe={onSwipe} />
       )}
       <Surface/>
       <View style={[ 

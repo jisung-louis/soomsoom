@@ -22,7 +22,7 @@ const ProgramList = ({ programData }: { programData: Activity[] }) => {
         programData.map((item) => (
           <TouchableOpacity key={item.id} style={styles.cardContainer} onPress={() => {navigation.navigate('PlayDetailScreen', { activityId: item.id, content: item })}}> 
             <View style={styles.card}>
-              <Image source={item.thumbnailImageUrl || require('../../../../assets/images/play/playFavoriteScreen/default_image_1.png')} style={styles.image} resizeMode='contain' />
+              <Image source={{uri: item.thumbnailImageUrl || require('../../../../assets/images/play/playFavoriteScreen/default_image_1.png')}} style={styles.image} resizeMode='cover' />
               <View style={styles.cardContent}>
                 <View style={styles.textHeader}>
                   <Badge title={item.type === 'BREATHING' ? '호흡' : '명상'} />

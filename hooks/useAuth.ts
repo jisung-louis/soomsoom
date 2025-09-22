@@ -15,6 +15,7 @@ import {
 import { registerDevice, unregisterDevice } from '../services/notificationService';
 import { getCachedInstallUuid } from '../utils/deviceId';
 import { resetAppState } from '../utils/resetAppState';
+import { syncAllUserData } from '../hooks/useUserDataSync';
 
 /**
  * 인증 관련 로직을 중앙화한 커스텀 훅
@@ -148,6 +149,9 @@ export const useAuth = () => {
       console.log(`✅ ${provider} 로그인 완료`);
       showToast({ message: `${provider === 'GOOGLE' ? '구글' : '애플'} 로그인에 성공했어요!` });
       
+      // 6. 사용자 데이터 전체 동기화
+      await syncAllUserData();
+      
       return { success: true };
     } catch (error: any) {
       console.error(`${provider} 로그인 에러:`, error);
@@ -195,7 +199,9 @@ export const useAuth = () => {
       setLoading('DEVICE');
       console.log('🔐 디바이스 로그인 시작...');
       
-      const deviceId = await getCachedInstallUuid();
+      const deviceId = 
+      //await getCachedInstallUuid();
+      'device-id-1234567890';
       const tokens = await postDeviceLogin({ deviceId });
       
       // 세션 설정
@@ -210,6 +216,10 @@ export const useAuth = () => {
       
       console.log('✅ 디바이스 로그인 완료');
       setPhase('logged_in');
+      
+      // 사용자 데이터 전체 동기화
+      await syncAllUserData();
+      
       return { success: true };
     } catch (error: any) {
       console.error('디바이스 로그인 에러:', error);

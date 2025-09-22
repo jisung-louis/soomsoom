@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, ScrollView, Image, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import SubpageHeader from '../../../components/common/top-navigation/SubpageHeader';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -174,11 +175,12 @@ const PlayDetailScreen: React.FC = () => {
   }
 
   return (
+    <>
     <SafeAreaView style={styles.container}>
       <SubpageHeader onBack={handleBack} />
-      <View style={{flexGrow: 1, paddingBottom: 100}}>
+      <ScrollView contentContainerStyle={{ paddingBottom: 200}}>
         <View style={styles.imageContainer}>
-          <Image source={content.thumbnailImageUrl || require('../../../assets/images/play/playFavoriteScreen/default_image_1.png')} style={styles.image} />
+          <Image source={{ uri: content.thumbnailImageUrl || require('../../../assets/images/play/playFavoriteScreen/default_image_1.png')}} style={styles.image} resizeMode='cover' />
         </View>
         <View style={styles.contentContainer}>
           <View style={styles.contentHeader}>
@@ -198,6 +200,7 @@ const PlayDetailScreen: React.FC = () => {
                 instructorName={content.author.name}
                 guide={content.narrator.name}
                 onPressInstructor={() => {navigation.navigate('PlayInstructorDetailScreen', { instructorId: content.author.id })}}
+                onPressGuide={() => {navigation.navigate('PlayInstructorDetailScreen', { instructorId: content.narrator.id })}}
               />
               <View style={styles.instructorAndAudioContainer}>
                 <AudioIcon width={24} height={24} color={colors.grayScale600} />
@@ -210,25 +213,7 @@ const PlayDetailScreen: React.FC = () => {
           </View>
           <Text style={styles.contentDescription}>{content.descriptions.join('\n')}</Text>
         </View>
-        <View style={styles.toastContainer}>
-          <ToastView
-            message='잠깐! 시작전에 소리를 키워주세요!'
-            theme='light'
-            iconType='help'
-          />
-        </View>
-        <View style={styles.buttonContainer}>
-          <Button
-            title='마음운동 시작하기'
-            variant='active'
-            size='large'
-            onPress={() => {
-              content.type === 'BREATHING' ? handleStartBreathing() : handleStartMeditation()
-            }}
-            style={styles.button}
-          />
-        </View>
-      </View>
+      </ScrollView>
       
       {/* 이어듣기 CustomAlert */}
       <CustomAlert
@@ -254,6 +239,24 @@ const PlayDetailScreen: React.FC = () => {
         onClose={handleCloseResumeAlert}
       />
     </SafeAreaView>
+          <View style={styles.buttonContainer}>
+            <ToastView
+              message='잠깐! 시작전에 소리를 키워주세요!'
+              theme='light'
+              iconType='help'
+              style={styles.toastContainer}
+            />
+            <Button
+              title='마음운동 시작하기'
+              variant='active'
+              size='large'
+              onPress={() => {
+                content.type === 'BREATHING' ? handleStartBreathing() : handleStartMeditation()
+              }}
+              style={styles.button}
+            />
+          </View>
+    </>
   );
 };
 
@@ -317,17 +320,22 @@ const styles = StyleSheet.create({
     color: colors.grayScale500,
   },
   toastContainer: {
-    position: 'absolute',
-    bottom: 90,
     alignSelf: 'center',
+    marginBottom: 20,
   },
   buttonContainer: {
     position: 'absolute',
-    bottom: 10,
-    alignSelf: 'center',
+    bottom: 0,
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 20,
+    paddingBottom: 30,
+    paddingTop: 50,
   },
   button: {
     flex: 1,
+    width: '100%',
   },
   loadingContainer: {
     flex: 1,

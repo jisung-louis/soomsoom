@@ -64,7 +64,10 @@ const MailboxScreen = () => {
       navigation.navigate('MailboxDetailScreen', { content: detail });
       
       // 읽음 처리 후 목록 새로고침 (읽음 상태 업데이트)
+      // loadAnnouncements 내부에서 loadUnreadCount도 호출됨
       await loadAnnouncements({ page: 0, size: 20, sort: ['receivedAt,desc'] });
+      
+      console.log('📬 메일 읽음 처리 완료, 캐시 동기화됨');
       
     } catch (error) {
       console.error('메일 상세 조회 실패:', error);

@@ -40,12 +40,11 @@ const PlayRecommendedContentList = ({ onRecommendedPress, recommendedActivityDat
         renderItem={({ item }) => (
           <TouchableOpacity onPress={() => {navigation.navigate('PlayDetailScreen', { activityId: item.id, content: item as Activity })}}>
             <View style={styles.card}>
-              <Image source={item.thumbnailImageUrl || require('../../../assets/images/play/playFavoriteScreen/default_image_1.png')} style={styles.image} />
+              <Image source={{ uri: item.thumbnailImageUrl || require('../../../assets/images/play/playFavoriteScreen/default_image_1.png')}} style={styles.image} />
               <View style={styles.cardContentContainer}>
                 <View style={styles.cardContent}>
                   <View style={styles.textHeader}>
                     <Badge title={item.type === 'BREATHING' ? '호흡' : '명상'} />
-                    <MoreIcon color={colors.grayScale300} />
                   </View>
                   <View style={styles.cardTitleAndTimeContainer}>
                     <View style={styles.cardTitleContainer}>

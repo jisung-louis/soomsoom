@@ -21,11 +21,11 @@ const SoundSelector: React.FC<SoundSelectorProps> = ({
   const [selectedSound, setSelectedSound] = useState(initialSoundName);
 
   const sounds = [
-    { name: '기본 벨소리'},
-    { name: '목탁 소리'},
-    { name: '자연 소리'},
-    { name: '고양이 소리'},
-    { name: '강아지 소리'},
+    { name: '신나는 소리'}, // exciting.caf
+    { name: '아침 기상 소리'}, // morning_rise.caf
+    { name: '하와이풍 소리'}, // hawaii.caf
+    { name: '고양이 소리'}, // cat.caf
+    { name: '강아지 소리'}, // dog.caf
   ];
 
   const handleConfirm = () => {

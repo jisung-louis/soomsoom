@@ -12,10 +12,6 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffaa33"
     },
-    "react-native-google-mobile-ads": {
-      "ios_app_id": "ca-app-pub-4758709448782249~5612676219",
-      "android_app_id": "ca-app-pub-3940256099942544~3347511713"
-    },
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.soomsoom.app",
@@ -82,8 +78,10 @@
       [
         "react-native-google-mobile-ads",
         {
-          "iosAppId": "ca-app-pub-4758709448782249~5612676219",
-          "androidAppId": "ca-app-pub-3940256099942544~3347511713"
+          "googleMobileAdsAppId": {
+            "ios": "ca-app-pub-4758709448782249~5612676219",
+            "android": "ca-app-pub-3940256099942544~3347511713"
+          }
         }
       ],
       "@react-native-firebase/app"

@@ -55,8 +55,12 @@ const HomeTab = () => {
     invalidateIfCrossedBoundary,
   } = useTodayMissionStore();
   
-  // 우편함 안 읽은 메일 개수
-  const { loadUnreadCount } = useMailboxStore();
+  // 우편함 안 읽은 메일 개수 (캐시된 값 사용)
+  const { unreadCount } = useMailboxStore();
+  
+  // 포커스될 때마다 캐시된 값을 UI에 반영하기 위해 사용
+  // (TopNavigation에서도 동일한 store를 구독하므로 자동으로 업데이트됨)
+  console.log('📬 HomeTab 포커스 - 현재 안 읽은 메일 개수:', unreadCount);
   useFocusEffect(
     useCallback(() => {
       console.log('🏠 HomeTab 완전 재마운트!');
@@ -74,8 +78,8 @@ const HomeTab = () => {
         }
       } catch {}
       
-      // 안 읽은 메일 개수 새로고침
-      loadUnreadCount();
+      // 안 읽은 메일 개수는 캐시된 값 사용 (API 호출하지 않음)
+      console.log('📬 포커스 시 안 읽은 메일 개수:', unreadCount);
       
       // 애니메이션 재시작을 위한 지연
       setTimeout(() => {
@@ -85,7 +89,7 @@ const HomeTab = () => {
       return () => {
         stopTracking();
       };
-    }, [startTracking, stopTracking, loadUnreadCount])
+    }, [startTracking, stopTracking, unreadCount])
   );
 
   // 앱이 포어그라운드로 돌아올 때 일경계 교차 감지 및 조건부 갱신

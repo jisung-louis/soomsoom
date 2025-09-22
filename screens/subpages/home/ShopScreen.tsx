@@ -39,6 +39,11 @@ import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { Button } from '../../../components/common/buttons/Button';
 import HeartPointIcon from '../../../assets/icons/common/Heart.svg';
 import Badge from '../../../components/common/badge/Badge';
+import { useRewardedAds } from '../../../hooks/useRewardedAds';
+import { useToast } from '../../../contexts/ToastContext';
+import { RewardedAd, RewardedAdEventType, AdEventType, TestIds } from 'react-native-google-mobile-ads';
+import { useAuthStore } from '../../../stores/authStore';
+import { environmentConfig } from '../../../configs/environment';
 
 type ShopScreenNavigationProp = StackNavigationProp<HomeStackParamList, 'ShopScreen'>;
 
@@ -58,6 +63,138 @@ const ShopScreen = () => {
   const [excludeOwnedItems, setExcludeOwnedItems] = useState(false);
   const [outOfStockItems, setOutOfStockItems] = useState<number[]>([]);
   const { heartPoints } = useCurrencyStore();
+  const { showToast } = useToast();
+  
+  // 보상형 광고 관련
+  const { availableAds, watchedAds, isLoading: adsLoading, markAsWatched } = useRewardedAds();
+  
+  // 사용자 ID 가져오기
+  const { getAccessToken } = useAuthStore();
+
+  // 안전한 JWT 디코더 (RN에서 atob가 없을 수 있어 Buffer도 시도)
+  const safeDecodeJwt = (token?: string): any | null => {
+    if (!token) return null;
+    try {
+      const base64Url = token.split('.')[1];
+      if (!base64Url) return null;
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      let jsonStr = '';
+      if (typeof atob === 'function') {
+        jsonStr = decodeURIComponent(
+          atob(base64)
+            .split('')
+            .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+            .join('')
+        );
+      } else if (typeof Buffer !== 'undefined') {
+        // @ts-ignore Buffer may be global in RN metro env
+        jsonStr = Buffer.from(base64, 'base64').toString('utf8');
+      }
+      return jsonStr ? JSON.parse(jsonStr) : null;
+    } catch {
+      return null;
+    }
+  };
+  
+  // 보상형 광고 인스턴스 생성 함수
+  const createRewardedAd = () => {
+    // JWT 토큰에서 사용자 ID 추출
+    const accessToken = getAccessToken();
+    let userId = 'anonymous';
+
+    if (accessToken) {
+      const payload = safeDecodeJwt(accessToken);
+      if (payload) {
+        userId = payload.sub || payload.userId || 'anonymous';
+        console.log('🔑 사용자 ID:', userId);
+      } else {
+        console.warn('JWT 토큰 디코딩 실패: payload null');
+      }
+    }
+
+    // 기기 ID 로깅 (AdMob 테스트 기기 등록 확인용)
+    import('react-native-device-info').then(DeviceInfo => {
+      DeviceInfo.default.getUniqueId().then(deviceId => {
+        console.log('📱 기기 ID (AdMob 테스트 기기 등록용):', deviceId);
+      });
+    });
+
+    // 환경 설정에서 광고 단위 ID 가져오기
+    const adUnitId = environmentConfig.ads.rewardedAdUnitId;
+
+    console.log('📺 광고 단위 ID:', adUnitId);
+
+    return RewardedAd.createForAdRequest(adUnitId, {
+      serverSideVerificationOptions: {
+        userId: userId,
+        // SSV 콜백 URL 설정 (서버 엔드포인트)
+        customData: JSON.stringify({
+          userId: userId,
+          adUnitId: adUnitId,
+          timestamp: Date.now(),
+          ssvCallbackUrl: environmentConfig.ads.ssvCallbackUrl,
+        }),
+      },
+    });
+  };
+  
+  // 현재 광고 인스턴스
+  const [rewardedAd, setRewardedAd] = useState(() => createRewardedAd());
+
+  // 현재 광고 컨텍스트 (보상 처리/토스트용)
+  const currentAdRef = useRef<{ adId: number; rewardAmount: number } | null>(null);
+  
+  // 광고 이벤트 리스너 설정
+  useEffect(() => {
+    const unsubscribeLoaded = rewardedAd.addAdEventListener(RewardedAdEventType.LOADED, () => {
+      console.log('📺 보상형 광고 로드 완료');
+      console.log('📺 광고 로드 상태:', rewardedAd.loaded);
+    });
+
+    const unsubscribeEarned = rewardedAd.addAdEventListener(RewardedAdEventType.EARNED_REWARD, (reward) => {
+      console.log('🎁 보상 획득:', reward);
+      const ctx = currentAdRef.current;
+      if (ctx) {
+        // 광고 시청 완료 처리
+        markAsWatched(ctx.adId);
+        showToast({
+          message: `+${ctx.rewardAmount} 하트 포인트를 받았어요!`,
+          theme: 'dark',
+          iconType: 'heart',
+          hasAnimation: true,
+        });
+      }
+      currentAdRef.current = null;
+      // 광고 사용 후 새로운 광고 객체 생성
+      setRewardedAd(createRewardedAd());
+    });
+
+    const unsubscribeClosed = rewardedAd.addAdEventListener(AdEventType.CLOSED, () => {
+      console.log('📺 보상형 광고 닫힘');
+      currentAdRef.current = null;
+      setRewardedAd(createRewardedAd());
+    });
+
+    const unsubscribeError = rewardedAd.addAdEventListener(AdEventType.ERROR, (error) => {
+      console.error('❌ 보상형 광고 에러:', error);
+      console.error('❌ 에러 상세:', JSON.stringify(error, null, 2));
+      showToast({
+        message: '광고를 불러올 수 없습니다.',
+        theme: 'dark',
+        iconType: 'brokenHeart',
+      });
+      currentAdRef.current = null;
+      setRewardedAd(createRewardedAd());
+    });
+
+    return () => {
+      unsubscribeLoaded();
+      unsubscribeEarned();
+      unsubscribeClosed();
+      unsubscribeError();
+    };
+  }, [rewardedAd, showToast, markAsWatched, createRewardedAd]);
+  
   // 정렬 드롭다운 상태
   type SortKey = 'POPULAR' | 'LATEST' | 'PRICE_DESC' | 'PRICE_ASC';
   const [sortKey, setSortKey] = useState<SortKey>('POPULAR'); // 디폴트: 구매순
@@ -101,6 +238,65 @@ const ShopScreen = () => {
   const handleExcludeOwnedItemsToggle = () => {
     setExcludeOwnedItems(!excludeOwnedItems);
     // TODO: 보유중 제외 기능 구현
+  };
+
+  // 보상형 광고 시청 핸들러
+  const handleWatchAd = async (adId: number, rewardAmount: number) => {
+    try {
+      currentAdRef.current = { adId, rewardAmount };
+      console.log('📺 광고 시청 시작:', adId);
+
+      // 광고가 이미 로드되어 있으면 바로 표시
+      if (rewardedAd.loaded) {
+        console.log('📺 광고 이미 로드됨, 바로 표시');
+        await rewardedAd.show();
+      } else {
+        console.log('📺 광고 로드 중...');
+
+        // 로드 완료를 기다리는 Promise
+        const loadPromise = new Promise<void>((resolve, reject) => {
+          const timeout = setTimeout(() => {
+            reject(new Error('광고 로드 타임아웃'));
+          }, 10000); // 10초 타임아웃
+
+          const unsubscribeLoaded = rewardedAd.addAdEventListener(RewardedAdEventType.LOADED, () => {
+            clearTimeout(timeout);
+            unsubscribeLoaded();
+            resolve();
+          });
+
+          const unsubscribeError = rewardedAd.addAdEventListener(AdEventType.ERROR, (error) => {
+            clearTimeout(timeout);
+            unsubscribeLoaded();
+            unsubscribeError();
+            reject(error);
+          });
+        });
+
+        // 광고 로드 시작
+        console.log('📺 광고 로드 요청 시작...');
+        rewardedAd.load();
+
+        // 로드 완료까지 대기
+        await loadPromise;
+
+        // 광고가 로드되었는지 다시 한번 확인
+        if (!rewardedAd.loaded) {
+          throw new Error('광고가 로드되지 않았습니다.');
+        }
+
+        console.log('📺 광고 로드 완료, 표시 중...');
+        await rewardedAd.show();
+      }
+      // 보상 획득 이벤트 리스너 (일회성) 제거됨 - 중앙화된 처리로 이동
+    } catch (error) {
+      console.error('❌ 광고 시청 실패:', error);
+      showToast({
+        message: '광고를 시청할 수 없습니다.',
+        theme: 'dark',
+        iconType: 'brokenHeart',
+      });
+    }
   };
 
   const toggleSortBottomSheet = () => {
@@ -330,7 +526,7 @@ const ShopScreen = () => {
                 </TouchableOpacity>
               </View>
             </View>
-            {itemTabMenu[selectedItemTab].title === '컬렉션' ? (
+            {itemTabMenu[selectedItemTab].title === '컬렉션' || itemTabMenu[selectedItemTab].title === '배경' ? (
               <View style={{ marginTop: 10 }}>
                 {collectionsLoading ? (
                   <Text style={styles.dropdownSortText}>컬렉션 불러오는 중...</Text>
@@ -341,6 +537,7 @@ const ShopScreen = () => {
                     isOutOfStock={() => false}
                     isOwned={() => false}
                     isCollection
+                    isBackground={selectedItemTab === 4}
                   />
                 )}
               </View>
@@ -377,18 +574,40 @@ const ShopScreen = () => {
     <View style={styles.content}>
       <BannerChargeImage width={layout.width} style={{ marginTop: 30 }}/>
       <View style={styles.chargeContent}>
-        {/* 서버 API 연결 */}
-        {heartCard.map((item) => (
-          <TouchableOpacity key={item.id} style={styles.heartCard} onPress={() => {}}>
+        {/* 보상형 광고 목록 */}
+        {adsLoading ? (
+          <Text style={styles.loadingText}>로딩 중...</Text>
+        ) : (
+          availableAds.map((ad) => (
+            <TouchableOpacity 
+              key={ad.id} 
+              style={styles.heartCard} 
+              onPress={() => handleWatchAd(ad.id, ad.rewardAmount)}
+            >
+              <HeartPointIcon width={40} height={40} />
+              <View style={styles.heartCardContent}>
+                <Text style={styles.heartCardText}>{ad.rewardAmount} 하트</Text>
+                <Badge
+                  title={ad.watchedToday ? '시청 완료' : '광고 시청'}
+                  variant={ad.watchedToday ? 'secondary' : 'default'}
+                />
+              </View>
+            </TouchableOpacity>
+          ))
+        )}
+        
+        {/* 시청 완료된 광고 (비활성화) */}
+        {watchedAds.map((ad) => (
+          <View key={`watched-${ad.id}`} style={[styles.heartCard, styles.disabledCard]}>
             <HeartPointIcon width={40} height={40} />
             <View style={styles.heartCardContent}>
-              <Text style={styles.heartCardText}>{item.point} 하트</Text>
+              <Text style={styles.heartCardText}>{ad.rewardAmount} 하트</Text>
               <Badge
-                title={'하트 받기'}
-                variant='default'
+                title="시청 완료"
+                variant="secondary"
               />
             </View>
-          </TouchableOpacity>
+          </View>
         ))}
       </View>
     </View>
@@ -612,6 +831,15 @@ const styles = StyleSheet.create({
   heartCardText: {
     ...typography.body4,
     color: colors.grayScale900,
+  },
+  disabledCard: {
+    opacity: 0.5,
+  },
+  loadingText: {
+    ...typography.body4,
+    color: colors.grayScale600,
+    textAlign: 'center',
+    marginVertical: 20,
   },
 });
 

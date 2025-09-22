@@ -2,6 +2,7 @@ import Expo
 import React
 import ReactAppDependencyProvider
 import FirebaseCore
+import GoogleMobileAds
 
 @UIApplicationMain
 public class AppDelegate: ExpoAppDelegate {
@@ -34,6 +35,10 @@ public class AppDelegate: ExpoAppDelegate {
     if FirebaseApp.app() == nil {
       FirebaseApp.configure()
     }
+    
+    // ✅ Initialize Google Mobile Ads
+    // GADMobileAds.sharedInstance().start(completionHandler: nil)
+    
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 

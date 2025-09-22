@@ -69,6 +69,7 @@ export const updateActivityProgress = async (
 ): Promise<void> => {
   try {
     // 실제 API 호출 (모킹은 apiClient에서 처리)
+    console.log(`💾 진행상황 저장: ${params.lastPlaybackPosition}초, 재생시간: ${params.actualPlayTimeInSeconds}초`);
     await apiClient.patch<void>(`/activities/${activityId}/history`, params);
   } catch (error) {
     throw createNetworkError(

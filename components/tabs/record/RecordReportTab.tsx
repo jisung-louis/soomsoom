@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, TouchableWithoutFeedback} from 'react-native';
-import Animated, { useSharedValue, useAnimatedStyle, withTiming, Easing } from 'react-native-reanimated';
+import Animated, { useSharedValue, useAnimatedStyle, withTiming, Easing, runOnJS } from 'react-native-reanimated';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { colors } from '../../../constants/colors';
 import { syongsyongTypography, typography } from '../../../constants/typography';
 import ArrowLeftIcon from '../../../assets/icons/common/arrow_back.svg';
@@ -297,6 +298,29 @@ const RecordReportTab = ({
   };
 
 
+  // --- Swipe gesture to change week (left/right) ---
+  const SWIPE_THRESHOLD = 60; // px
+  const swipeX = useSharedValue(0);
+  const pan = useMemo(() =>
+    Gesture.Pan()
+      .onUpdate((e) => {
+        swipeX.value = e.translationX;
+      })
+      .onEnd(() => {
+        const dx = swipeX.value;
+        if (Math.abs(dx) > SWIPE_THRESHOLD) {
+          // left swipe => next week, right swipe => prev week
+          runOnJS(handleWeekChange)(dx < 0 ? 'next' : 'prev');
+        }
+        swipeX.value = withTiming(0, { duration: 200 });
+      })
+  , [handleWeekChange]);
+
+  const swipeStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: swipeX.value * 0.5 }], // subtle follow effect
+  }));
+
+
   return monthRecordCount > 6 ? (
     <ScrollView style={styles.container}>
       {/* 월 단위 이동 컴포넌트 */}
@@ -429,8 +453,8 @@ const RecordReportTab = ({
           <View style={[styles.emotionReportTitleAndInfoContainer, {gap: 4}]}>
             <Text style={styles.emotionReportTitle}>감정분포</Text>
             <View style={{flexDirection: 'row', alignItems: 'center', gap: 4}}>
-              <InfoIcon width={24} height={24} color={colors.grayScale800} />
-              <Text style={styles.emotionReportInfoText}>차트 클릭 시 자세히 확인할 수 있어요!(미구현)</Text>
+              <InfoIcon width={24} height={24} color={colors.grayScale400} />
+              <Text style={styles.emotionReportInfoText}>차트 클릭 시 자세히 확인할 수 있어요!</Text>
             </View>
           </View>
           <View style={styles.emotionDistributionContentContainer}>
@@ -480,7 +504,7 @@ const RecordReportTab = ({
                              <IconStroke width={40} height={40}/>
                           </View>
                           <View style={styles.ratioEmotionBlockTextContainer}>
-                            <Text style={styles.ratioEmotionBlockText}>{item.percentage}%</Text>
+                            <Text style={styles.ratioEmotionBlockText}>{Math.floor(item.percentage)}%</Text>
                           </View>
                         </View>
                       );
@@ -509,7 +533,8 @@ const RecordReportTab = ({
         <Surface height={1} style={{marginHorizontal: 20}}/>
 
         {/* 요일별 감정 기록 컴포넌트 */}
-        <View style={styles.emotionRecordContainer}>
+        <GestureDetector gesture={pan}>
+          <Animated.View style={[styles.emotionRecordContainer, swipeStyle]}>
           <View style={styles.emotionRecordHeaderContainer}>
             <View style={styles.emotionRecordHeaderTitleContainer}>
               <Text style={styles.emotionRecordTitle}>요일별 감정기록</Text>
@@ -545,7 +570,8 @@ const RecordReportTab = ({
               emotionReportData={convertDailyDataToBarChartFormat(getCurrentWeekData())} 
             />
           </View>
-        </View>
+          </Animated.View>
+        </GestureDetector>
       </View>
     </ScrollView>
   ) : (

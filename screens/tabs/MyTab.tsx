@@ -28,11 +28,11 @@ import { useOwnedItems } from '../../hooks/useOwnedItems';
 import { objectPosition } from '../../constants/roomLayout';
 import { useRoomStore } from '../../stores/roomStore';
 import CustomAlert from '../../components/common/alert/CustomAlert';
+import { getCachedInstallUuid } from '../../utils/deviceId';
 import { usePurchase } from '../../hooks/usePurchase';
 import { PurchasedItem } from '../../services/purchaseService';
 import { bindAchievementNavigationHandler, useAchievementStore } from '../../stores/achievementStore';
 import { useAppConfigStore } from '../../stores/appConfigStore';
-import { getCachedInstallUuid } from '../../utils/deviceId';
 import { getUserActivitySummary, UserActivitySummaryResponse } from '../../services/activityLogService';
 import { useAuthStore } from '../../stores/authStore';
 import { useAuth } from '../../hooks/useAuth';
@@ -107,6 +107,20 @@ const MyTab = () => {
   useEffect(() => {
     loadOwnedItems();
   }, [loadOwnedItems]);
+
+  // 디바이스 ID 로드
+  useEffect(() => {
+    const loadDeviceId = async () => {
+      try {
+        const id = await getCachedInstallUuid();
+        setDeviceId(id);
+      } catch (error) {
+        console.error('디바이스 ID 로드 실패:', error);
+        setDeviceId('로드 실패');
+      }
+    };
+    loadDeviceId();
+  }, []);
 
   // 사용자 요약 데이터 로드 (/users/me/summary)
   useEffect(() => {
@@ -464,6 +478,7 @@ const MyTab = () => {
   }, [role]);
 
   const [roomBgUri, setRoomBgUri] = useState<string | null>(null);
+  const [deviceId, setDeviceId] = useState<string>('');
   const dynamicBgColor = useBackgroundColor(roomBgUri);
 
   const isBGColorDark = useBgTopColor(roomBgUri);
@@ -522,7 +537,7 @@ const MyTab = () => {
                         <View style={styles.statusCardHeader}>
                             <View style={styles.statusCardHeaderLeft}>
                               <Text style={styles.cardHeaderNameText}>야옹이님</Text>
-                              <Text style={styles.cardHeaderIdText}>ID : {getCachedInstallUuid() || '로드 중...'}</Text>
+                              <Text style={styles.cardHeaderIdText}>ID : {deviceId || '로드 중...'}</Text>
                             </View>
                             {/* TODO: 연동 기능 추가 */}
                             <View style={styles.statusCardHeaderRight}>
@@ -539,7 +554,7 @@ const MyTab = () => {
                             {statusData.map((item, index) => (
                             <View style={styles.statusCardContentItem} key={index}>
                                 <Text style={styles.statusCardContentItemTitle}>{item.title}</Text>
-                                <Text style={styles.statusCardContentItemValue}>{item.valueType === 'mm:ss' ? item.value : `${item.value}${item.valueType}`}</Text>
+                                <Text style={styles.statusCardContentItemValue}>{item.valueType === 'mm:ss' ? (item.value === '00:00' ? '-' : item.value) : (item.value === 0 ? '-' : `${item.value}${item.valueType}`)}</Text>
                             </View>
                             ))}
                         </View>

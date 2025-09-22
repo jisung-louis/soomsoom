@@ -139,27 +139,37 @@ const PlayBar = ({
     }
   }, [initialPosition]);
 
-  // duration이 로드되면 저장된 이어듣기 위치 적용
+  // duration이 로드되면 저장된 이어듣기 위치 적용 및 자동 재생
   React.useEffect(() => {
-    if (pendingInitialPosition.current && duration > 0) {
-      const position = pendingInitialPosition.current;
-      if (position < duration / 1000) {
-        console.log(`🎯 이어듣기 위치 설정: ${position}초 (전체: ${duration / 1000}초)`);
-        // 약간의 지연을 두고 seekTo 호출 (오디오가 완전히 로드된 후)
-        const timer = setTimeout(() => {
-          seekTo(position * 1000); // 초를 밀리초로 변환
-          pendingInitialPosition.current = null; // 적용 완료 후 초기화
-        }, 500);
-        
-        return () => clearTimeout(timer);
+    if (duration > 0) {
+      if (pendingInitialPosition.current) {
+        const position = pendingInitialPosition.current;
+        if (position < duration / 1000) {
+          console.log(`🎯 이어듣기 위치 설정: ${position}초 (전체: ${duration / 1000}초)`);
+          // 약간의 지연을 두고 seekTo 호출 (오디오가 완전히 로드된 후)
+          const timer = setTimeout(() => {
+            seekTo(position * 1000); // 초를 밀리초로 변환
+            pendingInitialPosition.current = null; // 적용 완료 후 초기화
+            // 이어듣기 위치 설정 후 자동 재생
+            play();
+            console.log(`▶️ 이어듣기 자동 재생 시작`);
+          }, 500);
+          
+          return () => clearTimeout(timer);
+        } else {
+          console.log(`🎯 이어듣기 위치가 전체 길이보다 큼: ${position}초 (전체: ${duration / 1000}초) - 처음부터 재생`);
+          pendingInitialPosition.current = null; // 무효한 위치이므로 초기화
+          // 처음부터 자동 재생
+          play();
+          console.log(`▶️ 처음부터 자동 재생 시작`);
+        }
       } else {
-        console.log(`🎯 이어듣기 위치가 전체 길이보다 큼: ${position}초 (전체: ${duration / 1000}초) - 처음부터 재생`);
-        pendingInitialPosition.current = null; // 무효한 위치이므로 초기화
+        // 이어듣기 위치가 없으면 처음부터 자동 재생
+        play();
+        console.log(`▶️ 처음부터 자동 재생 시작`);
       }
-    } else if (initialPosition === 0) {
-      console.log(`🎯 처음부터 재생 시작`);
     }
-  }, [duration, seekTo]);
+  }, [duration, seekTo, play]);
 
   const [barWidth, setBarWidth] = React.useState(0);
   

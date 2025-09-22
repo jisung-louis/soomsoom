@@ -46,6 +46,7 @@ const AlarmAddScreen = () => {
   
   // 기존 알람 데이터 로드 (수정 모드일 때)
   const existingAlarm = alarmId ? getAlarmById(alarmId) : null;
+  console.log('기존 알람 데이터:', existingAlarm);
   
   // 24시간 형식을 12시간 형식으로 변환하는 함수
   const convertTo12HourFormat = (time24: string) => {
@@ -67,7 +68,22 @@ const AlarmAddScreen = () => {
         hour: String(now.getHours() > 12 ? now.getHours() - 12 : now.getHours() === 0 ? 12 : now.getHours()),
         minute: String(now.getMinutes()).padStart(2, '0'),
       };
-  
+
+  const soundFileNameToText = (soundName: string) => {
+    switch (soundName) {
+      case 'exciting.caf':
+      default:
+        return '신나는 소리';
+      case 'morning_rise.caf':
+        return '아침 기상 소리';
+      case 'hawaii.caf':
+        return '하와이풍 소리';
+      case 'cat.caf':
+        return '고양이 소리';
+      case 'dog.caf':
+        return '강아지 소리';
+  };
+}
   const [selectedTime, setSelectedTime] = useState(initialTime);
   
   // 알람 설정 데이터 상태 - 기존 알람이 있으면 그 설정으로, 없으면 기본값으로 초기화
@@ -76,11 +92,11 @@ const AlarmAddScreen = () => {
     repeatType: existingAlarm?.repeatType || 'daily',
   });
   const [initialMissionData, setMissionData] = useState<MissionData>({
-    missionType: 'none',
-    missionCount: 0,
+    missionType: existingAlarm?.mission?.type || 'none',
+    missionCount: existingAlarm?.mission?.missions.length || 0,
   });
   const [initialSoundData, setSoundData] = useState({
-    soundName: existingAlarm?.soundName || '기본 벨소리',
+    soundName: soundFileNameToText(existingAlarm?.soundName || 'exciting.caf'),
   });
   const [isVibrationOn, setIsVibrationOn] = useState(existingAlarm?.isVibrationOn ?? true);
 
@@ -163,7 +179,7 @@ const AlarmAddScreen = () => {
     
     // 변경사항이 있는지 확인 (간단한 체크)
     const hasChanges = initialRepeatData.repeatDays.length > 0 || 
-                      initialSoundData.soundName !== '기본 벨소리' ||
+                      initialSoundData.soundName !== '신나는 소리' ||
                       !isVibrationOn;
     
     if (hasChanges) {
@@ -195,13 +211,30 @@ const AlarmAddScreen = () => {
           missionCount: initialMissionData.missionCount,
         });
       }
-      
+
+      // 알람음 파일명 변환
+      const soundStringToFileName = (soundName: string) => {
+        switch (soundName) {
+          case '신나는 소리':
+          default:
+            return 'exciting.caf';
+          case '아침 기상 소리':
+            return 'morning_rise.caf';
+          case '하와이풍 소리':
+            return 'hawaii.caf';
+          case '고양이 소리':
+            return 'cat.caf';
+          case '강아지 소리':
+            return 'dog.caf';
+      }}
+
+
       const alarmData = {
         time: timeString,
         repeatDays: initialRepeatData.repeatDays,
         repeatType: initialRepeatData.repeatType,
-        //soundName: initialSoundData.soundName,
-        soundName: 'default_alarm_audio.wav', // 벨소리 테스트
+        soundName: soundStringToFileName(initialSoundData.soundName),
+        // soundName: 'default_alarm_audio.wav', // 벨소리 테스트
         isVibrationOn: isVibrationOn,
         mission: mission,
       };
@@ -429,7 +462,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   bottomSheetContainer: {
-    padding: 20,
+    paddingHorizontal: 20,
     paddingBottom: 40,
   },
 });

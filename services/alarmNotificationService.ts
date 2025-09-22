@@ -8,8 +8,13 @@ const normalizeIosSoundName = (soundName: string): 'default' | string => {
   if (!soundName) return 'default';
   const raw = String(soundName).trim();
   if (raw === '기본' || raw.toLowerCase() === 'default') return 'default';
-  const base = raw.toLowerCase().replace(/\.(wav|mp3|caf)$/i, '');
-  return `${base}.wav`;
+
+  const m = raw.toLowerCase().match(/^(.*?)(\.(wav|mp3|caf))?$/i);
+  const base = m?.[1] ?? raw.toLowerCase();
+  const ext = (m?.[3] ?? '').toLowerCase();
+
+  if (ext === 'wav' || ext === 'mp3' || ext === 'caf') return `${base}.${ext}`;
+  return `${base}.wav`; // 확장자 없으면 기본 wav
 };
 
 // 알림 권한 요청
