@@ -2,6 +2,7 @@ import React from 'react';
 import * as Notifications from 'expo-notifications';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { scheduleDiaryNotification } from '../../utils/notificationUtils';
+import { toggleNotificationSetting, updateDiaryNotificationTime } from '../../services/notificationService';
 import { registerDevice } from '../../services/notificationService';
 import { getFcmTokenAsync } from '../../services/authService';
 import { Platform } from 'react-native';
@@ -82,15 +83,26 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, initial
           const newsNotification = await AsyncStorage.getItem('newsNotificationEnabled');
           let diaryNotificationTime = await AsyncStorage.getItem('diaryNotificationTime');
           
-          if (diaryNotification === null) await AsyncStorage.setItem('diaryNotificationEnabled', 'true');
-          if (greetingNotification === null) await AsyncStorage.setItem('greetingNotificationEnabled', 'true');
-          if (newsNotification === null) await AsyncStorage.setItem('newsNotificationEnabled', 'true');
+          // 서버에 초기 토글 상태 반영 (기본 on 가정). 성공 응답 기준으로 저장
+          try {
+            const toggles = await Promise.all([
+              toggleNotificationSetting('DIARY_REMINDER', true),
+              toggleNotificationSetting('RE_ENGAGEMENT', true),
+              toggleNotificationSetting('NEWS_UPDATE', true),
+              // 참고: ACHIEVEMENT_UNLOCKED, REWARD_ACQUIRED는 온보딩에서 건드리지 않습니다.
+            ]);
+            await AsyncStorage.setItem('diaryNotificationEnabled', 'true');
+            await AsyncStorage.setItem('greetingNotificationEnabled', 'true');
+            await AsyncStorage.setItem('newsNotificationEnabled', 'true');
+          } catch {}
           if (diaryNotificationTime === null) {
             await AsyncStorage.setItem('diaryNotificationTime', '오후 8:30');
             diaryNotificationTime = '오후 8:30';
+            // 서버 시간도 기본값으로 설정 (20:30:00)
+            try { await updateDiaryNotificationTime('20:30:00'); } catch {}
           }
           
-          const isEnabled = diaryNotification === 'true' || diaryNotification === null;
+          const isEnabled = true; // 서버 토글 기본 on으로 설정했으므로 true
           if (isEnabled) {
             const timeString = diaryNotificationTime || '오후 8:30';
             await scheduleDiaryNotification(timeString);

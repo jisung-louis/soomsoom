@@ -9,7 +9,7 @@ import { colors } from '../../../constants/colors';
 import { syongsyongTypography, typography } from '../../../constants/typography';
 import HeartPoint from '../../../components/common/heart-point/HeartPoint';
 import { TabMenu } from '../../../components/common/tabmenu/TabMenu';
-import { SceneMap, TabView } from 'react-native-tab-view';
+import { TabView } from 'react-native-tab-view';
 import { radius } from '../../../constants/radius';
 import { getItems, Item, ItemType } from '../../../services/itemService';
 import { getCollections, type CollectionSummary } from '../../../services/collectionService';
@@ -219,7 +219,7 @@ const ShopScreen = () => {
   
   // 아이템 카테고리 탭 메뉴
   const [selectedItemTab, setSelectedItemTab] = useState(0);
-  const itemTabMenu: TabMenuItem[] = [
+  const itemTabMenu: TabMenuItem[] = useMemo(() => ([
     { icon: EntireIcon, title: '전체' },
     { icon: CollectionIcon, title: '컬렉션' },
     { icon: AccessoryIcon, title: '악세사리' },
@@ -228,7 +228,7 @@ const ShopScreen = () => {
     { icon: RugIcon, title: '러그' },
     { icon: ShelfIcon, title: '선반' },
     { icon: OrnamentIcon, title: '장식품' },
-  ];
+  ]), []);
 
   const handleItemTabPress = (tabIndex: number) => {
     setSelectedItemTab(tabIndex);
@@ -613,10 +613,16 @@ const ShopScreen = () => {
     </View>
   );
 
-  const renderScene = SceneMap({
-    item: renderItemTab,
-    charge: renderChargeTab,
-  });
+  const renderScene = ({ route }: { route: { key: string } }) => {
+    switch (route.key) {
+      case 'item':
+        return renderItemTab();
+      case 'charge':
+        return renderChargeTab();
+      default:
+        return null;
+    }
+  };
 
 
 

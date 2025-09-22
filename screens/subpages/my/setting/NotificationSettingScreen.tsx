@@ -13,6 +13,7 @@ import NotificationTimePicker from '../../../../components/tabs/my/setting/Notif
 import { Button } from '../../../../components/common/buttons/Button';
 import { cancelAlarmNotifications, requestNotificationPermissions } from '../../../../services/alarmNotificationService';
 import { scheduleDiaryNotification } from '../../../../utils/notificationUtils';
+import { toggleNotificationSetting, updateDiaryNotificationTime } from '../../../../services/notificationService';
 import { parseNotificationTime } from '../../../../utils/timeUtils';
 import { useToast } from '../../../../hooks/useToast';
 import { useAppConfigStore } from '../../../../stores/appConfigStore';
@@ -141,6 +142,8 @@ const NotificationSettingScreen = () => {
     const handleDiaryNotificationToggle = async (value: boolean) => {
         try {
             setIsDiaryNotificationEnabled(value);
+            // 서버 반영 우선
+            await toggleNotificationSetting('DIARY_REMINDER', value);
             await AsyncStorage.setItem('diaryNotificationEnabled', value.toString());
             
             if (value) {
@@ -188,17 +191,10 @@ const NotificationSettingScreen = () => {
     const handleGreetingNotificationToggle = async (value: boolean) => {
         try {
             setIsGreetingNotificationEnabled(value);
+            // 서버 반영 우선 (재참여/리인게이지먼트 알림)
+            await toggleNotificationSetting('RE_ENGAGEMENT', value);
             await AsyncStorage.setItem('greetingNotificationEnabled', value.toString());
-            
-            if (value) {
-                console.log('숨숨 인사 알림 활성화');
-                // TODO: 백엔드 API 호출 (docs/TODO.md 참조)
-                // await updateNotificationSettings({ greeting: true });
-            } else {
-                console.log('숨숨 인사 알림 비활성화');
-                // TODO: 백엔드 API 호출 (docs/TODO.md 참조)
-                // await updateNotificationSettings({ greeting: false });
-            }
+            console.log(`숨숨 인사 알림 ${value ? '활성화' : '비활성화'}`);
         } catch (error) {
             console.error('알림 설정 저장 실패:', error);
             setIsGreetingNotificationEnabled(!value);
@@ -208,17 +204,10 @@ const NotificationSettingScreen = () => {
     const handleNewsNotificationToggle = async (value: boolean) => {
         try {
             setIsNewsNotificationEnabled(value);
+            // 서버 반영 우선 (뉴스/공지 알림)
+            await toggleNotificationSetting('NEWS_UPDATE', value);
             await AsyncStorage.setItem('newsNotificationEnabled', value.toString());
-            
-            if (value) {
-                console.log('숨숨 소식 알림 활성화');
-                // TODO: 백엔드 API 호출 (docs/TODO.md 참조)
-                // await updateNotificationSettings({ news: true });
-            } else {
-                console.log('숨숨 소식 알림 비활성화');
-                // TODO: 백엔드 API 호출 (docs/TODO.md 참조)
-                // await updateNotificationSettings({ news: false });
-            }
+            console.log(`숨숨 소식 알림 ${value ? '활성화' : '비활성화'}`);
         } catch (error) {
             console.error('알림 설정 저장 실패:', error);
             setIsNewsNotificationEnabled(!value);
@@ -240,6 +229,10 @@ const NotificationSettingScreen = () => {
             
             // AsyncStorage에 시간 저장
             const timeString = `${time.period} ${time.hour}:${time.minute.padStart(2, '0')}`;
+            // 서버는 24시간 HH:mm:ss 형식
+            const hh = time.period === '오후' ? ((Number(time.hour) % 12) + 12) : (Number(time.hour) % 12);
+            const serverTime = `${String(hh).padStart(2,'0')}:${time.minute.padStart(2,'0')}:00`;
+            await updateDiaryNotificationTime(serverTime);
             await AsyncStorage.setItem('diaryNotificationTime', timeString);
             
             console.log('마음일기 알림 시간 저장:', timeString);

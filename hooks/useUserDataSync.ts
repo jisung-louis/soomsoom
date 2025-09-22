@@ -9,6 +9,10 @@ import { getFollowedInstructors } from '../services/instructorService';
 import { getUserActivitySummary } from '../services/activityLogService';
 import { useTodayMissionStore } from '../stores/todayMissionStore';
 import { useMailboxStore } from '../stores/mailboxStore';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getNotificationSettings } from '../services/notificationService';
+import { scheduleDiaryNotification, clearAllNotifications } from '../utils/notificationUtils';
+import * as Notifications from 'expo-notifications';
 
 /**
  * 사용자 데이터 동기화 함수
@@ -36,7 +40,8 @@ export const syncAllUserData = async () => {
       activitySummaryResponse,
       achievementsResponse,
       todayMissionResponse,
-      mailboxResponse
+      mailboxResponse,
+      notificationSettingsResponse
     ] = await Promise.allSettled([
       getUserPoints(), // 하트포인트 동기화
       getOwnedItems({ page: 1, size: 1000 }),
@@ -47,18 +52,19 @@ export const syncAllUserData = async () => {
       loadUserAchievements(), // 업적 데이터 병렬 처리
       refreshTodayMission(),  // 오늘 미션 상태 병렬 처리
       loadUnreadCount(), // 안 읽은 메일 개수 동기화
+      getNotificationSettings(), // 내 알림 설정 동기화
     ]);
 
     // 각 결과 처리
     if (pointsResponse.status === 'fulfilled') {
       setHeartPoints(pointsResponse.value.points);
-      console.log('✅✔✅ 하트포인트 동기화 완료:', pointsResponse.value.points);
+      console.log('✅✔✅ 하트포인트 동기화 완료:', pointsResponse.value.points, '♥️');
     }
 
     if (ownedItemsResponse.status === 'fulfilled') {
       const itemIds = ownedItemsResponse.value.content.map(item => item.id);
       setOwnedItems(itemIds);
-      console.log('✅✔✅ 소유 아이템 동기화 완료:', itemIds.length, '♥️');
+      console.log('✅✔✅ 소유 아이템 동기화 완료:', itemIds.length);
     }
 
     if (equippedItemsResponse.status === 'fulfilled') {
@@ -107,6 +113,35 @@ export const syncAllUserData = async () => {
       console.log('✅✔✅ 안 읽은 메일 개수 동기화 완료');
     } else if (mailboxResponse.status === 'rejected') {
       console.warn('⚠️ 안 읽은 메일 개수 동기화 실패:', mailboxResponse.reason);
+    }
+
+    // 알림 설정 반영
+    if (notificationSettingsResponse.status === 'fulfilled') {
+      const s = notificationSettingsResponse.value;
+      await AsyncStorage.setItem('diaryNotificationEnabled', String(!!s.diaryNotificationEnabled));
+      await AsyncStorage.setItem('greetingNotificationEnabled', String(!!s.reEngagementNotificationEnabled));
+      await AsyncStorage.setItem('newsNotificationEnabled', String(!!s.soomsoomNewsNotificationEnabled));
+      // 서버 시간이 존재하면 스케줄 반영
+      if (s.diaryNotificationEnabled && s.diaryNotificationTime) {
+        // 서버 시간(HH:mm:ss) → 표시 문자열(오전/오후 h:mm)
+        const [HH, mm] = s.diaryNotificationTime.split(':');
+        const hourNum = Number(HH);
+        const period = hourNum >= 12 ? '오후' : '오전';
+        const hour12 = hourNum % 12 === 0 ? 12 : hourNum % 12;
+        const display = `${period} ${hour12}:${mm}`;
+        await AsyncStorage.setItem('diaryNotificationTime', display);
+        // 앱 부팅 시에는 권한이 이미 허용된 경우에만 스케줄링 (권한 요청 금지)
+        try {
+          const { status } = await Notifications.getPermissionsAsync();
+          if (status === 'granted') {
+            await scheduleDiaryNotification(display);
+          } else {
+            console.log('🔕 알림 권한 비허용 상태 - 부팅 동기화에서는 스케줄링 생략');
+          }
+        } catch (permError) {
+          console.warn('알림 권한 확인 실패(무시):', permError);
+        }
+      }
     }
 
     console.log('🎉✔🎉 사용자 데이터 전체 동기화 완료!');

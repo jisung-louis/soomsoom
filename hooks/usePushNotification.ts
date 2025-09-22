@@ -66,15 +66,15 @@ export const usePushNotification = () => {
       const popup = createItemRewardPopup(itemName);
       showUniversalPopup(popup);
     }
-    // 기타 푸시 처리
-    else {
-      console.log('📱 기타 푸시 처리:', data);
-      const title = String(data?.title || '알림');
-      const message = String(data?.message || notification.request.content.body || '새로운 알림이 있어요!');
-      console.log('📱 제목:', title, '메시지:', message);
-      const popup = createGenericPopup(title, message);
-      showUniversalPopup(popup);
-    }
+    // // 기타 푸시 처리
+    // else {
+    //   console.log('📱 기타 푸시 처리:', data);
+    //   const title = String(data?.title || '알림');
+    //   const message = String(data?.message || notification.request.content.body || '새로운 알림이 있어요!');
+    //   console.log('📱 제목:', title, '메시지:', message);
+    //   const popup = createGenericPopup(title, message);
+    //   showUniversalPopup(popup);
+    // }
   };
 
   /**

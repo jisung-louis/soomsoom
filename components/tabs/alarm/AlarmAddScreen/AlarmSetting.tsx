@@ -68,7 +68,7 @@ const AlarmSetting = ({ onRepeatPress, onMissionPress, onSoundPress, onVibration
             </View>
         </TouchableOpacity>
         <View style={styles.itemSeparator}/>
-        <View style={styles.settingItemContainer}>
+        {/* <View style={styles.settingItemContainer}>
             <Text style={styles.title}>진동</Text>
             <Switch
                 value={isVibrationOn}
@@ -80,7 +80,7 @@ const AlarmSetting = ({ onRepeatPress, onMissionPress, onSoundPress, onVibration
                     transform: [{ scaleX: 0.9 }, { scaleY: 0.9 }],
                 }}
             />
-        </View>
+        </View> */}
     </View>
   );
 };

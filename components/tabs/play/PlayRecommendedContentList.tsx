@@ -40,7 +40,19 @@ const PlayRecommendedContentList = ({ onRecommendedPress, recommendedActivityDat
         renderItem={({ item }) => (
           <TouchableOpacity onPress={() => {navigation.navigate('PlayDetailScreen', { activityId: item.id, content: item as Activity })}}>
             <View style={styles.card}>
-              <Image source={{ uri: item.thumbnailImageUrl || require('../../../assets/images/play/playFavoriteScreen/default_image_1.png')}} style={styles.image} />
+              <Image
+                source={(() => {
+                  const src: any = (item as any).thumbnailImageUrl;
+                  if (typeof src === 'string' && src.length > 0) {
+                    return { uri: src };
+                  }
+                  if (typeof src === 'number') {
+                    return src; // require(...) 결과 (number)
+                  }
+                  return require('../../../assets/images/play/playFavoriteScreen/default_image_1.png');
+                })()}
+                style={styles.image}
+              />
               <View style={styles.cardContentContainer}>
                 <View style={styles.cardContent}>
                   <View style={styles.textHeader}>

@@ -65,12 +65,11 @@ export default function UniversalPopup() {
         buttons: [
           {
             text: '닫기',
-            onPress: () => close(),
+            onPress: () => {},
           },
           {
             text: '업적 확인하기',
             onPress: () => {
-              close();
               navigateToAchievements();
             },
           }
@@ -103,12 +102,14 @@ export default function UniversalPopup() {
       image={data.image}
       message={data.message}
       subMessage={data.subMessage}
-      buttons={data.buttons || [
-        {
-          text: '닫기',
-          onPress: close,
+      buttons={(data.buttons || [
+        { text: '닫기', onPress: () => {} }
+      ]).map((btn) => ({
+        ...btn,
+        onPress: () => {
+          try { btn.onPress && btn.onPress(); } finally { close(); }
         }
-      ]}
+      }))}
       onClose={close}
     />
   );
@@ -197,11 +198,6 @@ export function createGenericPopup(title: string, message: string, subMessage?: 
     title,
     message,
     subMessage,
-    buttons: [
-      {
-        text: '확인',
-        onPress: () => close(),
-      }
-    ],
+    // 버튼을 지정하지 않으면 기본 닫기 버튼이 자동 주입됨
   };
 }

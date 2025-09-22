@@ -95,7 +95,8 @@ const CustomBottomSheet: React.FC<CustomBottomSheetProps> = ({
         handleComponent={renderHandle}
         {...props}
       >
-        <BottomSheetView style={{ flex: 1, zIndex: 10000 }}>
+        {/* NOTE: dynamic sizing 모드에서는 flex:1을 제거해야 콘텐츠 높이로 시트가 계산됩니다. */}
+        <BottomSheetView style={enableDynamicSizing ? { zIndex: 10000 } : { flex: 1, zIndex: 10000 }}>
           {hasXButton && (
             <TouchableOpacity style={styles.closeButton} onPress={() => bottomSheetModalRef.current?.close()}>
               <CloseIcon width={24} height={24} />

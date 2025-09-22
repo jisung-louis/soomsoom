@@ -33,8 +33,7 @@ const IconTabMenu: React.FC<IconTabMenuProps> = ({
       contentContainerStyle={[styles.tabMenuContentContainer, contentContainerStyle]}
       renderItem={({ item, index }) => (
         <TouchableOpacity 
-          style={styles.tabMenu} 
-          key={index} 
+          style={styles.tabMenu}
           onPress={() => onTabPress(index)}
         >
           <item.icon 
@@ -47,7 +46,7 @@ const IconTabMenu: React.FC<IconTabMenuProps> = ({
           </Text>
         </TouchableOpacity>
       )}
-      keyExtractor={(item, index) => `tab-${index}`}
+      keyExtractor={(item) => `tab-${item.title}`}
     />
   );
 };
@@ -80,4 +79,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default IconTabMenu;
+export default React.memo(IconTabMenu);

@@ -353,7 +353,7 @@ const RecordReportTab = ({
               <Text style={styles.emotionReportTitle}>감정 순위에요!</Text>
             </View>
             <View style={{flexDirection: 'row', alignItems: 'center', gap: 4}}>
-              <InfoIcon width={24} height={24} color={colors.grayScale800} />
+              <InfoIcon width={24} height={24} color={colors.grayScale400} />
               <Text style={styles.emotionReportInfoText}>기록한 감정이 많은 순으로 보여줘요!</Text>
             </View>
           </View>

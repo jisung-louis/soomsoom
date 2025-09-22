@@ -134,7 +134,7 @@ const DonutChart: React.FC<DonutChartProps> = ({
         <LottieView
           source={require('../../../assets/animations/icon-motion/hand_touch.json')}
           autoPlay
-          loop
+          loop={false}
           style={styles.focusAnimation}
         />
       )}
