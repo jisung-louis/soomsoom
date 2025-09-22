@@ -25,6 +25,7 @@ interface AlarmDismissScreenProps {
       missionType?: string;
       missionData?: any;
       missionPack?: MultiStepMission;
+      soundName?: string;
     };
   };
 }
@@ -34,7 +35,7 @@ type AlarmDismissScreenNavigationProp = StackNavigationProp<AlarmStackParamList,
 export default function AlarmDismissScreen({ route }: AlarmDismissScreenProps) {
   const navigation = useNavigation<AlarmDismissScreenNavigationProp>();
   const { dismissAlarm } = useAlarmStore();
-  const { alarmId, missionType, missionData, missionPack } = route.params;
+  const { alarmId, missionType, missionData, missionPack, soundName } = route.params;
 
   // 랜덤 배경 이미지 선택
   const backgroundImages = [
@@ -91,11 +92,11 @@ export default function AlarmDismissScreen({ route }: AlarmDismissScreenProps) {
 
       const startAt = new Date(Date.now() + 5 * 60 * 1000); // 5분 후
       const baseContent: Notifications.NotificationContentInput = {
-        title: '숨숨 알람',
-        body: missionType ? '미션을 완료해 알람을 해제하세요.' : '알람 시간입니다.',
+        title: '기상 리마인더',
+        body: '이제 진짜 일어날 시간이에요!!',
         data: { alarmId, missionType, missionData, missionPack },
         ...(missionType ? { categoryIdentifier: 'MISSION_ALARM' } : {}),
-        sound: 'default',
+        sound: soundName ? soundName : 'default',
       };
 
       // REPEAT_WINDOW_MINUTES 동안 1분 간격으로 벌크 예약

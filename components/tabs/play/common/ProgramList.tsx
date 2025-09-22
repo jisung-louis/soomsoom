@@ -71,6 +71,7 @@ const styles = StyleSheet.create({
     width: 130,
     height: 130,
     borderRadius: radius.r8,
+    backgroundColor: colors.grayScale100,
   },
   cardContent: {
     flex: 1,

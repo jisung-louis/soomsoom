@@ -25,10 +25,21 @@ import {
 import { useToast } from "../../../contexts/ToastContext";
 import { useAppConfigStore } from "../../../stores/appConfigStore";
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
+import { useAudioPlayer } from "../../../hooks/useAudioPlayer";
 
 const PlayBreathContentScreen = ({route}: {route: RouteProp<PlayStackParamList, 'PlayBreathContentScreen'>}) => {
     const {content} = route.params;
-    const [isPlaying, setIsPlaying] = useState(true);
+    const hasAudio = !!content.audioUrl;
+    const audioSource = React.useMemo(() => {
+        if (!content.audioUrl) return undefined;
+        // require(...) 결과(숫자)면 그대로 전달, 문자열 URL이면 { uri }로 래핑
+        return typeof content.audioUrl === 'string' ? { uri: content.audioUrl } : content.audioUrl;
+    }, [content.audioUrl]);
+    const { isLoading: audioLoading, play: playAudio, pause: pauseAudio } = useAudioPlayer({
+        source: audioSource as any,
+        autoPlay: false,
+    });
+    const [isPlaying, setIsPlaying] = useState(false);
     const navigation = useNavigation<StackNavigationProp<PlayStackParamList>>();       
     const insets = useSafeAreaInsets();
     const { showToast } = useToast();
@@ -50,6 +61,9 @@ const PlayBreathContentScreen = ({route}: {route: RouteProp<PlayStackParamList, 
             const actualPlayTime = getActualPlayTime();
             await saveProgress(lastPosition, actualPlayTime);
             
+            // 오디오 정지 (타임라인과 분리, 재생 중이었다면 일시정지)
+            try { if (hasAudio) pauseAudio(); } catch {}
+
             // 3. 두 스택 뒤(PlayDetailScreen)로 이동
             navigation.pop(2);
         } catch (error) {
@@ -67,6 +81,9 @@ const PlayBreathContentScreen = ({route}: {route: RouteProp<PlayStackParamList, 
             await completeActivity(content.id);
             setIsCompleted(true);
             
+            // 오디오 정지 (타임라인과 분리, 재생 중이었다면 일시정지)
+            try { if (hasAudio) pauseAudio(); } catch {}
+
             console.log(`🎉 호흡 액티비티 완료 처리: ${content.id}`);
             navigation.navigate('PlayResultScreen');
         } catch (error) {
@@ -185,6 +202,22 @@ const PlayBreathContentScreen = ({route}: {route: RouteProp<PlayStackParamList, 
         loadPreviousProgress();
     }, [content.id]);
 
+    // 오디오 준비 완료 시 자동 재생 및 타임라인 시작 (오디오 없으면 즉시 시작)
+    const autoStartedRef = useRef(false);
+    useEffect(() => {
+        if (autoStartedRef.current) return; // 자동 시작은 1회만
+        if (!hasAudio) {
+            autoStartedRef.current = true;
+            setIsPlaying(true);
+            return;
+        }
+        if (!audioLoading) {
+            autoStartedRef.current = true;
+            try { playAudio(); } catch {}
+            setIsPlaying(true);
+        }
+    }, [hasAudio, audioLoading, playAudio]);
+
     // 재생 상태에 따른 진행상황 추적 시작/중지 및 화면 꺼짐 방지
     useEffect(() => {
         if (isPlaying) {
@@ -228,9 +261,10 @@ const PlayBreathContentScreen = ({route}: {route: RouteProp<PlayStackParamList, 
         };
     }, []);
 
-    // 1초 타이머 (isPlaying일 때만 동작, 0 이하로 내려가지 않음)
+    // 1초 타이머 (오디오가 준비되어 재생 중일 때만 동작, 0 이하로 내려가지 않음)
     useEffect(() => {
         if (!isPlaying) return;
+        if (hasAudio && audioLoading) return; // 오디오 로딩 중에는 타이머 정지
         if (remainingTime <= 0) return;
         const timer = setTimeout(() => {
             setRemainingTime((t) => Math.max(0, t - 1));
@@ -242,7 +276,7 @@ const PlayBreathContentScreen = ({route}: {route: RouteProp<PlayStackParamList, 
             console.log('elapsed', elapsed);
         }, 1000);
         return () => clearTimeout(timer);
-    }, [isPlaying, remainingTime]);
+    }, [isPlaying, hasAudio, audioLoading, remainingTime]);
 
     // 남은 시간이 0이 되면 종료 처리
     useEffect(() => {
@@ -325,6 +359,7 @@ const PlayBreathContentScreen = ({route}: {route: RouteProp<PlayStackParamList, 
                         <BubbleTalk text="호흡을 잠시 멈출까요?" trianglePosition="right"/>
                         <TouchableOpacity onPress={() => {
                             setIsPlaying(false);
+                            try { if (hasAudio) pauseAudio(); } catch {}
                         }}>
                             <View style={styles.pauseButton}>
                                 {(() => {
@@ -341,6 +376,7 @@ const PlayBreathContentScreen = ({route}: {route: RouteProp<PlayStackParamList, 
                         <BubbleTalk text="다시 시작할까요?" trianglePosition="right"/>
                         <TouchableOpacity onPress={() => {
                             setIsPlaying(true);
+                            try { if (hasAudio) playAudio(); } catch {}
                         }}>
                             <playIcons.circleed.play width={64} height={64} />
                         </TouchableOpacity>

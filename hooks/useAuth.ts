@@ -13,7 +13,7 @@ import {
   onFcmTokenRefresh
 } from '../services/authService';
 import { registerDevice, unregisterDevice } from '../services/notificationService';
-import { getCachedInstallUuid } from '../utils/deviceId';
+import { getCachedInstallUuid, rotateInstallUuid } from '../utils/deviceId';
 import { resetAppState } from '../utils/resetAppState';
 import { syncAllUserData } from '../hooks/useUserDataSync';
 
@@ -101,14 +101,31 @@ export const useAuth = () => {
         ? await loginWithGoogle() 
         : await loginWithApple();
 
-      // 2. 서버에서 토큰 교환
+      // 2. 서버에서 토큰 교환 (deviceId 미존재 404 시, 선(先) 디바이스 로그인 후 재시도)
       console.log('🔄 서버에서 토큰 교환 중...');
       const deviceId = await getCachedInstallUuid();
-      const tokens = await postSocialLogin({ 
-        provider, 
-        providerToken, 
-        deviceId 
-      });
+      let tokens;
+      try {
+        tokens = await postSocialLogin({ provider, providerToken, deviceId });
+      } catch (err: any) {
+        const msg = String(err?.message ?? '');
+        // 서버에서 "deviceId로 계정을 찾을 수 없습니다." 케이스 대응
+        if (msg.includes('deviceId') && msg.includes('찾을 수 없습니다')) {
+          console.warn('⚠️ deviceId 계정 미존재 → 디바이스 로그인 선행 후 소셜 재시도');
+          try {
+            const deviceTokens = await postDeviceLogin({ deviceId });
+            // 임시 세션 세팅(소셜 성공 후 곧 교체됨)
+            await setSession({ accessToken: deviceTokens.accessToken, refreshToken: deviceTokens.refreshToken });
+          } catch (seedErr) {
+            console.error('❌ 디바이스 로그인(시드) 실패:', seedErr);
+            throw err; // 원본 에러 전파
+          }
+          // 재시도
+          tokens = await postSocialLogin({ provider, providerToken, deviceId });
+        } else {
+          throw err;
+        }
+      }
       console.log('===============================================');
       console.log('|전달된 provider:', provider);
       console.log('|전달된 providerToken:', providerToken);
@@ -200,8 +217,8 @@ export const useAuth = () => {
       console.log('🔐 디바이스 로그인 시작...');
       
       const deviceId = 
-      //await getCachedInstallUuid();
-      'device-id-1234567890';
+      await getCachedInstallUuid();
+      //'device-id-1234567890';
       const tokens = await postDeviceLogin({ deviceId });
       
       // 세션 설정
@@ -247,6 +264,9 @@ export const useAuth = () => {
         console.warn('⚠️ FCM 토큰 해지 실패 (무시하고 계속):', fcmError);
       }
       
+      // 현재 소셜 로그인 여부 캡처 (회전 조건 판단용)
+      const wasSocial = useAuthStore.getState().role === 'ROLE_USER';
+
       const currentTokens = useAuthStore.getState().tokens;
       if (currentTokens?.refreshToken) {
         // 서버에서 토큰 무효화
@@ -258,6 +278,16 @@ export const useAuth = () => {
       
       // 앱 상태 초기화 (캐시, 스토어 등) - 인증은 이미 초기화됨
       await resetAppState(false);
+
+      // 소셜 로그아웃인 경우에만 deviceId 회전(새 UUID 발급)
+      if (wasSocial) {
+        try {
+          await rotateInstallUuid();
+          console.log('🔄 deviceId 회전 완료 (소셜 로그아웃)');
+        } catch (e) {
+          console.warn('⚠️ deviceId 회전 실패(무시):', e);
+        }
+      }
       
       console.log('✅ 로그아웃 완료');
       showToast({ message: '로그아웃되었어요.' });

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, TouchableWithoutFeedback} from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, Easing, runOnJS } from 'react-native-reanimated';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { colors } from '../../../constants/colors';
@@ -23,7 +23,7 @@ import { getRankColor } from '../../../utils/emotionColorUtils';
 import { characterIconMap } from '../../../utils/iconMap';
 import { getEmotionTitle, sortEmotionsByCountAndPriority } from '../../../utils/emotionConstants';
 import { Button } from '../../common/buttons/Button';
-import BubbleTalk from '../../common/bubbletalk/BubbleTalk';
+// BubbleTalk 제거: 내부 라벨 사용
 import BarChart from '../../common/charts/BarChart';
 import EmptyCatIcon from '../../../assets/icons/charactors/cat-variation/cat_write.svg';
 import EmptyMonthIcon from '../../../assets/icons/charactors/cat-variation/cat_quiet.svg';
@@ -79,12 +79,8 @@ const RecordReportTab = ({
 }: RecordReportTabProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [selectedSegment, setSelectedSegment] = useState<{
-    item: EmotionRankingData;
-    index: number;
-    position: { x: number; y: number };
-  } | null>(null);
-  const [scrollOffset, setScrollOffset] = useState(0);  // 스크롤 오프셋 추가
+  // 월별 첫 사용 힌트(도넛 세그먼트 터치 유도) 노출 여부
+  const [showDonutHint, setShowDonutHint] = useState(true);
   const [showParticle, setShowParticle] = useState(true);
   
   // 주차 관련 상태 (내부에서 관리)
@@ -122,8 +118,9 @@ const RecordReportTab = ({
         return;
       }
 
-      const startOfMonth = dayjs().year(reportCurrentYear).month(reportCurrentMonth - 1).startOf('month');
-      const endOfMonth = dayjs().year(reportCurrentYear).month(reportCurrentMonth - 1).endOf('month');
+      // 해당 월의 주차 경계까지 확장해서 로드 (월 초가 속한 주의 시작 ~ 월 말이 속한 주의 끝)
+      const startOfMonth = dayjs().year(reportCurrentYear).month(reportCurrentMonth - 1).startOf('month').startOf('week');
+      const endOfMonth = dayjs().year(reportCurrentYear).month(reportCurrentMonth - 1).endOf('month').endOf('week');
       const dailyData = await emotionStatsService.getDailyEmotionDiaries({
         from: startOfMonth.format('YYYY-MM-DD'),
         to: endOfMonth.format('YYYY-MM-DD'),
@@ -171,6 +168,8 @@ const RecordReportTab = ({
   useEffect(() => {
     resetWeekToFirstWeekOfMonth();
     loadMonthlyData();
+    // 월 변경 시 힌트 초기화
+    setShowDonutHint(true);
   }, [reportCurrentYear, reportCurrentMonth, resetWeekToFirstWeekOfMonth, loadMonthlyData]);
 
 
@@ -271,31 +270,7 @@ const RecordReportTab = ({
     return <ErrorMessage message={error} onRetry={() => {}} />;
   }
 
-  const handleSegmentPress = (item: EmotionRankingData, index: number, meta: { 
-    midAngle: number; 
-    svg: { x: number; y: number }; 
-    screen: { x: number; y: number };
-    centerSvg: { x: number; y: number };
-    centerScreen: { x: number; y: number };
-    touchPosition?: { x: number; y: number };
-  }) => {
-    console.log(item, index, meta);
-    
-    // 사용자가 터치한 정확한 위치에 BubbleTalk 표시
-    setSelectedSegment({
-      item,
-      index,
-      position: {
-        x: meta.touchPosition?.x || meta.centerScreen.x,  // 터치 좌표 우선, 없으면 중심 좌표
-        y: meta.touchPosition?.y || meta.centerScreen.y   // 터치 좌표 우선, 없으면 중심 좌표
-      }
-    });
-  };
-
-  // BubbleTalk 닫기
-  const closeBubbleTalk = () => {
-    setSelectedSegment(null);
-  };
+  // DonutChart에 내장 라벨 사용하므로 터치 핸들러/오버레이 불필요
 
 
   // --- Swipe gesture to change week (left/right) ---
@@ -461,29 +436,12 @@ const RecordReportTab = ({
             <View style={styles.donutChartWrapper}>
               {emotionRankingData.length > 0 ? (
                 <>
-                <DonutChart data={emotionRankingData} onSegmentPress={handleSegmentPress} />
-                
-                {/* 선택된 세그먼트에 BubbleTalk 표시 */}
-                {/* {selectedSegment && (
-                  <BubbleTalk
-                    text={`${selectedSegment.item.title}: ${selectedSegment.item.count}회 (${selectedSegment.item.percentage}%)`}
-                    trianglePosition="bottom"
-                    style={{
-                      position: 'absolute',
-                      // 스크롤 오프셋을 고려한 정확한 위치 계산
-                      top: selectedSegment.position.y - scrollOffset,  // 스크롤 오프셋 제거
-                      left: selectedSegment.position.x - 90, // 터치 위치 왼쪽으로 (BubbleTalk 너비의 절반)
-                      zIndex: 1000,
-                    }}
-                  />
-                )} */}
-                
-                {/* 터치 외부 클릭 감지를 위한 투명 오버레이 */}
-                {selectedSegment && (
-                  <TouchableWithoutFeedback onPress={closeBubbleTalk}>
-                    <View style={styles.overlay} />
-                  </TouchableWithoutFeedback>
-                )}
+                <DonutChart
+                  key={`${reportCurrentYear}-${reportCurrentMonth}`}
+                  data={emotionRankingData}
+                  showHint={showDonutHint}
+                  onSeenHint={() => setShowDonutHint(false)}
+                />
                 
                 <View style={styles.percentageContainer}>
                   <View style={styles.barPercentageContainer}>

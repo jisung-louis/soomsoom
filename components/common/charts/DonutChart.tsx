@@ -1,123 +1,143 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import Svg, { G, Circle, Path } from 'react-native-svg';
-import { colors } from '../../../constants/colors';
-import { typography, syongsyongTypography } from '../../../constants/typography';
+import React, { useMemo, useState } from 'react';
+import { View, StyleSheet, TouchableWithoutFeedback } from 'react-native';
+import { PieChart } from 'react-native-gifted-charts';
 import { EmotionRankingData } from '../../../types';
 import { getRankColor } from '../../../utils/emotionColorUtils';
+import BubbleTalk from '../bubbletalk/BubbleTalk';
+import { characterIconMap } from '../../../utils/iconMap';
+import { ss, sv, sy } from '../../../utils/scale';
+import { typography } from '../../../constants/typography';
+import { colors } from '../../../constants/colors';
+import LottieView from 'lottie-react-native';
 
 interface DonutChartProps {
   data: EmotionRankingData[];
   size?: number;
-  strokeWidth?: number;
-  onSegmentPress?: (item: EmotionRankingData, index: number, meta: { 
-    midAngle: number; 
-    svg: { x: number; y: number }; 
-    screen: { x: number; y: number };
-    centerSvg: { x: number; y: number };
-    centerScreen: { x: number; y: number };
-    touchPosition?: { x: number; y: number }; // 추가: 사용자 터치 좌표
-  }) => void;
-  hitSlopStrokeWidth?: number; // extra invisible stroke width for easier touch
+  strokeWidth?: number; // 굵기
+  onSegmentPress?: (item: EmotionRankingData, index: number) => void;
+  showHint?: boolean; // 월별 첫 사용 힌트 표시 여부
+  onSeenHint?: () => void; // 힌트 본 것으로 처리
 }
 
-// Convert polar coordinates to cartesian
-const polarToCartesian = (cx: number, cy: number, r: number, angleRad: number) => ({
-  x: cx + r * Math.cos(angleRad),
-  y: cy + r * Math.sin(angleRad),
-});
-
-// Describe an SVG arc path for a donut segment
-const describeArcPath = (cx: number, cy: number, r: number, startAngle: number, endAngle: number) => {
-  // Ensure positive sweep and handle full circle edge cases by clamping
-  const EPS = 1e-6;
-  const clampedEnd = Math.max(startAngle + EPS, endAngle);
-  const start = polarToCartesian(cx, cy, r, startAngle);
-  const end = polarToCartesian(cx, cy, r, clampedEnd);
-  const delta = clampedEnd - startAngle;
-  const largeArcFlag = delta % (Math.PI * 2) > Math.PI ? 1 : 0;
-  const sweepFlag = 1; // clockwise
-  return `M ${start.x} ${start.y} A ${r} ${r} 0 ${largeArcFlag} ${sweepFlag} ${end.x} ${end.y}`;
-};
-
-// 간단한 SVG 도넛 차트 (성능 우선, 비애니메이션)
 const DonutChart: React.FC<DonutChartProps> = ({
   data,
-  size = 272,
-  strokeWidth = 86,
+  size = ss(272),
+  strokeWidth = ss(86),
   onSegmentPress,
-  hitSlopStrokeWidth = 70,
+  showHint = false,
+  onSeenHint,
 }) => {
-  const center = size / 2;
-  const radius = center - strokeWidth / 2;
+  const pieData = useMemo(
+    () =>
+      data.map((d, idx) => ({
+        value: d.count,
+        color: getRankColor(idx),
+        text: `${Math.floor(d.percentage)}%`,
+        onPress: onSegmentPress ? () => onSegmentPress(d, idx) : undefined,
+      })),
+    [data, onSegmentPress]
+  );
 
-  const total = data.reduce((sum, d) => sum + d.count, 0);
-  if (!total) return null;
+  if (!data || data.length === 0) return null;
 
-  let accAngle = 0;
+  const radius = size / 2;
+  const innerRadius = Math.max(0, radius - strokeWidth);
+  const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
+  const [bubbleSize, setBubbleSize] = useState<{ width: number; height: number }>({ width: 120, height: 48 });
+  const SelectedIcon = useMemo(() => {
+    if (selectedIdx == null) return null;
+    const emotionKey = data[selectedIdx]?.emotion as keyof typeof characterIconMap.active;
+    const Comp = characterIconMap.active[emotionKey] || characterIconMap.active.happy;
+    return Comp;
+  }, [selectedIdx, data]);
+
+  // 누적합 기반 각도 계산 (시작 각도 -90도 가정 → 위쪽부터 시작)
+  const total = useMemo(() => data.reduce((s, d) => s + d.count, 0), [data]);
+  const cumulativeFractions = useMemo(() => {
+    let acc = 0;
+    return data.map((d) => {
+      const start = acc / (total || 1);
+      acc += d.count;
+      const end = acc / (total || 1);
+      return { start, end };
+    });
+  }, [data, total]);
+
+  const midPoint = useMemo(() => {
+    if (selectedIdx == null) return null;
+    const { start, end } = cumulativeFractions[selectedIdx];
+    const midFraction = (start + end) / 2; // 0..1
+    const angle = midFraction * Math.PI * 2 - Math.PI / 2; // -90deg offset
+    const midR = (innerRadius + radius) / 2;
+    const cx = radius;
+    const cy = radius;
+    const x = cx + midR * Math.cos(angle);
+    const y = cy + midR * Math.sin(angle);
+    return { x, y };
+  }, [selectedIdx, cumulativeFractions, innerRadius, radius]);
 
   return (
     <View style={styles.container}>
-      <Svg width={size} height={size}>
-        <G rotation={-90} originX={center} originY={center}>
-          {/* 배경 트랙 */}
-          <Circle
-            cx={center}
-            cy={center}
-            r={radius}
-            stroke={colors.grayScale100}
-            strokeWidth={strokeWidth}
-            fill="transparent"
-          />
-          {data.map((item, index) => {
-            if (item.count <= 0) return null;
-            const angle = (item.count / total) * Math.PI * 2;
-            const startAngle = accAngle;
-            const endAngle = accAngle + angle;
-            accAngle = endAngle;
-
-            const midAngle = (startAngle + endAngle) / 2;
-            const midSvg = polarToCartesian(center, center, radius, midAngle);
-            // Because the entire group is rotated -90deg, compute visual(screen) coords by rotating the point -90deg around center
-            const midScreen = polarToCartesian(center, center, radius, midAngle - Math.PI / 2);
-            
-            // 세그먼트 면적의 중심점 계산 (내부 반지름 사용)
-            const innerRadius = radius - strokeWidth / 2;  // 내부 반지름
-            const centerSvg = polarToCartesian(center, center, innerRadius, midAngle);
-            const centerScreen = polarToCartesian(center, center, innerRadius, midAngle - Math.PI / 2);
-
-            const visiblePath = describeArcPath(center, center, radius, startAngle, endAngle);
-            const handlePress = (event: any) => {
-              // 사용자가 터치한 정확한 좌표 추출
-              const touchX = event.nativeEvent.pageX;
-              const touchY = event.nativeEvent.pageY;
-              
-              onSegmentPress?.(item, index, { 
-                midAngle, 
-                svg: midSvg, 
-                screen: midScreen,
-                centerSvg,      // 세그먼트 내부 중심 (SVG 좌표)
-                centerScreen,   // 세그먼트 내부 중심 (화면 좌표)
-                touchPosition: { x: touchX, y: touchY }  // 사용자 터치 좌표
-              });
-            };
-            return (
-              <G key={item.emotion}>
-                <Path
-                  d={visiblePath}
-                  stroke={getRankColor(index)}
-                  strokeWidth={strokeWidth}
-                  strokeLinecap="butt"
-                  fill="transparent"
-                  onPress={handlePress}
-                  accessible
-                  accessibilityLabel={`${item.emotion} ${item.count}`}
-                />
-              </G>
-            );
-          })}
-        </G>
-      </Svg>
+      <PieChart
+        data={pieData}
+        donut
+        radius={radius}
+        innerRadius={innerRadius}
+        showText={false}
+        showValuesAsLabels={false}
+        //tiltAngle={0}
+        onPress={(_item: any, index: number) => {
+          if (showHint && onSeenHint) {
+            onSeenHint();
+          }
+          setSelectedIdx((prev) => (prev === index ? null : index));
+          // 사용자가 외부에서 필요 시 알림
+          if (onSegmentPress && index != null && data[index]) {
+            onSegmentPress(data[index], index);
+          }
+        }}
+      />
+      {selectedIdx != null && midPoint && (
+        <>
+          <TouchableWithoutFeedback onPress={() => setSelectedIdx(null)}>
+            <View style={styles.overlay} />
+          </TouchableWithoutFeedback>
+          <View
+            pointerEvents="box-none"
+            style={[
+              styles.bubbleContainer,
+              {
+                left: midPoint.x - bubbleSize.width / 2,
+                top: midPoint.y - (bubbleSize.height + 8),
+              },
+            ]}
+          >
+            <View
+              onLayout={(e) => {
+                const { width, height } = e.nativeEvent.layout;
+                if (width && height && (Math.abs(width - bubbleSize.width) > 1 || Math.abs(height - bubbleSize.height) > 1)) {
+                  setBubbleSize({ width, height });
+                }
+              }}
+            >
+              <BubbleTalk
+                icon={SelectedIcon ? <SelectedIcon width={32} height={32} /> : undefined}
+                text={`${Math.floor(data[selectedIdx].percentage)}%`}
+                textStyle={{...typography.body4}}
+                trianglePosition="bottom"
+              />
+            </View>
+          </View>
+        </>
+      )}
+      {showHint && (
+        <LottieView
+          source={require('../../../assets/animations/icon-motion/hand_touch.json')}
+          autoPlay
+          loop
+          style={styles.focusAnimation}
+        />
+      )}
     </View>
   );
 };
@@ -126,19 +146,25 @@ const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
     justifyContent: 'center',
+    position: 'relative',
   },
-  centerLabel: {
+  overlay: {
     position: 'absolute',
-    alignItems: 'center',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'transparent',
   },
-  centerTitle: {
-    ...syongsyongTypography.body1,
-    color: colors.grayScale900,
-    marginBottom: 4,
+  bubbleContainer: {
+    position: 'absolute',
   },
-  centerCount: {
-    ...syongsyongTypography.h2,
-    color: colors.grayScale900,
+  focusAnimation: {
+    position: 'absolute',
+    top: sy(20),
+    right: 0,
+    width: ss(120),
+    height: sv(120),
   },
 });
 

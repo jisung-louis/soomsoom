@@ -191,44 +191,6 @@ export function createItemRewardPopup(itemName: string): PopupData {
   };
 }
 
-export function createMailboxPopup(title: string, content: string): PopupData {
-  return {
-    type: 'mailbox',
-    title: '새로운 메일이 도착했어요!',
-    message: title,
-    subMessage: content,
-    // TODO: 메일 아이콘 애니메이션 추가
-    buttons: [
-      {
-        text: '확인',
-        onPress: () => {},
-      },
-      {
-        text: '우편함 가기',
-        onPress: () => {
-          // TODO: 우편함으로 네비게이션
-        },
-      }
-    ],
-  };
-}
-
-export function createAlarmPopup(title: string, message: string): PopupData {
-  return {
-    type: 'alarm',
-    title: '알림',
-    message: title,
-    subMessage: message,
-    // TODO: 알림 아이콘 애니메이션 추가
-    buttons: [
-      {
-        text: '확인',
-        onPress: () => {},
-      }
-    ],
-  };
-}
-
 export function createGenericPopup(title: string, message: string, subMessage?: string): PopupData {
   return {
     type: 'generic',
@@ -238,7 +200,7 @@ export function createGenericPopup(title: string, message: string, subMessage?: 
     buttons: [
       {
         text: '확인',
-        onPress: () => {},
+        onPress: () => close(),
       }
     ],
   };

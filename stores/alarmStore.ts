@@ -1,4 +1,6 @@
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { scheduleAlarm, cancelAlarmNotifications } from '../services/alarmNotificationService';
 import { sortDays } from '../utils/dayDisplayUtils';
 import { MathMission, MultiStepMission } from '../utils/mathMissionGenerator';
@@ -33,6 +35,7 @@ interface AlarmStore {
   deleteAlarm: (id: number) => Promise<void>;
   toggleAlarm: (id: number) => Promise<void>;
   updateAlarmList: (alarmList: AlarmItem[]) => void;
+  resetAllAlarms: () => Promise<void>;
 
   // 미션 관련 함수 (시도 횟수 제거로 현재는 진행도 업데이트 없음)
   updateMissionProgress: (alarmId: string, missionData: MathMission) => void;
@@ -46,7 +49,9 @@ export interface MissionData {
 
 const initialAlarmList: AlarmItem[] = []; // 빈 배열로 시작
 
-export const useAlarmStore = create<AlarmStore>((set, get) => ({
+export const useAlarmStore = create<AlarmStore>()(
+  persist(
+    (set, get) => ({
   alarmList: initialAlarmList,
   
   addAlarm: async (alarmData: AlarmData) => {
@@ -214,6 +219,17 @@ export const useAlarmStore = create<AlarmStore>((set, get) => ({
     set({ alarmList });
   },
 
+  // 영구 저장된 알람 데이터 + OS 예약 모두 제거
+  resetAllAlarms: async () => {
+    try {
+      const state = get();
+      for (const a of state.alarmList) {
+        await cancelAlarmNotifications(String(a.id));
+      }
+    } catch {}
+    set({ alarmList: [] });
+  },
+
   updateMissionProgress: (_alarmId: string, _missionData: MathMission) => {
     // 시도 횟수(tracking) 제거에 따라 현재는 상태 갱신하지 않음
   },
@@ -235,4 +251,11 @@ export const useAlarmStore = create<AlarmStore>((set, get) => ({
     
     console.log(`알람 ${alarmId} 미션 완료로 인해 해제됨`);
   },
-})); 
+    }),
+    {
+      name: 'alarm-storage',
+      storage: createJSONStorage(() => AsyncStorage),
+      partialize: (state) => ({ alarmList: state.alarmList }),
+    }
+  )
+);

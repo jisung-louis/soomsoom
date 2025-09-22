@@ -1,17 +1,17 @@
 import React from 'react';
-import { View, StyleSheet, Text, ScrollView } from 'react-native';
+import { View, StyleSheet, Text, ScrollView, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors } from '../../../constants/colors';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RecordStackParamList } from '../../../navigations/tabs/RecordStackNavigator';
 import SubpageHeader from '../../../components/common/top-navigation/SubpageHeader';
-import VisualImage from '../../../assets/images/record/EmotionRecordHelp/image.svg';
 import { syongsyongTypography, typography } from '../../../constants/typography';
 import { radius } from '../../../constants/radius';
 import EmotionHelpBox from '../../../components/tabs/record/EmotionRecordHelp/EmotionHelpBox';
 import {Button} from '../../../components/common/buttons/Button';
 import { LinearGradient } from 'expo-linear-gradient';
+import { sv } from '../../../utils/scale';
 
 type EmotionRecordHelpScreenNavigationProp = StackNavigationProp<RecordStackParamList, 'EmotionRecordHelpScreen'>;
 
@@ -37,7 +37,7 @@ const EmotionRecordHelpScreen = () => {
           </View>
           <View style={styles.visualContainer}>
             <View style={styles.visualImageWrapper}>
-              <VisualImage />
+              <Image source={require('../../../assets/images/record/EmotionRecordHelp/visual.png')} style={styles.visualImage} resizeMode='cover' />
             </View>
           </View>
         </View>
@@ -109,8 +109,14 @@ const styles = StyleSheet.create({
     borderRadius: radius.r12,
   },
   visualImageWrapper: {
+    width: '100%',
+    height: sv(280),
     borderRadius: 16,
     overflow: 'hidden',
+  },
+  visualImage: {
+    width: '100%',
+    height: '100%',
   },
   contentBox: {
     borderRadius: radius.r16,

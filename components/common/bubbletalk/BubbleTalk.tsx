@@ -48,7 +48,7 @@ const BubbleTalk = (props: BubbleTalkProps) => {
                 <View style={[styles.triangle, styles.triangletop]} pointerEvents="none" />
             )}
             <View style={[styles.bubble, { backgroundColor: bubbleColor, maxWidth }]}>
-                {icon && <View style={{width: 32, height: 32}}>{icon}</View>}
+                {icon && <View>{icon}</View>}
                 <Text style={[styles.bubbleText, textStyle]} numberOfLines={2} ellipsizeMode="tail">{text}</Text>
             </View>
             {trianglePosition === 'right' && (
@@ -74,6 +74,7 @@ const styles = StyleSheet.create({
         paddingVertical: 8,
         flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'center',
         gap: 4,
     },
     bubbleText: {

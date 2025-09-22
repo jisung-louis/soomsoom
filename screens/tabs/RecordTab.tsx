@@ -427,7 +427,7 @@ const styles = StyleSheet.create({
   activityInducingContainer: {
     paddingBottom: 50,
     paddingHorizontal: 20,
-    marginTop: -10
+    marginTop: -10,
   },
   activityInducingTitle: {
     ...syongsyongTypography.title4,

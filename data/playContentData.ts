@@ -84,7 +84,7 @@ export const mockContentData: Activity[] = [
       profileImageUrl: null,
     },
     durationInSeconds: 300, // 5분
-    audioUrl: null,
+    audioUrl: require('../assets/audios/test_audio.mp3'),
     timeline: [
       {
         id: 1,

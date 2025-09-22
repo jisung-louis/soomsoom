@@ -101,7 +101,7 @@ const scheduleBurstPerMinute = async (params: {
           title,
           body,
           sound: normalizeIosSoundName(soundName),
-          data: { alarmId, ...data },
+          data: { alarmId, soundName, ...data },
           ...(categoryIdentifier ? { categoryIdentifier } : {}),
         },
         trigger: {
@@ -279,7 +279,7 @@ const scheduleWeeklyRegularAlarm = async (alarmData: {
               title,
               body,
               sound: normalizeIosSoundName(alarmData.soundName),
-              data: { alarmId: alarmData.id, time: alarmData.time, day: day },
+              data: { alarmId: alarmData.id, time: alarmData.time, day: day, soundName: alarmData.soundName },
             },
             trigger: {
               type: Notifications.SchedulableTriggerInputTypes.WEEKLY,

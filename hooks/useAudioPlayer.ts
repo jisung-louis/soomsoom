@@ -43,8 +43,17 @@ export function useAudioPlayer({ source, autoPlay = false, onEnd, repeat = false
     loadAudio();
     return () => {
       isMounted.current = false;
-      playerRef.current?.remove();
-      playerRef.current = null;
+      try {
+        const ref = playerRef.current as any;
+        if (ref && typeof ref.remove === 'function') {
+          ref.remove();
+        }
+      } catch (e) {
+        // 네이티브 객체가 이미 해제된 경우 무시
+        console.warn('Audio player remove failed (ignored):', e);
+      } finally {
+        playerRef.current = null;
+      }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [source]);
@@ -56,16 +65,24 @@ export function useAudioPlayer({ source, autoPlay = false, onEnd, repeat = false
   const loadAudio = async () => {
     setIsLoading(true);
     try {
+      if (!source) {
+        // 소스가 없으면 플레이어 생성 생략
+        setPlayer(null);
+        return;
+      }
       const audioPlayer = createAudioPlayer(source, 500);
       playerRef.current = audioPlayer; // ref에 저장
       
       audioPlayer.addListener('playbackStatusUpdate', (status: any) => {
-        console.log('status', status);
         if (!isMounted.current) return;
         
         setIsPlaying(status.playing);
-        setDuration(status.duration * 1000); // ms
-        setPosition(status.currentTime * 1000); // ms
+        if (typeof status.duration === 'number') {
+          setDuration(status.duration * 1000); // ms
+        }
+        if (typeof status.currentTime === 'number') {
+          setPosition(status.currentTime * 1000); // ms
+        }
         
         if (status.didJustFinish) {
           console.log('didJustFinish');

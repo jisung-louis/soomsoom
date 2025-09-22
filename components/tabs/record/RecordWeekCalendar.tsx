@@ -110,10 +110,10 @@ const RecordWeekCalendar: React.FC<RecordWeekCalendarProps> = ({ date, recordedI
                   onPress={() => onDayPress?.(date)}
                   activeOpacity={0.7}
                 >
-                <DayPlusIcon style={styles.icon} />
+                <DayPlusIcon style={styles.icon} color={colors.grayScale800}/>
                 </TouchableOpacity>
               ) : (
-                <DayUncheckedIcon style={styles.icon} />
+                <DayUncheckedIcon style={styles.icon}/>
               )}
             </View>
           );

@@ -146,6 +146,9 @@ const UserRoom = ({children, previewMode = false, previewItemIds = [], cropTop =
           ref={scrollViewRef}
           style={styles.scrollView}
           showsVerticalScrollIndicator={false}
+          bounces={false}
+          alwaysBounceVertical={false}
+          overScrollMode="never"
           contentContainerStyle={{ paddingBottom: 150 }}
         >
           <ImageBackground

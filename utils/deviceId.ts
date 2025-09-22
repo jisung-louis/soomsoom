@@ -179,3 +179,12 @@ export async function clearInstallUuid() {
   await AsyncStorage.removeItem(KEY);
   uuidCache = null;
 }
+
+/**
+ * 소셜 로그아웃 등 특정 시점에 설치 UUID를 회전(재발급)한다.
+ * - 기존 저장된 UUID를 제거한 뒤 새 UUID를 생성/저장하여 반환한다.
+ */
+export async function rotateInstallUuid(): Promise<string> {
+  await clearInstallUuid();
+  return initInstallUuid();
+}

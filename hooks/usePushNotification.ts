@@ -7,9 +7,7 @@ import {
   showUniversalPopup, 
   createAchievementPopup, 
   createHeartRewardPopup, 
-  createItemRewardPopup, 
-  createMailboxPopup, 
-  createAlarmPopup,
+  createItemRewardPopup,
   createGenericPopup 
 } from '../components/common/popup/UniversalPopup';
 
@@ -66,27 +64,6 @@ export const usePushNotification = () => {
       const itemName = String(data.itemName || '새로운 아이템');
       console.log('🎁 아이템 이름:', itemName);
       const popup = createItemRewardPopup(itemName);
-      showUniversalPopup(popup);
-    }
-    // 우편함 알림 처리
-    else if (data?.notificationType === 'mailbox') {
-      console.log('📬 우편함 푸시 처리:', data);
-      const title = String(data.title || '새로운 메일');
-      const content = String(data.content || '우편함에 새로운 메일이 도착했어요!');
-      console.log('📬 메일 제목:', title, '메일 내용:', content);
-      const popup = createMailboxPopup(title, content);
-      showUniversalPopup(popup);
-      
-      // 안 읽은 메일 개수 새로고침
-      loadUnreadCount();
-    }
-    // 알람 푸시 처리
-    else if (data?.notificationType === 'alarm') {
-      console.log('⏰ 알람 푸시 처리:', data);
-      const title = String(data.title || '알림');
-      const message = String(data.message || notification.request.content.body || '새로운 알림이 있어요!');
-      console.log('⏰ 알람 제목:', title, '알람 메시지:', message);
-      const popup = createAlarmPopup(title, message);
       showUniversalPopup(popup);
     }
     // 기타 푸시 처리
