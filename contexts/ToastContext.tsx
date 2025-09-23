@@ -9,6 +9,7 @@ export interface ToastConfig {
   iconType?: ToastIconType;
   hasAnimation?: boolean;
   duration?: number;
+  amount?: number;
 }
 
 interface ToastContextType {
@@ -17,10 +18,12 @@ interface ToastContextType {
   iconType: ToastIconType;
   theme: ToastTheme;
   hasAnimation: boolean;
+  amount?: number;
   showToast: (config: ToastConfig) => void;
   hideToast: () => void;
   hasBottomNavigation: boolean;
   setHasBottomNavigation: (hasBottomNav: boolean) => void;
+  setAmount: (amount: number) => void;
 }
 
 const ToastContext = createContext<ToastContextType | undefined>(undefined);
@@ -35,6 +38,7 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
   const [iconType, setIconType] = useState<ToastIconType>('none');
   const [theme, setTheme] = useState<ToastTheme>('dark');
   const [hasAnimation, setHasAnimation] = useState(false);
+  const [amount, setAmount] = useState(0);
   const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
   const [hasBottomNavigation, setHasBottomNavigation] = useState(true); // 기본값: 바텀 네비게이션 있음
 
@@ -46,11 +50,12 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
 
     const selectedTheme = config.theme || 'dark';
     const selectedIconType = config.iconType || 'none';
-
+    const selectedAmount = config.amount || 0;
     setMessage(config.message);
     setIconType(selectedIconType);
     setTheme(selectedTheme);
     setHasAnimation(config.hasAnimation || false);
+    setAmount(selectedAmount);
     // visible이 이미 true여도 강제로 업데이트하여 애니메이션 트리거
     setVisible(false);
     setTimeout(() => {
@@ -79,6 +84,8 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
     iconType,
     theme,
     hasAnimation,
+    amount,
+    setAmount,
     showToast,
     hideToast,
     hasBottomNavigation,

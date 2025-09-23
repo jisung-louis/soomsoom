@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo, useRef, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, useWindowDimensions, Image, FlatList, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, useWindowDimensions, Image, FlatList, TouchableOpacity, Alert, ActivityIndicator, InteractionManager } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -44,6 +44,8 @@ import { useToast } from '../../../contexts/ToastContext';
 import { RewardedAd, RewardedAdEventType, AdEventType, TestIds } from 'react-native-google-mobile-ads';
 import { useAuthStore } from '../../../stores/authStore';
 import { environmentConfig } from '../../../configs/environment';
+import { useAppConfigStore } from '../../../stores/appConfigStore';
+import { getUserPoints } from '../../../services/userService';
 
 type ShopScreenNavigationProp = StackNavigationProp<HomeStackParamList, 'ShopScreen'>;
 
@@ -62,7 +64,7 @@ const ShopScreen = () => {
   const layout = useWindowDimensions();
   const [excludeOwnedItems, setExcludeOwnedItems] = useState(false);
   const [outOfStockItems, setOutOfStockItems] = useState<number[]>([]);
-  const { heartPoints } = useCurrencyStore();
+  const { heartPoints, setHeartPoints } = useCurrencyStore();
   const { showToast } = useToast();
   
   // 보상형 광고 관련
@@ -120,50 +122,64 @@ const ShopScreen = () => {
     });
 
     // 환경 설정에서 광고 단위 ID 가져오기
-    const adUnitId = environmentConfig.ads.rewardedAdUnitId;
+    const adUnitId = //environmentConfig.ads.rewardedAdUnitId; //테스트ID
+    'ca-app-pub-4758709448782249/4206373001'; //실제ID
 
     console.log('📺 광고 단위 ID:', adUnitId);
 
+    // const { canRequestPersonalizedAds } = useAppConfigStore.getState();
+    // const requestNonPersonalizedAdsOnly = canRequestPersonalizedAds === false;
+    const requestNonPersonalizedAdsOnly = false;
+
     return RewardedAd.createForAdRequest(adUnitId, {
+      requestNonPersonalizedAdsOnly,
       serverSideVerificationOptions: {
         userId: userId,
         // SSV 콜백 URL 설정 (서버 엔드포인트)
-        customData: JSON.stringify({
-          userId: userId,
-          adUnitId: adUnitId,
-          timestamp: Date.now(),
-          ssvCallbackUrl: environmentConfig.ads.ssvCallbackUrl,
-        }),
+        // customData: JSON.stringify({
+        //   userId: userId,
+        //   adUnitId: adUnitId,
+        //   timestamp: Date.now(),
+        //   ssvCallbackUrl: environmentConfig.ads.ssvCallbackUrl,
+        // }),
       },
     });
   };
   
-  // 현재 광고 인스턴스
-  const [rewardedAd, setRewardedAd] = useState(() => createRewardedAd());
+  // 현재 광고 인스턴스 (지연 생성)
+  const [rewardedAd, setRewardedAd] = useState<ReturnType<typeof RewardedAd.createForAdRequest> | null>(null);
 
   // 현재 광고 컨텍스트 (보상 처리/토스트용)
   const currentAdRef = useRef<{ adId: number; rewardAmount: number } | null>(null);
   
   // 광고 이벤트 리스너 설정
   useEffect(() => {
+    if (!rewardedAd) return;
     const unsubscribeLoaded = rewardedAd.addAdEventListener(RewardedAdEventType.LOADED, () => {
       console.log('📺 보상형 광고 로드 완료');
       console.log('📺 광고 로드 상태:', rewardedAd.loaded);
     });
 
-    const unsubscribeEarned = rewardedAd.addAdEventListener(RewardedAdEventType.EARNED_REWARD, (reward) => {
-      console.log('🎁 보상 획득:', reward);
+    const unsubscribeEarned = rewardedAd.addAdEventListener(RewardedAdEventType.EARNED_REWARD, async (reward) => {
+      console.log('🎁 EARNED_REWARD 이벤트 수신:', reward);
       const ctx = currentAdRef.current;
-      if (ctx) {
-        // 광고 시청 완료 처리
-        markAsWatched(ctx.adId);
+
+      // 프로덕션: SSV 이후 서버 잔액 동기화      
+      try {
+        const res = await getUserPoints();
+        setHeartPoints(res.points);
         showToast({
-          message: `+${ctx.rewardAmount} 하트 포인트를 받았어요!`,
+          amount: reward.amount,
+          message: '하트 획득했어요!',
           theme: 'dark',
           iconType: 'heart',
           hasAnimation: true,
         });
+      } catch (e) {
+        console.warn('하트 동기화 실패:', e);
       }
+      
+
       currentAdRef.current = null;
       // 광고 사용 후 새로운 광고 객체 생성
       setRewardedAd(createRewardedAd());
@@ -193,7 +209,15 @@ const ShopScreen = () => {
       unsubscribeClosed();
       unsubscribeError();
     };
-  }, [rewardedAd, showToast, markAsWatched, createRewardedAd]);
+  }, [rewardedAd, showToast, markAsWatched]);
+
+  // 사용자 인터랙션 이후 광고 객체 생성
+  useEffect(() => {
+    const task = InteractionManager.runAfterInteractions(() => {
+      setRewardedAd(createRewardedAd());
+    });
+    return () => task.cancel();
+  }, []);
   
   // 정렬 드롭다운 상태
   type SortKey = 'POPULAR' | 'LATEST' | 'PRICE_DESC' | 'PRICE_ASC';
@@ -246,10 +270,17 @@ const ShopScreen = () => {
       currentAdRef.current = { adId, rewardAmount };
       console.log('📺 광고 시청 시작:', adId);
 
+      // 광고 객체 준비 (없으면 생성)
+      let ad = rewardedAd;
+      if (!ad) {
+        ad = createRewardedAd();
+        setRewardedAd(ad);
+      }
+
       // 광고가 이미 로드되어 있으면 바로 표시
-      if (rewardedAd.loaded) {
+      if (ad.loaded) {
         console.log('📺 광고 이미 로드됨, 바로 표시');
-        await rewardedAd.show();
+        await ad.show();
       } else {
         console.log('📺 광고 로드 중...');
 
@@ -259,13 +290,13 @@ const ShopScreen = () => {
             reject(new Error('광고 로드 타임아웃'));
           }, 10000); // 10초 타임아웃
 
-          const unsubscribeLoaded = rewardedAd.addAdEventListener(RewardedAdEventType.LOADED, () => {
+          const unsubscribeLoaded = ad.addAdEventListener(RewardedAdEventType.LOADED, () => {
             clearTimeout(timeout);
             unsubscribeLoaded();
             resolve();
           });
 
-          const unsubscribeError = rewardedAd.addAdEventListener(AdEventType.ERROR, (error) => {
+          const unsubscribeError = ad.addAdEventListener(AdEventType.ERROR, (error) => {
             clearTimeout(timeout);
             unsubscribeLoaded();
             unsubscribeError();
@@ -275,18 +306,18 @@ const ShopScreen = () => {
 
         // 광고 로드 시작
         console.log('📺 광고 로드 요청 시작...');
-        rewardedAd.load();
+        ad.load();
 
         // 로드 완료까지 대기
         await loadPromise;
 
         // 광고가 로드되었는지 다시 한번 확인
-        if (!rewardedAd.loaded) {
+        if (!ad.loaded) {
           throw new Error('광고가 로드되지 않았습니다.');
         }
 
         console.log('📺 광고 로드 완료, 표시 중...');
-        await rewardedAd.show();
+        await ad.show();
       }
       // 보상 획득 이벤트 리스너 (일회성) 제거됨 - 중앙화된 처리로 이동
     } catch (error) {
@@ -333,6 +364,7 @@ const ShopScreen = () => {
 
   // 서비스에서 불러온 아이템 목록 (서버 스펙 → 화면용으로 매핑)
   const [items, setItems] = useState<RoomItemLike[]>([]);
+  const [itemsLoading, setItemsLoading] = useState<boolean>(true);
   
   // isOwned 함수 - 서버에서 받은 isOwned 정보를 우선 사용
   const isOwned = useCallback((itemId: number) => {
@@ -372,10 +404,12 @@ const ShopScreen = () => {
 
   useEffect(() => {
     let mounted = true;
-    (async () => {
-      try {
-        const res = await getItems({ sort: 'CREATED', page: 1, size: 60 });
-        const mapped: RoomItemLike[] = res.content.map((it) => ({
+    const task = InteractionManager.runAfterInteractions(() => {
+      (async () => {
+        try {
+          setItemsLoading(true);
+          const res = await getItems({ sort: 'CREATED', page: 1, size: 60 });
+          const mapped: RoomItemLike[] = res.content.map((it) => ({
           id: it.id,
           title: it.name,
           image: typeof it.imageUrl === 'string' ? null : (it.imageUrl as any) ?? null,
@@ -389,35 +423,40 @@ const ShopScreen = () => {
             it.itemType === 'FLOOR' ? '러그' :
             it.itemType === 'SHELF' ? '선반' :
             '장식품',
-        }));
-        if (mounted) {
-          setItems(mapped);
-          const initialSoldOutIds = mapped.filter(i => i.isSoldOut).map(i => i.id);
-          setOutOfStockItems(initialSoldOutIds);
+          }));
+          if (mounted) {
+            setItems(mapped);
+            const initialSoldOutIds = mapped.filter(i => i.isSoldOut).map(i => i.id);
+            setOutOfStockItems(initialSoldOutIds);
+          }
+        } catch (e) {
+          console.warn('아이템 목록 로드 실패:', e);
+        } finally {
+          if (mounted) setItemsLoading(false);
         }
-      } catch (e) {
-        console.warn('아이템 목록 로드 실패:', e);
-      }
-    })();
-    return () => { mounted = false; };
+      })();
+    });
+    return () => { mounted = false; task.cancel(); };
   }, []);
 
-  // 컬렉션은 탭 선택 여부와 상관없이 화면 마운트 시 한번 로드
+  // 컬렉션은 탭 선택 여부와 상관없이 화면 마운트 시 한번 로드 (인터랙션 이후)
   useEffect(() => {
     let mounted = true;
-    (async () => {
-      try {
-        setCollectionsLoading(true);
-        const res = await getCollections({ sort: 'CREATED', page: 1, size: 12 });
-        if (!mounted) return;
-        setCollections(res.content);
-      } catch (e) {
-        console.warn('컬렉션 목록 로드 실패:', e);
-      } finally {
-        if (mounted) setCollectionsLoading(false);
-      }
-    })();
-    return () => { mounted = false; };
+    const task = InteractionManager.runAfterInteractions(() => {
+      (async () => {
+        try {
+          setCollectionsLoading(true);
+          const res = await getCollections({ sort: 'CREATED', page: 1, size: 12 });
+          if (!mounted) return;
+          setCollections(res.content);
+        } catch (e) {
+          console.warn('컬렉션 목록 로드 실패:', e);
+        } finally {
+          if (mounted) setCollectionsLoading(false);
+        }
+      })();
+    });
+    return () => { mounted = false; task.cancel(); };
   }, []);
 
   // 상점 진입 시 소유 아이템 로드
@@ -529,7 +568,10 @@ const ShopScreen = () => {
             {itemTabMenu[selectedItemTab].title === '컬렉션' || itemTabMenu[selectedItemTab].title === '배경' ? (
               <View style={{ marginTop: 10 }}>
                 {collectionsLoading ? (
-                  <Text style={styles.dropdownSortText}>컬렉션 불러오는 중...</Text>
+                  <View style={{ paddingVertical: 40, alignItems: 'center' }}>
+                    <ActivityIndicator color={colors.primary300} />
+                    <Text style={[styles.dropdownSortText, { marginTop: 8 }]}>컬렉션 불러오는 중...</Text>
+                  </View>
                 ) : (
                   <ItemList
                     filteredItems={filteredItems}
@@ -542,13 +584,20 @@ const ShopScreen = () => {
                 )}
               </View>
             ) : (
-              <ItemList 
-                filteredItems={filteredItems}
-                onItemPress={handleItemPress}
-                isOutOfStock={isOutOfStock}
-                isOwned={isOwned}
-                isCollection={false}
-              />
+              itemsLoading ? (
+                <View style={{ paddingVertical: 40, alignItems: 'center' }}>
+                  <ActivityIndicator color={colors.primary300} />
+                  <Text style={[styles.dropdownSortText, { marginTop: 8 }]}>아이템 불러오는 중...</Text>
+                </View>
+              ) : (
+                <ItemList 
+                  filteredItems={filteredItems}
+                  onItemPress={handleItemPress}
+                  isOutOfStock={isOutOfStock}
+                  isOwned={isOwned}
+                  isCollection={false}
+                />
+              )
             )}
         </ScrollView>
       </View>
@@ -589,7 +638,7 @@ const ShopScreen = () => {
                 <Text style={styles.heartCardText}>{ad.rewardAmount} 하트</Text>
                 <Badge
                   title={ad.watchedToday ? '시청 완료' : '광고 시청'}
-                  variant={ad.watchedToday ? 'secondary' : 'default'}
+                  variant={'default'}
                 />
               </View>
             </TouchableOpacity>
@@ -628,7 +677,11 @@ const ShopScreen = () => {
 
     return (
     <SafeAreaView style={styles.container}>
-      <SubpageHeader onBack={handleBack} style={{paddingHorizontal: 20}} right={<HeartPoint money={heartPoints.toString()} onPress={() => {}}/>}/>
+      <SubpageHeader 
+        onBack={handleBack} 
+        style={{paddingHorizontal: 20}} 
+        right={<HeartPoint money={heartPoints.toString() } onPress={() => setIndex(1)}/>}
+      />
       <TabView
         navigationState={{ index, routes }}
         renderScene={renderScene}

@@ -17,6 +17,7 @@ const CustomToast: React.FC = () => {
     hasAnimation,
     hideToast,
     hasBottomNavigation,
+    amount,
   } = useToast();
 
   const [isAnimating, setIsAnimating] = useState(false);
@@ -87,6 +88,7 @@ const CustomToast: React.FC = () => {
             theme={theme}
             iconType={iconType}
             hasAnimation={hasAnimation}
+            amount={amount}
           />
         </Animated.View>
       </View>

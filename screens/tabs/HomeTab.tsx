@@ -112,11 +112,12 @@ const HomeTab = () => {
     
     giveTestReward();
     showToast({
-      message: '+10 하트 획득했어요!',
+      message: '하트 획득했어요!',
       theme: 'dark',
       iconType: 'heart',
       hasAnimation: true,
       duration: 900,
+      amount: 10,
     });
   };
 
@@ -135,6 +136,8 @@ const HomeTab = () => {
   const handleHeartPress = () => {
     // 하트 버튼 기능 구현
     console.log('하트 버튼 클릭');
+    // ShopScreen의 ChargeTab으로 이동
+    navigation.navigate('ShopScreen', { initialTab: 'charge' });
   };
 
   const handleMessagePress = () => {

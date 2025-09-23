@@ -32,9 +32,9 @@ export const environmentConfig = {
     baseUrl: isDevelopment 
       ? (() => {
           // 개발 서버 고정(사용자 제공)
-          return 'http://13.209.96.72:8080';
+          return 'http://15.164.129.186:8080';
         })()
-      : 'http://13.209.96.72:8080',     // 프로덕션 API 서버
+      : 'http://15.164.129.186:8080',     // 프로덕션 API 서버
     
     timeout: isDevelopment 
       ? 10000  // 개발: 10초 (디버깅 시간 고려)

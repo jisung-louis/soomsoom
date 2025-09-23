@@ -12,6 +12,7 @@ import BrokenHeartIcon from '../../../assets/icons/common/broken_Heart.svg';
 import AlarmIcon from '../../../assets/icons/common/alarm.svg';
 import HelpIcon from '../../../assets/icons/common/help.svg';
 import CheckIcon from '../../../assets/icons/common/stroke_check.svg';
+import { ss, sv } from '../../../utils/scale';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -29,6 +30,7 @@ export type ToastIconType =
 interface ToastViewProps {
   message: string;
   theme: ToastTheme;
+  amount?: number;
   iconType?: ToastIconType;
   hasAnimation?: boolean;
   style?: StyleProp<ViewStyle>;
@@ -50,22 +52,22 @@ const toastThemes = {
 const getToastIcon = (iconType: ToastIconType) => {
   switch (iconType) {
     case 'heart':
-      return <HeartIcon width={24} height={24} />;
+      return <HeartIcon width={ss(32)} height={sv(32)} />;
     case 'brokenHeart':
-      return <BrokenHeartIcon width={24} height={24} />;
+      return <BrokenHeartIcon width={ss(32)} height={sv(32)} />;
     case 'alarm':
-      return <AlarmIcon width={24} height={24} />;
+      return <AlarmIcon width={ss(32)} height={sv(32)} />;
     case 'help':
-      return <HelpIcon width={24} height={24} />;
+      return <HelpIcon width={ss(32)} height={sv(32)} />;
     case 'check':
-      return <CheckIcon width={24} height={24} />;
+      return <CheckIcon width={ss(32)} height={sv(32)} />;
     case 'none':
     default:
       return null;
   }
 };
 
-const ToastView: React.FC<ToastViewProps> = ({ message, theme, iconType = 'none', hasAnimation = false, style }) => {
+const ToastView: React.FC<ToastViewProps> = ({ message, theme, amount, iconType = 'none', hasAnimation = false, style }) => {
   const themeStyle = toastThemes[theme];
   const icon = getToastIcon(iconType);
 
@@ -73,7 +75,7 @@ const ToastView: React.FC<ToastViewProps> = ({ message, theme, iconType = 'none'
     <View style={[styles.toast, { backgroundColor: themeStyle.backgroundColor }, style]}>
       {icon && 
       <View style={styles.iconContainer}>
-        {iconType === 'heart' && hasAnimation && 
+        {/* {iconType === 'heart' && hasAnimation && 
         <LottieView
           source={require('../../../assets/animations/heart_up.json')}
           autoPlay
@@ -82,8 +84,11 @@ const ToastView: React.FC<ToastViewProps> = ({ message, theme, iconType = 'none'
             console.log('Animation finished');
           }}
           style={styles.icon}
-        />}
+        />} */}
         {icon}
+        {typeof amount === 'number' && amount > 0 ? (
+          <Text style={[styles.amount, { color: themeStyle.textColor }]}>+{amount}</Text>
+        ) : null}
       </View>}
       <Text
         style={[
@@ -102,15 +107,22 @@ const styles = StyleSheet.create({
   toast: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 9,
+    paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: radius.r8,
     maxWidth: screenWidth - 40,
     minWidth: 56,
-    alignSelf: 'flex-start',
+    justifyContent: 'center',
+    alignSelf: 'center',
+    width: ss(280),
+    gap: 8,
+    height: sv(48),
   },
   iconContainer: {
-    marginRight: 4,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 2,
   },
   icon: {
     position: 'absolute',
@@ -120,7 +132,11 @@ const styles = StyleSheet.create({
     height: 100,
   },
   message: {
-    ...typography.body5,
+    ...typography.body1,
+    textAlign: 'center',
+  },
+  amount: {
+    ...typography.body1,
     textAlign: 'center',
   },
 });

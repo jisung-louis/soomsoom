@@ -9,7 +9,7 @@ export type PopupType = 'achievement' | 'reward_heart' | 'reward_item' | 'mailbo
 // 팝업 데이터 인터페이스
 export interface PopupData {
   type: PopupType;
-  title: string;
+  title?: string;
   message: string;
   subMessage?: string;
   image?: any; // Lottie 애니메이션 또는 이미지
@@ -134,13 +134,12 @@ export function showUniversalPopup(data: PopupData, onClose?: () => void) {
 }
 
 // Push notification type별 팝업 생성 헬퍼 함수들
-export function createAchievementPopup(achievement: MyAchievement): PopupData {
+export function createAchievementPopup(badgeGrade: AchievementGrade, message: string, subMessage: string): PopupData {
   return {
     type: 'achievement',
-    title: '새로운 업적을 달성했어요!',
-    message: '새로운 업적을 달성했어요!',
-    subMessage: `'${achievement.name}' 업적 달성!`,
-    image: animByGrade[achievement.grade],
+    image: animByGrade[badgeGrade],
+    message: message,
+    subMessage: subMessage,
     buttons: [
       {
         text: '닫기',
@@ -153,29 +152,12 @@ export function createAchievementPopup(achievement: MyAchievement): PopupData {
     ],
   };
 }
-
-export function createHeartRewardPopup(amount: number): PopupData {
-  return {
-    type: 'reward_heart',
-    title: '하트 포인트 획득!',
-    message: `${amount}개의 하트 포인트를 획득했어요!`,
-    subMessage: '계속해서 감정을 기록해보세요 💝',
-    // TODO: 하트 포인트 애니메이션 추가
-    buttons: [
-      {
-        text: '확인',
-        onPress: () => {},
-      }
-    ],
-  };
-}
-
-export function createItemRewardPopup(itemName: string): PopupData {
+export function createItemRewardPopup(image: {uri: string}, message: string, subMessage?: string): PopupData {
   return {
     type: 'reward_item',
-    title: '새로운 아이템 획득!',
-    message: `'${itemName}' 아이템을 획득했어요!`,
-    subMessage: '내 방에서 확인해보세요 🎁',
+    image: image,
+    message: message,
+    subMessage: subMessage,
     // TODO: 아이템 획득 애니메이션 추가
     buttons: [
       {
@@ -183,9 +165,9 @@ export function createItemRewardPopup(itemName: string): PopupData {
         onPress: () => {},
       },
       {
-        text: '내 방 가기',
+        text: '꾸미러 가기',
         onPress: () => {
-          // TODO: 내 방으로 네비게이션
+          // TODO: MyTab으로 네비게이션
         },
       }
     ],
