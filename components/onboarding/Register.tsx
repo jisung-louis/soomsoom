@@ -33,7 +33,7 @@ const Register = ({onComplete, submitOnboardingAnswers}: RegisterProps) => {
   return (
     <View style={styles.container}>
         <View style={styles.titleContainer}>
-            <Logo width={160} height={160} />
+            <Logo width={160} height={160}/>
             <Text style={styles.subtitle}>숨숨</Text>
         </View>
         <View style={styles.socialLoginContainer}>
@@ -74,7 +74,7 @@ const styles = StyleSheet.create({
     color: colors.white,
     textShadowColor: colors.white,
     fontSize: 48,
-    lineHeight: 48,
+    lineHeight: 48*1.2,
   },
   socialLoginContainer: {
     width: '100%',

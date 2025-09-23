@@ -40,7 +40,17 @@ const PlayResultScreen = () => {
         //     index: 0,
         //     routes: [{ name: 'PlayTab' }],
         // });
-        navigation.popToTop();
+        // 홈 탭으로 이동
+        navigation.reset({
+            index: 0,
+            routes: [{ name: 'PlayTab' }],
+        });
+        navigation.getParent()?.navigate('home');
+        {/* TODO: 하트 보상 받기 후 홈으로 이동 */}
+        // navigation.reset({
+        //     index: 0,
+        //     routes: [{ name: 'PlayTab' }],
+        // });
     };
 
     // 슬라이드업 애니메이션 훅 사용

@@ -628,7 +628,7 @@ const ShopScreen = () => {
 
     return (
     <SafeAreaView style={styles.container}>
-      <SubpageHeader onBack={handleBack} right={<HeartPoint money={heartPoints.toString()} onPress={() => {}}/>}/>
+      <SubpageHeader onBack={handleBack} style={{paddingHorizontal: 20}} right={<HeartPoint money={heartPoints.toString()} onPress={() => {}}/>}/>
       <TabView
         navigationState={{ index, routes }}
         renderScene={renderScene}

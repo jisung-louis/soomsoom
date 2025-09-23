@@ -165,6 +165,7 @@ const ShopItemDetailScreen = () => {
     >
       <SubpageHeader 
         onBack={handleBack} 
+        style={{paddingHorizontal: 20}}
         right={<HeartPoint money={heartPoints.toString()} onPress={() => {}}/>}
       />
       
@@ -248,10 +249,11 @@ const ShopItemDetailScreen = () => {
       <View style={styles.buttonContainer}>
           <Button 
             icon={'heart'}
-            title={hasValidPrice ? ` ${priceText} ${isCollection ? '컬렉션' : ''} 구매하기` : ' 가격 정보 없음'}
+            price={priceText}
+            title={hasValidPrice ? `${isCollection ? '컬렉션' : ''} 구매하기` : ' 가격 정보 없음'}
             size='large' 
             variant={isPurchasing || alreadyOwned || !hasValidPrice ? 'default' : 'active'} 
-            style={{gap: 2, width: '100%'}} 
+            style={{width: '100%'}} 
             disabled={isPurchasing || alreadyOwned || !hasValidPrice}
             loading={isPurchasing}
             onPress={handleBuy} 

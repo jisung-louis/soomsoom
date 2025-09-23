@@ -449,7 +449,10 @@ const MyTab = () => {
   useEffect(() => {
     if (isEditMode) {
       scrollViewRef.current?.scrollTo({ y: 0, animated: true });
-      bottomSheetRef.current?.expand();
+      // ref가 준비될 때까지 약간의 지연
+      setTimeout(() => {
+        bottomSheetRef.current?.expand();
+      }, 100);
     } else {
       bottomSheetRef.current?.close();
     }

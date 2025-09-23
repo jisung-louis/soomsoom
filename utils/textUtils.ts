@@ -12,7 +12,8 @@ export const titleLineBreaker = (title: string): string => {
   return title
     .replace(/, /g, ',\n')
     .replace(/! /g, '!\n')
-    .replace(/: /g, ':\n');
+    .replace(/: /g, ':\n')
+    .replace(/  /g, '\n');
 };
 
 /**

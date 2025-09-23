@@ -9,6 +9,8 @@ import PlayTitle from './common/PlayTitle';
 import { Banner } from '../../../types';
 import { Dimensions } from 'react-native';
 import CatCryIcon from '../../../assets/icons/charactors/cat-variation/cat_cry.svg';
+import { titleLineBreaker } from '../../../utils/textUtils';
+import { sv } from '../../../utils/scale';
 
 interface PlayBannerProps {
   style?: StyleProp<ViewStyle>;
@@ -79,12 +81,13 @@ const PlayBanner = ({ style, onPress, banners, isLoading = false }: PlayBannerPr
           <View style={styles.overlayContent}>
             <View style={styles.labelContainer}>
               <Badge title={getActivityTypeText(banner.activityType)} variant='default' />
-              <Text style={styles.title}>{banner.description}</Text>
+              <Text style={styles.title}>{titleLineBreaker(banner.description)}</Text>
             </View>
             <Button 
               title={banner.buttonText} 
               variant='white' 
               style={{alignSelf: 'center', width: '100%', height: 48}} 
+              textStyle={{...typography.body1, color: colors.grayScale800}}
               onPress={() => onPress?.(banner)}
             />
           </View>
@@ -116,7 +119,7 @@ const PlayBanner = ({ style, onPress, banners, isLoading = false }: PlayBannerPr
           scrollEventThrottle={16}
         />
         {/* 페이지 인디케이터 */}
-        <View style={styles.pageIndicatorContainer}>
+        {/* <View style={styles.pageIndicatorContainer}>
           {banners.map((_, index) => (
             <View
               key={index}
@@ -126,7 +129,7 @@ const PlayBanner = ({ style, onPress, banners, isLoading = false }: PlayBannerPr
               ]}
             />
           ))}
-        </View>
+        </View> */}
         </>
       ) : (
             renderBannerItem({ item: banners[0] })
@@ -166,7 +169,7 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
   },
   overlayContent: {
-    gap : 13,
+    gap : sv(21),
   },
   labelContainer: {
     flexDirection: 'column',

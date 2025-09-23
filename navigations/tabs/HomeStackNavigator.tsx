@@ -6,7 +6,7 @@ import ShopItemDetailScreen from '../../screens/subpages/home/ShopItemDetailScre
 import TestScreen from '../../screens/subpages/home/TestScreen';
 import MailboxScreen from '../../screens/subpages/home/MailboxScreen';
 import MailboxDetailScreen from '../../screens/subpages/home/MailboxDetailScreen';
-import { MailData } from '../../screens/subpages/home/MailboxScreen';
+// import { MailData } from '../../screens/subpages/home/MailboxScreen';
 
 export type HomeStackParamList = {
   HomeTab: undefined;
@@ -14,7 +14,7 @@ export type HomeStackParamList = {
   ShopItemDetailScreen: { itemId: number, isCollection: boolean };
   TestScreen: undefined;
   MailboxScreen: undefined;
-  MailboxDetailScreen: { content: MailData };
+  MailboxDetailScreen: { content: any };
 };
 
 const Stack = createStackNavigator<HomeStackParamList>();

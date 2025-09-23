@@ -1,5 +1,5 @@
 import React, { useState, useEffect, forwardRef } from 'react';
-import { NavigationContainer, NavigationContainerRef } from '@react-navigation/native';
+import { NavigationContainer, NavigationContainerRef, StackActions } from '@react-navigation/native';
 import { createBottomTabNavigator, BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { getFocusedRouteNameFromRoute } from '@react-navigation/native';
 import { BottomNavigation, BottomTabKey } from '../components/navigation/BottomNavigation';
@@ -75,6 +75,7 @@ function CustomTabBar({ state, navigation, setHasBottomNavigation }: BottomTabBa
   // 애니메이션 값
   const [fadeAnim] = useState(new Animated.Value(1));
   const [translateY] = useState(new Animated.Value(0));
+  const [poppingTabs, setPoppingTabs] = useState<Set<string>>(new Set());
 
   // 현재 포커스된 탭의 하위 스크린 이름 가져오기
   const getRouteName = (route: any) => {
@@ -153,8 +154,39 @@ function CustomTabBar({ state, navigation, setHasBottomNavigation }: BottomTabBa
       <BottomNavigation
         selectedTab={state.routeNames[state.index] as BottomTabKey}
         onTabPress={(tab) => {
+          // popToTop 진행 중인 탭은 터치 무시
+          if (poppingTabs.has(tab)) return;
           const idx = state.routeNames.indexOf(tab);
-          if (idx !== -1) navigation.navigate(tab);
+          if (idx !== -1) {
+            // 1) 먼저 대상 탭으로 이동하여 현재 탭의 pop 애니메이션이 보이지 않게 함
+            navigation.navigate(tab);
+            // 2) 다음 틱에서 비활성 탭들의 스택만 루트로 초기화 (오프스크린에서 처리)
+            setTimeout(() => {
+              const rootState: any = navigation.getState();
+              const routes = rootState?.routes ?? state.routes;
+              routes.forEach((route: any) => {
+                if (route.name !== tab) {
+                  const childState = route.state;
+                  if (childState && childState.type === 'stack' && childState.index > 0) {
+                    // 시작: 해당 탭을 isPopping 상태로 표시
+                    setPoppingTabs((prev) => new Set(prev).add(route.name));
+                    navigation.dispatch({
+                      ...StackActions.popToTop(),
+                      target: childState.key,
+                    });
+                    // 종료: 약간의 지연 후 isPopping 해제
+                    setTimeout(() => {
+                      setPoppingTabs((prev) => {
+                        const next = new Set(prev);
+                        next.delete(route.name);
+                        return next;
+                      });
+                    }, 200);
+                  }
+                }
+              });
+            }, 0);
+          }
         }}
       />
     </Animated.View>

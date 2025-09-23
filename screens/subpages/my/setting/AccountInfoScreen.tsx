@@ -131,7 +131,7 @@ const styles = StyleSheet.create({
     settingItem: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        alignItems: 'center',
+        alignItems: 'flex-end',
     },
     settingItemText: {
         ...typography.body1,
@@ -141,6 +141,8 @@ const styles = StyleSheet.create({
         ...typography.body5,
         color: colors.grayScale500,
         marginTop: 4,
+    },
+    logoutButton: {
     },
     loginText: {
         ...typography.body3,

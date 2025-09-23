@@ -119,7 +119,7 @@ const PlayBreathScreen = ({route}: {route: RouteProp<PlayStackParamList, 'PlayBr
             setStep(step + 1);
           }
         }}
-        activeOpacity={step === 1 ? 0.8 : 1}
+        activeOpacity={1}
         >
         {/* <View style={styles.headerContainer}>
           <Text style={styles.headerTitle}>제목 : {content.title}</Text>

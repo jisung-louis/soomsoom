@@ -1,5 +1,5 @@
 import React, { forwardRef, useImperativeHandle } from 'react';
-import { TouchableOpacity, TouchableOpacityProps, StyleSheet, Text, View, StyleProp, ViewStyle, ActivityIndicator } from 'react-native';
+import { TouchableOpacity, TouchableOpacityProps, StyleSheet, Text, View, StyleProp, ViewStyle, ActivityIndicator, TextStyle } from 'react-native';
 import { colors } from '../../../constants/colors';
 import { radius } from '../../../constants/radius';
 import { typography } from '../../../constants/typography';
@@ -12,9 +12,11 @@ import LottieView from 'lottie-react-native';
 export interface ButtonProps extends TouchableOpacityProps {
   title: string;
   icon?: 'check' | 'heart';
+  price?: string;
   variant?: 'default' | 'active' | 'secondary' | 'white';
   size?: 'medium' | 'large';
   style?: StyleProp<ViewStyle>;
+  textStyle?: StyleProp<TextStyle>;
   loading?: boolean;
   showIconMotion?: boolean;
 }
@@ -24,7 +26,7 @@ export interface ButtonRef {
 }
 
 export const Button = forwardRef<ButtonRef, ButtonProps>((props, ref) => {
-  const { title, icon, variant = 'default', size = 'medium', style, loading = false, disabled, showIconMotion = false, ...rest } = props;
+  const { title, icon, variant = 'default',price, size = 'medium', style, loading = false, disabled, showIconMotion = false, textStyle, ...rest } = props;
 
   // Spinner color follows text color per variant
   const spinnerColor = variant === 'active'
@@ -58,25 +60,26 @@ export const Button = forwardRef<ButtonRef, ButtonProps>((props, ref) => {
     
     if (icon === 'check') {
       return showIconMotion ? (
-        <Animated.View style={[{width: 24, height: 24, zIndex: 100}, animatedStyle]}>
+        <Animated.View style={[{width: 28, height: 28, zIndex: 100}, animatedStyle]}>
           <LottieView
             source={require('../../../assets/animations/icon-motion/check.json')}
             autoPlay
             loop={false}
-            style={[{width: 24, height: 24}]}
+            style={[{width: 28, height: 28}]}
             />
         </Animated.View>
       ) : (
-        <Animated.View style={[{width: 24, height: 24, zIndex: 100}, animatedStyle]}>
-          <CheckIcon width={24} height={24} />
+        <Animated.View style={[{width: 28, height: 28, zIndex: 100}, animatedStyle]}>
+          <CheckIcon width={28} height={28} />
         </Animated.View>
       );
     }
 
     if (icon === 'heart') {
       return (
-        <Animated.View style={[{width: 24, height: 24, zIndex: 100}, animatedStyle]}>
-          <HeartIcon width={24} height={24} />
+        <Animated.View style={[{flexDirection: 'row', alignItems: 'center', gap: 2, zIndex: 100}, animatedStyle]}>
+          <HeartIcon width={28} height={28} />
+          {price && <Text style={styles.price}>{price}</Text>}
         </Animated.View>
       );
     }
@@ -91,7 +94,7 @@ export const Button = forwardRef<ButtonRef, ButtonProps>((props, ref) => {
       {...rest}
     >
       {renderLeft()}
-      <Text style={[styles.title, styles[variant], icon || loading ? { marginLeft: 6 } : null]}>{title}</Text>
+      <Text style={[styles.title, styles[variant], icon || loading ? { marginLeft: 4 } : null, textStyle]}>{title}</Text>
     </TouchableOpacity>
   );
 });
@@ -104,7 +107,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   title: {
-    ...typography.body1,
+    ...typography.heading9,
   },
 
   default: {
@@ -132,5 +135,8 @@ const styles = StyleSheet.create({
     width: 335,
     height: 62,
   },
-  
+  price: {
+    ...typography.body1,
+    color: colors.white,
+  },
 });

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { View, StyleSheet, TouchableWithoutFeedback } from 'react-native';
 import { PieChart } from 'react-native-gifted-charts';
 import { EmotionRankingData } from '../../../types';
@@ -27,22 +27,39 @@ const DonutChart: React.FC<DonutChartProps> = ({
   showHint = false,
   onSeenHint,
 }) => {
+  const hexToRgba = (hex: string, alpha: number) => {
+    const normalized = hex.replace('#', '');
+    const bigint = parseInt(normalized.length === 3
+      ? normalized.split('').map((c) => c + c).join('')
+      : normalized, 16);
+    const r = (bigint >> 16) & 255;
+    const g = (bigint >> 8) & 255;
+    const b = bigint & 255;
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  };
+
+  const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
+
   const pieData = useMemo(
     () =>
-      data.map((d, idx) => ({
-        value: d.count,
-        color: getRankColor(idx),
-        text: `${Math.floor(d.percentage)}%`,
-        onPress: onSegmentPress ? () => onSegmentPress(d, idx) : undefined,
-      })),
-    [data, onSegmentPress]
+      data.map((d, idx) => {
+        const baseColor = getRankColor(idx);
+        const dimmed = selectedIdx != null && idx !== selectedIdx;
+        const color = dimmed ? hexToRgba(baseColor, 0.4) : baseColor;
+        return {
+          value: d.count,
+          color,
+          text: `${Math.floor(d.percentage)}%`,
+          onPress: onSegmentPress ? () => onSegmentPress(d, idx) : undefined,
+        };
+      }),
+    [data, onSegmentPress, selectedIdx]
   );
 
   if (!data || data.length === 0) return null;
 
   const radius = size / 2;
   const innerRadius = Math.max(0, radius - strokeWidth);
-  const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
   const [bubbleSize, setBubbleSize] = useState<{ width: number; height: number }>({ width: 120, height: 48 });
   const SelectedIcon = useMemo(() => {
     if (selectedIdx == null) return null;
@@ -75,6 +92,16 @@ const DonutChart: React.FC<DonutChartProps> = ({
     const y = cy + midR * Math.sin(angle);
     return { x, y };
   }, [selectedIdx, cumulativeFractions, innerRadius, radius]);
+
+  const lottieRef = useRef<LottieView>(null);
+
+  useEffect(() => {
+    if (!showHint) return;
+    const timer = setTimeout(() => {
+      lottieRef.current?.play();
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [showHint]);
 
   return (
     <View style={styles.container}>
@@ -131,12 +158,15 @@ const DonutChart: React.FC<DonutChartProps> = ({
         </>
       )}
       {showHint && (
-        <LottieView
-          source={require('../../../assets/animations/icon-motion/hand_touch.json')}
-          autoPlay
-          loop={false}
-          style={styles.focusAnimation}
-        />
+        <View pointerEvents="none" style={styles.focusAnimation}>
+          <LottieView
+            source={require('../../../assets/animations/icon-motion/hand_touch.json')}
+            autoPlay={false}
+            loop={false}
+            style={{ width: '100%', height: '100%' }}
+            ref={lottieRef}
+          />
+        </View>
       )}
     </View>
   );

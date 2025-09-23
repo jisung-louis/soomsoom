@@ -225,7 +225,8 @@ const MyRoomDecorationPurchaseScreen = () => {
                 {isCheckedItems.length > 0 ? (
                 <Button
                   icon='heart'
-                  title={` ${formattedSumPrice} 구매하기`}
+                  price={formattedSumPrice}
+                  title={'구매하기'}
                   variant={isPurchasing ? 'default' : 'active'}
                   size='large'
                   style={{width: '100%'}}
@@ -252,7 +253,6 @@ const MyRoomDecorationPurchaseScreen = () => {
                 { text: '나중에', onPress: hideErrorAlert },
                 { text: '충전소가기', onPress: async () => {
                     hideErrorAlert();
-                    // hideErrorAlert가 완료된 후 goToChargeTab 실행
                     setTimeout(async () => {
                         await goToChargeTab();
                     }, 50);
@@ -265,7 +265,7 @@ const MyRoomDecorationPurchaseScreen = () => {
             message="다음에 아이템을 구매할까요?"
             subMessage="보유하지 않은 아이템은 저장할 수 없어요!"
             buttons={[
-                { text: '홈으로', onPress: () => handleBack() },
+                { text: '마이페이지로', onPress: () => handleBack() },
                 { text: '머물기', onPress: () => setIsExitAlertVisible(false) }
             ]}
             onClose={() => setIsExitAlertVisible(false)}

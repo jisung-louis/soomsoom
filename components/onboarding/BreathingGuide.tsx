@@ -12,8 +12,32 @@ import { ButtonSmall } from '../common/buttons/ButtonSmall';
 import { useAppConfigStore } from '../../stores/appConfigStore';
 
 
+const breathContentTimeline:ActivityTimeline[] = [ //3회 호흡 컨텐츠 타임라인
+  {
+    id: 1,
+    time: 0.0,
+    action: 'INHALE',
+    text: '깊게 숨을 들이키세요!',
+    duration: 3.0,
+  },
+  {
+    id: 2,
+    time: 3.0,
+    action: 'HOLD',
+    text: '잠시 숨을 멈추세요!',
+    duration: 3.0,
+  },
+  {
+    id: 3,
+    time: 6.0,
+    action: 'EXHALE',
+    text: '길게 숨을 내쉬세요!',
+    duration: 3.0,
+  },
+];
 
-const TOTAL_DURATION = 65;
+ const lastTimelineItem = breathContentTimeline[breathContentTimeline.length - 1];
+ const TOTAL_DURATION = (lastTimelineItem?.time ?? 0) + (lastTimelineItem?.duration ?? 0);
 export default function BreathingGuide({ onComplete }: { onComplete?: () => void }) {
   const { useMockApi } = useAppConfigStore.getState();
   const [step, setStep] = useState(0);
@@ -38,18 +62,22 @@ export default function BreathingGuide({ onComplete }: { onComplete?: () => void
     // 현재 액션에 맞는 애니메이션 소스를 1회 계산 (없으면 기본 SVG 사용)
     const animationSource = useMemo(() => {
         if (breathContentTimeline[step]?.action === 'INHALE') {
+            console.log('INHALE');
             return require('../../assets/animations/breathing_motion.json');
         }
         if (breathContentTimeline[step]?.action === 'EXHALE') {
+            console.log('EXHALE');
             return require('../../assets/animations/inhale_cat.json');
         }
         // HOLD 또는 기타: 직전 호흡 액션을 재귀로 탐색
         if (step === 0) return null; // 처음이면 기본 SVG
         const lastBreath = findPreviousBreathAction(step);
         if (lastBreath === 'INHALE') {
+            console.log('INHALE');
             return require('../../assets/animations/breathing_motion.json');
         }
         if (lastBreath === 'EXHALE') {
+            console.log('EXHALE');
             return require('../../assets/animations/inhale_cat.json');
         }
         return null; // 아무것도 못 찾으면 기본 SVG
@@ -64,14 +92,14 @@ export default function BreathingGuide({ onComplete }: { onComplete?: () => void
     return () => clearTimeout(timer);
   }, [remainingTime]);
 
-  // 타임라인 진행: 경과 시간이 현재 스텝 목표 시간을 지나면 다음 스텝으로
+  // 타임라인 진행: 다음 스텝의 목표 시간을 기준으로 전환 (초기 time=0 스킵 방지)
   useEffect(() => {
-    const target = current?.time ?? Infinity;
     if (remainingTime <= 0) return;
-    if (elapsed >= target && step < breathContentTimeline.length - 1) {
+    const nextTarget = breathContentTimeline[step + 1]?.time;
+    if (typeof nextTarget === 'number' && elapsed >= nextTarget) {
       setStep((s) => Math.min(s + 1, breathContentTimeline.length - 1));
     }
-  }, [elapsed, remainingTime, step, current?.time]);
+  }, [elapsed, remainingTime, step]);
 
 
   // 완료 콜백
@@ -91,8 +119,10 @@ export default function BreathingGuide({ onComplete }: { onComplete?: () => void
   useEffect(() => {
     if (!lottieRef.current) return;
     if (action === 'INHALE' || action === 'EXHALE') {
+      console.log('play');
       lottieRef.current.play?.();
     } else {
+      console.log('pause');
       lottieRef.current.pause?.();
     }
   }, [action]);
@@ -100,7 +130,7 @@ export default function BreathingGuide({ onComplete }: { onComplete?: () => void
   return (
     <View style={styles.container}>
         <View style={[styles.contentContainer, {marginTop: Math.max(0, sy(277))}]}>
-            <Text style={styles.contentText}>{currentStepRemaining}</Text>
+            {/* <Text style={styles.contentText}>{currentStepRemaining}</Text> */}
             <Text style={styles.contentText}>{text}</Text>
         </View>
 
@@ -179,105 +209,4 @@ const styles = StyleSheet.create({
     zIndex: 1000,
   },
 });
-
-const breathContentTimeline:ActivityTimeline[] = [ //3회 호흡 컨텐츠 타임라인
-      {
-        id: 1,
-        time: 0.0,
-        action: 'START',
-        text: '호흡을 시작합니다.',
-        duration: null,
-      },
-      {
-        id: 2,
-        time: 5.0,
-        action: 'INHALE',
-        text: '숨을 들이쉬세요.',
-        duration: 4.0,
-      },
-      {
-        id: 3,
-        time: 10.0,
-        action: 'HOLD',
-        text: '숨을 들이 쉰 상태로 참으세요.',
-        duration: 4.0,
-      },
-      {
-        id: 4,
-        time: 15.0,
-        action: 'EXHALE',
-        text: '숨을 내쉬세요.',
-        duration: 4.0,
-      },
-      {
-        id: 5,
-        time: 20.0,
-        action: 'HOLD',
-        text: '숨을 내쉰 상태로 참으세요.',
-        duration: 4.0,
-      },
-      {
-        id: 6,
-        time: 25.0,
-        action: 'INHALE',
-        text: '숨을 들이쉬세요.',
-        duration: 4.0,
-      },
-      {
-        id: 7,
-        time: 30.0,
-        action: 'HOLD',
-        text: '숨을 들이 쉰 상태로 참으세요.',
-        duration: 4.0,
-      },
-      {
-        id: 8,
-        time: 35.0,
-        action: 'EXHALE',
-        text: '숨을 내쉬세요.',
-        duration: 4.0,
-      },
-      {
-        id: 9,
-        time: 40.0,
-        action: 'HOLD',
-        text: '숨을 내쉰 상태로 참으세요.',
-        duration: 4.0,
-      },
-      {
-        id: 10,
-        time: 45.0,
-        action: 'INHALE',
-        text: '숨을 들이쉬세요.',
-        duration: 4.0,
-      },
-      {
-        id: 11,
-        time: 50.0,
-        action: 'HOLD',
-        text: '숨을 들이 쉰 상태로 참으세요.',
-        duration: 4.0,
-      },
-      {
-        id: 12,
-        time: 55.0,
-        action: 'EXHALE',
-        text: '숨을 내쉬세요.',
-        duration: 4.0,
-      },
-      {
-        id: 13,
-        time: 60.0,
-        action: 'HOLD',
-        text: '숨을 내쉰 상태로 참으세요.',
-        duration: 4.0,
-      },
-      {
-        id: 14,
-        time: 65.0,
-        action: 'END',
-        text: '호흡을 끝냅니다.',
-        duration: 4.0,
-      },
-    ];
 
