@@ -36,6 +36,7 @@ const PlayHistoryScreen = () => {
     // rear(마지막 요소)가 최신이므로 뒤에서 앞으로
     const reversed = orderedIds.reverse();
     // 상세 병렬 로드
+    console.log('🔍 상세 병렬 로드:', reversed);
     const results = await Promise.allSettled(reversed.map(id => getActivityDetail(id)));
     const list: Activity[] = [];
     results.forEach((r) => { if (r.status === 'fulfilled' && r.value) list.push(r.value); });

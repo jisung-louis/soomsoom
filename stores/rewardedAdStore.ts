@@ -6,6 +6,9 @@ interface RewardedAdState {
   ads: RewardedAd[];
   isLoading: boolean;
   lastUpdated: Date | null;
+  // 광고 표시 상태 및 대기 중 토스트
+  isAdShowing: boolean;
+  pendingToastAmount: number | null;
   
   // Actions
   setAds: (ads: RewardedAd[]) => void;
@@ -20,6 +23,8 @@ export const useRewardedAdStore = create<RewardedAdState>()(
       ads: [],
       isLoading: false,
       lastUpdated: null,
+      isAdShowing: false,
+      pendingToastAmount: null,
       
       setAds: (ads) => {
         set({ ads, lastUpdated: new Date() });
@@ -43,6 +48,7 @@ export const useRewardedAdStore = create<RewardedAdState>()(
           });
           
           console.log('✅ 보상형 광고 목록 로드 완료:', ads.length, '개');
+          console.log(JSON.stringify(ads, null, 2));
         } catch (error) {
           console.error('❌ 보상형 광고 목록 로드 실패:', error);
           set({ isLoading: false });

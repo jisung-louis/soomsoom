@@ -3,7 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { syongsyongTypography, typography } from '../../../constants/typography';
 import { colors } from '../../../constants/colors';
-import { StackActions, useNavigation } from '@react-navigation/native';
+import { RouteProp, StackActions, useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { PlayStackParamList } from '../../../navigations/tabs/PlayStackNavigator';
 import TopNavigation from '../../../components/common/top-navigation/TopNavigation';
@@ -22,9 +22,10 @@ const MOCK_ACTIVITY_DESCRIPTION = [
         '무엇인가 집중할 준비가 되었어요!',
     ]
 
-const PlayResultScreen = () => {
+const PlayResultScreen = ({route}: {route: RouteProp<PlayStackParamList, 'PlayResultScreen'>}) => {
     const navigation = useNavigation<StackNavigationProp<PlayStackParamList>>();
     const buttonRef = useRef<ButtonRef>(null);
+    const { effectTexts } = route.params;
     const handleBack = () => {
         navigation.goBack();
     };
@@ -97,7 +98,7 @@ const PlayResultScreen = () => {
                 </View> */}{/* PlayResult.tsx 컴포넌트로 분리 및 공통관리 */}
                 <PlayResult 
                     style={styles.playResult} 
-                    activityDescription={MOCK_ACTIVITY_DESCRIPTION}
+                    activityDescription={effectTexts || MOCK_ACTIVITY_DESCRIPTION}
                     onAnimationsEnd={handleResultAnimationsEnd}
                 />
                 <Animated.View style={[styles.buttonContainer, buttonAnimatedStyle]}>

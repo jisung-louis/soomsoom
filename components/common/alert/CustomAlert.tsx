@@ -11,6 +11,7 @@ const { width: screenWidth } = Dimensions.get('window');
 
 export type AlertButton = {
   text: string;
+  icon?: 'check' | 'heart';
   onPress: () => void;
   buttonVariants?: ButtonProps['variant'];
 };
@@ -128,6 +129,7 @@ const CustomAlert = ({ visible, image, message, subMessage, buttons, onClose, cl
           <View style={styles.buttonContainer}>
             {buttons.map((button, index) => (
               <Button
+                icon={button.icon}
                 key={index}
                 title={button.text}
                 onPress={button.onPress}

@@ -36,13 +36,13 @@ export interface Activity {
   title: string;
   type: 'BREATHING' | 'MEDITATION' | 'SLEEP' | 'REST' ;
   thumbnailImageUrl: string | null;
-  //miniThumbnailImageUrl: string | null;  //!아직 api에 추가 안 됨
   descriptions: string[];
   author: ActivityAuthor;
   narrator: ActivityNarrator;
   durationInSeconds: number;
   audioUrl: string | null;
   timeline: ActivityTimeline[] | null;
+  miniThumbnailImageUrl?: string | null;
   isFavorited: boolean;
 }
 

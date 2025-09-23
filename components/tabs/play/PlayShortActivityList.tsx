@@ -58,8 +58,8 @@ const PlayShortActivityList = ({ onShortActivityPress, shortActivityData, isLoad
               <TimeIcon color={colors.grayScale700} width={16} height={16} />
               <Text style={styles.time}>{Math.floor(item.durationInSeconds / 60)}min</Text>
             </View>
-            {/* <Image source={item.miniThumbnailImageUrl || require('../../../assets/images/play/playFavoriteScreen/default_image_1.png')} style={styles.icon} /> */}
-            <Image source={getRandomImage(item.id)} style={styles.icon} />
+            {/* <Image source={item.miniThumbnailImageUrl ? { uri: item.miniThumbnailImageUrl } : getRandomImage(item.id)} style={styles.icon} /> */}
+            <Image source={item.miniThumbnailImageUrl ? { uri: item.miniThumbnailImageUrl } : require('../../../assets/images/play/playFavoriteScreen/default_image_1.png')} style={styles.icon} />
           </View>
         </TouchableOpacity>
       )}

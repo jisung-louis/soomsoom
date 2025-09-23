@@ -161,12 +161,13 @@ const PlayMeditationScreen = ({route}: {route: RouteProp<PlayStackParamList, 'Pl
       stopProgressTracking();
       
       // 액티비티 완료 처리
-      await completeActivity(content.id);
+      const res = await completeActivity(content.id);
+      console.log('🔍 액티비티 완료 처리 응답:', JSON.stringify(res, null, 2));
       setIsCompleted(true);
-      // TODO: 액티비티 완료 처리 후 오는 응답(하트 보상, 효과 3줄)을 받아서 처리하기(효과 3줄은 PlayResult에 prop으로 넘겨서 처리하면 됨)
+      // TODO: 액티비티 완료 처리 후 오는 응답(효과 3줄)을 받아서 처리하기(효과 3줄은 PlayResult에 prop으로 넘겨서 처리하면 됨)
       
       console.log(`🎉 액티비티 완료 처리: ${content.id}`);
-      navigation.navigate('PlayResultScreen');
+      navigation.navigate('PlayResultScreen', { effectTexts: res.completionEffectTexts || null });
     } catch (error) {
       console.error('액티비티 완료 처리 실패:', error);
       showToast({

@@ -32,21 +32,29 @@ export interface GetUserActivitySummaryParams {
   userId?: number; // (ADMIN용) 특정 사용자의 활동 요약 정보를 조회할 때 사용. 없으면 본인 기록 조회.
 }
 
+// 액티비티 완료 처리 응답 타입
+export interface CompleteActivityResponse {
+  activityId: number;
+  completionEffectTexts: string[]; // 효과 3줄
+  rewardable: boolean; // 하트 보상 가능 여부
+}
+
 /**
  * 액티비티 완료 처리 API
  * POST /activities/{activityId}/history/complete
  * 
  * @param activityId - 완료할 액티비티 ID
- * @returns Promise<void> - 204 No Content 응답
+ * @returns Promise<CompleteActivityResponse> - 200 OK 응답
  */
-export const completeActivity = async (activityId: number): Promise<void> => {
+export const completeActivity = async (activityId: number): Promise<CompleteActivityResponse> => {
   try {
     // 실제 API 호출 (모킹은 apiClient에서 처리)
-    await apiClient.post<void>(`/activities/${activityId}/history/complete`);
+    const response = await apiClient.post<CompleteActivityResponse>(`/activities/${activityId}/history/complete`);
     // 오늘 미션 상태 갱신 (NEED_ACTIVITY → ALL_DONE 등)
     try {
       await useTodayMissionStore.getState().refresh();
     } catch {}
+    return response;
   } catch (error) {
     throw createNetworkError(
       '액티비티 완료 처리에 실패했습니다.',

@@ -22,7 +22,7 @@ export type PlayStackParamList = {
   PlayBreathScreen: { content: Activity };
   PlayBreathContentScreen: { content: Activity };
   PlayMeditationScreen: { content: Activity; initialPosition?: number };
-  PlayResultScreen: undefined;
+  PlayResultScreen: {effectTexts: string[]};
   PlayActivityListScreen: { title: string, content: Activity[] };
 };
 

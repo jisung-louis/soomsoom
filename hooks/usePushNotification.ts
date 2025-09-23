@@ -9,6 +9,7 @@ import {
   showUniversalPopup, 
   createAchievementPopup,
   createItemRewardPopup,
+  createHeartRewardPopup,
   createGenericPopup 
 } from '../components/common/popup/UniversalPopup';
 import { AchievementGrade } from '../types';
@@ -39,7 +40,8 @@ export const usePushNotification = () => {
       | 'RE_ENGAGEMENT'
       | 'ACHIEVEMENT_UNLOCKED'
       | 'NEWS_UPDATE'
-      | 'REWARD_ACQUIRED';
+      | 'REWARD_ACQUIRED'
+      | 'HEART_REWARD'; // 아직 이건 명세상 미정
 
     const data = payload?.notificationType as NotificationType;
 
@@ -58,8 +60,6 @@ export const usePushNotification = () => {
         break;
 
       case 'NEWS_UPDATE':
-        // 공지 화면 혹은 배지 업데이트(type으로 분기)
-        // TODO: 뉴스가 왔을 때는 커스텀토스트로 띄우고 홈화면 우편함 뱃지 업데이트
         showToast({
           message: '새로운 뉴스가 있어요!',
           theme: 'dark',
@@ -78,14 +78,14 @@ export const usePushNotification = () => {
           (async () => {
             try {
               const res = await getUserPoints();
+              const amount = res.points - useCurrencyStore.getState().heartPoints; // 증가한 하트 포인트 개수
               useCurrencyStore.getState().setHeartPoints(res.points);
-              const amount = Number(payload?.amount ?? payload?.rewardAmount ?? 0);
               showToast({
-                message: amount > 0 ? `+${amount} 하트가 적립되었어요!` : '하트가 적립되었어요!',
+                amount: amount,
+                message: '하트 획득했어요!',
                 theme: 'dark',
                 iconType: 'heart',
                 hasAnimation: true,
-                amount: amount > 0 ? amount : undefined as any,
               });
             } catch (e) {
               console.warn('하트 동기화 실패:', e);
@@ -98,6 +98,14 @@ export const usePushNotification = () => {
           const popup = createItemRewardPopup(image, message, subMessage);
           showUniversalPopup(popup);
         }
+        break;
+        
+      case 'HEART_REWARD': // 아직 이건 명세상 미정 ('일주일간의 출석을 완료했어요' 리시버)
+        const title = String(payload?.aps.alert.title || '하트 획득했어요!');
+        const second = String(payload?.aps.alert.body || '하트를 획득했어요!');
+        const popup2 = createHeartRewardPopup(title, second);
+        showUniversalPopup(popup2);
+        
         break;
 
       default:
@@ -158,40 +166,31 @@ export const usePushNotification = () => {
     // }
   };
 
-  /**
-   * 푸시 알림 탭 처리 함수
-   * 사용자가 푸시를 탭했을 때 실행
-   */
-  const handlePushNotificationTap = (response: Notifications.NotificationResponse) => {
-    const { data } = response.notification.request.content;
-    console.log('📱 푸시 탭함:', {
-      actionIdentifier: response.actionIdentifier,
-      userText: response.userText,
-      notification: {
-        id: response.notification.request.identifier,
-        title: response.notification.request.content.title,
-        body: response.notification.request.content.body,
-        data: data,
-        date: response.notification.date,
-      }
-    });
+  // /**
+  //  * 푸시 알림 탭 처리 함수
+  // * 이 부분은 현재 사용하지 않고, useNotificationSetup에서 처리하고 있음
+  //  * 사용자가 푸시를 탭했을 때 실행
+  //  */
+  // const handlePushNotificationTap = (response: Notifications.NotificationResponse) => {
+  //   const { data } = response.notification.request.content;
+  //   console.log('📱 푸시 탭함:', {json: JSON.stringify(response, null, 2)});
     
-    // 업적 달성 푸시 탭 시
-    if (data?.type === 'achievement') {
-      // TODO: 업적 화면으로 네비게이션
-      // navigation.navigate('AchievementScreen');
-    }
-    // 알람 푸시 탭 시
-    else if (data?.type === 'alarm') {
-      // TODO: 알람 화면으로 네비게이션
-      // navigation.navigate('AlarmTab');
-    }
-    // 우편함 푸시 탭 시
-    else if (data?.type === 'mailbox') {
-      // TODO: 우편함 화면으로 네비게이션
-      // navigation.navigate('MailboxScreen');
-    }
-  };
+  //   // 업적 달성 푸시 탭 시
+  //   if (data?.type === 'achievement') {
+  //     // TODO: 업적 화면으로 네비게이션
+  //     // navigation.navigate('AchievementScreen');
+  //   }
+  //   // 알람 푸시 탭 시
+  //   else if (data?.type === 'alarm') {
+  //     // TODO: 알람 화면으로 네비게이션
+  //     // navigation.navigate('AlarmTab');
+  //   }
+  //   // 우편함 푸시 탭 시
+  //   else if (data?.type === 'mailbox') {
+  //     // TODO: 우편함 화면으로 네비게이션
+  //     // navigation.navigate('MailboxScreen');
+  //   }
+  // };
 
 
   /**
@@ -200,6 +199,7 @@ export const usePushNotification = () => {
    * 
    * ⚠️ 제한사항: getLastNotificationResponseAsync()는 마지막 푸시만 반환
    * 여러 푸시를 모두 처리하려면 서버에서 푸시 히스토리를 제공해야 함
+   * 아직 사용하지 않음
    */
   const handleBackgroundPush = async () => {
     try {
@@ -246,8 +246,8 @@ export const usePushNotification = () => {
     // 포그라운드에서 푸시 받을 때
     const foregroundSubscription = Notifications.addNotificationReceivedListener(handlePushNotification);
 
-    // 푸시를 탭했을 때
-    const responseSubscription = Notifications.addNotificationResponseReceivedListener(handlePushNotificationTap);
+    // // 푸시를 탭했을 때
+    // const responseSubscription = Notifications.addNotificationResponseReceivedListener(handlePushNotificationTap);
 
     // 앱 상태 변경 리스너 (백그라운드 → 포그라운드)
     const appStateSubscription = AppState.addEventListener('change', (nextAppState) => {
@@ -259,13 +259,13 @@ export const usePushNotification = () => {
 
     return () => {
       foregroundSubscription.remove();
-      responseSubscription.remove();
+      //responseSubscription.remove();
       appStateSubscription?.remove();
     };
   }, []);
 
   return {
     handlePushNotification,
-    handlePushNotificationTap,
+    //handlePushNotificationTap,
   };
 };

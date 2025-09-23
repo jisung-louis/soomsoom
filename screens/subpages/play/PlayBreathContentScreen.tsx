@@ -78,14 +78,14 @@ const PlayBreathContentScreen = ({route}: {route: RouteProp<PlayStackParamList, 
             stopProgressTracking();
             
             // 2. 액티비티 완료 처리
-            await completeActivity(content.id);
+            const res = await completeActivity(content.id);
             setIsCompleted(true);
             
             // 오디오 정지 (타임라인과 분리, 재생 중이었다면 일시정지)
             try { if (hasAudio) pauseAudio(); } catch {}
 
             console.log(`🎉 호흡 액티비티 완료 처리: ${content.id}`);
-            navigation.navigate('PlayResultScreen');
+            navigation.navigate('PlayResultScreen', { effectTexts: res.completionEffectTexts || null });
         } catch (error) {
             console.error('호흡 액티비티 완료 처리 실패:', error);
             showToast({

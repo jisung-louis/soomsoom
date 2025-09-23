@@ -14,6 +14,9 @@ export const zIndex = {
   floor: 1,
   shelf: 10,
   frame: 10,
+
+  //하트
+  heart: 10,
 };
 
 // 아이템 위치 정의 (Figma 375x812 기준)

@@ -164,20 +164,8 @@ const ShopScreen = () => {
       console.log('🎁 EARNED_REWARD 이벤트 수신:', reward);
       const ctx = currentAdRef.current;
 
-      // 프로덕션: SSV 이후 서버 잔액 동기화      
-      try {
-        const res = await getUserPoints();
-        setHeartPoints(res.points);
-        showToast({
-          amount: reward.amount,
-          message: '하트 획득했어요!',
-          theme: 'dark',
-          iconType: 'heart',
-          hasAnimation: true,
-        });
-      } catch (e) {
-        console.warn('하트 동기화 실패:', e);
-      }
+      // UI 상에서 해당 광고 카드를 "시청 완료"로 표시 (로컬 상태)
+      try { if (ctx) { markAsWatched(ctx.adId); } } catch {}
       
 
       currentAdRef.current = null;

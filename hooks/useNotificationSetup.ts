@@ -43,6 +43,7 @@ export function useNotificationSetup(navigationRef: React.RefObject<any>) {
   const setupResponseListener = React.useCallback(() => {
     const sub = Notifications.addNotificationResponseReceivedListener(response => {
       const { actionIdentifier, notification } = response;
+      console.log('📱 앱 수신 응답 리스너:', JSON.stringify(response, null, 2));
       const { alarmId, missionType, missionData, missionPack } = notification.request.content.data as { 
         alarmId: string;
         missionType?: string;

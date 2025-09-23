@@ -681,7 +681,16 @@ export const mockRoutes: MockRoute[] = [
       const path = endpoint.split('?')[0];
       const id = Number(path.split('/')[2]);
       useActivityHistoryStore.getState().completeActivity(id);
-      return undefined; // 204 No Content 의미
+      const MOCK_ACTIVITY_DESCRIPTION = [
+        '뇌에 맑fdsafdsafds 차올랐고...',
+        '마음은 하루를 준비할 평온함을 얻고...',
+        '무엇인가 집중할 준비가 되었어요!',
+    ]
+      return {
+        activityId: id,
+        completionEffectTexts: MOCK_ACTIVITY_DESCRIPTION,
+        rewardable: true,
+      };
     },
   },
 

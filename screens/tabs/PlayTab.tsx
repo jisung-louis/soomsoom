@@ -40,6 +40,7 @@ const PlayTab = () => {
         const randomFive = shuffled.slice(0, 5);
         
         setShortActivityData(shortActivityResponse.content); // 회복을 위한 짧은 5분!
+        console.log('🔍 회복을 위한 짧은 5분:', JSON.stringify(shortActivityResponse.content, null, 2));
         setRecommendedActivityData(randomFive); // 나를 위한 추천 콘텐츠
         setBannerData(bannersResponse); // 모든 배너 표시
       } catch (error) {
@@ -68,7 +69,7 @@ const PlayTab = () => {
         activityId: banner.linkedActivityId
       });
     } else {
-      Alert.alert('미구현 기능입니다.');
+      Alert.alert('배너에 연결된 액티비티가 없네요..! 🤔');
     }
   };
   return (

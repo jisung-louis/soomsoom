@@ -9,7 +9,7 @@ import { colors } from '../../../constants/colors';
 import ArrowRightIcon from '../../../assets/icons/common/arrow_right.svg';
 import { typography } from '../../../constants/typography';
 import { Surface } from '../../../components/common/surface/Surface';
-import { TERMS_URL, PRIVACY_URL } from '../../../constants/externalUrl';
+import { TERMS_URL, PRIVACY_URL, INQUIRY_BUG_URL } from '../../../constants/externalUrl';
 import { useOpenExternalLink } from '../../../hooks/useOpenExternalLink';
 
 const MySettingScreen = () => {
@@ -33,7 +33,7 @@ const MySettingScreen = () => {
                 <Text style={styles.settingItemText}>계정정보</Text>
                 <ArrowRightIcon width={24} height={24} color={colors.grayScale900} />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.settingItem} onPress={() => {navigation.navigate('InquiryBugScreen')}}>
+            <TouchableOpacity style={styles.settingItem} onPress={() => {handleOpenExternalLink(INQUIRY_BUG_URL)}}>
                 <Text style={styles.settingItemText}>문의/버그</Text>
                 <ArrowRightIcon width={24} height={24} color={colors.grayScale900} />
             </TouchableOpacity>

@@ -42,14 +42,16 @@ const PlayDetailScreen: React.FC = () => {
   // 액티비티 상세 정보 조회 (initialContent가 없을 때만)
   useEffect(() => {
     // 이미 content가 있으면 서버 조회 생략
-    if (initialContent) {
-      return;
-    }
+    // if (initialContent) {
+    //   console.log('🔍 이미 content가 있으면 서버 조회 생략');
+    //   return;
+    // }
 
     const loadActivityDetail = async () => {
       try {
         setIsLoading(true);
         const activityDetail = await getActivityDetail(activityId);
+        console.log('🔍 액티비티 상세 정보:', JSON.stringify(activityDetail, null, 2));
         setContent(activityDetail);
       } catch (error) {
         console.error('액티비티 상세 정보 조회 실패:', error);
@@ -211,7 +213,7 @@ const PlayDetailScreen: React.FC = () => {
               </View>
             </View>
           </View>
-          <Text style={styles.contentDescription}>{content.descriptions.join('\n')}</Text>
+          <Text style={styles.contentDescription}>{Array.isArray(content.descriptions) ? content.descriptions.join('\n') : content.descriptions}</Text>
         </View>
       </ScrollView>
       
@@ -244,6 +246,8 @@ const PlayDetailScreen: React.FC = () => {
               message='잠깐! 시작전에 소리를 키워주세요!'
               theme='light'
               iconType='help'
+              textStyle={styles.toastText}
+              iconSize={24}
               style={styles.toastContainer}
             />
             <Button
@@ -322,6 +326,8 @@ const styles = StyleSheet.create({
   toastContainer: {
     alignSelf: 'center',
     marginBottom: 20,
+    width: 'auto',
+    height: 'auto',
   },
   buttonContainer: {
     position: 'absolute',
@@ -330,7 +336,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 20,
-    paddingBottom: 30,
+    paddingBottom: 40,
     paddingTop: 50,
   },
   button: {
@@ -345,5 +351,8 @@ const styles = StyleSheet.create({
   loadingText: {
     ...typography.body1,
     color: colors.grayScale600,
+  },
+  toastText: {
+    ...typography.body5,
   },
 });

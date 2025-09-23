@@ -15,6 +15,7 @@ export interface PopupData {
   image?: any; // Lottie 애니메이션 또는 이미지
   buttons?: Array<{
     text: string;
+    icon?: 'check' | 'heart';
     onPress: () => void;
   }>;
   onClose?: () => void;
@@ -174,6 +175,21 @@ export function createItemRewardPopup(image: {uri: string}, message: string, sub
   };
 }
 
+export function createHeartRewardPopup(title: string, message: string, subMessage?: string): PopupData {
+  return {
+    type: 'reward_heart',
+    title,
+    message,
+    subMessage,
+    buttons: [
+      {
+        icon: 'heart',
+        text: '하트 보상받기',
+        onPress: () => {}, // TODO: 하트 보상 받기 기능 추가
+      }
+    ],
+  };
+}
 export function createGenericPopup(title: string, message: string, subMessage?: string): PopupData {
   return {
     type: 'generic',

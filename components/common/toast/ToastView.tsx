@@ -2,7 +2,7 @@
 
 import LottieView from 'lottie-react-native';
 import React from 'react';
-import { View, Text, StyleSheet, Dimensions, StyleProp, ViewStyle } from 'react-native';
+import { View, Text, StyleSheet, Dimensions, StyleProp, ViewStyle, TextStyle } from 'react-native';
 import { colors } from '../../../constants/colors';
 import { radius } from '../../../constants/radius';
 import { typography } from '../../../constants/typography';
@@ -13,6 +13,7 @@ import AlarmIcon from '../../../assets/icons/common/alarm.svg';
 import HelpIcon from '../../../assets/icons/common/help.svg';
 import CheckIcon from '../../../assets/icons/common/stroke_check.svg';
 import { ss, sv } from '../../../utils/scale';
+import { zIndex } from '../../../constants/roomLayout';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -34,6 +35,8 @@ interface ToastViewProps {
   iconType?: ToastIconType;
   hasAnimation?: boolean;
   style?: StyleProp<ViewStyle>;
+  textStyle?: StyleProp<TextStyle>;
+  iconSize?: number;
 }
 
 // 테마별 스타일 정의
@@ -49,29 +52,30 @@ const toastThemes = {
 };
 
 // 아이콘 타입별 매핑
-const getToastIcon = (iconType: ToastIconType) => {
+const getToastIcon = (iconType: ToastIconType, iconSize: number) => {
   switch (iconType) {
     case 'heart':
-      return <HeartIcon width={ss(32)} height={sv(32)} />;
+      return <HeartIcon width={iconSize} height={iconSize} />;
     case 'brokenHeart':
-      return <BrokenHeartIcon width={ss(32)} height={sv(32)} />;
+      return <BrokenHeartIcon width={iconSize} height={iconSize} />;
     case 'alarm':
-      return <AlarmIcon width={ss(32)} height={sv(32)} />;
+      return <AlarmIcon width={iconSize} height={iconSize} />;
     case 'help':
-      return <HelpIcon width={ss(32)} height={sv(32)} />;
+      return <HelpIcon width={iconSize} height={iconSize} />;
     case 'check':
-      return <CheckIcon width={ss(32)} height={sv(32)} />;
+      return <CheckIcon width={iconSize} height={iconSize} />;
     case 'none':
     default:
       return null;
   }
 };
 
-const ToastView: React.FC<ToastViewProps> = ({ message, theme, amount, iconType = 'none', hasAnimation = false, style }) => {
+const ToastView: React.FC<ToastViewProps> = ({ message, theme, amount, iconType = 'none', hasAnimation = false, style, textStyle, iconSize=ss(32) }) => {
   const themeStyle = toastThemes[theme];
-  const icon = getToastIcon(iconType);
+  const icon = getToastIcon(iconType, iconSize);
 
   return (
+    <>
     <View style={[styles.toast, { backgroundColor: themeStyle.backgroundColor }, style]}>
       {icon && 
       <View style={styles.iconContainer}>
@@ -94,12 +98,25 @@ const ToastView: React.FC<ToastViewProps> = ({ message, theme, amount, iconType 
         style={[
           styles.message,
           { color: themeStyle.textColor },
+          textStyle,
         ]}
         numberOfLines={3}
       >
         {message}
       </Text>
     </View>
+    {iconType === 'heart' && hasAnimation && (
+      <LottieView
+        source={require('../../../assets/animations/heart_up.json')}
+        autoPlay
+        loop
+        onAnimationFinish={() => {
+          console.log('Animation finished');
+        }}
+        style={styles.icon}
+        />
+      )}
+    </>
   );
 };
 
@@ -126,10 +143,11 @@ const styles = StyleSheet.create({
   },
   icon: {
     position: 'absolute',
-    left: -24,
-    top: -100,
-    width: 100,
-    height: 100,
+    left: -((ss(375)-ss(280))/2),
+    top: -ss(589)+sv(48)+20,
+    width: ss(375),
+    height: sv(589),
+    zIndex: zIndex.heart, //zIndex 설정이 의미가 없는것같다. 그래도 기획상 문제는 없으니 유지하지만, 나중에 수정해보자.
   },
   message: {
     ...typography.body1,
