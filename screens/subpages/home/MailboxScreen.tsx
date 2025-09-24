@@ -18,16 +18,17 @@ import { UserAnnouncement, getAnnouncementDetail } from '../../../services/mailb
 dayjs.extend(relativeTime);
 dayjs.locale('ko');
 
-const isMailboxEmpty = (announcements: UserAnnouncement[]) => {
-  return announcements.length === 0;
+const isMailboxEmpty = (announcements: UserAnnouncement[] | undefined | null) => {
+  return !announcements || announcements.length === 0;
 };
 
 export const typeMap = {
   news: '새로운 소식',
 };
 
-const sortAnnouncements = (announcements: UserAnnouncement[]) => {
-  return announcements.sort((a, b) => {
+const sortAnnouncements = (announcements: UserAnnouncement[] | undefined | null) => {
+  const list = Array.isArray(announcements) ? announcements.slice() : [];
+  return list.sort((a, b) => {
     return dayjs(b.receivedAt).diff(dayjs(a.receivedAt));
   });
 };

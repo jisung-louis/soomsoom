@@ -6,9 +6,6 @@ interface RewardedAdState {
   ads: RewardedAd[];
   isLoading: boolean;
   lastUpdated: Date | null;
-  // 광고 표시 상태 및 대기 중 토스트
-  isAdShowing: boolean;
-  pendingToastAmount: number | null;
   
   // Actions
   setAds: (ads: RewardedAd[]) => void;
@@ -23,8 +20,6 @@ export const useRewardedAdStore = create<RewardedAdState>()(
       ads: [],
       isLoading: false,
       lastUpdated: null,
-      isAdShowing: false,
-      pendingToastAmount: null,
       
       setAds: (ads) => {
         set({ ads, lastUpdated: new Date() });

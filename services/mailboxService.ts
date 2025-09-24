@@ -71,8 +71,17 @@ export const getAnnouncements = async (params: FetchAnnouncementsParams = {}): P
     const queryString = queryParams.toString();
     const endpoint = queryString ? `/mailbox/announcements?${queryString}` : '/mailbox/announcements';
     
-    const response = await apiClient.get<UserAnnouncement[]>(endpoint);
-    return response;
+    const response = await apiClient.get<any>(endpoint);
+    // 서버가 배열 또는 페이지네이션 객체({ content: [...] })를 반환할 수 있으므로 방어적으로 처리
+    if (Array.isArray(response)) {
+      return response as UserAnnouncement[];
+    }
+    if (response && Array.isArray(response.content)) {
+      return response.content as UserAnnouncement[];
+    }
+    // 예외 케이스: 비정상 응답이면 빈 배열 반환(상층에서 빈 UI 처리)
+    console.warn('📬 우편함 공지사항 예상치 못한 응답 형식, 빈 배열로 대체:', typeof response);
+    return [] as UserAnnouncement[];
   } catch (error) {
     if (error instanceof AppError) {
       throw error;

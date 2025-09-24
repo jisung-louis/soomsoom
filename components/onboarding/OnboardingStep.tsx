@@ -145,7 +145,7 @@ export const OnboardingStep: React.FC<OnboardingStepProps> = ({
         return (
           <OnboardingCountdown
             onComplete={onCountdownComplete}
-            duration={5}
+            duration={6}
           />
         );
 

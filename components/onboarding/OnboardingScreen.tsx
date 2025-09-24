@@ -1,4 +1,7 @@
 import React from 'react';
+import { Animated, Image } from 'react-native';
+import { Asset } from 'expo-asset';
+import { onboardingSteps } from '../../data/onboardingData';
 import * as Notifications from 'expo-notifications';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { scheduleDiaryNotification } from '../../utils/notificationUtils';
@@ -51,7 +54,96 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, initial
 
   const currentStepData = getCurrentStepData();
 
-  const handleNext = async () => {
+  // 배경 이미지 프리로딩 및 페이드 인 처리
+  const [bgReady, setBgReady] = React.useState(false);
+  const fadeAnim = React.useRef(new Animated.Value(0)).current;
+  // 스텝 0 -> 1 전환 시 배경 줌인(10%)
+  const scaleAnim = React.useRef(new Animated.Value(1)).current;
+  const prevStepRef = React.useRef<number>(currentStep);
+  const [zoomActive, setZoomActive] = React.useState(false);
+  const [zoomMode, setZoomMode] = React.useState<'none' | 'first' | 'second'>('none');
+
+  const preloadImage = React.useCallback(async (src: any) => {
+    if (!src) return;
+    try {
+      if (typeof src === 'number') {
+        // require(...) 자산
+        await Asset.loadAsync(src);
+      } else if (typeof src === 'object' && src.uri) {
+        await Image.prefetch(src.uri);
+      }
+    } catch {}
+  }, []);
+
+  // 리렌더 최소화를 위한 메모 값들
+  const bgSource = React.useMemo(() => {
+    if (currentStep === 0 || currentStep === 1) {
+      return require('../../assets/images/onboarding/bg_zoom1.png');
+    }
+    if (currentStep === 6 || currentStep === 7) {
+      return require('../../assets/images/onboarding/bg_zoom4.png');
+    }
+    return currentStepData.backgroundImage;
+  }, [currentStep, currentStepData.backgroundImage]);
+
+  const backgroundStyle = React.useMemo(
+    () => [styles.backgroundImage, { backgroundColor: currentStepData.backgroundColor ? currentStepData.backgroundColor : 'white' }],
+    [currentStepData.backgroundColor]
+  );
+
+  const memoTitle = React.useMemo(() => currentStepData.title || [], [currentStepData.id]);
+
+  // 현재 스텝 배경 준비되면 컨텐츠 페이드인, 동시에 다음 스텝 배경을 백그라운드 프리로드
+  React.useEffect(() => {
+    let mounted = true;
+    setBgReady(false);
+    fadeAnim.setValue(0);
+
+    (async () => {
+      await preloadImage(currentStepData.backgroundImage);
+      if (!mounted) return;
+      setBgReady(true);
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: (currentStep === 8 || currentStep === 12) ? 800 : 400,
+        useNativeDriver: true,
+      }).start();
+    })();
+
+    // 다음 스텝도 미리 로드
+    const nextIndex = currentStep + 1;
+    const next = onboardingSteps[nextIndex];
+    if (next?.backgroundImage) {
+      preloadImage(next.backgroundImage);
+    }
+
+    // 0 -> 1로 넘어갈 때 배경 10% 줌인
+    const prev = prevStepRef.current;
+    const firstZoom = prev === 0 && currentStep === 1;
+    const secondZoom = prev === 6 && currentStep === 7;
+    if (firstZoom || secondZoom) {
+      setZoomActive(true);
+      setZoomMode(firstZoom ? 'first' : 'second');
+      scaleAnim.setValue(1);
+      Animated.timing(scaleAnim, {
+        toValue: firstZoom ? 1.3 : 1.8,
+        duration: 500,
+        useNativeDriver: true,
+      }).start();
+    } else if ((currentStep !== 1 && zoomActive && zoomMode === 'first') || (currentStep !== 7 && zoomActive && zoomMode === 'second')) {
+      // 1단계를 벗어나면 줌 상태 해제
+      setZoomActive(false);
+      setZoomMode('none');
+      scaleAnim.setValue(1);
+    }
+    prevStepRef.current = currentStep;
+
+    return () => {
+      mounted = false;
+    };
+  }, [currentStepData.backgroundImage, currentStep, preloadImage, fadeAnim]);
+
+  const handleNext = React.useCallback(async () => {
     if (isLastStep) {
       onComplete();
     } else if (currentStepData.id === 'onboarding06') {
@@ -122,23 +214,100 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, initial
     } else {
       goToNextStep();
     }
-  };
+  }, [
+    isLastStep,
+    onComplete,
+    currentStepData.id,
+    scheduleDiaryNotification,
+    toggleNotificationSetting,
+    updateDiaryNotificationTime,
+    goToNextStep, // 최신 검증/상태를 반영하기 위해 반드시 포함
+  ]);
 
-  const handleCountdownComplete = () => {
+  const handleCountdownComplete = React.useCallback(() => {
     goToNextStep();
-  };
+  }, [goToNextStep]);
 
   // 특별한 단계들 (카운트다운, 결과 화면 등)
   if (currentStepData.id === 'countdown') {
     return (
-      <ImageBackground
-        source={currentStepData.backgroundImage}
+      <>
+      <Animated.View
         style={[
-          styles.backgroundImage, 
-          { backgroundColor: currentStepData.backgroundColor ? `colors.${currentStepData.backgroundColor}` : colors.white }
+          { flex: 1 },
+          zoomActive
+            ? zoomMode === 'second'
+              // 6->7: 중앙보다 100 아래를 화면 중앙처럼 보이게(아래로 기준 이동 후 확대 후 원위치)
+              ? { transform: [{ translateY: 100 }, { scale: scaleAnim }, { translateY: -100 }] }
+              // 0->1: 기본 중앙 확대
+              : { transform: [{ scale: scaleAnim }] }
+            : null,
+            { opacity: fadeAnim }
         ]}
+      >
+        <ImageBackground
+          source={currentStep <= 2 ? require('../../assets/images/onboarding/bg_zoom1.png') : currentStepData.backgroundImage}
+          style={[
+            styles.backgroundImage, 
+            { backgroundColor: currentStepData.backgroundColor ? `colors.${currentStepData.backgroundColor}` : colors.white }
+          ]}
+          resizeMode="cover"
+        >
+        
+        </ImageBackground>
+      </Animated.View>
+      {bgReady ? (
+        <Animated.View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, flex: 1, opacity: fadeAnim }}>
+          <OnboardingStep
+            stepId={currentStepData.id}
+            title={currentStepData.title || []}
+            selectedFocusIds={onboardingData.selectedFocusIds}
+            selectedTimeIds={onboardingData.selectedTimeIds}
+            onFocusSelectionChange={updateFocusSelection}
+            onTimeSelectionChange={updateTimeSelection}
+            onCountdownComplete={handleCountdownComplete}
+            onNext={handleNext}
+            showNext={currentStepData.showNext}
+            specialButtonText={currentStepData.specialButtonText}
+            canProceed={canProceedToNext()}
+            submitOnboardingAnswers={submitOnboardingAnswers}
+          />
+        </Animated.View>
+      ) : null}
+      </>
+    );
+  }
+
+  // 일반적인 온보딩 단계
+  return (
+    <>
+    <Animated.View
+      style={[
+        { flex: 1 },
+        zoomActive
+          ? zoomMode === 'second'
+            ? { transform: [{ translateY: 200 }, { scale: scaleAnim }, { translateY: -200 }] }
+            : { transform: [{ scale: scaleAnim }] }
+          : null,
+        { opacity: (currentStep === 8 || currentStep === 13) ? fadeAnim : 1 }
+      ]}
+    >
+      <ImageBackground
+        source={
+          currentStep === 0 || currentStep === 1 ? require('../../assets/images/onboarding/bg_zoom1.png') : 
+          currentStep === 6 || currentStep === 7 ? require('../../assets/images/onboarding/bg_zoom4.png') : 
+          currentStepData.backgroundImage}
+        style={[styles.backgroundImage, { backgroundColor: currentStepData.backgroundColor ? currentStepData.backgroundColor : 'white' }]}
         resizeMode="cover"
       >
+      
+      </ImageBackground>
+    </Animated.View>
+    {bgReady ? (
+      <Animated.View style={{ 
+        position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, flex: 1, 
+        opacity: currentStep !== 14 ? fadeAnim : 1 
+        }}>
         <OnboardingStep
           stepId={currentStepData.id}
           title={currentStepData.title || []}
@@ -153,33 +322,8 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, initial
           canProceed={canProceedToNext()}
           submitOnboardingAnswers={submitOnboardingAnswers}
         />
-      </ImageBackground>
-    );
-  }
-
-  // 일반적인 온보딩 단계
-  return (
-    <>
-    <ImageBackground
-      source={currentStepData.backgroundImage}
-      style={[styles.backgroundImage, { backgroundColor: currentStepData.backgroundColor ? currentStepData.backgroundColor : 'white' }]}
-      resizeMode="cover"
-    >
-      <OnboardingStep
-        stepId={currentStepData.id}
-        title={currentStepData.title || []}
-        selectedFocusIds={onboardingData.selectedFocusIds}
-        selectedTimeIds={onboardingData.selectedTimeIds}
-        onFocusSelectionChange={updateFocusSelection}
-        onTimeSelectionChange={updateTimeSelection}
-        onCountdownComplete={handleCountdownComplete}
-        onNext={handleNext}
-        showNext={currentStepData.showNext}
-        specialButtonText={currentStepData.specialButtonText}
-        canProceed={canProceedToNext()}
-        submitOnboardingAnswers={submitOnboardingAnswers}
-      />
-    </ImageBackground>
+      </Animated.View>
+      ) : null}
 
     {/*DEV ONLY*/}
     {currentStepData.id !== 'register' && (

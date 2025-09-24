@@ -185,7 +185,7 @@ export const onboardingSteps: OnboardingStep[] = [
     ],
     backgroundImage: require('../assets/images/onboarding/bg_default.png'),
     showNext: true,
-  },
+  }, // TODO : 14->15로 넘어가는 부분은 나중에 하나의 스텝으로 통합해서, 14에서 다음을 누르면 텍스트만 바뀌도록(바뀔때 fade애니메이션도 추가)하고 그 다음 바로 register로 넘어가도록 하기 (그러면 넘어가는 중간에 깜빡임 방지 가능)
   {
     id: 'register',//register
     backgroundColor: colors.primary300,

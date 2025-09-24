@@ -90,10 +90,10 @@ const MyAchievementScreen = () => {
                     <Text style={[styles.goldTextColor, styles.badgeTextTypography]}>골드 뱃지</Text>
                 </View>
                 {/* {Array.from(userAchievements.values()).some(a => a.grade === 'SPECIAL') && ( */}
-                  <View style={styles.badgeAndTextContainer}>
+                  {/* <View style={styles.badgeAndTextContainer}>
                     <BadgeHidden width={64} height={64} />
                     <Text style={[styles.hiddenTextColor, styles.badgeTextTypography]}>히든 뱃지</Text>
-                  </View>
+                  </View> */}
                 {/* )} */}
             </View>
         </View>
