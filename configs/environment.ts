@@ -31,7 +31,7 @@ export const isProduction = getEnvironment() === 'production';
 export const environmentConfig = {
   // API 설정
   api: {
-    baseUrl: 'http://3.34.5.178:8080',     // 백엔드 서버
+    baseUrl: 'https://533bebe9a3c1.ngrok-free.app:8080',     // 백엔드 서버
     timeout: 10000 // 10초동안 응답이 없으면 에러 처리
   },
 

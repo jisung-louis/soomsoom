@@ -2,14 +2,14 @@
   "expo": {
     "name": "숨숨",
     "slug": "soomsoom",
-    "version": "0.1.7",
+    "version": "0.1.8",
     "orientation": "portrait",
     "icon": "./assets/app-icons/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
       "image": "./assets/app-icons/icon.png",
-      "resizeMode": "contain",
+      "resizeMode": "cover",
       "backgroundColor": "#ffaa33"
     },
     "ios": {
@@ -43,7 +43,7 @@
       ]
     },
     "web": {
-      "favicon": "./assets/app-icons/favicon.png"
+      "favicon": "./assets/app-icons/icon.png"
     },
     "assetBundlePatterns": [
       "assets/**/*"
