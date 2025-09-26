@@ -11,16 +11,39 @@ import { typography } from '../../../constants/typography';
 import { Surface } from '../../../components/common/surface/Surface';
 import { TERMS_URL, PRIVACY_URL, INQUIRY_BUG_URL } from '../../../constants/externalUrl';
 import { useOpenExternalLink } from '../../../hooks/useOpenExternalLink';
+import { checkLatestVersion } from '../../../services/versionService';
+import { storeUrlForPlatform } from '../../../constants/externalUrl';
 
 const MySettingScreen = () => {
   const navigation = useNavigation<StackNavigationProp<MyStackParamList>>();
   const openExternalLink = useOpenExternalLink();
+  const [isLatest, setIsLatest] = React.useState<boolean | null>(null);
+  const [checking, setChecking] = React.useState<boolean>(false);
   const handleBack = () => {
     navigation.goBack();
   };
   const handleOpenExternalLink = async (url: string) => {
     await openExternalLink(url);
   };
+  React.useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        setChecking(true);
+        const res = await checkLatestVersion();
+        if (!mounted) return;
+        setIsLatest(!!res.isLatest);
+      } catch {
+        if (!mounted) return;
+        setIsLatest(null);
+      } finally {
+        if (mounted) setChecking(false);
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, []);
   return (
     <SafeAreaView style={styles.container}>
         <SubpageHeader onBack={() => {handleBack()}}/>
@@ -40,10 +63,15 @@ const MySettingScreen = () => {
         </View>
         <Surface style={styles.surface}/>
         <View style={styles.termAndPolicyContainer}>
-            {/* TODO: 버전 체크 추가 */}
             <View style={styles.settingItem}>
                 <Text style={styles.settingItemText}>정보</Text>
-                <Text style={styles.versionText}>최신버전</Text>
+                {isLatest === false ? (
+                  <TouchableOpacity onPress={() => handleOpenExternalLink(storeUrlForPlatform)}>
+                    <Text style={[styles.versionText]}>업데이트 필요</Text>
+                  </TouchableOpacity>
+                ) : (
+                  <Text style={styles.versionText}>{checking ? '확인 중...' : '최신버전'}</Text>
+                )}
             </View>
             <TouchableOpacity style={styles.settingItem} onPress={() => {handleOpenExternalLink(TERMS_URL)}}>
                 <Text style={styles.settingItemText}>서비스 이용 약관</Text>

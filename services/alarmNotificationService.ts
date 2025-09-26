@@ -101,7 +101,7 @@ const scheduleBurstPerMinute = async (params: {
           title,
           body,
           sound: normalizeIosSoundName(soundName),
-          data: { alarmId, soundName, ...data },
+          data: { alarmId, soundName, notificationType: 'ALARM', ...data },
           ...(categoryIdentifier ? { categoryIdentifier } : {}),
         },
         trigger: {
@@ -153,7 +153,7 @@ const scheduleOneTimeRegularAlarm = async (alarmData: {
       title,
       body,
       soundName: alarmData.soundName,
-      data: { time: alarmData.time },
+      data: { time: alarmData.time, notificationType: 'ALARM' },
     });
   } catch (error) {
     console.error('일회성 일반 알람 예약 실패:', error);
@@ -204,6 +204,7 @@ const scheduleOneTimeMissionAlarm = async (alarmData: {
       body,
       soundName: alarmData.soundName,
       data: {
+        notificationType: 'ALARM',
         alarmId: alarmData.id,
         time: alarmData.time,
         missionType: 'math',
@@ -269,7 +270,7 @@ const scheduleWeeklyRegularAlarm = async (alarmData: {
             title,
             body,
             soundName: alarmData.soundName,
-            data: { time: alarmData.time, day: day },
+            data: { time: alarmData.time, day: day, notificationType: 'ALARM' },
           });
           console.log(`요일 ${day} 일반 알림 버스트 예약 완료`);
         } else {
@@ -279,7 +280,7 @@ const scheduleWeeklyRegularAlarm = async (alarmData: {
               title,
               body,
               sound: normalizeIosSoundName(alarmData.soundName),
-              data: { alarmId: alarmData.id, time: alarmData.time, day: day, soundName: alarmData.soundName },
+              data: { alarmId: alarmData.id, time: alarmData.time, day: day, soundName: alarmData.soundName, notificationType: 'ALARM' },
             },
             trigger: {
               type: Notifications.SchedulableTriggerInputTypes.WEEKLY,
@@ -360,6 +361,7 @@ const scheduleWeeklyMissionAlarm = async (alarmData: {
           body,
           soundName: alarmData.soundName,
           data: {
+            notificationType: 'ALARM',
             alarmId: alarmData.id,
             time: alarmData.time,
             day: day,

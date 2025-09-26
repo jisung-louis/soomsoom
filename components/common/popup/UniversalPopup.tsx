@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { MyAchievement, AchievementGrade } from '../../../types';
-import { bindAchievementPopupHandler, navigateToAchievements } from '../../../stores/achievementStore';
+import { bindAchievementPopupHandler, navigateToAchievements, navigateToMyDecoration } from '../../../stores/achievementStore';
 import CustomAlert from '../alert/CustomAlert';
+import { useToast } from '../../../contexts/ToastContext';
+import { useCurrencyStore } from '../../../stores/currencyStore';
+import { getUserPoints } from '../../../services/userService';
 
 // 팝업 타입 정의
 export type PopupType = 'achievement' | 'reward_heart' | 'reward_item' | 'mailbox' | 'alarm' | 'generic';
@@ -12,6 +15,7 @@ export interface PopupData {
   title?: string;
   message: string;
   subMessage?: string;
+  amount?: number;
   image?: any; // Lottie 애니메이션 또는 이미지
   buttons?: Array<{
     text: string;
@@ -43,6 +47,7 @@ export default function UniversalPopup() {
   const [open, setOpen] = useState(false);
   const [data, setData] = useState<PopupData | null>(null);
   const [onCloseCb, setOnCloseCb] = useState<(() => void) | null>(null);
+  const { showToast } = useToast();
 
   useEffect(() => {
     // 범용 팝업 핸들러 등록
@@ -62,7 +67,7 @@ export default function UniversalPopup() {
         title: '새로운 업적을 달성했어요!',
         message: '새로운 업적을 달성했어요!',
         subMessage: `'${achievement.name}' 업적 달성!`,
-        image: animByGrade[achievement.grade],
+        image: { lottie: animByGrade[achievement.grade] },
         buttons: [
           {
             text: '닫기',
@@ -107,8 +112,29 @@ export default function UniversalPopup() {
         { text: '닫기', onPress: () => {} }
       ]).map((btn) => ({
         ...btn,
-        onPress: () => {
-          try { btn.onPress && btn.onPress(); } finally { close(); }
+        onPress: async () => {
+          try {
+            // 버튼 로직 실행
+            if (btn.onPress) await btn.onPress();
+            // 하트 보상 팝업에서 서버 진실값 동기화 및 토스트 표시
+            if (data.type === 'reward_heart' && btn.icon === 'heart') {
+              try {
+                const res = await getUserPoints();
+                useCurrencyStore.getState().setHeartPoints(res.points);
+                showToast({ 
+                  amount: data.amount,
+                  message: '하트가 적립되었어요!', 
+                  theme: 'dark', 
+                  iconType: 'heart',
+                });
+              } catch (e) {
+                // 포인트 동기화 실패는 사용자 흐름에 치명적이지 않으므로 조용히 처리
+                console.warn('하트 포인트 동기화 실패:', e);
+              }
+            }
+          } finally {
+            close();
+          }
         }
       }))}
       onClose={close}
@@ -138,7 +164,7 @@ export function showUniversalPopup(data: PopupData, onClose?: () => void) {
 export function createAchievementPopup(badgeGrade: AchievementGrade, message: string, subMessage: string): PopupData {
   return {
     type: 'achievement',
-    image: animByGrade[badgeGrade],
+    image: { lottie: animByGrade[badgeGrade] },
     message: message,
     subMessage: subMessage,
     buttons: [
@@ -159,33 +185,35 @@ export function createItemRewardPopup(image: {uri: string}, message: string, sub
     image: image,
     message: message,
     subMessage: subMessage,
-    // TODO: 아이템 획득 애니메이션 추가
     buttons: [
       {
-        text: '확인',
+        text: '닫기',
         onPress: () => {},
       },
       {
         text: '꾸미러 가기',
         onPress: () => {
-          // TODO: MyTab으로 네비게이션
+          navigateToMyDecoration({ autoEnterEditMode: true });
         },
       }
     ],
   };
 }
 
-export function createHeartRewardPopup(title: string, message: string, subMessage?: string): PopupData {
+export function createHeartRewardPopup(message: string, subMessage?: string, amount?: number): PopupData {
   return {
     type: 'reward_heart',
-    title,
+    image: require('../../../assets/icons/charactors/cat-variation/cat_nice.png'),
     message,
     subMessage,
+    amount: amount,
     buttons: [
       {
         icon: 'heart',
         text: '하트 보상받기',
-        onPress: () => {}, // TODO: 하트 보상 받기 기능 추가
+        onPress: () => {
+          
+        }, // TODO: ShowToast 하기
       }
     ],
   };

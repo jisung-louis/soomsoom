@@ -31,7 +31,7 @@ import CustomAlert from '../../components/common/alert/CustomAlert';
 import { getCachedInstallUuid } from '../../utils/deviceId';
 import { usePurchase } from '../../hooks/usePurchase';
 import { PurchasedItem } from '../../services/purchaseService';
-import { bindAchievementNavigationHandler, useAchievementStore } from '../../stores/achievementStore';
+import { bindAchievementNavigationHandler, bindMyDecorationNavigationHandler, useAchievementStore } from '../../stores/achievementStore';
 import { useAppConfigStore } from '../../stores/appConfigStore';
 import { getUserActivitySummary, UserActivitySummaryResponse } from '../../services/activityLogService';
 import { useAuthStore } from '../../stores/authStore';
@@ -60,7 +60,7 @@ const MyTab = () => {
   const heartPoints = useCurrencyStore(state => state.heartPoints);
   
   // 업적 데이터 (정의 의존 제거: cache와 userAchievements만 사용)
-  const { cache, userAchievements, scheduleCheck } = useAchievementStore();
+  const { cache, userAchievements } = useAchievementStore();
 
   const placedItems = useRoomStore(state => state.placedItems);
   const isOwned = useRoomStore(state => state.isOwned);
@@ -250,17 +250,18 @@ const MyTab = () => {
     return () => { mounted = false; };
   }, [isEditMode, getCartItems, placedItems]);
 
-  // 업적 데이터 가져오기 (MyTab 마운트 시)
-  useEffect(() => {
-    console.log('🏆 MyTab 마운트: 업적 데이터 가져오기 시작');
-    scheduleCheck(500); // 500ms 후 업적 체크
-  }, [scheduleCheck]);
+  // 업적 데이터 폴링 제거: 푸시 기반 동기화로 전환
 
   // 네비게이션 핸들러 등록 (팝업에서 업적 화면으로 이동할 수 있도록)
   useEffect(() => {
     bindAchievementNavigationHandler(() => {
       console.log('🎯 업적 화면으로 네비게이션 요청됨');
       navigation.navigate('MyAchievementScreen');
+    });
+    bindMyDecorationNavigationHandler((params) => {
+      console.log('🎯 My 꾸미기 화면으로 네비게이션 요청됨', params);
+      // 탭 루트로 먼저 이동한 뒤, autoEnterEditMode 전달
+      navigation.navigate('MyTab', params as any);
     });
   }, [navigation]);
 
@@ -533,6 +534,7 @@ const MyTab = () => {
                     title="방 꾸미기" 
                     variant='active' 
                     size='large' 
+                    textStyle={{...typography.body1}}
                     style={styles.button} 
                     onPress={() => {enterEditMode()}}
                     />

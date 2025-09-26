@@ -16,7 +16,8 @@ export type MyAchievement = {
   category: AchievementCategory;
   isAchieved: boolean;
   achievedAt?: string | null;
-  progress?: { current: number; target: number } | null;
+  // 서버 응답 원형을 그대로 사용
+  progress?: { currentValue: number; targetValue: number; unit?: string } | null;
 };
 
 export type PagedResponse<T> = {

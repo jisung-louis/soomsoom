@@ -1,3 +1,4 @@
+
 /**
  * 환경별 설정 관리
  * 
@@ -23,22 +24,15 @@ export const isDevelopment = getEnvironment() === 'development';
 export const isStaging = getEnvironment() === 'staging';
 export const isProduction = getEnvironment() === 'production';
 
+
 /**
  * 환경별 기본 설정
  */
 export const environmentConfig = {
   // API 설정
   api: {
-    baseUrl: isDevelopment 
-      ? (() => {
-          // 개발 서버 고정(사용자 제공)
-          return 'http://3.34.190.34:8080';
-        })()
-      : 'http://3.34.190.34:8080',     // 프로덕션 API 서버
-    
-    timeout: isDevelopment 
-      ? 10000  // 개발: 10초 (디버깅 시간 고려)
-      : 5000,  // 프로덕션: 5초 (빠른 응답)
+    baseUrl: 'http://3.34.5.178:8080',     // 백엔드 서버
+    timeout: 10000 // 10초동안 응답이 없으면 에러 처리
   },
 
   // 디버깅 설정
@@ -48,21 +42,14 @@ export const environmentConfig = {
     showDevTools: isDevelopment, // Zustand DevTools 활성화
   },
 
-  // 앱 설정
-  app: {
-    name: isDevelopment ? '숨숨 (개발)' : '숨숨',
-    version: '1.0.0',
-    buildNumber: isDevelopment ? 'dev' : '1',
-  },
-
-  // 기능 플래그 (Feature Flags)
-  features: {
-    enableAnalytics: isProduction,        // 프로덕션에서만 분석 수집
-    enableCrashReporting: isProduction,   // 프로덕션에서만 크래시 리포팅
-    enableLocalPurchaseSimulator: isDevelopment, // 개발에서만 로컬 구매 시뮬레이터
-    showDebugInfo: isDevelopment,         // 개발에서만 디버그 정보 표시
-    enableSSVTesting: isDevelopment,      // 개발에서만 SSV 테스트 활성화
-  },
+  // // 기능 플래그 (Feature Flags)
+  // features: {
+  //   enableAnalytics: isProduction,        // 프로덕션에서만 분석 수집
+  //   enableCrashReporting: isProduction,   // 프로덕션에서만 크래시 리포팅
+  //   enableLocalPurchaseSimulator: isDevelopment, // 개발에서만 로컬 구매 시뮬레이터
+  //   showDebugInfo: isDevelopment,         // 개발에서만 디버그 정보 표시
+  //   enableSSVTesting: isDevelopment,      // 개발에서만 SSV 테스트 활성화
+  // },
 
   // 소셜 로그인 설정
   auth: {
@@ -77,10 +64,7 @@ export const environmentConfig = {
   },
 
   // 광고 설정
-  ads: {
-    // SSV 콜백 URL (서버 엔드포인트)
-    ssvCallbackUrl:'https://185c348d8980.ngrok-free.app/callbacks/admob/ssv',  // 개발 서버 (ngrok)
-    
+  ads: { 
     // 광고 단위 ID 설정
     rewardedAdUnitId: isDevelopment
       ? 'ca-app-pub-3940256099942544/5224354917'  // Google 테스트 광고 ID (SSV 지원)
@@ -112,7 +96,7 @@ export const initialStates = {
       : [],// 실제
     
     placedItems: {
-      background: 6,
+      background: null,
       eyewear: null,
       hat: null,
       frame: null,
@@ -209,17 +193,17 @@ export const errorHandler = {
  */
 export const printEnvironmentInfo = () => {
   if (isDevelopment) {
-    console.log('--------------------------------');
+    console.log('┌-----------------------------------------------');
     console.log('| 🚀 환경 정보:');
     console.log(`| - 환경: ${isDevelopment ? '개발' : '프로덕션'}`);
     console.log(`| - API URL: ${environmentConfig.api.baseUrl}`);
     console.log(`| - 디버깅: ${environmentConfig.debug.enabled ? '활성화' : '비활성화'}`);
-    console.log(`| - 초기 하트: ${initialStates.currency.heartPoints}`);
-    console.log(`| - 소유 아이템 수: ${initialStates.room.ownedItems.length}`);
-    console.log(`| - 배치 아이템 수: ${Object.values(initialStates.room.placedItems).length}`);
-    console.log(`| - 온보딩 상태: ${initialStates.onboarding.hasSeenOnboarding}`);
-    console.log(`| - 알람 상태: ${initialStates.alarm.alarmList.length}`);
-    console.log('--------------------------------');
+    console.log(`| - 초기 하트: ${initialStates.currency.heartPoints} ❤️`);
+    console.log(`| - 소유 아이템 수: ${initialStates.room.ownedItems.length} 개`);
+    console.log(`| - 배치 아이템 수: ${Object.values(initialStates.room.placedItems).length} 개`);
+    console.log(`| - 온보딩 상태: ${initialStates.onboarding.hasSeenOnboarding ? '온보딩 시청 완료' : '온보딩 시청 필요'}`);
+    console.log(`| - 알람 상태: ${initialStates.alarm.alarmList.length} 개`);
+    console.log('└----------------------------------------------');
   }
 };
 

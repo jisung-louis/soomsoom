@@ -104,9 +104,7 @@ export const emotionDiaryService = {
           deletedAt: res.deletedAt,
         } as EmotionDiary;
         console.log(result);
-        // 감정일기 등록 성공 후 업적 체크
-        useAchievementStore.getState().scheduleCheck(400);
-        console.log('📝 감정일기 등록 성공, 업적 체크 스케줄링');
+        // 업적 체크 폴링 제거: 서버 푸시 기반으로 전환
 
         // 오늘 미션 상태 갱신 (NEED_DIARY → NEED_ACTIVITY/ALL_DONE 등)
         try {

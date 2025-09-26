@@ -103,6 +103,7 @@ export const mockRoutes: MockRoute[] = [
         createdAt: mock.createdAt,
         modifiedAt: mock.modifiedAt,
         deletedAt: mock.deletedAt,
+        rewardableMission: null,
       };
     },
   },
@@ -177,77 +178,11 @@ export const mockRoutes: MockRoute[] = [
       };
     })(),
   },
-  // 업적 정의 목록 (관리자)
-  // GET /achievements
-  {
-    method: 'GET',
-    match: (e) => e.startsWith('/achievements') && !/^\/achievements\/(\d+)/.test(e.split('?')[0]),
-    handler: async ({ endpoint }) => {
-      const { mockAchievementDefinitions } = await import('../data/achievementMockData');
-      // 서버 페이지 포맷 흉내
-      const q = parseQuery(endpoint);
-      const size = Number(q.size ?? 12);
-      const number = Number(q.page ?? 1);
-      const start = (number - 1) * size;
-      const end = start + size;
-      const content = mockAchievementDefinitions.slice(start, end);
-      return {
-        content,
-        page: {
-          size,
-          number,
-          totalElements: mockAchievementDefinitions.length,
-          totalPages: Math.max(1, Math.ceil(mockAchievementDefinitions.length / size)),
-        },
-      };
-    },
-  },
+  // 업적 정의/목록 모킹 제거: 실제 서버 사용
 
-  // 업적 상세 (관리자)
-  // GET /achievements/{id}
-  {
-    method: 'GET',
-    match: (e) => /^\/achievements\/(\d+)/.test(e.split('?')[0]),
-    handler: async ({ endpoint }) => {
-      const { mockAchievementDefinitions } = await import('../data/achievementMockData');
-      const path = endpoint.split('?')[0];
-      const id = Number(path.split('/')[2]);
-      const achievement = mockAchievementDefinitions.find((a: any) => a.id === id);
-      if (!achievement) throw new Error('Achievement not found');
-      return achievement;
-    },
-  },
+  // 업적 상세 모킹 제거
 
-  // 내 업적 목록
-  // GET /users/me/achievements
-  {
-    method: 'GET',
-    match: (e) => e.startsWith('/users/me/achievements'),
-    handler: async ({ endpoint }) => {
-      const { getDynamicMockAchievementData } = await import('../data/achievementMockData');
-      const mock = getDynamicMockAchievementData();
-      // 서버 포맷과 유사하게 반환
-      return {
-        content: mock.content.map((a: any) => ({
-          achievementId: a.achievementId,
-          name: a.name,
-          description: a.description,
-          phrase: a.phrase,
-          grade: a.grade,
-          category: a.category,
-          isAchieved: a.isAchieved,
-          achievedAt: a.achievedAt,
-          progress: a.progress,
-        })),
-        page: {
-          size: mock.size,
-          number: mock.number + 1, // 내부 0-based였으면 1-based 유사 값 반환
-          totalElements: mock.totalElements,
-          totalPages: mock.totalPages,
-        },
-      };
-    },
-  },
+  // 내 업적 목록 모킹 제거
 
   // 안 읽은 메일 개수 조회
   // GET /mailbox/announcements/unread-count

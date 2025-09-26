@@ -16,6 +16,8 @@ import { apiClient } from '../services/apiClient';
 import { refreshTokens } from '../services/authService';
 import { initInstallUuid } from '../utils/deviceId';
 import { useAuth } from '../hooks/useAuth';
+import { useAppConfigStore } from '../stores/appConfigStore';
+import ServerClosedScreen from '../screens/ServerClosedScreen';
 import { usePushNotification } from '../hooks/usePushNotification';
 import { registerDevice } from '../services/notificationService';
 import { getFcmTokenAsync } from '../services/authService';
@@ -34,6 +36,7 @@ const AppContent = () => {
   const navigationRef = React.useRef<NavigationContainerRef<any>>(null);
 
   const { isBootstrapping, run } = useAppBootstrap();
+  const { serverClosed } = useAppConfigStore();
   const { setupResponseListener } = useNotificationSetup(navigationRef);
   const { phase } = useAuthStore();
   const { deviceLogin } = useAuth();
@@ -72,12 +75,16 @@ const AppContent = () => {
 
 
   useEffect(() => {
+    let mounted = true;
     (async () => {
       await run();
-      // 알림 초기화/권한 요청은 온보딩 06단계에서 수행
-      const sub = setupResponseListener();
-      return () => sub?.remove();
+      if (!mounted) return;
     })();
+    const cleanup = setupResponseListener();
+    return () => {
+      mounted = false;
+      cleanup?.();
+    };
   }, [run, setupResponseListener]);
 
   const completeOnboarding = async () => {
@@ -112,6 +119,9 @@ const AppContent = () => {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <PortalProvider>
+        {serverClosed ? (
+          <ServerClosedScreen />
+        ) : (
         <AuthGate
           showSplash={showSplash}
           onCompleteSplash={() => setShowSplash(false)}
@@ -125,6 +135,7 @@ const AppContent = () => {
           <CustomToast />
           <UniversalPopup />
         </AuthGate>
+        )}
       </PortalProvider>
     </GestureHandlerRootView>
   );

@@ -61,7 +61,6 @@ const MailboxScreen = () => {
       const detail = await getAnnouncementDetail(item.userAnnouncementId);
       console.log('메일 상세 조회 완료:', detail);
       
-      // TODO: 공지사항 상세 화면으로 네비게이션
       navigation.navigate('MailboxDetailScreen', { content: detail });
       
       // 읽음 처리 후 목록 새로고침 (읽음 상태 업데이트)

@@ -163,39 +163,39 @@ export const checkPermissions = async () => {
   }
 }; 
 
-// 마음일기 알림 스케줄링 함수
-export const scheduleDiaryNotification = async (timeString: string) => {
-  try {
-    const { convert12To24Hour } = await import('./timeUtils');
-    const time24Format = convert12To24Hour(timeString);
-    console.log('마음일기 알림 스케줄링:', `${timeString} -> ${time24Format}`);
+// 마음일기 알림 스케줄링 함수 //// 로컬 다이어리 스케줄 제거 (서버 FCM 전환)
+// export const scheduleDiaryNotification = async (timeString: string) => {
+//   try {
+//     const { convert12To24Hour } = await import('./timeUtils');
+//     const time24Format = convert12To24Hour(timeString);
+//     console.log('마음일기 알림 스케줄링:', `${timeString} -> ${time24Format}`);
     
-    const { scheduleAlarm, cancelAlarmNotifications } = await import('../services/alarmNotificationService');
+//     const { scheduleAlarm, cancelAlarmNotifications } = await import('../services/alarmNotificationService');
     
-    // 기존 알림 취소
-    await cancelAlarmNotifications('diary_notification');
+//     // 기존 알림 취소
+//     await cancelAlarmNotifications('diary_notification');
     
-    // 새로운 알림 스케줄링
-    const success = await scheduleAlarm({
-      id: 'diary_notification',
-      time: time24Format,
-      repeatDays: ['일', '월', '화', '수', '목', '금', '토'],
-      soundName: '기본',
-      isVibrationOn: true,
-      title: '마음일기 작성 시간입니다',
-      body: '오늘 하루는 어떠셨나요? 마음일기를 작성해보세요.',
-      isBurstMode: false, // 🔥 단일 모드
-    });
+//     // 새로운 알림 스케줄링
+//     const success = await scheduleAlarm({
+//       id: 'diary_notification',
+//       time: time24Format,
+//       repeatDays: ['일', '월', '화', '수', '목', '금', '토'],
+//       soundName: '기본',
+//       isVibrationOn: true,
+//       title: '마음일기 작성 시간입니다',
+//       body: '오늘 하루는 어떠셨나요? 마음일기를 작성해보세요.',
+//       isBurstMode: false, // 🔥 단일 모드
+//     });
     
-    if (success) {
-      console.log('마음일기 알림 스케줄링 완료:', time24Format);
-      return true;
-    } else {
-      console.error('마음일기 알림 스케줄링 실패');
-      return false;
-    }
-  } catch (error) {
-    console.error('마음일기 알림 스케줄링 실패:', error);
-    return false;
-  }
-}; 
+//     if (success) {
+//       console.log('마음일기 알림 스케줄링 완료:', time24Format);
+//       return true;
+//     } else {
+//       console.error('마음일기 알림 스케줄링 실패');
+//       return false;
+//     }
+//   } catch (error) {
+//     console.error('마음일기 알림 스케줄링 실패:', error);
+//     return false;
+//   }
+// }; 

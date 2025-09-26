@@ -17,6 +17,9 @@ const CustomToast: React.FC = () => {
     hasAnimation,
     hideToast,
     hasBottomNavigation,
+    style,
+    textStyle,
+    iconSize,
     amount,
   } = useToast();
 
@@ -89,6 +92,9 @@ const CustomToast: React.FC = () => {
             iconType={iconType}
             hasAnimation={hasAnimation}
             amount={amount}
+            style={style}
+            textStyle={textStyle}
+            iconSize={iconSize}
           />
         </Animated.View>
       </View>

@@ -11,7 +11,6 @@ import { useTodayMissionStore } from '../stores/todayMissionStore';
 import { useMailboxStore } from '../stores/mailboxStore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getNotificationSettings } from '../services/notificationService';
-import { scheduleDiaryNotification, clearAllNotifications } from '../utils/notificationUtils';
 import * as Notifications from 'expo-notifications';
 
 /**
@@ -134,7 +133,7 @@ export const syncAllUserData = async () => {
         try {
           const { status } = await Notifications.getPermissionsAsync();
           if (status === 'granted') {
-            await scheduleDiaryNotification(display);
+            // 로컬 스케줄링 제거: 서버가 FCM 발송을 담당
           } else {
             console.log('🔕 알림 권한 비허용 상태 - 부팅 동기화에서는 스케줄링 생략');
           }

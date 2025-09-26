@@ -75,3 +75,23 @@ export const getNotificationSettings = async (): Promise<NotificationSettingsRes
     throw error;
   }
 };
+
+/**
+ * 알림 클릭 추적
+ * POST /notifications/track-click
+ * 
+ * @param historyId - 알림 클릭 추적할 알림 히스토리 ID
+ */
+export const trackNotificationClick = async (historyId: number): Promise<void> => {
+  if (!historyId) {
+    console.error('❌ 알림 클릭 추적 실패: historyId가 없습니다.');
+    throw new Error('알림 클릭 추적 실패: historyId가 없습니다.');
+  }
+  try {
+    await apiClient.post<void>('/notifications/track-click', { historyId });
+    console.log('✅ 알림 클릭 추적 성공:', historyId);
+  } catch (error) {
+    console.error('❌ 알림 클릭 추적 실패:', error);
+    throw error;
+  }
+};

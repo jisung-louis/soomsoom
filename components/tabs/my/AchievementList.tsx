@@ -31,15 +31,35 @@ const renderBadgeIcon = (grade: string, isAchieved: boolean, width: number = 48,
   }
 };
 
-const AchievementList = ({ achievements }: { achievements: MyAchievement[] }) => {
-  const getProgressText = (a: MyAchievement) => {
-    const targetValue = a.progress?.target ?? 1;
-    const current = a.progress?.current ?? 0;
-    if (a.isAchieved) {
-      return `${targetValue} / ${targetValue}`;
+{/*
+🔍 내 업적 목록 조회 결과: {
+  "content": [
+    {
+      "achievementId": 1,
+      "name": "1회 일기 작성",
+      "description": "감정일기 1회 작성",
+      "phrase": "1회도 중요해요",
+      "grade": "BRONZE",
+      "category": "DIARY",
+      "isAchieved": true,
+      "achievedAt": "2025-09-25T15:48:10.534055",
+      "progress": {
+        "currentValue": 1,
+        "targetValue": 1,
+        "unit": "회"
+      }
     }
-    return `${current} / ${targetValue}`;
-  };
+  ],
+  "page": {
+    "size": 50,
+    "number": 1,
+    "totalElements": 1,
+    "totalPages": 1
+  }
+}
+  */}
+
+const AchievementList = ({ achievements }: { achievements: MyAchievement[] }) => {
 
   return (
     <View>
@@ -50,10 +70,22 @@ const AchievementList = ({ achievements }: { achievements: MyAchievement[] }) =>
                   {renderBadgeIcon(item.grade, item.isAchieved)}
                   <View style={styles.achievementTitle}>
                     <Text style={styles.achievementTitleText}>{item.name}</Text>
-                    <Text style={styles.achievementCompletionRateText}>
-                      {getProgressText(item)}
-                    </Text>
+                    <View style={styles.achievementLeftBottomContainer}>
+                      <Text style={styles.achievementDescriptionText}>
+                        {item.description}
+                      </Text>
+                      <Text style={styles.achievementDescriptionText}>∙</Text>
+                      <View style={styles.achievementCompletionRateTextContainer}>
+                        <Text style={styles.achievementCompletionRateText}>
+                          {item.progress?.currentValue}
+                        </Text>
+                        <Text style={styles.achievementCompletionRateText}>/</Text>
+                        <Text style={styles.achievementCompletionRateText}>
+                          {item.progress?.targetValue}{item.progress?.unit}
+                        </Text>
+                      </View>
                     </View>
+                  </View>
                 </View>
                 <View>
                     {item.isAchieved ? 
@@ -96,9 +128,21 @@ const styles = StyleSheet.create({
       ...typography.body4,
       color: colors.grayScale900,
     },
-    achievementCompletionRateText: {
+    achievementLeftBottomContainer: {
+      flexDirection: 'row',
+      gap: 4,
+    },
+    achievementDescriptionText: {
       ...typography.caption2,
       color: colors.grayScale600,
+    },
+    achievementCompletionRateTextContainer: {
+      flexDirection: 'row',
+      gap: 1,
+    },
+    achievementCompletionRateText: {
+      ...typography.caption2,
+      color: colors.grayScale800,
     },
     statusText: {
         fontSize: 14,

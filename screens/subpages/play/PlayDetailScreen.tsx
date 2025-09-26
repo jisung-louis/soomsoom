@@ -254,6 +254,7 @@ const PlayDetailScreen: React.FC = () => {
               title='마음운동 시작하기'
               variant='active'
               size='large'
+              textStyle={{...typography.heading9}}
               onPress={() => {
                 content.type === 'BREATHING' ? handleStartBreathing() : handleStartMeditation()
               }}

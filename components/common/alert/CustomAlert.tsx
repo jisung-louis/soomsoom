@@ -18,7 +18,7 @@ export type AlertButton = {
 
 type CustomAlertProps = {
   visible: boolean;
-  image?: string | any; // string (URI) 또는 any (Lottie 파일)
+  image?: string | number | { uri: string } | { lottie: number | string | { uri: string } };
   message: string;
   subMessage?: string;
   buttons: AlertButton[];
@@ -91,7 +91,21 @@ const CustomAlert = ({ visible, image, message, subMessage, buttons, onClose, cl
 
           {/* 이미지 */}
           {image && (
-            typeof image === 'string' && image.endsWith('.json') ? (
+            // 명시적 Lottie 포맷: { lottie: ... }
+            (typeof image === 'object' && 'lottie' in image) ? (
+              <View style={styles.imageContainer}>
+                <LottieView
+                  source={
+                    typeof (image as any).lottie === 'string'
+                      ? (image as any).lottie
+                      : (image as any).lottie
+                  }
+                  autoPlay
+                  loop
+                  style={styles.image}
+                />
+              </View>
+            ) : typeof image === 'string' && image.endsWith('.json') ? (
               <View style={styles.imageContainer}>
                 <LottieView source={image} autoPlay loop style={styles.image} />
               </View>
@@ -99,11 +113,11 @@ const CustomAlert = ({ visible, image, message, subMessage, buttons, onClose, cl
               <View style={styles.imageContainer}>
                 <Image source={{ uri: image }} style={styles.image} />
               </View>
-            ) : (
+            ) : typeof image === 'number' ? (
               <View style={styles.imageContainer}>
-                <LottieView source={image} autoPlay loop style={styles.image} />
+                <Image source={image} style={styles.image} />
               </View>
-            )
+            ) : null
           )}
 
           {/* 메시지 */}
@@ -133,6 +147,7 @@ const CustomAlert = ({ visible, image, message, subMessage, buttons, onClose, cl
                 key={index}
                 title={button.text}
                 onPress={button.onPress}
+                textStyle={{...typography.body4}}
                 variant={button.buttonVariants || defaultButtonVariant(index)}
                 style={{flex: 1}}
               />

@@ -12,7 +12,7 @@ import CustomBottomSheet from '../../../../components/common/bottomsheet/CustomB
 import NotificationTimePicker from '../../../../components/tabs/my/setting/NotificationTimePicker';
 import { Button } from '../../../../components/common/buttons/Button';
 import { cancelAlarmNotifications, requestNotificationPermissions } from '../../../../services/alarmNotificationService';
-import { scheduleDiaryNotification } from '../../../../utils/notificationUtils';
+// 로컬 다이어리 스케줄 제거 (서버 FCM 전환)
 import { toggleNotificationSetting, updateDiaryNotificationTime } from '../../../../services/notificationService';
 import { parseNotificationTime } from '../../../../utils/timeUtils';
 import { useToast } from '../../../../hooks/useToast';
@@ -59,40 +59,10 @@ const NotificationSettingScreen = () => {
     };
 
     // 알림 스케줄링 함수
-    const scheduleDiaryNotificationLocal = async () => {
-        try {
-            const timeString = `${notificationTime.period} ${notificationTime.hour}:${notificationTime.minute.padStart(2, '0')}`;
-            console.log('스케줄링할 시간 문자열:', timeString);
-            
-            const success = await scheduleDiaryNotification(timeString);
-            
-            if (success) {
-                console.log('마음일기 알림 스케줄링 완료');
-            } else {
-                console.error('마음일기 알림 스케줄링 실패');
-            }
-        } catch (error) {
-            console.error('알림 스케줄링 실패:', error);
-        }
-    };
+    // 로컬 스케줄링 제거: 서버가 발송을 담당
 
     // 특정 시간으로 알림 스케줄링하는 함수
-    const scheduleDiaryNotificationWithTime = async (time: TimeData) => {
-        try {
-            const timeString = `${time.period} ${time.hour}:${time.minute.padStart(2, '0')}`;
-            console.log('새로운 시간으로 스케줄링:', timeString);
-            
-            const success = await scheduleDiaryNotification(timeString);
-            
-            if (success) {
-                console.log('마음일기 알림 스케줄링 완료');
-            } else {
-                console.error('마음일기 알림 스케줄링 실패');
-            }
-        } catch (error) {
-            console.error('알림 스케줄링 실패:', error);
-        }
-    };
+    // 로컬 스케줄링 제거: 서버가 발송을 담당
 
     // 알림 취소 함수
     const cancelDiaryNotification = async () => {
@@ -156,10 +126,7 @@ const NotificationSettingScreen = () => {
                     return;
                 }
                 
-                // 2. 현재 설정된 시간으로 알림 스케줄링
-                await scheduleDiaryNotificationLocal();
-                
-                // 3. 알림 활성화 되었다는 토스트 메시지
+                // 2. (로컬 스케줄링 제거) 서버 토글만 반영되었음을 안내
                 //Alert.alert('알림 활성화', '마음일기 알림이 활성화되었습니다.');
                 showToast({
                     message: '마음일기 알람이 설정되었어요!',
@@ -238,10 +205,9 @@ const NotificationSettingScreen = () => {
             console.log('마음일기 알림 시간 저장:', timeString);
             console.log('현재 알림 활성화 상태:', isDiaryNotificationEnabled);
             
-            // 알림이 활성화되어 있다면 새로운 시간으로 스케줄링 업데이트
+            // 알림이 활성화되어 있다면 서버 시간 업데이트만 수행
             if (isDiaryNotificationEnabled) {
-                console.log('알림이 활성화되어 있으므로 새로운 시간으로 스케줄링 업데이트');
-                await scheduleDiaryNotificationWithTime(time); // 새로운 시간을 직접 전달
+                console.log('알림이 활성화되어 있으므로 서버 시간 업데이트만 수행');
                 //Alert.alert('알림 시간 변경', '마음일기 알림 시간이 변경되었습니다.');
                 showToast({
                     message: '마음일기 알람 시간이 변경되었어요!',

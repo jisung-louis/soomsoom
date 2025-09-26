@@ -79,7 +79,7 @@ export const Button = forwardRef<ButtonRef, ButtonProps>((props, ref) => {
       return (
         <Animated.View style={[{flexDirection: 'row', alignItems: 'center', gap: 2, zIndex: 100}, animatedStyle]}>
           <HeartIcon width={28} height={28} />
-          {price && <Text style={styles.price}>{price}</Text>}
+          {price && <Text style={[styles.price, styles[variant]]}>{price}</Text>}
         </Animated.View>
       );
     }
@@ -94,20 +94,28 @@ export const Button = forwardRef<ButtonRef, ButtonProps>((props, ref) => {
       {...rest}
     >
       {renderLeft()}
-      <Text style={[styles.title, styles[variant], icon || loading ? { marginLeft: 4 } : null, textStyle]}>{title}</Text>
+      <Text style={[
+        styles.title,
+        price && price ? {...typography.heading9} : {...typography.body1},
+        styles[variant], 
+        icon || loading ? { marginLeft: 4 } : null, 
+        textStyle
+        ]}>
+          {title}
+          </Text>
     </TouchableOpacity>
   );
 });
 
 const styles = StyleSheet.create({
-  button: {
+  button: { 
     borderRadius: radius.r12,
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row',
   },
   title: {
-    ...typography.heading9,
+    ...typography.body1,
   },
 
   default: {

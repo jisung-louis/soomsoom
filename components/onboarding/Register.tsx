@@ -6,6 +6,7 @@ import { colors } from '../../constants/colors';
 import { sv } from '../../utils/scale';
 import SocialLoginButtons from './SocialLoginButtons';
 import { useOpenExternalLink } from '../../hooks/useOpenExternalLink';
+import { Button } from '../common/buttons/Button';
 
 const TERMS_URL = 'https://habjungdriking.notion.site/Terms-of-Service-2368c8e0513580f9999ccb7bb901a0d5';
 const PRIVACY_URL = 'https://habjungdriking.notion.site/2378c8e0513580758730fade7689a04a';

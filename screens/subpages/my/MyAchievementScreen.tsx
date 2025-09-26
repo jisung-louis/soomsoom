@@ -26,14 +26,15 @@ const MyAchievementScreen = () => {
     userAchievements,
     getAchievedCount,
     getTotalCount,
-    scheduleCheck,
+    loadUserAchievements,
     cache,
     resetShownAchievements,
   } = useAchievementStore();
 
+  // 화면 진입 시 1회 업적 목록 동기화
   useEffect(() => {
-    scheduleCheck(500);
-  }, [scheduleCheck]);
+    loadUserAchievements('ALL');
+  }, [loadUserAchievements]);
 
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
@@ -58,7 +59,7 @@ const MyAchievementScreen = () => {
   const userAchievementArray = useMemo(() => {
     return filteredAchievements.map<MyAchievement & { completionRate: number }>((a) => ({
       ...a,
-      completionRate: a.progress?.current || 0,
+      completionRate: a.progress?.currentValue || 0,
     }));
   }, [filteredAchievements]);
 
@@ -89,12 +90,12 @@ const MyAchievementScreen = () => {
                     <BadgeGold width={64} height={64} />
                     <Text style={[styles.goldTextColor, styles.badgeTextTypography]}>골드 뱃지</Text>
                 </View>
-                {/* {Array.from(userAchievements.values()).some(a => a.grade === 'SPECIAL') && ( */}
-                  {/* <View style={styles.badgeAndTextContainer}>
+                {Array.from(cache.values()).some(a => a.grade === 'SPECIAL') && (
+                  <View style={styles.badgeAndTextContainer}>
                     <BadgeHidden width={64} height={64} />
                     <Text style={[styles.hiddenTextColor, styles.badgeTextTypography]}>히든 뱃지</Text>
-                  </View> */}
-                {/* )} */}
+                  </View>
+                )}
             </View>
         </View>
         <Surface style={styles.surface}/>

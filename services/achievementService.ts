@@ -1,6 +1,6 @@
 import { apiClient } from './apiClient';
 import { AppError, createNetworkError } from '../utils/errorHandler';
-import { MyAchievement, PagedResponse } from '../types';
+// 서버 응답을 그대로 사용합니다.
 // DEV 모킹은 apiClient + mockRoutes에서 일괄 처리합니다.
 
 /**
@@ -20,9 +20,27 @@ export interface FetchMyAchievementsParams {
   deletionStatus?: DeletionStatus; // 기본 ACTIVE (ADMIN만 DELETED/ALL 가능)
 }
 
+// 서버 응답 타입 정의 (그대로 노출)
+export type ServerAchievementProgress = { currentValue: number; targetValue: number; unit?: string } | null;
+export type ServerAchievementItem = {
+  achievementId: number;
+  name: string;
+  description?: string;
+  phrase?: string | null;
+  grade: 'BRONZE' | 'SILVER' | 'GOLD' | 'SPECIAL';
+  category: 'DIARY' | 'MEDITATION' | 'BREATHING' | 'HIDDEN';
+  isAchieved: boolean;
+  achievedAt?: string | null;
+  progress: ServerAchievementProgress;
+};
+export type ServerPagedResponse = {
+  content: ServerAchievementItem[];
+  page: { size: number; number: number; totalElements: number; totalPages: number };
+};
+
 export const fetchMyAchievements = async (
   params: FetchMyAchievementsParams = {}
-): Promise<PagedResponse<MyAchievement>> => {
+): Promise<ServerPagedResponse> => {
   try {
     // apiClient 사용 (Authorization 자동 주입)
     const qp = new URLSearchParams();
@@ -34,41 +52,9 @@ export const fetchMyAchievements = async (
     if (params.sort) qp.set('sort', params.sort);
     if (params.deletionStatus) qp.set('deletionStatus', params.deletionStatus);
 
-    type ServerProgress = { currentValue: number; targetValue: number } | null;
-    type ServerItem = Omit<MyAchievement, 'progress'> & { progress: ServerProgress };
-    type ServerResponse = {
-      content: ServerItem[];
-      page: { size: number; number: number; totalElements: number; totalPages: number };
-    };
-
-    const res = await apiClient.get<ServerResponse>(`/users/me/achievements?${qp.toString()}`);
-
-    // 서버 응답 → 클라이언트 표준 타입으로 매핑
-    const mapped: PagedResponse<MyAchievement> = {
-      content: res.content.map((a) => ({
-        achievementId: a.achievementId,
-        name: a.name,
-        description: a.description,
-        phrase: a.phrase,
-        grade: a.grade,
-        category: a.category,
-        isAchieved: a.isAchieved,
-        achievedAt: a.achievedAt,
-        progress: a.progress
-          ? { current: a.progress.currentValue, target: a.progress.targetValue }
-          : null,
-      })),
-      totalElements: res.page.totalElements,
-      totalPages: res.page.totalPages,
-      size: res.page.size,
-      // 내부적으로는 0-based를 사용해왔으므로 호환성 위해 1→0 보정
-      number: Math.max(0, (res.page.number ?? 1) - 1),
-      first: (res.page.number ?? 1) <= 1,
-      last: (res.page.number ?? 1) >= res.page.totalPages,
-      empty: res.page.totalElements === 0,
-    };
-
-    return mapped;
+    const res = await apiClient.get<ServerPagedResponse>(`/users/me/achievements?${qp.toString()}`);
+    console.log('🔍 내 업적 목록 조회 결과:', JSON.stringify(res, null, 2));
+    return res;
   } catch (error) {
     if (error instanceof AppError) {
       throw error;

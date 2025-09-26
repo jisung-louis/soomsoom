@@ -19,6 +19,9 @@ import LoadingSpinner from '../../../components/common/loading/LoadingSpinner';
 import ErrorMessage from '../../../components/common/error/ErrorMessage';
 import { getActivityDetail, Activity } from '../../../services/contentService';
 import { normalizeImageSource } from '../../../utils/textUtils';
+import { claimMission } from '../../../services/missionService';
+import { useCurrencyStore } from '../../../stores/currencyStore';
+import { getUserPoints } from '../../../services/userService';
 
 const PlayInstructorDetailScreen: React.FC = () => {
     const navigation = useNavigation<StackNavigationProp<PlayStackParamList>>();
@@ -115,6 +118,7 @@ const PlayInstructorDetailScreen: React.FC = () => {
       </SafeAreaView>
     );
   }
+  const [specialButtonVisible, setSpecialButtonVisible] = useState(instructor?.rewardableMission !== null);
 
   // 강사 정보가 없는 경우
   if (!instructor) {
@@ -136,18 +140,41 @@ const PlayInstructorDetailScreen: React.FC = () => {
           </View>
           <Text style={styles.bio}>{instructor.bio}</Text>
         </View>
+        {(specialButtonVisible && !isLoading) && (
         <View style={[styles.buttonContainer, styles.defaultButtonContainer]}>
           <Button 
             title="하트 보상받기"
             variant="active"
             size="large"
             icon="heart"
+            textStyle={{...typography.heading9}}
             style={styles.button}
-            onPress={() => {
-              // 하트 보상받기 API 호출
+            onPress={async () => {
+              try {
+                const res = await claimMission(instructor.rewardableMission?.missionId ?? 0);
+                console.log('res', JSON.stringify(res, null, 2));
+                const readHeartPoints = await getUserPoints();
+                console.log('readHeartPoints', JSON.stringify(readHeartPoints, null, 2));
+                useCurrencyStore.getState().setHeartPoints(readHeartPoints.points);
+                setSpecialButtonVisible(false);
+                showToast({
+                  amount: res.claimedReward.points,
+                  message: '하트 획득했어요!',
+                  theme: 'dark',
+                  iconType: 'heart',
+                });
+              } catch (error) {
+                console.error('미션 보상 받기 실패:', error);
+                showToast({
+                  message: '미션 보상 받기에 실패했어요.',
+                  theme: 'dark',
+                  iconType: 'brokenHeart',
+                });
+              }
             }}
           />
         </View>
+        )}
       </SafeAreaView>
     );
   }
@@ -177,6 +204,7 @@ const PlayInstructorDetailScreen: React.FC = () => {
             icon={instructor.isFollowing ? 'check' : undefined}
             variant={instructor.isFollowing ? 'secondary' : 'active'}  
             size='large'
+            textStyle={{...typography.heading9}}
             showIconMotion
             style={styles.button}
             onPress={async () => {

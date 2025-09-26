@@ -52,20 +52,20 @@ const RecordTab = () => {
   const celebrationSheetRef = useRef<BottomSheetModal>(null);
   const activityInducingSheetRef = useRef<BottomSheetModal>(null);
 
-  // 첫 기록 축하 바텀시트 표시
-  useEffect(() => {
-    if (route.params?.isFirstRecord === true) {
-      // 약간의 지연을 두고 바텀시트 열기
-      setTimeout(() => {
-        setIsCelebrationParticle(true);
-        celebrationSheetRef.current?.expand();
-      }, 100);
-    } else if (route.params?.isFirstRecord === false) {
-      setTimeout(() => {
-        activityInducingSheetRef.current?.expand();
-      }, 100);
-    }
-  }, [route.params?.isFirstRecord]);
+  // 첫 기록 축하 바텀시트 표시 (정책 상 제거)
+  // useEffect(() => {
+  //   if (route.params?.isFirstRecord === true) {
+  //     // 약간의 지연을 두고 바텀시트 열기
+  //     setTimeout(() => {
+  //       setIsCelebrationParticle(true);
+  //       celebrationSheetRef.current?.expand();
+  //     }, 100);
+  //   } else if (route.params?.isFirstRecord === false) {
+  //     setTimeout(() => {
+  //       activityInducingSheetRef.current?.expand();
+  //     }, 100);
+  //   }
+  // }, [route.params?.isFirstRecord]);
 
   // 축하 바텀시트 닫기
   const handleCelebrationClose = () => {
@@ -136,7 +136,20 @@ const RecordTab = () => {
 
       // 주간 단위 미래 체크
       if (nextWeek.isAfter(today, 'week')) {
-        showToast({ message: '미래의 감정은 지금 기록할 수 없어요!', theme: 'dark', iconType: 'brokenHeart' });
+        showToast({ 
+          message: '미래의 감정은 지금 기록할 수 없어요!', 
+          theme: 'dark', 
+          iconType: 'brokenHeart',
+          style: {
+            width: ss(335),
+            height: sv(42),
+          },
+          textStyle: {
+            ...typography.body5,
+            textAlign: 'center',
+          },
+          iconSize: ss(24),
+        });
         return;
       }
 
@@ -150,7 +163,17 @@ const RecordTab = () => {
 
       // 월간 단위 미래 체크
       if (nextMonth.isAfter(today, 'month')) {
-        showToast({ message: '미래의 감정은 지금 기록할 수 없어요!', theme: 'dark', iconType: 'brokenHeart' });
+        showToast({ message: '미래의 감정은 지금 기록할 수 없어요!', theme: 'dark', iconType: 'brokenHeart',
+          style: {
+            width: ss(335),
+            height: sv(42),
+          },
+          textStyle: {
+            ...typography.body5,
+            textAlign: 'center',
+          },
+          iconSize: ss(24),
+        });
         return;
       }
 

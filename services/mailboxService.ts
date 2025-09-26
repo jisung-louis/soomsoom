@@ -1,5 +1,9 @@
 import { apiClient } from './apiClient';
 import { AppError, createNetworkError } from '../utils/errorHandler';
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+
+dayjs.extend(utc);
 
 /**
  * 우편함 관련 API 서비스
@@ -72,12 +76,24 @@ export const getAnnouncements = async (params: FetchAnnouncementsParams = {}): P
     const endpoint = queryString ? `/mailbox/announcements?${queryString}` : '/mailbox/announcements';
     
     const response = await apiClient.get<any>(endpoint);
+
+    const normalizeReceivedAt = (iso: string): string => {
+      if (!iso) return iso;
+      const d = dayjs.utc(iso);
+      return d.isValid() ? d.local().toISOString() : iso;
+    };
+
+    const mapNormalize = (list: any[]): UserAnnouncement[] =>
+      (list || []).map((item) => ({
+        ...item,
+        receivedAt: normalizeReceivedAt(item?.receivedAt),
+      }));
     // 서버가 배열 또는 페이지네이션 객체({ content: [...] })를 반환할 수 있으므로 방어적으로 처리
     if (Array.isArray(response)) {
-      return response as UserAnnouncement[];
+      return mapNormalize(response);
     }
     if (response && Array.isArray(response.content)) {
-      return response.content as UserAnnouncement[];
+      return mapNormalize(response.content);
     }
     // 예외 케이스: 비정상 응답이면 빈 배열 반환(상층에서 빈 UI 처리)
     console.warn('📬 우편함 공지사항 예상치 못한 응답 형식, 빈 배열로 대체:', typeof response);

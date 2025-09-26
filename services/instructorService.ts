@@ -12,6 +12,10 @@ export interface Instructor {
   createdAt: string;
   modifiedAt: string;
   deletedAt: string | null;
+  rewardableMission: {
+    missionId: number;
+    title: string;
+  } | null;
 }
 
 export interface InstructorListResponse {

@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { getUnreadCount, getAnnouncements, UserAnnouncement, FetchAnnouncementsParams } from '../services/mailboxService';
+import * as Notifications from 'expo-notifications';
 
 interface MailboxState {
   unreadCount: number;
@@ -48,6 +49,11 @@ export const useMailboxStore = create<MailboxState>()(
           set({ isLoading: true });
           const response = await getUnreadCount();
           get().setUnreadCount(response.unreadCount);
+          try {
+            await Notifications.setBadgeCountAsync(response.unreadCount);
+          } catch (e) {
+            console.warn('📬 배지 설정 실패:', e);
+          }
         } catch (error) {
           console.error('❌ 안 읽은 메일 개수 조회 실패:', error);
           // 에러 시에도 로딩 상태는 해제

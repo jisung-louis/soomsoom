@@ -329,9 +329,9 @@ const HomeTab = () => {
       
     </UserRoom>
     {/* 광고 배너 */}
-    <View style={styles.adContainer}>
+    {/* <View style={styles.adContainer}>
       <AdBanner />
-    </View>
+    </View> */}
   </>
   );
 };

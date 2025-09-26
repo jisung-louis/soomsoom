@@ -94,7 +94,7 @@ export default function AlarmDismissScreen({ route }: AlarmDismissScreenProps) {
       const baseContent: Notifications.NotificationContentInput = {
         title: '기상 리마인더',
         body: '이제 진짜 일어날 시간이에요!!',
-        data: { alarmId, missionType, missionData, missionPack },
+        data: { alarmId, missionType, missionData, missionPack ,notificationType: 'ALARM'},
         ...(missionType ? { categoryIdentifier: 'MISSION_ALARM' } : {}),
         sound: soundName ? soundName : 'default',
       };
@@ -105,7 +105,7 @@ export default function AlarmDismissScreen({ route }: AlarmDismissScreenProps) {
         await Notifications.scheduleNotificationAsync({
           content: {
             ...baseContent,
-            data: { ...baseContent.data, burstIndex: i },
+            data: { ...baseContent.data, burstIndex: i, notificationType: 'ALARM' },
           },
           trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: fireAt },
         });
@@ -141,9 +141,9 @@ export default function AlarmDismissScreen({ route }: AlarmDismissScreenProps) {
           </View>
           <View style={styles.footer}>
               {missionType ? (
-                  <Button title="미션 시작" variant="active" style={styles.button} onPress={()=>{handleMissionStart()}} />
+                  <Button title="미션 시작" variant="active" style={styles.button} textStyle={{...typography.heading9}} onPress={()=>{handleMissionStart()}} />
               ) : (
-                  <Button title="알림 해제" size="large" variant="active" style={styles.button} onPress={handleDismiss} />
+                  <Button title="알림 해제" size="large" variant="active" style={styles.button} textStyle={{...typography.heading9}} onPress={handleDismiss} />
               )}
           </View>
       </ImageBackground>

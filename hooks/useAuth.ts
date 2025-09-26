@@ -16,6 +16,10 @@ import { registerDevice, unregisterDevice } from '../services/notificationServic
 import { getCachedInstallUuid, rotateInstallUuid } from '../utils/deviceId';
 import { resetAppState } from '../utils/resetAppState';
 import { syncAllUserData } from '../hooks/useUserDataSync';
+import { colors } from '../constants/colors';
+import { typography } from '../constants/typography';
+
+import { ss, sv } from '../utils/scale';
 
 /**
  * 인증 관련 로직을 중앙화한 커스텀 훅
@@ -164,7 +168,16 @@ export const useAuth = () => {
       await registerFcmToken();
 
       console.log(`✅ ${provider} 로그인 완료`);
-      showToast({ message: `${provider === 'GOOGLE' ? '구글' : '애플'} 로그인에 성공했어요!` });
+      showToast({ 
+        message: `${provider === 'GOOGLE' ? '구글' : '애플'} 로그인에 성공했어요!` ,
+        textStyle: {
+          ...typography.body5,
+        },
+        style: {
+          width: ss(335),
+          height: sv(42),
+        },
+      });
       
       // 6. 사용자 데이터 전체 동기화
       await syncAllUserData();

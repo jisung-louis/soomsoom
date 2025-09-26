@@ -13,6 +13,9 @@ import {
   createGenericPopup 
 } from '../components/common/popup/UniversalPopup';
 import { AchievementGrade } from '../types';
+import { ss, sv } from '../utils/scale';
+import { typography } from '../constants/typography';
+import { useAchievementStore } from '../stores/achievementStore';
 
 /**
  * 푸시 알림 처리 커스텀 훅
@@ -22,10 +25,19 @@ import { AchievementGrade } from '../types';
  * - 업적 달성, 알람 등 타입별 푸시 처리
  * - 푸시 탭 시 네비게이션 처리
  */
+
+
+export type NotificationType =
+| 'DIARY_REMINDER'
+| 'RE_ENGAGEMENT'
+| 'ACHIEVEMENT_UNLOCKED'
+| 'NEWS_UPDATE'
+| 'MISSION_COMPLETED'
+| 'ALARM';
+
 export const usePushNotification = () => {
   const { showToast } = useToast();
   const { loadUnreadCount, unreadCount } = useMailboxStore();
-  
   /**
    * 푸시 알림 처리 함수
    * 업적 달성, 알람 등 다양한 타입의 푸시를 처리
@@ -35,23 +47,21 @@ export const usePushNotification = () => {
     const payload = request.trigger.payload;
     console.log('📱 포그라운드 푸시 받음 - 전체 객체 (JSON):', JSON.stringify(notification, null, 2));
 
-    type NotificationType =
-      | 'DIARY_REMINDER'
-      | 'RE_ENGAGEMENT'
-      | 'ACHIEVEMENT_UNLOCKED'
-      | 'NEWS_UPDATE'
-      | 'REWARD_ACQUIRED'
-      | 'HEART_REWARD'; // 아직 이건 명세상 미정
 
     const data = payload?.notificationType as NotificationType;
 
     switch (data) {
-      case 'DIARY_REMINDER': // 일기 화면 유도, historyId 사용 가능
-      case 'RE_ENGAGEMENT': // 홈 진입/혜택 배너 보여주기 등
+      case 'DIARY_REMINDER': 
+      case 'RE_ENGAGEMENT': 
         break; //위 두 개는 포그라운드에서 상호작용하지 않음
 
       case 'ACHIEVEMENT_UNLOCKED':
         // 업적 팝업: achievementId, achievementGrade 사용
+        try {
+          // 백그라운드 동기화 (UI 블로킹 X)
+          useAchievementStore.getState().loadUserAchievements('ALL')
+            .catch((e) => console.warn('업적 동기화 실패:', e));
+        } catch {}
         const badgeGrade = payload?.achievementGrade as AchievementGrade;
         const message = String(payload?.aps.alert.title || '새로운 업적을 달성했어요!');
         const subMessage = String(payload?.aps.alert.body || '새 업적을 달성했어요!');
@@ -69,43 +79,65 @@ export const usePushNotification = () => {
         try { loadUnreadCount(); } catch {}
         break;
 
-      case 'REWARD_ACQUIRED':
-        // 보상 팝업: rewardType 보고 분기(POINT/ITEM)
-        // imageUrl은 ITEM일 때만
-        const rewardType = payload?.rewardType as 'POINT' | 'ITEM';
-        if (rewardType === 'POINT') {
-          // 서버 SSV로 지급 완료되면 이 푸시가 옴 → 서버 잔액을 즉시 동기화
-          (async () => {
-            try {
-              const res = await getUserPoints();
-              const amount = res.points - useCurrencyStore.getState().heartPoints; // 증가한 하트 포인트 개수
-              useCurrencyStore.getState().setHeartPoints(res.points);
-              showToast({
-                amount: amount,
-                message: '하트 획득했어요!',
-                theme: 'dark',
-                iconType: 'heart',
-                hasAnimation: true,
-              });
-            } catch (e) {
-              console.warn('하트 동기화 실패:', e);
-            }
-          })();
-        } else if (rewardType === 'ITEM') {
+      // case 'REWARD_ACQUIRED': // 안 씀
+      //   // 보상 팝업: rewardType 보고 분기(POINT/ITEM)
+      //   // imageUrl은 ITEM일 때만
+      //   const rewardType = payload?.rewardType as 'POINT' | 'ITEM';
+      //   if (rewardType === 'POINT') {
+      //     // 서버 SSV로 지급 완료되면 이 푸시가 옴 → 서버 잔액을 즉시 동기화
+      //     (async () => {
+      //       try {
+      //         const res = await getUserPoints();
+      //         const amount = res.points - useCurrencyStore.getState().heartPoints; // 증가한 하트 포인트 개수
+      //         useCurrencyStore.getState().setHeartPoints(res.points);
+      //         showToast({
+      //           amount: amount,
+      //           message: '하트 획득했어요!',
+      //           theme: 'dark',
+      //           iconType: 'heart',
+      //           style: {
+      //             width: ss(335),
+      //             height: sv(42),
+      //           },
+      //           textStyle: {
+      //             ...typography.body5,
+      //           },
+      //           iconSize: ss(24),
+      //           hasAnimation: true,
+      //         });
+      //       } catch (e) {
+      //         console.warn('하트 동기화 실패:', e);
+      //       }
+      //     })();
+      //   } else if (rewardType === 'ITEM') {
+      //     const image = {uri: payload?.imageUrl || ''};
+      //     const message = String(payload?.aps.alert.title || '새로운 아이템!');
+      //     const subMessage = String(payload?.aps.alert.body || '새 아이템을 받았어요!');
+      //     const popup = createItemRewardPopup(image, message, subMessage);
+      //     showUniversalPopup(popup);
+      //   }
+      //   break;
+        
+
+      case 'MISSION_COMPLETED':
+        if (payload?.imageUrl) { // 아이템 보상 푸시
           const image = {uri: payload?.imageUrl || ''};
           const message = String(payload?.aps.alert.title || '새로운 아이템!');
           const subMessage = String(payload?.aps.alert.body || '새 아이템을 받았어요!');
           const popup = createItemRewardPopup(image, message, subMessage);
           showUniversalPopup(popup);
         }
+        else if(payload?.points) { // 하트 보상 푸시
+          const message = String(payload?.aps.alert.title || '하트 획득했어요!');
+          const subMessage = String(payload?.aps.alert.body || '하트를 획득했어요!');
+          const amount = payload?.points;
+          const popup = createHeartRewardPopup(message, subMessage, amount);
+          showUniversalPopup(popup);
+        }
         break;
-        
-      case 'HEART_REWARD': // 아직 이건 명세상 미정 ('일주일간의 출석을 완료했어요' 리시버)
-        const title = String(payload?.aps.alert.title || '하트 획득했어요!');
-        const second = String(payload?.aps.alert.body || '하트를 획득했어요!');
-        const popup2 = createHeartRewardPopup(title, second);
-        showUniversalPopup(popup2);
-        
+
+      case 'ALARM':
+        // AlarmDismissScreen으로 이동
         break;
 
       default:
