@@ -174,8 +174,8 @@ export const useAuth = () => {
           ...typography.body5,
         },
         style: {
-          width: ss(335),
-          height: sv(42),
+          width: 'auto',
+          height: 'auto',
         },
       });
       
