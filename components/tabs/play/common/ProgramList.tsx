@@ -11,21 +11,45 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { PlayStackParamList } from '../../../../navigations/tabs/PlayStackNavigator';
 import { Activity } from '../../../../services/contentService';
 import { titleLineBreaker } from '../../../../utils/textUtils';
+import { normalizeImageSource } from '../../../../utils/textUtils';
 
 const ProgramList = ({ programData }: { programData: Activity[] }) => {
   const navigation = useNavigation<StackNavigationProp<PlayStackParamList>>();
-
-
+  const typeToString = (type: 'BREATHING' | 'MEDITATION' | 'SLEEP' | 'REST') => {
+    switch (type) {
+      case 'BREATHING':
+        return '호흡';
+      case 'MEDITATION':
+        return '명상';
+      case 'SLEEP':
+        return '수면';
+      case 'REST':
+        return '쉼';
+    }
+  }
+  const onPress = (item: Activity) => {
+    if (item.type === 'REST') {
+      navigation.navigate('PlayRestScreen', { activityId: item.id, content: item });
+    } else {
+      navigation.navigate('PlayDetailScreen', { activityId: item.id, content: item });
+    }
+  }
+  const timeToString = (durationInSeconds: number) => {
+    if (durationInSeconds === Infinity) {
+      return '∞';
+    }
+    return `${Math.floor(durationInSeconds / 60)}min`;
+  }
   return(
     <View style={styles.container}>
       {
         programData.map((item) => (
-          <TouchableOpacity key={item.id} style={styles.cardContainer} onPress={() => {navigation.navigate('PlayDetailScreen', { activityId: item.id, content: item })}}> 
+          <TouchableOpacity key={item.id} style={styles.cardContainer} onPress={() => {onPress(item)}}> 
             <View style={styles.card}>
-              <Image source={{uri: item.thumbnailImageUrl || require('../../../../assets/images/play/playFavoriteScreen/default_image_1.png')}} style={styles.image} resizeMode='cover' />
+              <Image source={normalizeImageSource(item.thumbnailImageUrl)} style={styles.image} resizeMode='cover' />
               <View style={styles.cardContent}>
                 <View style={styles.textHeader}>
-                  <Badge title={item.type === 'BREATHING' ? '호흡' : '명상'} />
+                  <Badge title={typeToString(item.type)} />
                   <MoreIcon color={colors.grayScale300} />
                 </View>
                 <View style={styles.cardTitleAndTimeContainer}>
@@ -34,7 +58,7 @@ const ProgramList = ({ programData }: { programData: Activity[] }) => {
                   </View>
                   <View style={styles.timeRow}>
                     <TimeIcon color={colors.grayScale700} width={16} height={16} />
-                    <Text style={styles.time}>{Math.floor(item.durationInSeconds / 60)}min</Text>
+                    <Text style={styles.time}>{timeToString(item.durationInSeconds)}</Text>
                   </View>
                 </View>
               </View>

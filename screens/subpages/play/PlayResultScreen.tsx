@@ -15,6 +15,7 @@ import { Button, ButtonRef } from '../../../components/common/buttons/Button';
 import PlayResult from '../../../components/tabs/play/PlayResultScreen/PlayResult';
 import Animated from 'react-native-reanimated';
 import { useSpringUpAnimation } from '../../../hooks/useSpringUpAnimation';
+import { eventBus, APP_EVENTS } from '../../../utils/eventBus';
 
 const MOCK_ACTIVITY_DESCRIPTION = [
         '뇌에 맑은 산소가 가득 차올랐고...',
@@ -33,6 +34,8 @@ const PlayResultScreen = ({route}: {route: RouteProp<PlayStackParamList, 'PlayRe
         // TODO: 액티비티 종료 후 하트 보상 받기
         // TODO: 얼마의 하트를 줘야하는지 백엔드에서 조회 후 보상 받기
         // TODO: 하트 보상 받기 후 홈으로 이동
+    // 요약 데이터 새로고침 트리거
+    eventBus.emit(APP_EVENTS.REFRESH_SUMMARY);
         exit();
     }
     const exit = () => {

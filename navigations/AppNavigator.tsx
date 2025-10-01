@@ -89,7 +89,7 @@ function CustomTabBar({ state, navigation, setHasBottomNavigation }: BottomTabBa
       //'RecordTab',
     ],
     home: ['ShopScreen', 'ShopItemDetailScreen', 'MailboxScreen', 'MailboxDetailScreen', 'TestScreen'],
-    play: ['PlayFavoriteScreen', 'PlayHistoryScreen', 'PlayDetailScreen', 'PlayInstructorDetailScreen', 'PlayBreathScreen', 'PlayMeditationScreen', 'PlayResultScreen', 'PlayBreathContentScreen', 'PlayActivityListScreen'],
+    play: ['PlayFavoriteScreen', 'PlayHistoryScreen', 'PlayDetailScreen', 'PlayInstructorDetailScreen', 'PlayBreathScreen', 'PlayMeditationScreen', 'PlayResultScreen', 'PlayBreathContentScreen', 'PlayActivityListScreen', 'PlayRestScreen'],
     alarm: ['AlarmAddScreen', 'AlarmDismissScreen', 'MissionAccomplishmentScreen'],
     my: ['MyRoomDecorationPurchaseScreen', 'MyAchievementScreen'],
   };

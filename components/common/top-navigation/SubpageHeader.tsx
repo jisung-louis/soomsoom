@@ -15,6 +15,10 @@ interface SubpageHeaderProps {
 
 export const SUBPAGE_HEADER_HEIGHT = 48;
 
+const titleLineCombiner = (title: string) => {
+  return title.replace(/\n/g, ' ');
+}
+
 const SubpageHeader: React.FC<SubpageHeaderProps> = ({
   onBack,
   title,
@@ -31,7 +35,7 @@ const SubpageHeader: React.FC<SubpageHeaderProps> = ({
     ) : (
       <View style={styles.backButton} />
     )}
-    {title ? <Text style={styles.title}>{title}</Text> : <View style={{ flex: 1 }} />}
+    {title ? <Text style={styles.title}>{titleLineCombiner(title)}</Text> : <View style={{ flex: 1 }} />}
     {right ? right : <View style={styles.rightPlaceholder} />}
   </View>
 );

@@ -101,11 +101,13 @@ const styles = StyleSheet.create({
     },
     infoBox: {
         width: ss(335),
-        height: 156,
+        minHeight: 156,
         padding: 20,
         backgroundColor: colors.white,
         borderRadius: radius.r16,
         gap: 16,
+        // 내용이 길 때도 박스 내부 패딩을 유지하며 높이가 늘어나도록
+        overflow: 'hidden',
     },
     infoTextBoxContainer: {
     },
@@ -113,10 +115,14 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         gap: 8,
         alignItems: 'center',
+        width: '100%',
     },
     infoText: {
         ...typography.body2,
         color: colors.grayScale900,
+        // 아이콘 옆 가용 영역 내에서만 줄바꿈
+        flex: 1,
+        flexShrink: 1,
     },
 });
 

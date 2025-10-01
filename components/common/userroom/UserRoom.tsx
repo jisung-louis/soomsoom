@@ -21,7 +21,9 @@ export type UserRoomProps = {
 
 const UserRoom = ({children, previewMode = false, previewItemIds = [], cropTop = 0, scrollable, scrollViewRef, onBackgroundImageUri}: UserRoomProps) => {
   const placedItems = useRoomStore(state => state.placedItems);
-  const replayKey = useRef(0);
+  // 로띠 동기 재생을 위한 ref들
+  const catRef = useRef<LottieView | null>(null);
+  const itemLottieRefs = useRef<Record<number, LottieView | null>>({});
   const [itemMap, setItemMap] = React.useState<Map<number, { image?: any; lottieJson?: any; positionType?: string }>>(new Map());
 
   React.useEffect(() => {
@@ -32,8 +34,8 @@ const UserRoom = ({children, previewMode = false, previewItemIds = [], cropTop =
         const map = new Map<number, { image?: any; lottieJson?: any; positionType?: string }>();
         res.content.forEach((it) => {
           map.set(it.id, {
-            image: typeof it.imageUrl === 'string' ? undefined : (it.imageUrl as any),
-            lottieJson: typeof it.lottieUrl === 'string' ? undefined : (it.lottieUrl as any),
+            image: typeof it.imageUrl === 'string' && it.imageUrl.length > 0 ? ({ uri: it.imageUrl } as any) : (it.imageUrl as any) ?? undefined,
+            lottieJson: typeof it.lottieUrl === 'string' && it.lottieUrl.length > 0 ? ({ uri: it.lottieUrl } as any) : (it.lottieUrl as any) ?? undefined,
             positionType: it.equipSlot?.toLowerCase?.(),
           });
         });
@@ -72,12 +74,31 @@ const UserRoom = ({children, previewMode = false, previewItemIds = [], cropTop =
     });
   }, [previewItemIds, itemMap]);
 
+  // 대상 변경 시, 짧은 지연 뒤 동시에 재생 (로드 콜백 의존 제거)
   useEffect(() => {
-    // Lottie 애니메이션 아이템이 변경될 때만 애니메이션 리셋 후 재생
-    if (lottieItemIds.length > 0) {
-      replayKey.current = replayKey.current === 0 ? 1 : 0;
-    }
-  }, [lottieItemIds]);
+    // 사용하지 않는 ref 정리
+    Object.keys(itemLottieRefs.current).forEach(k => {
+      const id = Number(k);
+      if (!lottieItemIds.includes(id)) delete itemLottieRefs.current[id];
+    });
+    const t = setTimeout(() => {
+      try {
+        const cat = catRef.current as any;
+        if (cat) {
+          if (typeof cat.reset === 'function') cat.reset();
+          if (typeof cat.play === 'function') cat.play();
+        }
+        lottieItemIds.forEach(id => {
+          const ref = itemLottieRefs.current[id] as any;
+          if (ref) {
+            if (typeof ref.reset === 'function') ref.reset();
+            if (typeof ref.play === 'function') ref.play();
+          }
+        });
+      } catch {}
+    }, 50);
+    return () => clearTimeout(t);
+  }, [lottieItemIds.join(','), itemMap]);
 
   const renderLottieItem = useCallback((itemId: number | null, position: { x: number; y: number }, style: any, key: string) => {
     if (!itemId) return null;
@@ -85,9 +106,9 @@ const UserRoom = ({children, previewMode = false, previewItemIds = [], cropTop =
     if (!item?.lottieJson) return null;
     return (
       <LottieView
-        key={`${key}-${itemId}-${replayKey.current}`}
+        ref={(ref) => { itemLottieRefs.current[itemId] = ref; }}
         source={item.lottieJson}
-        autoPlay
+        autoPlay={false}
         loop
         style={[style, {
           top: position.y,
@@ -95,7 +116,7 @@ const UserRoom = ({children, previewMode = false, previewItemIds = [], cropTop =
         }]}
       />
     );
-  }, [replayKey.current, itemMap]);
+  }, [itemMap]);
 
   const renderImageItem = useCallback((itemId: number | null, position: { x: number; y: number }, containerStyle: any, imageStyle: any, key: string) => {
     if (!itemId) return null;
@@ -110,7 +131,7 @@ const UserRoom = ({children, previewMode = false, previewItemIds = [], cropTop =
         <Image source={item.image} style={imageStyle} />
       </View>
     );
-  }, [replayKey.current, itemMap]);
+  }, [itemMap]);
 
   const backgroundPreviewId = previewByCategory.background;
   const eyewearPreviewId = previewByCategory.eyewear;
@@ -164,9 +185,9 @@ const UserRoom = ({children, previewMode = false, previewItemIds = [], cropTop =
               {children}
               {/* 기본 캐릭터 요소들 */}
               <LottieView
-                key={`cat-${replayKey.current}`}
+                ref={catRef}
                 source={require('../../../assets/animations/cat_basic_motion.json')}
-                autoPlay
+                autoPlay={false}
                 loop
                 style={itemStyles.cat}
               />
@@ -201,9 +222,9 @@ const UserRoom = ({children, previewMode = false, previewItemIds = [], cropTop =
           {children}
           {/* 기본 캐릭터 요소들 */}
           <LottieView
-            key={`cat-${replayKey.current}`}
+            ref={catRef}
             source={require('../../../assets/animations/cat_basic_motion.json')}
-            autoPlay
+            autoPlay={false}
             loop
             style={itemStyles.cat}
           />

@@ -70,7 +70,11 @@ const getToastIcon = (iconType: ToastIconType, iconSize: number) => {
   }
 };
 
-const ToastView: React.FC<ToastViewProps> = ({ message, theme, amount, iconType = 'none', hasAnimation = false, style, textStyle, iconSize=ss(32) }) => {
+const ToastView: React.FC<ToastViewProps> = ({ message, theme, amount, iconType = 'none', hasAnimation = false, style, textStyle, 
+  //iconSize=ss(32) 
+  iconSize=ss(24)
+
+}) => {
   const themeStyle = toastThemes[theme];
   const icon = getToastIcon(iconType, iconSize);
 
@@ -131,9 +135,11 @@ const styles = StyleSheet.create({
     minWidth: 56,
     justifyContent: 'center',
     alignSelf: 'center',
-    width: ss(280),
     gap: 8,
-    height: sv(48),
+    // width: ss(280),
+    // height: sv(48),
+    width: ss(335),
+    height: sv(42),
   },
   iconContainer: {
     flexDirection: 'row',
@@ -150,7 +156,8 @@ const styles = StyleSheet.create({
     zIndex: zIndex.heart, //zIndex 설정이 의미가 없는것같다. 그래도 기획상 문제는 없으니 유지하지만, 나중에 수정해보자.
   },
   message: {
-    ...typography.body1,
+    //...typography.body1,
+    ...typography.body5,
     textAlign: 'center',
   },
   amount: {

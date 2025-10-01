@@ -98,8 +98,10 @@ const ShopScreen = () => {
     }
   };
   
-  // 보상형 광고 인스턴스 생성 함수
-  const createRewardedAd = () => {
+  // 보상형 광고 인스턴스 생성 함수 (선택된 광고의 adUnitId로 생성)
+  const lastAdUnitIdRef = useRef<string | null>(null);
+  const createRewardedAd = (adUnitIdParam?: string) => {
+    console.log('클릭한 광고의 adUnitId:', adUnitIdParam);
     // JWT 토큰에서 사용자 ID 추출
     const accessToken = getAccessToken();
     let userId = 'anonymous';
@@ -121,9 +123,14 @@ const ShopScreen = () => {
       });
     });
 
-    // 환경 설정에서 광고 단위 ID 가져오기
-    const adUnitId = //environmentConfig.ads.rewardedAdUnitId; //테스트ID
-    'ca-app-pub-4758709448782249/4206373001'; //실제ID
+    // 선택된 카드에서 전달된 adUnitId 사용 (없으면 마지막 사용값 재사용)
+    const adUnitId = adUnitIdParam ?? lastAdUnitIdRef.current;
+    if (!adUnitId) {
+      console.warn('보상형 광고 adUnitId 미지정: 클릭 이벤트에서 adUnitId를 전달해야 합니다.');
+      // @ts-ignore 안전장치
+      return null;
+    }
+    lastAdUnitIdRef.current = adUnitId;
 
     console.log('📺 광고 단위 ID:', adUnitId);
 
@@ -213,13 +220,7 @@ const ShopScreen = () => {
     };
   }, [rewardedAd, showToast, markAsWatched]);
 
-  // 사용자 인터랙션 이후 광고 객체 생성
-  useEffect(() => {
-    const task = InteractionManager.runAfterInteractions(() => {
-      setRewardedAd(createRewardedAd());
-    });
-    return () => task.cancel();
-  }, []);
+  // 초기엔 생성하지 않고, 클릭 시 선택한 adUnitId로 생성
   
   // 정렬 드롭다운 상태
   type SortKey = 'POPULAR' | 'LATEST' | 'PRICE_DESC' | 'PRICE_ASC';
@@ -273,10 +274,15 @@ const ShopScreen = () => {
       console.log('📺 광고 시청 시작:', adId);
 
       // 광고 객체 준비 (없으면 생성)
+      // 클릭한 카드의 adUnitId 찾기
+      const clicked = availableAds.find(a => a.id === adId) || watchedAds.find(a => a.id === adId);
+      const adUnitId = clicked?.adUnitId;
       let ad = rewardedAd;
-      if (!ad) {
-        ad = createRewardedAd();
-        setRewardedAd(ad);
+      if (!ad || adUnitId) {
+        const created = createRewardedAd(adUnitId);
+        if (!created) throw new Error('광고 인스턴스 생성 실패');
+        ad = created;
+        setRewardedAd(created);
       }
 
       // 광고가 이미 로드되어 있으면 바로 표시
@@ -414,7 +420,7 @@ const ShopScreen = () => {
           const mapped: RoomItemLike[] = res.content.map((it) => ({
           id: it.id,
           title: it.name,
-          image: typeof it.imageUrl === 'string' ? null : (it.imageUrl as any) ?? null,
+          image: typeof it.imageUrl === 'string' && it.imageUrl.length > 0 ? ({ uri: it.imageUrl } as any) : null,
           price: it.price,
           isSoldOut: it.isSoldOut,
           isOwned: it.isOwned, // 서버에서 받은 isOwned 정보 사용
@@ -493,7 +499,7 @@ const ShopScreen = () => {
       list = collections.map(collection => ({
         id: collection.id,
         title: collection.name,
-        image: collection.imageUrl ? require('../../../assets/images/backgrounds/chuseok.png') : null,
+        image: collection.imageUrl ? ({ uri: collection.imageUrl } as any) : null,
         price: collection.purchasePrice,
         type: '컬렉션',
         isCollection: true,
@@ -546,7 +552,7 @@ const ShopScreen = () => {
             />
           </View>
           <ScrollView showsVerticalScrollIndicator={false} style={styles.innerContent}>
-            <BannerItemImage width={'100%'} />
+            <BannerItemImage width={'100%'} onPress={() => {setIndex(1)}}/>
             <View style={styles.filterContainer}>
               <TouchableOpacity style={styles.excludeOwnedItems} onPress={handleExcludeOwnedItemsToggle}>
                 {excludeOwnedItems ? <CheckActiveIcon /> : <CheckDisableIcon />}
@@ -655,7 +661,8 @@ const ShopScreen = () => {
               <Text style={styles.heartCardText}>{ad.rewardAmount} 하트</Text>
               <Badge
                 title="시청 완료"
-                variant="secondary"
+                variant="default"
+                style={{backgroundColor: colors.grayScale200}}
               />
             </View>
           </View>

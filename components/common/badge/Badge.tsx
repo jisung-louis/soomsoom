@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, View, ViewProps } from 'react-native';
+import { StyleSheet, Text, View, ViewProps, StyleProp, ViewStyle } from 'react-native';
 import { colors } from '../../../constants/colors';
 import { radius } from '../../../constants/radius';
 import { typography } from '../../../constants/typography';
@@ -7,15 +7,16 @@ import { typography } from '../../../constants/typography';
 interface BadgeProps extends ViewProps {
   title: string;
   variant?: 'default' | 'secondary' | 'small';
+  style?: StyleProp<ViewStyle>;
 }
 
 export const Badge: React.FC<BadgeProps> = (props) => {
-  const { title, variant = 'default', ...rest } = props;
+  const { title, variant = 'default', style, ...rest } = props;
 
   const textVariant = `${variant}Text` as const;
 
   return (
-    <View style={[styles.badge, styles[variant]]} {...rest}>
+    <View style={[styles.badge, styles[variant], style]} {...rest}>
       <Text style={[styles.title, styles[textVariant]]}>{title}</Text>
     </View>
   );

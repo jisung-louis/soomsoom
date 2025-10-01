@@ -17,6 +17,7 @@ import { KeyboardEvent, Dimensions } from 'react-native';
 import { SUBPAGE_HEADER_HEIGHT } from '../../../components/common/top-navigation/SubpageHeader';
 import dayjs from 'dayjs';
 import { getLogicalNow } from '../../../utils/timeUtils';
+import { eventBus, APP_EVENTS } from '../../../utils/eventBus';
 
 type ScreenMode = 'create' | 'view' | 'edit';
 
@@ -122,6 +123,8 @@ const EmotionRecordScreen = () => {
     if (screenMode === 'create') {
       const result = await saveEmotionRecord();
       if (result.success) {
+        // 요약 데이터 새로고침 트리거
+        eventBus.emit(APP_EVENTS.REFRESH_SUMMARY);
         // 정책상 토스트 메시지는 띄우지 않음 (주석 처리)
         // // 첫 기록이 아닌 경우에만 토스트 표시
         // if (!result.firstRecord) {
@@ -164,12 +167,12 @@ const EmotionRecordScreen = () => {
             right={
               <>
               {/* 삭제버튼 임시 비활성화 */}
-              {/* <TouchableOpacity onPress={() => {
+              <TouchableOpacity onPress={() => {
                 emotionDiaryService.deleteEmotionDiary((params as any).diaryId);
                 navigation.reset({ index: 0, routes: [{ name: 'RecordTab' }] });
               }}>
                 <Text style={{marginRight: 20, ...typography.body2, color: 'red',}}>삭제</Text>
-              </TouchableOpacity> */}
+              </TouchableOpacity>
               {
               screenMode === 'view' ? (
                 <TouchableOpacity 

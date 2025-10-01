@@ -9,6 +9,7 @@ import { typography, syongsyongTypography } from '../../../../constants/typograp
 import ProgramList from '../../../../components/tabs/play/common/ProgramList';
 import { Activity, getActivitiesByType } from '../../../../services/contentService';
 import { catIconMap } from '../../../../utils/iconMap';
+import { activityRestData } from '../../../../data/activityRestData';
 
 const PlayActivityListScreen = ({route}: {route: RouteProp<PlayStackParamList, 'PlayActivityListScreen'>}) => {
   const { title: initialTitle, content: initialContent } = route.params;
@@ -82,7 +83,7 @@ const PlayActivityListScreen = ({route}: {route: RouteProp<PlayStackParamList, '
           setActivityList((await getActivitiesByType('SLEEP')).content);
           break;
         case '쉼':
-          setActivityList((await getActivitiesByType('REST')).content);
+          setActivityList(activityRestData);
           break;
       }
     } else {

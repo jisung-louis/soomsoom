@@ -12,6 +12,7 @@ import RecordMonthCalendar from './RecordMonthCalendar';
 import { Surface } from '../../common/surface/Surface';
 import RecordList from './RecordList';
 import { sv } from '../../../utils/scale';
+import { getLogicalNow } from '../../../utils/timeUtils';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type RecordDiaryTabNavigationProp = CompositeNavigationProp<
@@ -77,6 +78,8 @@ const RecordDiaryTab = ({
     }
   };
   const RECORDLIST_STATIC_HEIGHT = sv(466) - safeAreaInsetsBottom - 92; // 전체 높이에서 리스트 위쪽의 높이를 뺀 높이(sv(466)) - 하단 안전영역 높이(safeAreaInsetsBottom) - 하단 네비게이션 높이(92)
+  // 주간 보기에서 '오늘이 포함된 주'인 경우에만 논리적 오늘을 기준으로 보정
+  const listBaseDate = viewType === 'week' && containsToday ? getLogicalNow() : currentDate;
   return (
     <ScrollView contentContainerStyle={{ paddingBottom: 100 }} scrollEnabled={hasThisMonthRecords || viewType === 'month'}>
       <RecordCalenderHeader
@@ -109,7 +112,7 @@ const RecordDiaryTab = ({
         !hasThisMonthRecords && (viewType === 'month') && { marginVertical: 50 },
         ]}>
         <RecordList 
-          date={currentDate} 
+          date={listBaseDate} 
           recordedItems={recordedItems} 
           onStartRecordPress={onStartRecordPress} 
           onHasRecordsChange={handleHasRecordsChange} 

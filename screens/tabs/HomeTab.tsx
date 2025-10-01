@@ -27,6 +27,9 @@ import { useHomeTimeLogger } from '../../hooks/useHomeTimeLogger';
 import { useTodayMissionStore } from '../../stores/todayMissionStore';
 import { useBackgroundColor, useBgTopColor } from '../../hooks/useBackgroundColor';
 import { useMailboxStore } from '../../stores/mailboxStore';
+import { getLogicalNow } from '../../utils/timeUtils';
+import { getActivitiesByType } from '../../services/contentService';
+import { typography } from '../../constants/typography';
 
 type HomeTabNavigationProp = StackNavigationProp<HomeStackParamList, 'HomeTab'>;
 
@@ -118,6 +121,15 @@ const HomeTab = () => {
       hasAnimation: true,
       duration: 900,
       amount: 10,
+      style: {
+        width: ss(335),
+        height: sv(42),
+      },
+      textStyle: {
+        ...typography.body5,
+        textAlign: 'center',
+      },
+      iconSize: ss(24),
     });
   };
 
@@ -217,13 +229,37 @@ const HomeTab = () => {
     }
   };
 
-  const onBubbleTalkPress = () => {
+  const onBubbleTalkPress = async () => {
     if (todayStatus === 'NEED_DIARY') {
-      navigation.getParent()?.navigate('record', { screen: 'RecordTab' });
+      // 논리적 오늘 날짜 계산 (06:00 ~ 다음날 05:59 기준)
+      const logicalToday = getLogicalNow();
+      const todayDateString = logicalToday.format('YYYY-MM-DD');
+      
+      // Record 탭의 EmotionSelectScreen으로 이동
+      navigation.getParent()?.navigate('record', { 
+        screen: 'EmotionSelectScreen', 
+        params: { date: todayDateString } 
+      });
       return;
     }
     if (todayStatus === 'NEED_ACTIVITY') {
-      navigation.getParent()?.navigate('play', { screen: 'PlayTab' });
+      try {
+        // BREATHING 타입의 액티비티 목록 가져오기 (짧은 활동용)
+        const breathingActivities = await getActivitiesByType('BREATHING');
+        
+        // Play 탭의 PlayActivityListScreen으로 이동
+        navigation.getParent()?.navigate('play', { 
+          screen: 'PlayActivityListScreen', 
+          params: { 
+            title: 'SHORT', 
+            content: breathingActivities.content 
+          } 
+        });
+      } catch (error) {
+        console.error('BREATHING 액티비티 목록 조회 실패:', error);
+        // 에러 발생 시 Play 탭으로 이동
+        navigation.getParent()?.navigate('play', { screen: 'PlayTab' });
+      }
       return;
     }
   };

@@ -37,6 +37,7 @@ import { getUserActivitySummary, UserActivitySummaryResponse } from '../../servi
 import { useAuthStore } from '../../stores/authStore';
 import { useAuth } from '../../hooks/useAuth';
 import { useBackgroundColor, useBgTopColor } from '../../hooks/useBackgroundColor';
+import { eventBus, APP_EVENTS } from '../../utils/eventBus';
 
 const mockStatusData = [
     { title: '기록', valueType: '회', value: null },
@@ -136,6 +137,18 @@ const MyTab = () => {
       }
     })();
     return () => { mounted = false; };
+  }, [getAccessToken]);
+
+  // 앱 전역 요약 새로고침 이벤트 구독
+  useEffect(() => {
+    const unsubscribe = eventBus.on(APP_EVENTS.REFRESH_SUMMARY, async () => {
+      try {
+        if (!getAccessToken()) return;
+        const res = await getUserActivitySummary();
+        setSummary(res);
+      } catch {}
+    });
+    return unsubscribe;
   }, [getAccessToken]);
 
   const formatMmSs = (totalSeconds: number) => {

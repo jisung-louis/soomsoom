@@ -165,7 +165,7 @@ const MyRoomDecoration = ({
             id: it.id,
             type: (it.itemType === 'ACCESSORY' ? '악세사리' : it.itemType === 'HAT' ? '모자' : it.itemType === 'BACKGROUND' ? '배경' : it.itemType === 'FLOOR' ? '러그' : it.itemType === 'SHELF' ? '선반' : '장식품') as any,
             title: it.name,
-            image: typeof it.imageUrl === 'string' ? undefined : (it.imageUrl as any),
+            image: typeof it.imageUrl === 'string' && it.imageUrl.length > 0 ? ({ uri: it.imageUrl } as any) : (it.imageUrl as any) ?? undefined,
             price: it.price,
           }));
           if (mounted) setItems(mapped);

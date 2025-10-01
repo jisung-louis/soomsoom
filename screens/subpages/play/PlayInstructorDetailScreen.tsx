@@ -22,6 +22,8 @@ import { normalizeImageSource } from '../../../utils/textUtils';
 import { claimMission } from '../../../services/missionService';
 import { useCurrencyStore } from '../../../stores/currencyStore';
 import { getUserPoints } from '../../../services/userService';
+import { ss } from '../../../utils/scale';
+import { sv } from '../../../utils/scale';
 
 const PlayInstructorDetailScreen: React.FC = () => {
     const navigation = useNavigation<StackNavigationProp<PlayStackParamList>>();
@@ -50,6 +52,7 @@ const PlayInstructorDetailScreen: React.FC = () => {
 
           // 강사 정보만 먼저 로드
           const instructorData = await getInstructorDetail(instructorId);
+          console.log('instructorData', JSON.stringify(instructorData, null, 2));
           
           // UI에서 실제 팔로우 상태를 확인하여 설정
           const isFollowing = followedInstructors.some(inst => inst.instructorId === instructorId);
@@ -118,7 +121,13 @@ const PlayInstructorDetailScreen: React.FC = () => {
       </SafeAreaView>
     );
   }
-  const [specialButtonVisible, setSpecialButtonVisible] = useState(instructor?.rewardableMission !== null);
+  const isRewardable = Boolean(instructor?.rewardableMission);
+  console.log('isRewardable', isRewardable);
+  const [specialButtonVisible, setSpecialButtonVisible] = useState<boolean>(false);
+  React.useEffect(() => {
+    setSpecialButtonVisible(isRewardable);
+  }, [isRewardable]);
+  console.log('specialButtonVisible', specialButtonVisible);
 
   // 강사 정보가 없는 경우
   if (!instructor) {
@@ -135,7 +144,7 @@ const PlayInstructorDetailScreen: React.FC = () => {
         <SubpageHeader onBack={handleBack} />
         <View style={styles.contentContainer}>
           <View style={styles.contentHeader}>
-            <Image source={require('../../../assets/images/common/default_profile_image.png')} style={styles.contentHeaderTitleImage} />
+            <Image source={normalizeImageSource(instructor.profileImageUrl) || require('../../../assets/images/common/default_profile_image.png')} style={styles.contentHeaderTitleImage} />
             <Text style={styles.contentHeaderTitle}>{instructor.name}</Text>
           </View>
           <Text style={styles.bio}>{instructor.bio}</Text>
@@ -162,6 +171,15 @@ const PlayInstructorDetailScreen: React.FC = () => {
                   message: '하트 획득했어요!',
                   theme: 'dark',
                   iconType: 'heart',
+                  style: {
+                    width: ss(280),
+                    height: sv(48),
+                  },
+                  textStyle: {
+                    ...typography.body1,
+                    textAlign: 'center',
+                  },
+                  iconSize: ss(32),
                 });
               } catch (error) {
                 console.error('미션 보상 받기 실패:', error);

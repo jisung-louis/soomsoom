@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { StyleSheet, Text, View, ScrollView, useWindowDimensions, Image } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, useWindowDimensions, Image, InteractionManager } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation, useTheme, useRoute, RouteProp } from '@react-navigation/native';
+import { useNavigation, useTheme, useRoute, RouteProp, useFocusEffect } from '@react-navigation/native';
 import { CompositeNavigationProp } from '@react-navigation/native';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -51,21 +51,28 @@ const RecordTab = () => {
 
   const celebrationSheetRef = useRef<BottomSheetModal>(null);
   const activityInducingSheetRef = useRef<BottomSheetModal>(null);
+  const hasOpenedInitialSheetRef = useRef(false);
 
-  // 첫 기록 축하 바텀시트 표시 (정책 상 제거)
-  // useEffect(() => {
-  //   if (route.params?.isFirstRecord === true) {
-  //     // 약간의 지연을 두고 바텀시트 열기
-  //     setTimeout(() => {
-  //       setIsCelebrationParticle(true);
-  //       celebrationSheetRef.current?.expand();
-  //     }, 100);
-  //   } else if (route.params?.isFirstRecord === false) {
-  //     setTimeout(() => {
-  //       activityInducingSheetRef.current?.expand();
-  //     }, 100);
-  //   }
-  // }, [route.params?.isFirstRecord]);
+  
+  const presentSheetSafely = useCallback((ref: React.RefObject<BottomSheetModal | null>, withCelebration?: boolean) => {
+    InteractionManager.runAfterInteractions(() => {
+      requestAnimationFrame(() => {
+        if (withCelebration) setIsCelebrationParticle(true);
+        ref.current?.expand();
+      });
+    });
+  }, []);
+
+  useEffect(() => {
+    if (hasOpenedInitialSheetRef.current) return;
+    if (route.params?.isFirstRecord === true) {
+      hasOpenedInitialSheetRef.current = true;
+      presentSheetSafely(activityInducingSheetRef, false);
+    } else if (route.params?.isFirstRecord === false) {
+      hasOpenedInitialSheetRef.current = true;
+      presentSheetSafely(activityInducingSheetRef);
+    }
+  }, [route.params?.isFirstRecord, presentSheetSafely]);
 
   // 축하 바텀시트 닫기
   const handleCelebrationClose = () => {
@@ -272,6 +279,20 @@ const RecordTab = () => {
     { key: 'report', title: '마음 리포트' },
   ]);
 
+  // 탭 포커스 시 항상: 일기 탭, 주간 보기, 이번 주(오늘 포함 주)로 초기화
+  useFocusEffect(
+    useCallback(() => {
+      const now = getLogicalNow();
+      setIndex(0);
+      setViewType('week');
+      setCurrent(prev => ({
+        ...prev,
+        week: now.startOf('week'),
+        month: now.startOf('month'),
+      }));
+    }, [getLogicalNow])
+  );
+
   const renderScene = ({ route }: { route: { key: string } }) => {
     switch (route.key) {
       case 'diary':
@@ -390,6 +411,7 @@ const RecordTab = () => {
         hasXButton
         enableOverDrag={false}
         hasTopButton={false}
+        hasCelebrationParticle={false}
         onClose={handleActivityInducingClose}
       />
     </SafeAreaView>

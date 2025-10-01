@@ -114,10 +114,9 @@ function MissionAccomplishmentScreen({ route }: MissionAccomplishmentScreenProps
   return (
     <>
     <SafeAreaView style={styles.container}>
-        <View style={styles.adContainer}>
-            {/* <Text>AD</Text> */}
+        {/* <View style={styles.adContainer}>
             <AdBanner size={AD_SIZES.ANCHORED_ADAPTIVE_BANNER as BannerAdSize} />
-        </View>
+        </View> */}
         <View style={styles.missionCountContainer}>
             <Text style={styles.missionCountText}>
               {missionPack ? `${currentIndex + 1}/${missionPack.total}` : '1/1'}

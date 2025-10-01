@@ -13,6 +13,7 @@ import { colors } from '../../constants/colors';
 import { getActivitiesByType, Activity, getActivities } from '../../services/contentService';
 import { getActiveBanners } from '../../services/bannerService';
 import { Banner } from '../../types';
+import { ButtonSmall } from '../../components/common/buttons/ButtonSmall';
 
 const PlayTab = () => {
   const navigation = useNavigation<StackNavigationProp<PlayStackParamList>>();
@@ -74,6 +75,10 @@ const PlayTab = () => {
   };
   return (
   <SafeAreaView style={styles.container}>
+    {/* <ButtonSmall
+      title="야옹이강사"
+      onPress={() => navigation.navigate('PlayInstructorDetailScreen', { instructorId: 1 })}
+    /> */}
     <FlatList
       data={[]}
       keyExtractor={(_, index) => index.toString()}
