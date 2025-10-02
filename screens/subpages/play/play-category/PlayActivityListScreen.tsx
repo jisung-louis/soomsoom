@@ -7,9 +7,10 @@ import SubpageHeader from '../../../../components/common/top-navigation/SubpageH
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { typography, syongsyongTypography } from '../../../../constants/typography';
 import ProgramList from '../../../../components/tabs/play/common/ProgramList';
-import { Activity, getActivitiesByType } from '../../../../services/contentService';
+import { Activity, getActivitiesByCategory, getActivitiesByType } from '../../../../services/contentService';
 import { catIconMap } from '../../../../utils/iconMap';
 import { activityRestData } from '../../../../data/activityRestData';
+import LoadingSpinner from '../../../../components/common/loading/LoadingSpinner';
 
 const PlayActivityListScreen = ({route}: {route: RouteProp<PlayStackParamList, 'PlayActivityListScreen'>}) => {
   const { title: initialTitle, content: initialContent } = route.params;
@@ -23,6 +24,7 @@ const PlayActivityListScreen = ({route}: {route: RouteProp<PlayStackParamList, '
       id: 1,
       title: 'Program 1',
       type: 'MEDITATION',
+      category: 'MEDITATION',
       thumbnailImageUrl: require('../../../../assets/images/play/playFavoriteScreen/default_image_1.png'),
       descriptions: [],
       author: {
@@ -46,6 +48,7 @@ const PlayActivityListScreen = ({route}: {route: RouteProp<PlayStackParamList, '
       id: 2,
       title: 'Program 2',
       type: 'BREATHING',
+      category: 'BREATHING',
       thumbnailImageUrl: require('../../../../assets/images/play/playFavoriteScreen/default_image_1.png'),
       descriptions: [],
       author: {
@@ -66,41 +69,54 @@ const PlayActivityListScreen = ({route}: {route: RouteProp<PlayStackParamList, '
       isFavorited: false,
     },
   ];
+  
 
   const [activityList, setActivityList] = useState<Activity[]>([]);
   const [title, setTitle] = useState(initialTitle);
+  const [isLoading, setIsLoading] = useState(true);
   const fetchActivityList = async () => {
-    if (title === '명상' || title === '호흡' || title === '수면' || title === '쉼') {
-      switch (title) {
-        case '명상':
-        default:
-          setActivityList((await getActivitiesByType('MEDITATION')).content);
-          break;
-        case '호흡':
-          setActivityList((await getActivitiesByType('BREATHING')).content);
-          break;
-        case '수면':
-          setActivityList((await getActivitiesByType('SLEEP')).content);
-          break;
-        case '쉼':
-          setActivityList(activityRestData);
-          break;
+    setIsLoading(true);
+    try {
+      if (title === '명상' || title === '호흡' || title === '수면' || title === '쉼') {
+        switch (title) {
+          case '명상':
+          default:
+            setActivityList((await getActivitiesByCategory('MEDITATION')).content);
+            break;
+          case '호흡':
+            setActivityList((await getActivitiesByCategory('BREATHING')).content);
+            break;
+          case '수면':
+            setActivityList((await getActivitiesByCategory('SLEEP')).content);
+            break;
+          case '쉼':
+            //setActivityList(activityRestData);
+            setActivityList((await getActivitiesByCategory('REST')).content)
+            break;
+        }
+      } else {
+        switch (title) {
+          case 'SHORT':
+            setActivityList(initialContent);
+            break;
+          case 'RECOMMENDED':
+            setActivityList(initialContent);
+            break;
+          default:
+            return;
+        }
       }
-    } else {
-      switch (title) {
-        case 'SHORT':
-          setActivityList(initialContent);
-          break;
-        case 'RECOMMENDED':
-          setActivityList(initialContent);
-          break;
-        default:
-          return;
-      }
+    } catch (error) {
+      console.error('액티비티 목록 로드 실패:', error);
+    } finally {
+      setIsLoading(false);
     }
   }
   useEffect(() => {
     fetchActivityList();
+  }, [title]);
+
+  useEffect(() => {
     if (title === 'SHORT') {
       setTitle('회복을 위한, 짧은 5분!');
     }
@@ -114,7 +130,12 @@ const PlayActivityListScreen = ({route}: {route: RouteProp<PlayStackParamList, '
       <SubpageHeader onBack={handleBack} />
       <Text style={styles.title}>{title}</Text>
       <View style={styles.contentContainer}>
-        {activityList.length === 0 ? (
+        {isLoading ? (
+          <View style={styles.emptyContainer}>
+            <LoadingSpinner  />
+            <Text style={styles.emptyText}>로딩 중...</Text>
+          </View>
+        ) : activityList.length === 0 ? (
           <View style={styles.emptyContainer}>
             <catIconMap.cry />
             <Text style={styles.emptyText}>컨텐츠를 준비중이에요.</Text>

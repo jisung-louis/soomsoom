@@ -7,7 +7,7 @@ import MoreIcon from '../../../assets/icons/common/more.svg';
 import TimeIcon from '../../../assets/icons/common/time.svg';
 import { colors } from '../../../constants/colors';
 import { typography } from '../../../constants/typography';
-import { Activity } from '../../../services/contentService';
+import { Activity, ActivityType } from '../../../services/contentService';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { PlayStackParamList } from '../../../navigations/tabs/PlayStackNavigator';
@@ -24,6 +24,16 @@ interface PlayRecommendedContentListProps {
 const PlayRecommendedContentList = ({ onRecommendedPress, recommendedActivityData, isLoading }: PlayRecommendedContentListProps) => {
   const navigation = useNavigation<StackNavigationProp<PlayStackParamList>>();
   
+  const typeToString = (type: ActivityType) => {
+    switch (type) {
+      case 'BREATHING':
+        return '호흡';
+      case 'MEDITATION':
+        return '명상';
+      default:
+        return '활동'; //이게 뜬다면 문제가 있음
+    }
+  }
   return (
   <View style={styles.section}>
     <PlayTitle title='playRecommendedContentList' onPress={onRecommendedPress} />
@@ -56,7 +66,7 @@ const PlayRecommendedContentList = ({ onRecommendedPress, recommendedActivityDat
               <View style={styles.cardContentContainer}>
                 <View style={styles.cardContent}>
                   <View style={styles.textHeader}>
-                    <Badge title={item.type === 'BREATHING' ? '호흡' : '명상'} />
+                    <Badge title={typeToString(item.type)} />
                   </View>
                   <View style={styles.cardTitleAndTimeContainer}>
                     <View style={styles.cardTitleContainer}>

@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useCallback } from 'react';
 import { View, Text, ImageBackground, StyleSheet, Image, ScrollView } from 'react-native';
 import LottieView from 'lottie-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useIsFocused } from '@react-navigation/native';
 import { useRoomStore } from '../../../stores/roomStore';
 import { getItems } from '../../../services/itemService';
 import { objectPosition, itemStyles } from '../../../constants/roomLayout';
@@ -13,18 +14,21 @@ export type UserRoomProps = {
   children: React.ReactNode;
   previewMode?: boolean; // 프리뷰 모드 여부
   previewItemIds?: number[]; // 여러 프리뷰 아이템
+  showPlacedItems?: boolean; // 프리뷰 모드에서도 기존 착용 아이템 표시 여부
   cropTop?: number; // 상단에서 잘라낼 height (figma 기준)
   scrollable?: boolean; // 스크롤 가능 여부 (cropTop이 있으면 자동 true)
   scrollViewRef?: React.RefObject<ScrollView>
   onBackgroundImageUri?: (uri: string) => void; // 배경 이미지 URI 전달 콜백
 };
 
-const UserRoom = ({children, previewMode = false, previewItemIds = [], cropTop = 0, scrollable, scrollViewRef, onBackgroundImageUri}: UserRoomProps) => {
+const UserRoom = ({children, previewMode = false, previewItemIds = [], showPlacedItems = false, cropTop = 0, scrollable, scrollViewRef, onBackgroundImageUri}: UserRoomProps) => {
   const placedItems = useRoomStore(state => state.placedItems);
   // 로띠 동기 재생을 위한 ref들
   const catRef = useRef<LottieView | null>(null);
   const itemLottieRefs = useRef<Record<number, LottieView | null>>({});
   const [itemMap, setItemMap] = React.useState<Map<number, { image?: any; lottieJson?: any; positionType?: string }>>(new Map());
+  const isFocused = useIsFocused();
+
 
   React.useEffect(() => {
     let mounted = true;
@@ -66,13 +70,87 @@ const UserRoom = ({children, previewMode = false, previewItemIds = [], cropTop =
     };
   }, [previewItemIds, itemMap]);
 
+  // 실제 렌더링할 아이템들 (프리뷰 우선, 없으면 기존 착용 아이템)
+  const renderItems = useMemo(() => {
+    if (previewMode && showPlacedItems) {
+      // 프리뷰 모드 + 기존 착용 아이템 표시: 프리뷰가 있으면 프리뷰, 없으면 기존 착용
+      return {
+        background: previewByCategory.background ?? placedItems.background,
+        eyewear: previewByCategory.eyewear ?? placedItems.eyewear,
+        hat: previewByCategory.hat ?? placedItems.hat,
+        floor: previewByCategory.floor ?? placedItems.floor,
+        shelf: previewByCategory.shelf ?? placedItems.shelf,
+        frame: previewByCategory.frame ?? placedItems.frame,
+      };
+    } else if (previewMode) {
+      // 프리뷰 모드만: 프리뷰 아이템만
+      return previewByCategory;
+    } else {
+      // 일반 모드: 기존 착용 아이템만
+      return {
+        background: placedItems.background,
+        eyewear: placedItems.eyewear,
+        hat: placedItems.hat,
+        floor: placedItems.floor,
+        shelf: placedItems.shelf,
+        frame: placedItems.frame,
+      };
+    }
+  }, [previewMode, showPlacedItems, previewByCategory, placedItems]);
+
   // Lottie 애니메이션이 필요한 아이템들만 필터링
   const lottieItemIds = useMemo(() => {
-    return previewItemIds.filter(id => {
+    let candidateIds: Array<number> = [];
+    
+    if (previewMode) {
+      // 프리뷰 모드: 실제 렌더링되는 아이템들만 사용 (renderItems 기준)
+      candidateIds = [
+        renderItems.eyewear,
+        renderItems.hat,
+        renderItems.floor,
+        renderItems.shelf,
+        renderItems.frame,
+      ].filter((v): v is number => typeof v === 'number');
+    } else {
+      // 일반 모드: 현재 배치된 아이템 ID들 사용
+      candidateIds = [
+        placedItems.eyewear,
+        placedItems.hat,
+        placedItems.floor,
+        placedItems.shelf,
+        placedItems.frame,
+      ].filter((v): v is number => typeof v === 'number');
+    }
+
+    return candidateIds.filter((id) => {
       const item = itemMap.get(id);
-      return item?.lottieJson;
+      return Boolean(item?.lottieJson);
     });
-  }, [previewItemIds, itemMap]);
+  }, [previewMode, renderItems, placedItems, itemMap]);
+
+  // 디버깅: 렌더링되는 아이템들 확인
+  // useEffect(() => {
+  //   const currentItems = previewMode ? previewItemIds : [
+  //     placedItems.eyewear,
+  //     placedItems.hat,
+  //     placedItems.floor,
+  //     placedItems.shelf,
+  //     placedItems.frame
+  //   ].filter(Boolean);
+    
+  //   console.log('🔍 UserRoom 렌더링 아이템들:', {
+  //     previewMode,
+  //     previewItemIds,
+  //     placedItems,
+  //     currentItems,
+  //     lottieItemIds
+  //   });
+  // }, [previewMode, previewItemIds, placedItems, lottieItemIds]);
+
+  // 포커스 상태 로그
+  // useEffect(() => {
+  //   console.log('🔍 UserRoom isFocused', isFocused);
+  // }, [isFocused]);
 
   // 대상 변경 시, ref 바인딩 완료까지 기다린 후 동시에 재생
   useEffect(() => {
@@ -115,33 +193,22 @@ const UserRoom = ({children, previewMode = false, previewItemIds = [], cropTop =
       
       if (catReady && allItemRefsReady) {
         try {
-          // 고양이 애니메이션 (수동 제어)
+          // 1) 모두 reset 먼저
           cat.reset();
-          cat.play();
-          console.log('🔄 고양이 애니메이션 동기화 완료');
-          
-          // 아이템 애니메이션들 (onAnimationLoaded에서 이미 재생됨)
-          lottieItemIds.forEach(id => {
-            const ref = itemLottieRefs.current[id] as any;
-            if (ref) {
-              console.log(`🎬 아이템 애니메이션 확인 (ID: ${id}): onAnimationLoaded에서 재생됨`);
-              
-              // 동기화를 위해 reset만 호출 (이미 play는 onAnimationLoaded에서 실행됨)
-              try {
-                ref.reset();
-                ref.play(); // 동기화를 위해 다시 play 호출
-                console.log(`🔄 아이템 동기화 완료 (ID: ${id})`);
-              } catch (syncError) {
-                console.warn(`⚠️ 아이템 동기화 실패 (ID: ${id}):`, syncError);
-              }
-            } else {
-              console.warn(`⚠️ 아이템 ref가 없음 (ID: ${id})`);
-            }
+          const itemRefs = lottieItemIds.map(id => itemLottieRefs.current[id] as any).filter(Boolean);
+          itemRefs.forEach((ref: any) => {
+            try { ref.reset(); } catch {}
           });
-          
-          // 성공 완료 플래그 설정
-          isCompleted = true;
-          console.log('✅ 모든 애니메이션 동기화 완료 - 폴링 중단');
+
+          // 2) 50ms 지연 후 동시에 play
+          isCompleted = true; // 중복 실행 방지
+          setTimeout(() => {
+            try { cat.play(); } catch {}
+            itemRefs.forEach((ref: any) => {
+              try { ref.play(); } catch {}
+            });
+          }, 50);
+          //console.log('✅ 모든 애니메이션 동기화 완료 - 동일 프레임 재생 시작');
         } catch (error) {
           console.warn('애니메이션 재생 중 오류:', error);
         }
@@ -153,7 +220,7 @@ const UserRoom = ({children, previewMode = false, previewItemIds = [], cropTop =
 
     // 최대 1초까지만 대기 (무한 대기 방지)
     const timeoutId = setTimeout(() => {
-      console.warn('⚠️ 애니메이션 ref 바인딩 타임아웃 (1초)');
+      //console.warn('⚠️ 애니메이션 ref 바인딩 타임아웃 (1초)');
     }, 1000);
 
     // 즉시 첫 번째 시도
@@ -161,6 +228,31 @@ const UserRoom = ({children, previewMode = false, previewItemIds = [], cropTop =
 
     return () => clearTimeout(timeoutId);
   }, [lottieItemIds.join(','), itemMap]);
+
+  // 화면이 처음 포커싱될 때도 동시에 시작되도록 보장
+  useEffect(() => {
+    if (!isFocused) return;
+    // 포커스가 들어오는 프레임에 모두 reset 후 다음 프레임에 일괄 play
+    const cat = catRef.current as any;
+    const itemRefs = lottieItemIds.map(id => itemLottieRefs.current[id] as any).filter(Boolean);
+
+    const ready = (
+      cat && typeof cat.reset === 'function' && typeof cat.play === 'function' &&
+      itemRefs.length === lottieItemIds.length &&
+      itemRefs.every((r: any) => r && typeof r.reset === 'function' && typeof r.play === 'function')
+    );
+
+    if (!ready) return; // 기존 폴링 이펙트가 준비되면 재생 처리함
+
+    try {
+      cat.reset();
+      itemRefs.forEach((ref: any) => { try { ref.reset(); } catch {} });
+      setTimeout(() => {
+        try { cat.play(); } catch {}
+        itemRefs.forEach((ref: any) => { try { ref.play(); } catch {} });
+      }, 100);
+    } catch {}
+  }, [isFocused, lottieItemIds.join(',')]);
 
   const renderLottieItem = useCallback((itemId: number | null, position: { x: number; y: number }, style: any, key: string) => {
     if (!itemId) return null;
@@ -170,7 +262,7 @@ const UserRoom = ({children, previewMode = false, previewItemIds = [], cropTop =
       <LottieView
         ref={(ref) => { 
           itemLottieRefs.current[itemId] = ref;
-          console.log(`🔗 아이템 ref 바인딩 완료 (ID: ${itemId})`);
+          //console.log(`🔗 아이템 ref 바인딩 완료 (ID: ${itemId})`);
         }}
         source={item.lottieJson}
         autoPlay={false}
@@ -179,20 +271,6 @@ const UserRoom = ({children, previewMode = false, previewItemIds = [], cropTop =
           top: position.y,
           left: position.x,
         }]}
-        onAnimationLoaded={() => {
-          console.log(`🎬 아이템 LottieView 로드 완료 (ID: ${itemId})`);
-          // 로드 완료 후 즉시 재생 시도
-          const ref = itemLottieRefs.current[itemId];
-          if (ref) {
-            try {
-              ref.reset();
-              ref.play();
-              console.log(`▶️ 아이템 애니메이션 즉시 재생 (ID: ${itemId})`);
-            } catch (error) {
-              console.warn(`❌ 아이템 애니메이션 즉시 재생 실패 (ID: ${itemId}):`, error);
-            }
-          }
-        }}
       />
     );
   }, [itemMap]);
@@ -277,11 +355,38 @@ const UserRoom = ({children, previewMode = false, previewItemIds = [], cropTop =
               <Shadow width={itemStyles.shadowSize.width} height={itemStyles.shadowSize.height} style={itemStyles.shadowStyle} color={itemStyles.shadowColor} opacity={itemStyles.shadowOpacity} />
 
               {/* 아이템 배치 (프리뷰 우선, 없으면 배치 아이템) */}
-              {renderLottieItem(eyewearPreviewId ?? (previewMode ? null : placedItems.eyewear), objectPosition.eyewear, itemStyles.eyewear, 'eyewear')}
-              {renderLottieItem(hatPreviewId ?? (previewMode ? null : placedItems.hat), objectPosition.hat, itemStyles.hat, 'hat')}
-              {renderImageItem(floorPreviewId ?? (previewMode ? null : placedItems.floor), objectPosition.floor, itemStyles.floorContainer, itemStyles.floor, 'floor')}
-              {renderImageItem(shelfPreviewId ?? (previewMode ? null : placedItems.shelf), objectPosition.shelf, itemStyles.shelfContainer, itemStyles.shelf, 'shelf')}
-              {renderImageItem(framePreviewId ?? (previewMode ? null : placedItems.frame), objectPosition.frame, itemStyles.frameContainer, itemStyles.frame, 'frame')}
+              {renderLottieItem(renderItems.eyewear, objectPosition.eyewear, itemStyles.eyewear, 'eyewear')}
+              {renderLottieItem(renderItems.hat, objectPosition.hat, itemStyles.hat, 'hat')}
+          {(() => {
+            const id = renderItems.floor;
+            if (id) {
+              const item = itemMap.get(id);
+              return item?.lottieJson
+                ? renderLottieItem(id, objectPosition.floor, itemStyles.floor, 'floor')
+                : renderImageItem(id, objectPosition.floor, itemStyles.floorContainer, itemStyles.floor, 'floor');
+            }
+            return null;
+          })()}
+          {(() => {
+            const id = renderItems.shelf;
+            if (id) {
+              const item = itemMap.get(id);
+              return item?.lottieJson
+                ? renderLottieItem(id, objectPosition.shelf, itemStyles.shelf, 'shelf')
+                : renderImageItem(id, objectPosition.shelf, itemStyles.shelfContainer, itemStyles.shelf, 'shelf');
+            }
+            return null;
+          })()}
+          {(() => {
+            const id = renderItems.frame;
+            if (id) {
+              const item = itemMap.get(id);
+              return item?.lottieJson
+                ? renderLottieItem(id, objectPosition.frame, itemStyles.frame, 'frame')
+                : renderImageItem(id, objectPosition.frame, itemStyles.frameContainer, itemStyles.frame, 'frame');
+            }
+            return null;
+          })()}
             </View>
           </ImageBackground>
         </ScrollView>
@@ -314,11 +419,38 @@ const UserRoom = ({children, previewMode = false, previewItemIds = [], cropTop =
           <Shadow width={itemStyles.shadowSize.width} height={itemStyles.shadowSize.height} style={itemStyles.shadowStyle} color={itemStyles.shadowColor} opacity={itemStyles.shadowOpacity} />
 
           {/* 아이템 배치 (프리뷰 우선, 없으면 배치 아이템) */}
-          {renderLottieItem(eyewearPreviewId ?? placedItems.eyewear, objectPosition.eyewear, itemStyles.eyewear, 'eyewear')}
-          {renderLottieItem(hatPreviewId ?? placedItems.hat, objectPosition.hat, itemStyles.hat, 'hat')}
-          {renderImageItem(floorPreviewId ?? placedItems.floor, objectPosition.floor, itemStyles.floorContainer, itemStyles.floor, 'floor')}
-          {renderImageItem(shelfPreviewId ?? placedItems.shelf, objectPosition.shelf, itemStyles.shelfContainer, itemStyles.shelf, 'shelf')}
-          {renderImageItem(framePreviewId ?? placedItems.frame, objectPosition.frame, itemStyles.frameContainer, itemStyles.frame, 'frame')}
+          {renderLottieItem(renderItems.eyewear, objectPosition.eyewear, itemStyles.eyewear, 'eyewear')}
+          {renderLottieItem(renderItems.hat, objectPosition.hat, itemStyles.hat, 'hat')}
+          {(() => {
+            const id = renderItems.floor;
+            if (id) {
+              const item = itemMap.get(id);
+              return item?.lottieJson
+                ? renderLottieItem(id, objectPosition.floor, itemStyles.floor, 'floor')
+                : renderImageItem(id, objectPosition.floor, itemStyles.floorContainer, itemStyles.floor, 'floor');
+            }
+            return null;
+          })()}
+          {(() => {
+            const id = renderItems.shelf;
+            if (id) {
+              const item = itemMap.get(id);
+              return item?.lottieJson
+                ? renderLottieItem(id, objectPosition.shelf, itemStyles.shelf, 'shelf')
+                : renderImageItem(id, objectPosition.shelf, itemStyles.shelfContainer, itemStyles.shelf, 'shelf');
+            }
+            return null;
+          })()}
+          {(() => {
+            const id = renderItems.frame;
+            if (id) {
+              const item = itemMap.get(id);
+              return item?.lottieJson
+                ? renderLottieItem(id, objectPosition.frame, itemStyles.frame, 'frame')
+                : renderImageItem(id, objectPosition.frame, itemStyles.frameContainer, itemStyles.frame, 'frame');
+            }
+            return null;
+          })()}
         </SafeAreaView>
       </ImageBackground>
     </View>

@@ -35,13 +35,16 @@ const PlayTab = () => {
         setIsLoading(true);
         
         // 병렬로 데이터 로딩
-        const [shortActivityResponse, allActivitiesResponse, bannersResponse] = await Promise.all([
+        const [shortActivityResponse, breathingActivitiesResponse, meditationActivitiesResponse, bannersResponse] = await Promise.all([
           getActivitiesByType('BREATHING'), // 호흡 타입 액티비티 가져오기
-          getActivities(), // 모든 액티비티를 가져온 후 랜덤으로 5개 선택
+          getActivitiesByType('BREATHING'), // 호흡 타입 액티비티
+          getActivitiesByType('MEDITATION'), // 명상 타입 액티비티
           getActiveBanners(), // 활성 배너 목록 가져오기
         ]);
         
-        const shuffled = [...allActivitiesResponse.content].sort(() => 0.5 - Math.random());
+        // BREATHING과 MEDITATION 액티비티를 합쳐서 랜덤으로 5개 선택
+        const combinedActivities = [...breathingActivitiesResponse.content, ...meditationActivitiesResponse.content];
+        const shuffled = combinedActivities.sort(() => 0.5 - Math.random());
         const randomFive = shuffled.slice(0, 5);
         
         setShortActivityData(shortActivityResponse.content); // 회복을 위한 짧은 5분!

@@ -46,6 +46,7 @@ import { useAuthStore } from '../../../stores/authStore';
 import { environmentConfig } from '../../../configs/environment';
 import { useAppConfigStore } from '../../../stores/appConfigStore';
 import { getUserPoints } from '../../../services/userService';
+import { useNotificationQueueProcessor } from '../../../hooks/useNotificationQueueProcessor';
 
 type ShopScreenNavigationProp = StackNavigationProp<HomeStackParamList, 'ShopScreen'>;
 
@@ -56,6 +57,8 @@ ItemList.displayName = 'ItemList';
 const ShopScreen = () => {
   const navigation = useNavigation<ShopScreenNavigationProp>();
   const route = useRoute<RouteProp<HomeStackParamList, 'ShopScreen'>>();
+  // 탭 포커스 시 큐에 있는 알림을 순차적으로 표시
+  useNotificationQueueProcessor();
   const { ownedItems } = useRoomStore();
   const { loadOwnedItems } = useOwnedItems();
   
@@ -155,6 +158,7 @@ const ShopScreen = () => {
   
   // 현재 광고 인스턴스 (지연 생성)
   const [rewardedAd, setRewardedAd] = useState<ReturnType<typeof RewardedAd.createForAdRequest> | null>(null);
+  const [isAdLoading, setIsAdLoading] = useState<boolean>(false);
 
   // 현재 광고 컨텍스트 (보상 처리/토스트용)
   const currentAdRef = useRef<{ adId: number; rewardAmount: number } | null>(null);
@@ -314,6 +318,7 @@ const ShopScreen = () => {
 
         // 광고 로드 시작
         console.log('📺 광고 로드 요청 시작...');
+        setIsAdLoading(true);
         ad.load();
 
         // 로드 완료까지 대기
@@ -325,11 +330,13 @@ const ShopScreen = () => {
         }
 
         console.log('📺 광고 로드 완료, 표시 중...');
+        setIsAdLoading(false);
         await ad.show();
       }
       // 보상 획득 이벤트 리스너 (일회성) 제거됨 - 중앙화된 처리로 이동
     } catch (error) {
       console.error('❌ 광고 시청 실패:', error);
+      setIsAdLoading(false);
       showToast({
         message: '광고를 시청할 수 없습니다.',
         theme: 'dark',
@@ -630,8 +637,15 @@ const ShopScreen = () => {
   const renderChargeTab = () => (
     <View style={styles.content}>
       <BannerChargeImage width={layout.width} style={{ marginTop: 30 }}/>
+      {isAdLoading ? (
+        <View style={{ paddingVertical: 40, alignItems: 'center' }}>
+          <ActivityIndicator color={colors.primary300} />
+          <Text style={[styles.dropdownSortText, { marginTop: 8 }]}>광고 불러오는 중...</Text>
+        </View>
+      ) : (
       <View style={styles.chargeContent}>
         {/* 보상형 광고 목록 */}
+        
         {adsLoading ? (
           <Text style={styles.loadingText}>로딩 중...</Text>
         ) : (
@@ -668,6 +682,7 @@ const ShopScreen = () => {
           </View>
         ))}
       </View>
+      )}
     </View>
   );
 

@@ -38,6 +38,16 @@ type RecordTabNavigationProp = CompositeNavigationProp<
 const RecordTab = () => {
   // 알림 큐 처리 (탭 포커스 시 큐에 있는 알림을 순차적으로 표시)
   useNotificationQueueProcessor();
+
+  // 탭을 벗어날 때 바텀시트 닫기
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        // 탭을 벗어날 때 바텀시트가 열려있으면 닫기
+        activityInducingSheetRef.current?.close();
+      };
+    }, [])
+  );
   
   // 논리적 오늘(now) 유틸 사용: utils에서 설정한 기본 boundaryHour 사용
   const getLogicalNow = useCallback(() => getLogicalNowUtil(), []);
@@ -273,6 +283,10 @@ const RecordTab = () => {
     setTimeout(() => navigation.getParent()?.navigate('play' as never), 120);
   }, [navigation, handleActivityInducingClose]);
 
+  const handlePastDayPress = useCallback((date: dayjs.Dayjs) => {
+    showToast({ message: '지난 날짜는 기록할 수 없어요!', theme: 'dark', iconType: 'brokenHeart' });
+  }, []);
+
   const onStartRecordPress = useCallback(() => {
     navigation.navigate('EmotionSelectScreen', { date: getLogicalNow().format('YYYY-MM-DD') });
   }, [navigation, getLogicalNow]);
@@ -309,6 +323,7 @@ const RecordTab = () => {
             onNext={handleNext}
             onViewTypeChange={handleViewTypeChange}
             onDayPress={handleDayPress}
+            onPastDayPress={handlePastDayPress}
             onStartRecordPress={onStartRecordPress}
             styles={styles}
             containsToday={weekIncludesToday}
@@ -409,6 +424,7 @@ const RecordTab = () => {
             </View>
           </View>
         }
+        
         bottomSheetModalRef={activityInducingSheetRef}
         hasBackDrop={true}
         enablePanDownToClose={false}

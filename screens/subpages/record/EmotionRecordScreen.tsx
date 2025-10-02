@@ -167,12 +167,12 @@ const EmotionRecordScreen = () => {
             right={
               <>
               {/* 삭제버튼 임시 비활성화 */}
-              <TouchableOpacity onPress={() => {
+              {/* <TouchableOpacity onPress={() => {
                 emotionDiaryService.deleteEmotionDiary((params as any).diaryId);
                 navigation.reset({ index: 0, routes: [{ name: 'RecordTab' }] });
               }}>
                 <Text style={{marginRight: 20, ...typography.body2, color: 'red',}}>삭제</Text>
-              </TouchableOpacity>
+              </TouchableOpacity> */}
               {
               screenMode === 'view' ? (
                 <TouchableOpacity 

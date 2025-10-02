@@ -161,7 +161,9 @@ const ShopItemDetailScreen = () => {
   return (
     <>
     <UserRoom
+      previewMode={true}
       previewItemIds={isCollection ? (collection?.items?.map(it => it.id) ?? []) : [itemId]}
+      showPlacedItems={true}
     >
       <SubpageHeader 
         onBack={handleBack} 

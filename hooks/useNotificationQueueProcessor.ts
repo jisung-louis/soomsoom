@@ -55,6 +55,23 @@ export const useNotificationQueueProcessor = () => {
           }
           break;
 
+        case 'REWARD_ACQUIRED':
+          if (payload?.points) {
+            const message = String(payload?.aps?.alert?.title || '하트 획득했어요!');
+            const subMessage = String(payload?.aps?.alert?.body || '하트를 획득했어요!');
+            const amount = payload?.points;
+            const popup = createHeartRewardPopup(message, subMessage, amount);
+            showUniversalPopup(popup);
+          }
+          else if (payload?.imageUrl) {
+            const image = { uri: payload?.imageUrl || '' };
+            const message = String(payload?.aps?.alert?.title || '새로운 아이템!');
+            const subMessage = String(payload?.aps?.alert?.body || '새 아이템을 받았어요!');
+            const popup = createItemRewardPopup(image, message, subMessage);
+            showUniversalPopup(popup);
+          }
+          break;
+
         default:
           console.warn('알 수 없는 알림 타입:', type);
           break;

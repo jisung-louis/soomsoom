@@ -118,16 +118,21 @@ async function generateUuidV4(): Promise<string> {
 export async function getOrCreateInstallUuid(): Promise<string> {
   try {
     const exists = await getItem(KEY);
-    if (exists) return exists;
+    if (exists) {
+      // 기존에 저장된 값이 전체 UUID인 경우 8자로 정규화하여 반환
+      return exists.length > 8 ? exists.slice(0, 8) : exists;
+    }
 
     const id = await generateUuidV4();
-    await saveItem(KEY, id);
-    return id;
+    const shortId = id.slice(0, 8);
+    await saveItem(KEY, shortId);
+    return shortId;
   } catch {
-    const fallback = `uuid-${Platform.OS}-fallback-${Date.now()}`;
+    // 예외 발생 시 간단한 8자리 fallback 반환
+    const fallbackShort = String(Date.now()).slice(-8);
     // 캐시 일관성 유지: 예외 시에도 같은 런타임에서는 동일 문자열을 돌려준다.
-    uuidCache = fallback;
-    return fallback;
+    uuidCache = fallbackShort;
+    return fallbackShort;
   }
 }
 
@@ -158,8 +163,13 @@ export async function getCachedInstallUuid(): Promise<string> {
 
   const saved = await getItem(KEY);
   if (saved) {
-    uuidCache = saved;
-    return saved;
+    const normalized = saved.length > 8 ? saved.slice(0, 8) : saved;
+    // 저장된 값이 길다면 8자로 정규화하여 저장소에 반영(일관성 유지)
+    if (normalized !== saved) {
+      await saveItem(KEY, normalized);
+    }
+    uuidCache = normalized;
+    return normalized;
   }
   return initInstallUuid();
 }

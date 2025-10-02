@@ -6,6 +6,7 @@ import { radius } from '../../../constants/radius';
 import XButton from '../../../assets/icons/common/close.svg';
 import { Button, ButtonProps } from '../buttons/Button';
 import LottieView from 'lottie-react-native';
+import { ss, sv, sx } from '../../../utils/scale';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -19,6 +20,7 @@ export type AlertButton = {
 type CustomAlertProps = {
   visible: boolean;
   image?: string | number | { uri: string } | { lottie: number | string | { uri: string } };
+  particle?: boolean;
   message: string;
   subMessage?: string;
   buttons: AlertButton[];
@@ -26,7 +28,7 @@ type CustomAlertProps = {
   closeButton?: boolean;
 };
 
-const CustomAlert = ({ visible, image, message, subMessage, buttons, onClose, closeButton = true }: CustomAlertProps) => {
+const CustomAlert = ({ visible, image, particle=false, message, subMessage, buttons, onClose, closeButton = true }: CustomAlertProps) => {
   const handleBackdropPress = () => {
     if (onClose) {
       onClose();
@@ -82,6 +84,7 @@ const CustomAlert = ({ visible, image, message, subMessage, buttons, onClose, cl
           activeOpacity={1}
           onPress={() => {}} // 내부 터치 시 닫히지 않도록
         >
+          
           {/* X 버튼 */}
           {closeButton && (
             <TouchableOpacity style={styles.closeButton} onPress={onClose}>
@@ -92,8 +95,16 @@ const CustomAlert = ({ visible, image, message, subMessage, buttons, onClose, cl
           {/* 이미지 */}
           {image && (
             // 명시적 Lottie 포맷: { lottie: ... }
-            (typeof image === 'object' && 'lottie' in image) ? (
-              <View style={styles.imageContainer}>
+            <View style={styles.imageContainer}>
+              {particle && (
+                <LottieView
+                  source={require('../../../assets/animations/popup_particle.json')}
+                  autoPlay
+                  loop={false}
+                  style={styles.particle}
+                />
+              )}
+              {(typeof image === 'object' && 'lottie' in image) ? (
                 <LottieView
                   source={
                     typeof (image as any).lottie === 'string'
@@ -103,22 +114,18 @@ const CustomAlert = ({ visible, image, message, subMessage, buttons, onClose, cl
                   autoPlay
                   loop
                   style={styles.image}
+                  resizeMode="contain"
                 />
-              </View>
-            ) : typeof image === 'string' && image.endsWith('.json') ? (
-              <View style={styles.imageContainer}>
-                <LottieView source={image} autoPlay loop style={styles.image} />
-              </View>
-            ) : typeof image === 'string' ? (
-              <View style={styles.imageContainer}>
-                <Image source={{ uri: image }} style={styles.image} />
-              </View>
-            ) : typeof image === 'number' ? (
-              <View style={styles.imageContainer}>
-                <Image source={image} style={styles.image} />
-              </View>
-            ) : null
+              ) : typeof image === 'string' && image.endsWith('.json') ? (
+                <LottieView source={image} autoPlay loop style={styles.image} resizeMode="contain" />
+              ) : typeof image === 'string' || typeof image === 'object' && 'uri' in image ? ( //uri 형태일때
+                <Image source={image as any} style={styles.image} resizeMode="contain" />
+              ) : typeof image === 'number' ? (
+                <Image source={image} style={styles.image} resizeMode="contain" />
+              ) : null}
+            </View>
           )}
+          
 
           {/* 메시지 */}
           <View style={styles.messageContainer}>
@@ -180,6 +187,14 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 8,
+  },
+  particle: {
+    position: 'absolute',
+    top: -sv(32),
+    left: sx(105) - 20 - 20,
+    width: ss(164),
+    height: sv(164),
+    zIndex: -100,
   },
   closeButton: {
     alignItems: 'flex-end',

@@ -65,7 +65,7 @@ function AppNavigatorContent() {
       <Tab.Screen 
         name="my" 
         component={MyStackNavigator}
-        options={{ lazy: true }}
+        options={{ lazy: false }}
       />
     </Tab.Navigator>
   );

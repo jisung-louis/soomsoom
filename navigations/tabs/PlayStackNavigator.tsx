@@ -26,7 +26,7 @@ export type PlayStackParamList = {
   PlayMeditationScreen: { content: Activity; initialPosition?: number };
   PlayResultScreen: {effectTexts: string[], rewardableMission?: RewardableMission};
   PlayActivityListScreen: { title: string, content: Activity[] };
-  PlayRestScreen: { activityId: number, content: Activity };
+  PlayRestScreen: { activityId: number };
 };
 
 const Stack = createStackNavigator<PlayStackParamList>();

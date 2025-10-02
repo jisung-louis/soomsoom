@@ -9,14 +9,14 @@ import TimeIcon from '../../../../assets/icons/common/time.svg';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { PlayStackParamList } from '../../../../navigations/tabs/PlayStackNavigator';
-import { Activity } from '../../../../services/contentService';
+import { Activity, ActivityCategory } from '../../../../services/contentService';
 import { titleLineBreaker } from '../../../../utils/textUtils';
 import { normalizeImageSource } from '../../../../utils/textUtils';
 
 const ProgramList = ({ programData }: { programData: Activity[] }) => {
   const navigation = useNavigation<StackNavigationProp<PlayStackParamList>>();
-  const typeToString = (type: 'BREATHING' | 'MEDITATION' | 'SLEEP' | 'REST') => {
-    switch (type) {
+  const categoryToString = (category: ActivityCategory) => {
+    switch (category) {
       case 'BREATHING':
         return '호흡';
       case 'MEDITATION':
@@ -28,17 +28,17 @@ const ProgramList = ({ programData }: { programData: Activity[] }) => {
     }
   }
   const onPress = (item: Activity) => {
-    if (item.type === 'REST') {
-      navigation.navigate('PlayRestScreen', { activityId: item.id, content: item });
+    if (item.category === 'REST') {
+      navigation.navigate('PlayRestScreen', { activityId: item.id });
     } else {
       navigation.navigate('PlayDetailScreen', { activityId: item.id, content: item });
     }
   }
-  const timeToString = (durationInSeconds: number) => {
-    if (durationInSeconds === Infinity) {
+  const timeToString = (item: Activity) => {
+    if (item.category === 'REST') {
       return '∞';
     }
-    return `${Math.floor(durationInSeconds / 60)}min`;
+    return `${Math.floor(item.durationInSeconds / 60)}min`;
   }
   return(
     <View style={styles.container}>
@@ -49,7 +49,7 @@ const ProgramList = ({ programData }: { programData: Activity[] }) => {
               <Image source={normalizeImageSource(item.thumbnailImageUrl)} style={styles.image} resizeMode='cover' />
               <View style={styles.cardContent}>
                 <View style={styles.textHeader}>
-                  <Badge title={typeToString(item.type)} />
+                  <Badge title={categoryToString(item.category)} />
                   <MoreIcon color={colors.grayScale300} />
                 </View>
                 <View style={styles.cardTitleAndTimeContainer}>
@@ -58,7 +58,7 @@ const ProgramList = ({ programData }: { programData: Activity[] }) => {
                   </View>
                   <View style={styles.timeRow}>
                     <TimeIcon color={colors.grayScale700} width={16} height={16} />
-                    <Text style={styles.time}>{timeToString(item.durationInSeconds)}</Text>
+                    <Text style={styles.time}>{timeToString(item)}</Text>
                   </View>
                 </View>
               </View>

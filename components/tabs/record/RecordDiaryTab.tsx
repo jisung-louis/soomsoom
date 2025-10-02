@@ -35,6 +35,7 @@ type RecordDiaryTabProps = {
   onNext: () => void;
   onViewTypeChange: (type: 'week' | 'month') => void;
   onDayPress: (date: dayjs.Dayjs) => void;
+  onPastDayPress: (date: dayjs.Dayjs) => void;
   onStartRecordPress: () => void;
   styles: StyleSheet.NamedStyles<any>;
   containsToday?: boolean;
@@ -53,6 +54,7 @@ const RecordDiaryTab = ({
   onNext,
   onViewTypeChange,
   onDayPress,
+  onPastDayPress,
   onStartRecordPress,
   styles,
   containsToday,
@@ -99,6 +101,7 @@ const RecordDiaryTab = ({
           date={currentDate}
           recordedItems={recordedItems}
           onDayPress={onDayPress}
+          onPastDayPress={onPastDayPress}
           onWeekSwipe={onSwipe}
         />
       )}

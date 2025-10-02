@@ -108,6 +108,7 @@ export const useAuth = () => {
       // 2. 서버에서 토큰 교환 (deviceId 미존재 404 시, 선(先) 디바이스 로그인 후 재시도)
       console.log('🔄 서버에서 토큰 교환 중...');
       const deviceId = await getCachedInstallUuid();
+      console.log(deviceId)
       let tokens;
       try {
         tokens = await postSocialLogin({ provider, providerToken, deviceId });

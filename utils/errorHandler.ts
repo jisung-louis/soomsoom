@@ -235,7 +235,29 @@ export function parseError(error: any): ErrorDetails {
   // Error 객체인 경우
   if (error instanceof Error) {
     // 하트 포인트 부족 에러
-    if (error.message.includes('하트 포인트 부족')) {
+    // 구매: 하트/포인트 부족 케이스 매칭 (서버 코드/원문 우선)
+
+      // 다양한 래핑(AppError, AxiosError) 상황에서 서버 페이로드를 최대한 끌어옴
+      const anyErr = error as any;
+      const resp = anyErr?.response || anyErr?.originalError?.response || anyErr?.cause?.response;
+      const data = resp?.data || anyErr?.response?.data || anyErr?.originalError?.response?.data;
+      const serverCode = data?.errorCode;
+      const serverMessage = (data?.message || anyErr?.serverMessage || anyErr?.message || '').toString();
+      const isInsufficientPoints =
+        serverCode === 'INSUFFICIENT_POINTS' ||
+        /포인트.*부족/.test(serverMessage) ||
+        /보유한\s*포인트가\s*부족/.test(serverMessage) ||
+        /하트\s*포인트\s*부족/.test(serverMessage);
+
+      if (isInsufficientPoints) {
+        return {
+          title: '하트 포인트가 부족해요',
+          message: '',
+          type: ErrorType.VALIDATION,
+          code: 'INSUFFICIENT_POINTS',
+        };
+      }
+    if (error.message.includes('포인트가 부족')) {
       // "하트 포인트 부족: 현재 100, 필요 300" 형태에서 부족한 포인트 추출
       const match = error.message.match(/현재 (\d+), 필요 (\d+)/);
       if (match) {

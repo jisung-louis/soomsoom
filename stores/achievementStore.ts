@@ -235,6 +235,7 @@ export function navigateToAchievements() {
   } else {
     console.warn('⚠️ 업적 네비게이션 핸들러가 연결되지 않음 - MyTab이 아직 마운트되지 않았을 수 있습니다');
     setTimeout(() => {
+      // MyTab 마운트하고 네비게이션 핸들러 재시도
       if (_navigationHandler) {
         console.log('🔄 네비게이션 핸들러 재시도...');
         _navigationHandler();
@@ -256,6 +257,7 @@ export function navigateToMyDecoration(params?: { autoEnterEditMode?: boolean })
   } else {
     console.warn('⚠️ My 꾸미기 네비게이션 핸들러가 연결되지 않음 - MyTab이 아직 마운트되지 않았을 수 있습니다');
     setTimeout(() => {
+      // MyTab 마운트하고 네비게이션 핸들러 재시도
       if (_goToMyDecorationHandler) {
         console.log('🔄 My 꾸미기 네비게이션 핸들러 재시도...');
         _goToMyDecorationHandler(params);

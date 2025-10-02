@@ -15,7 +15,7 @@ import { colors } from '../../../constants/colors';
 import { radius } from '../../../constants/radius';
 import EmotionIcon from '../../../assets/icons/common/emotion.svg';
 import Badge from '../../../components/common/badge/Badge';
-import CheckIcon from '../../../assets/icons/common/stroke_check copy.svg';
+import CheckIcon from '../../../assets/icons/common/check.svg';
 import { getItems } from '../../../services/itemService';
 import { getCollections, getCollectionDetail, type CollectionSummary, type CollectionDetail } from '../../../services/collectionService';
 import { useRoomStore } from '../../../stores/roomStore';
@@ -296,13 +296,13 @@ const MyRoomDecoration = ({
                 onTabPress={handleTabPress}
             />
             <FlatList 
-            key={isCollection || isBackground ? 'collection' : 'items'}
-            style={styles.itemListContainer}
-            data={paddedData} 
-            numColumns={isCollection || isBackground ? 2 : 3}
-            columnWrapperStyle={isCollection || isBackground ? styles.collectionRow : styles.row}
-            showsVerticalScrollIndicator={false}
-            renderItem={({item, index}) => (
+              key={isCollection || isBackground ? 'collection' : 'items'}
+              style={styles.itemListContainer}
+              data={paddedData} 
+              numColumns={isCollection || isBackground ? 2 : 3}
+              columnWrapperStyle={isCollection || isBackground ? styles.collectionRow : styles.row}
+              showsVerticalScrollIndicator={false}
+              renderItem={({item, index}) => (
                 item.__isPlaceholder ? (
                   <View style={[styles.item, {backgroundColor: 'transparent', elevation: 0, width: ITEM_IMAGE_WIDTH, height: ITEM_IMAGE_HEIGHT}]} key={item.id} />
                 ) : 
@@ -344,9 +344,12 @@ const MyRoomDecoration = ({
                             </View>
                         )}
                         {selectedItems.includes(item.id) && (  
-                            <View style={styles.collectionYellowDimmedContainer}>
-                                <CheckIcon width={56} height={56} color={colors.white} />
+                          <View style={styles.yellowDimmedContainer}>
+                            <View style={styles.yellowDimmed}/>
+                            <View style={styles.checkIconContainer}>
+                              <CheckIcon width={56} height={56} color={colors.white} style={styles.checkIcon} />
                             </View>
+                          </View>
                         )}
                         <View style={styles.collectionItemImageContainer}>
                           <Image source={normalizeImageSource(item.image)} style={styles.collectionItemImage} resizeMode="cover"/>
@@ -369,9 +372,12 @@ const MyRoomDecoration = ({
                             </View>
                         )}
                         {selectedItems.includes(item.id) && (  
-                            <View style={styles.yellowDimmedContainer}>
-                                <CheckIcon width={56} height={56} color={colors.white} />
+                          <View style={styles.yellowDimmedContainer}>
+                            <View style={styles.yellowDimmed}/>
+                            <View style={styles.checkIconContainer}>
+                              <CheckIcon width={56} height={56} color={colors.white} style={styles.checkIcon} />
                             </View>
+                          </View>
                         )}
                         <View style={styles.itemImageContainer}>
                           <Image source={normalizeImageSource(item.image)} style={styles.itemImage} resizeMode="contain"/>
@@ -466,19 +472,6 @@ const styles = StyleSheet.create({
     color: colors.grayScale900,
     textAlign: 'center',
   },
-  yellowDimmedContainer: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    width: ITEM_IMAGE_WIDTH,
-    height: ITEM_IMAGE_HEIGHT,
-    backgroundColor: '#FFAA33',
-    opacity: 0.6,
-    borderRadius: radius.r8,
-    zIndex: 100,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   collectionProgressContainer: {
     marginTop: 2,
   },
@@ -493,17 +486,42 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   collectionYellowDimmedContainer: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
     width: COLLECTION_IMAGE_WIDTH,
     height: COLLECTION_IMAGE_HEIGHT,
     backgroundColor: '#FFAA33',
     opacity: 0.6,
     borderRadius: radius.r8,
     zIndex: 100,
+  },
+  yellowDimmedContainer: {
+    width: ITEM_IMAGE_WIDTH,
+    height: ITEM_IMAGE_HEIGHT,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    zIndex: 100,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  yellowDimmed: {
+    position: 'absolute',
+    width: ITEM_IMAGE_WIDTH,
+    height: ITEM_IMAGE_HEIGHT,
+    top: 0,
+    left: 0,
+    backgroundColor: '#FFAA33',
+    opacity: 0.6,
+    borderRadius: radius.r8,
+    zIndex: 1000,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkIconContainer: {
+    zIndex: 10000,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkIcon: {
   },
 });
 

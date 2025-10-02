@@ -250,7 +250,7 @@ const PlayBar = ({
           <playIcons.naked.repeat
             width={40}
             height={40}
-            color={isRepeat ? colors.primary400 : colors.primary200}
+            color={isRepeat ? colors.primary300 : colors.primary200}
           />
         </TouchableOpacity>
       </View>

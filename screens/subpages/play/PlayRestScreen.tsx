@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Text, View, StyleSheet, InteractionManager } from 'react-native';
 import { Image } from 'react-native';
 import { RouteProp, useNavigation } from '@react-navigation/native';
@@ -15,6 +15,7 @@ import { colors } from '../../../constants/colors';
 import LottieView from 'lottie-react-native';
 import { ss, sv } from '../../../utils/scale';
 import CatBasic from '../../../assets/images/play/playBreathing/basic.svg';
+import { Activity, getActivityDetail } from '../../../services/contentService';
 
 
 const PlayRestScreen = ({route}: {route: RouteProp<PlayStackParamList, 'PlayRestScreen'>}) => {
@@ -26,12 +27,32 @@ const PlayRestScreen = ({route}: {route: RouteProp<PlayStackParamList, 'PlayRest
     }
     navigation.goBack();
   };
-  const { activityId, content } = route.params;
-  const hasAudio = !!content.audioUrl;
+
+  
+
+  const { activityId } = route.params;
+  const [content, setContent] = useState<Activity | null>(null);
+  const hasAudio = !!content?.audioUrl;
   const audioSource = React.useMemo(() => {
-    if (!content.audioUrl) return undefined;
-    return typeof content.audioUrl === 'string' ? { uri: content.audioUrl } : content.audioUrl;
-  }, [content.audioUrl]);
+    if (!content?.audioUrl) return undefined;
+    return typeof content?.audioUrl === 'string' ? { uri: content?.audioUrl } : content?.audioUrl;
+  }, [content?.audioUrl]);
+
+
+  useEffect(() => {
+    const loadContent = async () => {
+      const content = await getActivityDetail(activityId);
+      setContent(content);
+    };
+    loadContent();
+  }, [activityId]);
+
+  useEffect(() => {
+    console.log('🔍 content', JSON.stringify(content, null, 2));
+  }, [content]);
+
+
+
   const { isLoading: audioLoading, play: playAudio, pause: pauseAudio } = useAudioPlayer({
     source: audioSource as any,
     autoPlay: false,
@@ -136,8 +157,7 @@ const PlayRestScreen = ({route}: {route: RouteProp<PlayStackParamList, 'PlayRest
   return (
     <SafeAreaView style={styles.container}>
       <SubpageHeader 
-        onBack={handleBack} 
-        title={content.title}
+        onBack={handleBack}
       />
       {isLoading ? (
         <LottieView

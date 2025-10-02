@@ -28,9 +28,10 @@ import { useTodayMissionStore } from '../../stores/todayMissionStore';
 import { useBackgroundColor, useBgTopColor } from '../../hooks/useBackgroundColor';
 import { useMailboxStore } from '../../stores/mailboxStore';
 import { getLogicalNow } from '../../utils/timeUtils';
-import { getActivitiesByType } from '../../services/contentService';
+import { getActivitiesByType, getActivityDetail } from '../../services/contentService';
 import { typography } from '../../constants/typography';
 import { useNotificationQueueProcessor } from '../../hooks/useNotificationQueueProcessor';
+import { showUniversalPopup, createAchievementPopup, createHeartRewardPopup, createItemRewardPopup } from '../../components/common/popup/UniversalPopup';
 
 type HomeTabNavigationProp = StackNavigationProp<HomeStackParamList, 'HomeTab'>;
 
@@ -282,6 +283,14 @@ const HomeTab = () => {
         messageButtonPress={handleMessagePress}
         isBGColorDark={isBGColorDark}
       />
+      {/* <ButtonSmall
+        title="팝업(즉시)"
+        onPress={() => showUniversalPopup(createItemRewardPopup(
+          { uri: 'https://soomsoom-prod-bucket.s3.ap-northeast-2.amazonaws.com/items/6/image/8475fad1-6416-4243-9f23-2c8d0026b5d4.png' }, 
+          '아이템왕 획득했어요!', 
+          '아이템왕을 획득했어요!'
+        ))}
+      /> */}
 
       {/* 버블톡: 오늘 미션 상태에 따른 조건부 표시 */}
       {(todayStatus === 'NEED_DIARY' || todayStatus === 'NEED_ACTIVITY') && (

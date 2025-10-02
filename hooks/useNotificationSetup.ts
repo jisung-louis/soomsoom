@@ -70,6 +70,7 @@ export function useNotificationSetup(navigationRef: React.RefObject<any>) {
         case 'ACHIEVEMENT_UNLOCKED':
         case 'NEWS_UPDATE':
         case 'MISSION_COMPLETED':
+        case 'REWARD_ACQUIRED':
         default:
           if(payload?.historyId) {
             trackNotificationClick(payload.historyId);

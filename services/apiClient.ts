@@ -338,12 +338,21 @@ export class ApiClient {
 
     console.error(`API 에러 [${response.status}]:`, {
       endpoint,
+      errorCode,
       message: errorMessage,
       userFriendlyMessage,
-      errorCode
     });
 
-    throw new AppError(userFriendlyMessage, errorType, errorCode, `api-response-${response.status}`);
+    const appErr = new AppError(
+      userFriendlyMessage,
+      errorType,
+      errorCode,
+      `api-response-${response.status}`
+    );
+    // 서버 원문을 보존하여 downstream 파서가 활용할 수 있게 함
+    (appErr as any).response = { status: response.status, data: { errorCode, message: errorMessage } };
+    (appErr as any).serverMessage = errorMessage;
+    throw appErr;
   }
 }
 

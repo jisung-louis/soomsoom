@@ -8,6 +8,7 @@ import { radius } from '../../../constants/radius';
 import { colors } from '../../../constants/colors';
 import { typography } from '../../../constants/typography';
 import HeartIcon from '../../../assets/icons/common/Heart.svg';
+import { normalizeImageSource } from '../../../utils/textUtils';
 
 interface PurchaseItemListProps {
     item: {
@@ -22,6 +23,7 @@ interface PurchaseItemListProps {
 }
 
 const PurchaseItemList = ({ item, isChecked, onCheckPress, onXPress }: PurchaseItemListProps) => {
+    console.log('🔍 PurchaseItemList - item:', item);
     return (
         <View style={styles.container}>
             <View style={styles.contentContainer}>
@@ -30,8 +32,8 @@ const PurchaseItemList = ({ item, isChecked, onCheckPress, onXPress }: PurchaseI
                 </TouchableOpacity>
                 <View style={styles.itemInfoContainer}>
                     <View style={styles.itemImageContainer}>
-                        {item.image ? (
-                            <Image source={item.image as any} style={styles.itemImage} resizeMode='contain' />
+                        {item.image !== null && item.image !== undefined ? (
+                            <Image source={normalizeImageSource(item.image)} style={styles.itemImage} resizeMode='contain' />
                         ) : null}
                     </View>
                     <View style={styles.itemInfo}>

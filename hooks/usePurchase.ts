@@ -11,7 +11,7 @@ import {
   purchaseCart 
 } from '../services/purchaseService';
 import { useOwnedItems } from './useOwnedItems';
-import { handlePurchaseError } from '../utils/purchaseErrorHandler';
+import { parseError } from '../utils/errorHandler';
 import { useAppConfigStore } from '../stores/appConfigStore';
 
 export interface UsePurchaseOptions {
@@ -67,7 +67,7 @@ export function usePurchase(options: UsePurchaseOptions = {}): UsePurchaseReturn
   const [errorSubMessage, setErrorSubMessage] = useState<string | undefined>(undefined);
 
   // 공통 구매 로직
-  const executePurchase = useCallback(async (purchaseFn: () => Promise<any>) => {
+  const executePurchase = useCallback(async (purchaseFn: () => Promise<any>, ctx?: { expectedTotalPrice?: number }) => {
     if (isPurchasing) return;
     
     try {
@@ -93,10 +93,19 @@ export function usePurchase(options: UsePurchaseOptions = {}): UsePurchaseReturn
       onSuccess?.();
     } catch (error) {
       console.log('❌ 구매 에러 발생:', error);
-      const errorState = handlePurchaseError(error);
-      console.log('🔍 파싱된 에러 상태:', errorState);
-      setErrorTitle(errorState.title);
-      setErrorSubMessage(errorState.subMessage);
+      const details = parseError(error);
+      let title = details.title;
+      let subMessage = details.message;
+      // 부족 수량을 클라이언트에서 보강 계산
+      if (details.code === 'INSUFFICIENT_POINTS') {
+        const current = useCurrencyStore.getState().heartPoints;
+        const shortage = Math.max((ctx?.expectedTotalPrice ?? 0) - current, 0);
+        title = `하트 **${shortage}**개가 부족해요`;
+        subMessage = '';
+      }
+      console.log('🔍 파싱된 에러 상태:', { title, subMessage });
+      setErrorTitle(title);
+      setErrorSubMessage(subMessage);
       setIsErrorAlertVisible(true);
       onError?.(error);
     } finally {
@@ -113,12 +122,12 @@ export function usePurchase(options: UsePurchaseOptions = {}): UsePurchaseReturn
       return;
     }
 
-    await executePurchase(() => purchaseItemsApi({ itemIds, expectedTotalPrice }));
+    await executePurchase(() => purchaseItemsApi({ itemIds, expectedTotalPrice }), { expectedTotalPrice });
   }, [executePurchase]);
 
   // 단일 아이템 구매
   const purchaseSingleItem = useCallback(async (itemId: number, expectedTotalPrice: number) => {
-    await executePurchase(() => purchaseSingleItemApi(itemId, expectedTotalPrice));
+    await executePurchase(() => purchaseSingleItemApi(itemId, expectedTotalPrice), { expectedTotalPrice });
   }, [executePurchase]);
 
   // Alert 관리
@@ -164,9 +173,9 @@ export function usePurchase(options: UsePurchaseOptions = {}): UsePurchaseReturn
       onSuccess?.();
     } catch (error) {
       console.log('❌ 장바구니 추가 에러:', error);
-      const errorState = handlePurchaseError(error);
-      setErrorTitle(errorState.title);
-      setErrorSubMessage(errorState.subMessage);
+      const details = parseError(error);
+      setErrorTitle(details.title);
+      setErrorSubMessage(details.message);
       setIsErrorAlertVisible(true);
       onError?.(error);
     } finally {
@@ -193,9 +202,9 @@ export function usePurchase(options: UsePurchaseOptions = {}): UsePurchaseReturn
       onSuccess?.();
     } catch (error) {
       console.log('❌ 장바구니 제거 에러:', error);
-      const errorState = handlePurchaseError(error);
-      setErrorTitle(errorState.title);
-      setErrorSubMessage(errorState.subMessage);
+      const details = parseError(error);
+      setErrorTitle(details.title);
+      setErrorSubMessage(details.message);
       setIsErrorAlertVisible(true);
       onError?.(error);
     } finally {
@@ -227,9 +236,17 @@ export function usePurchase(options: UsePurchaseOptions = {}): UsePurchaseReturn
       onSuccess?.();
     } catch (error) {
       console.log('❌ 장바구니 구매 에러:', error);
-      const errorState = handlePurchaseError(error);
-      setErrorTitle(errorState.title);
-      setErrorSubMessage(errorState.subMessage);
+      const details = parseError(error);
+      let title = details.title;
+      let subMessage = details.message;
+      if (details.code === 'INSUFFICIENT_POINTS') {
+        const current = useCurrencyStore.getState().heartPoints;
+        const shortage = Math.max(expectedTotalPrice - current, 0);
+        title = `하트 ${shortage}개가 부족해요`;
+        subMessage = '';
+      }
+      setErrorTitle(title);
+      setErrorSubMessage(subMessage);
       setIsErrorAlertVisible(true);
       onError?.(error);
     } finally {

@@ -12,8 +12,6 @@ export type RoomItemPositionType =
   | 'eyewear'    // 선글라스
   | 'hat'        // 모자
   | 'frame'      // 액자
-  // | 'frame1'     // 액자1 (frame_1 → frame1)
-  // | 'frame2'     // 액자2 (frame_2 → frame2)
   | 'background' // 배경
   | 'floor'      // 바닥
   | 'shelf';     // 선반
@@ -30,8 +28,6 @@ export interface PlacedItems {
   eyewear: number | null;
   hat: number | null;
   frame: number | null;
-  // frame1: number | null;    // frame_1 → frame1
-  // frame2: number | null;    // frame_2 → frame2
   floor: number | null;
   shelf: number | null;
 }

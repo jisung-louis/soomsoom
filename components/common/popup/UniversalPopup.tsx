@@ -5,6 +5,9 @@ import CustomAlert from '../alert/CustomAlert';
 import { useToast } from '../../../contexts/ToastContext';
 import { useCurrencyStore } from '../../../stores/currencyStore';
 import { getUserPoints } from '../../../services/userService';
+import { StyleSheet, Text } from 'react-native';
+import LottieView from 'lottie-react-native';
+import { ss, sv } from '../../../utils/scale';
 
 // 팝업 타입 정의
 export type PopupType = 'achievement' | 'reward_heart' | 'reward_item' | 'mailbox' | 'alarm' | 'generic';
@@ -103,45 +106,60 @@ export default function UniversalPopup() {
   if (!data) return null;
 
   return (
-    <CustomAlert
-      visible={open}
-      image={data.image}
-      message={data.message}
-      subMessage={data.subMessage}
-      buttons={(data.buttons || [
-        { text: '닫기', onPress: () => {} }
-      ]).map((btn) => ({
-        ...btn,
-        onPress: async () => {
-          try {
-            // 버튼 로직 실행
-            if (btn.onPress) await btn.onPress();
-            // 하트 보상 팝업에서 서버 진실값 동기화 및 토스트 표시
-            if (data.type === 'reward_heart' && btn.icon === 'heart') {
-              try {
-                const res = await getUserPoints();
-                useCurrencyStore.getState().setHeartPoints(res.points);
-                showToast({ 
-                  amount: data.amount,
-                  message: '하트가 적립되었어요!', 
-                  theme: 'dark', 
-                  iconType: 'heart',
-                });
-              } catch (e) {
-                // 포인트 동기화 실패는 사용자 흐름에 치명적이지 않으므로 조용히 처리
-                console.warn('하트 포인트 동기화 실패:', e);
+    <>
+      <CustomAlert
+        visible={open}
+        image={data.image}
+        particle
+        message={data.message}
+        subMessage={data.subMessage}
+        buttons={(data.buttons || [
+          { text: '닫기', onPress: () => {} }
+        ]).map((btn) => ({
+          ...btn,
+          onPress: async () => {
+            try {
+              // 버튼 로직 실행
+              if (btn.onPress) await btn.onPress();
+              // 하트 보상 팝업에서 서버 진실값 동기화 및 토스트 표시
+              if (data.type === 'reward_heart' && btn.icon === 'heart') {
+                try {
+                  const res = await getUserPoints();
+                  useCurrencyStore.getState().setHeartPoints(res.points);
+                  showToast({ 
+                    amount: data.amount,
+                    message: '하트가 적립되었어요!', 
+                    theme: 'dark', 
+                    iconType: 'heart',
+                  });
+                } catch (e) {
+                  // 포인트 동기화 실패는 사용자 흐름에 치명적이지 않으므로 조용히 처리
+                  console.warn('하트 포인트 동기화 실패:', e);
+                }
               }
+            } finally {
+              close();
             }
-          } finally {
-            close();
           }
-        }
-      }))}
-      onClose={close}
-    />
+        }))}
+        onClose={close}
+      />
+    </>
   );
 }
 
+const styles = StyleSheet.create({
+  particle: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    // right: 0,
+    // bottom: 0,
+    width: ss(375),
+    height: sv(375),
+    zIndex: 10000000,
+  },
+});
 
 // 범용 팝업 핸들러 시스템
 let _universalPopupHandler: PopupHandler | null = null;

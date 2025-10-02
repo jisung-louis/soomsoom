@@ -22,12 +22,13 @@ interface RecordWeekCalendarProps {
   date: dayjs.Dayjs;
   recordedItems?: RecordedItem[];
   onDayPress?: (date: dayjs.Dayjs) => void;
+  onPastDayPress?: (date: dayjs.Dayjs) => void;
   onWeekSwipe?: (direction: 'prev' | 'next') => void;
 }
 
 const daysOfWeek = ['일', '월', '화', '수', '목', '금', '토'];
 
-const RecordWeekCalendar: React.FC<RecordWeekCalendarProps> = ({ date, recordedItems, onDayPress, onWeekSwipe }) => {
+const RecordWeekCalendar: React.FC<RecordWeekCalendarProps> = ({ date, recordedItems, onDayPress, onPastDayPress, onWeekSwipe }) => {
   const startOfWeek = date.startOf('week');
   const weekDates = Array.from({ length: 7 }, (_, i) => startOfWeek.add(i, 'day'));
   const logicalNow = getLogicalNowUtil(); // utils의 기본 boundaryHour 사용
@@ -84,6 +85,7 @@ const RecordWeekCalendar: React.FC<RecordWeekCalendarProps> = ({ date, recordedI
           const isToday = date.isSame(logicalNow, 'day');
           const isSunday = date.day() === 0;
           const isRecord = recordedItems?.some((item) => item.date === date.format('YYYY-MM-DD'));
+          const isPast = date.isBefore(logicalNow, 'day');
 
           return (
             <View key={date.format('YYYY-MM-DD')} style={styles.dayBox}>
@@ -110,10 +112,19 @@ const RecordWeekCalendar: React.FC<RecordWeekCalendarProps> = ({ date, recordedI
                   onPress={() => onDayPress?.(date)}
                   activeOpacity={0.7}
                 >
-                <DayPlusIcon style={styles.icon} color={colors.grayScale800}/>
+                  <DayPlusIcon style={styles.icon} color={colors.grayScale800}/>
                 </TouchableOpacity>
               ) : (
-                <DayUncheckedIcon style={styles.icon}/>
+                isPast ? ( // past
+                <TouchableOpacity
+                  onPress={() => onPastDayPress?.(date)}
+                  activeOpacity={0.7}
+                >
+                  <DayUncheckedIcon style={styles.icon}/>
+                </TouchableOpacity>
+                ) : ( // future
+                  <DayUncheckedIcon style={styles.icon} opacity={0.4}/>
+                )
               )}
             </View>
           );

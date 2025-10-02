@@ -317,7 +317,7 @@ const PlayBreathContentScreen = ({route}: {route: RouteProp<PlayStackParamList, 
                     <Text style={styles.contentText}>{text}</Text>
                 </View>
 
-                {useMockApi && (
+                {/* {useMockApi && ( */}
                     <View style={styles.debugContainer}>
                         <View style={styles.debugButtonContainer}>
                             <ButtonSmall title="초기화" variant="active" style={styles.debugButton} onPress={() => { setStep(0); setRemainingTime(content.durationInSeconds); }} />
@@ -330,10 +330,11 @@ const PlayBreathContentScreen = ({route}: {route: RouteProp<PlayStackParamList, 
                             <Text>Total Remaining Time: {remainingTime} sec</Text>
                             <Text>Total Elapsed Time: {elapsed} sec</Text>
                             <Text>Action: {action}</Text>
+                            <Text>Duration: {duration}</Text>
                             <Text>Breathing is {isPlaying ? '\"PLAYING\"' : '\"PAUSED\"'} </Text>
                         </TouchableOpacity>
                     </View>
-                )}
+                {/* )} */}
             </SafeAreaView>
 
             {animationSource ? (

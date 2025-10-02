@@ -3,7 +3,7 @@ import { devtools } from 'zustand/middleware';
 
 export interface QueuedNotification {
   id: string;
-  type: 'ACHIEVEMENT_UNLOCKED' | 'NEWS_UPDATE' | 'MISSION_COMPLETED';
+  type: 'ACHIEVEMENT_UNLOCKED' | 'NEWS_UPDATE' | 'MISSION_COMPLETED' | 'REWARD_ACQUIRED';
   payload: any;
   timestamp: number;
 }

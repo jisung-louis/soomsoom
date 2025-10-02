@@ -23,7 +23,7 @@ import BadgeHidden from '../../assets/icons/my/badge_hidden.svg';
 import { Button } from '../../components/common/buttons/Button';
 import CustomBottomSheet from '../../components/common/bottomsheet/CustomBottomSheet';
 import MyRoomDecoration from '../subpages/my/MyRoomDecoration';
-import { getItems } from '../../services/itemService';
+import { getItems, updateEquippedItems, getEquippedItems } from '../../services/itemService';
 import { useOwnedItems } from '../../hooks/useOwnedItems';
 import { objectPosition } from '../../constants/roomLayout';
 import { useRoomStore } from '../../stores/roomStore';
@@ -43,7 +43,7 @@ import { useNotificationQueueProcessor } from '../../hooks/useNotificationQueueP
 const mockStatusData = [
     { title: '기록', valueType: '회', value: null },
     { title: '운동', valueType: '회', value: null },
-    { title: '시간', valueType: 'mm:ss', value: null },
+    { title: '시간', valueType: 'hh:mm', value: null },
 ];
 const statusCardContentItemWidth = 100 / mockStatusData.length;
 
@@ -155,12 +155,12 @@ const MyTab = () => {
     return unsubscribe;
   }, [getAccessToken]);
 
-  const formatMmSs = (totalSeconds: number) => {
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = totalSeconds % 60;
+  const formatHhMm = (totalSeconds: number) => {
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const hh = String(hours).padStart(2, '0');
     const mm = String(minutes).padStart(2, '0');
-    const ss = String(seconds).padStart(2, '0');
-    return `${mm}:${ss}`;
+    return `${hh}:${mm}`;
   };
 
   const statusData = useMemo(() => {
@@ -168,7 +168,7 @@ const MyTab = () => {
     return [
       { title: '기록', valueType: '회', value: summary.diaryCount },
       { title: '운동', valueType: '회', value: summary.activityCount },
-      { title: '시간', valueType: 'mm:ss', value: formatMmSs(summary.totalActivitySeconds) },
+      { title: '시간', valueType: 'hh:mm', value: formatHhMm(summary.totalActivitySeconds) },
     ];
   }, [summary]);
 
@@ -226,11 +226,11 @@ const MyTab = () => {
     let mounted = true;
     (async () => {
       try {
-        // 1. 현재 배치된 아이템들 수집
+        // 1. 현재 배치된 아이템들 수집 (frame 포함: 모두 단일 값 처리)
         const placedItemsList: number[] = [];
         Object.entries(placedItems).forEach(([key, value]) => {
-          if (value !== null && value !== undefined) {
-            placedItemsList.push(value as number);
+          if (typeof value === 'number') {
+            placedItemsList.push(value);
           }
         });
 
@@ -248,7 +248,8 @@ const MyTab = () => {
         
         if (mounted) {
           setEditModeSelectedItems(allItems);
-          setInitialSelectedItems([...allItems]); // 초기 선택된 아이템 저장
+          // 초기 기준은 '보유 아이템'만 포함해 비교 기준으로 사용
+          setInitialSelectedItems(allItems.filter(id => isOwned(id))); // 초기 선택된 아이템 저장(보유분만)
         }
       } catch (error) {
         console.warn('🛒 MyTab - 장바구니 조회 실패:', error);
@@ -259,7 +260,7 @@ const MyTab = () => {
         });
         if (mounted) {
           setEditModeSelectedItems(items);
-          setInitialSelectedItems([...items]); // 초기 선택된 아이템 저장
+          setInitialSelectedItems(items.filter(id => isOwned(id))); // 초기 선택된 아이템 저장(보유분만)
         }
       }
     })();
@@ -289,6 +290,7 @@ const MyTab = () => {
   // 선택된 아이템 중 미보유 아이템 개수 (구매 대상 수)
   const purchaseCount = useMemo(() => {
     if (purchaseItems.length === 0) return 0;
+    console.log('🛒 MyTab - 구매 대상 아이템:', purchaseItems);
     return purchaseItems.length;
   }, [purchaseItems]);
 
@@ -365,15 +367,7 @@ const MyTab = () => {
     setIsEditMode(true);
     const items: number[] = [];
     Object.entries(placedItems).forEach(([key, value]) => {
-      if (key === 'frame' && Array.isArray(value)) {
-        // frame 배열의 경우 각 요소를 개별적으로 처리
-        value.forEach(item => {
-          if (item !== null) items.push(item);
-        });
-      } else if (value !== null && value !== undefined) {
-        // 다른 카테고리는 기존 로직
-        items.push(value as number);
-      }
+      if (typeof value === 'number') items.push(value);
     });
     setEditModeSelectedItems(items);
   };
@@ -405,53 +399,64 @@ const MyTab = () => {
     }
   };
 
-  const saveItems = () => {
-    // TODO: 저장 API 연동
-    // 1) 선택이 비어 있으면 전체 제거
-    if (editModeSelectedItems.length === 0) {
-      clearAllPlacedItems();
+  const saveItems = async () => {
+    try {
+      // 인증 토큰 확인 (비로그인/만료 상태 방지)
+      if (!getAccessToken()) {
+        console.warn('❌ 아이템 저장 불가: 인증 토큰 없음');
+        setShowSaveAlert(false);
+        exitEditMode();
+        return;
+      }
+
+      // 1) 보유 아이템만 필터링
+      const ownedSelections = editModeSelectedItems.filter(id => isOwned(id));
+      
+      // 2) positionType별 매핑 (서버에 전송할 형태)
+      const itemsToEquip: Partial<Record<'BACKGROUND' | 'EYEWEAR' | 'HAT' | 'FRAME' | 'FLOOR' | 'SHELF', number>> = {};
+      const slotKeyMap: Record<string, 'BACKGROUND' | 'EYEWEAR' | 'HAT' | 'FRAME' | 'FLOOR' | 'SHELF'> = {
+        background: 'BACKGROUND',
+        eyewear: 'EYEWEAR',
+        hat: 'HAT',
+        frame: 'FRAME',
+        floor: 'FLOOR',
+        shelf: 'SHELF',
+      };
+      
+      ownedSelections.forEach((itemId) => {
+        const itemData = itemMap.get(itemId);
+        if (itemData?.positionType) {
+          const slot = slotKeyMap[itemData.positionType];
+          if (slot) {
+            itemsToEquip[slot] = itemId;
+          }
+        }
+      });
+
+      // 3) 서버에 PUT 요청
+      await updateEquippedItems({ itemsToEquip });
+      
+      // 4) 서버에서 최신 상태 GET
+      const response = await getEquippedItems();
+      
+      // 5) 로컬 스토어 업데이트 (EquippedItemsResponse를 placedItems 형태로 변환)
+      const equippedItems = {
+        background: response.background?.id || null,
+        eyewear: response.eyewear?.id || null,
+        hat: response.hat?.id || null,
+        floor: response.floor?.id || null,
+        shelf: response.shelf?.id || null,
+        frame: response.frame?.id || null,
+      };
+      updatePlacedItems(equippedItems);
+
+      console.log('저장 완료 (서버 동기화)');
       setShowSaveAlert(false);
-      console.log('저장 완료 (선택 아이템 없음)');
       exitEditMode();
-      return;
+    } catch (error) {
+      console.error('아이템 저장 실패:', error);
+      // TODO: 에러 처리 (토스트 메시지 등)
     }
-
-    // 2) positionType별 nextMap 구성
-    const nextMap: Record<string, number | number[]> = {};
-    
-    editModeSelectedItems.forEach((itemId) => {
-      const itemData = itemMap.get(itemId);
-      if (itemData) {
-        nextMap[itemData.positionType as string] = itemId;
-      }
-    });
-
-    // 3) 현재 배치와 비교해 변경분만 추출 (제거는 null로 표시)
-    const updates: Record<string, number | [number | null, number | null] | null> = {};
-
-    // 제거 대상 (현재에는 있는데 next엔 없는 키)
-    Object.keys(placedItems).forEach((pt) => {
-      if (!Object.prototype.hasOwnProperty.call(nextMap, pt)) {
-        updates[pt] = pt === 'frame' ? [null, null] as [number | null, number | null] : null;
-      }
-    });
-    
-    // 업서트 대상 (값이 다르거나 새로 생긴 키)
-    Object.entries(nextMap).forEach(([pt, value]) => {
-      const currentValue = placedItems[pt as keyof typeof placedItems];
-      if (currentValue !== value) {
-        updates[pt] = value as number;
-      }
-    });
-
-    // 4) 부분 갱신
-    if (Object.keys(updates).length > 0) {
-      updatePlacedItems(updates as any);
-    }
-
-    console.log('저장 완료 (부분 갱신)');
-    setShowSaveAlert(false);
-    exitEditMode();
   };
 
 
@@ -477,9 +482,11 @@ const MyTab = () => {
   }, [isEditMode]);
 
   const onBackButtonClick = () => {
+    // 비교는 '보유 아이템'만 대상으로 수행
+    const ownedCurrent = editModeSelectedItems.filter(id => isOwned(id));
     // 배열을 정렬해서 비교 (순서 무관하게)
     const sortedInitial = [...initialSelectedItems].sort((a, b) => a - b);
-    const sortedCurrent = [...editModeSelectedItems].sort((a, b) => a - b);
+    const sortedCurrent = [...ownedCurrent].sort((a, b) => a - b);
     
     // 배열 길이와 내용이 모두 같은지 확인
     const isUnchanged = sortedInitial.length === sortedCurrent.length && 
@@ -522,15 +529,7 @@ const MyTab = () => {
               <Text style={styles.test}>배치된 아이템 : {(() => {
                 const items: number[] = [];
                 Object.entries(placedItems).forEach(([key, value]) => {
-                  if (key === 'frame' && Array.isArray(value)) {
-                    // frame 배열의 경우 각 요소를 개별적으로 처리
-                    value.forEach(item => {
-                      if (item !== null) items.push(item);
-                    });
-                  } else if (value !== null && value !== undefined) {
-                    // 다른 카테고리는 기존 로직
-                    items.push(value as number);
-                  }
+                  if (typeof value === 'number') items.push(value);
                 });
                 return items.join(',');
               })()}</Text>
@@ -576,7 +575,7 @@ const MyTab = () => {
                             {statusData.map((item, index) => (
                             <View style={styles.statusCardContentItem} key={index}>
                                 <Text style={styles.statusCardContentItemTitle}>{item.title}</Text>
-                                <Text style={styles.statusCardContentItemValue}>{item.valueType === 'mm:ss' ? (item.value === '00:00' ? '-' : item.value) : (item.value === 0 ? '-' : `${item.value}${item.valueType}`)}</Text>
+                                <Text style={styles.statusCardContentItemValue}>{item.valueType === 'hh:mm' ? (item.value === '00:00' ? '-' : item.value) : (item.value === 0 ? '-' : `${item.value}${item.valueType}`)}</Text>
                             </View>
                             ))}
                         </View>

@@ -31,10 +31,15 @@ export interface ActivityTimeline {
 }
 
 // 액티비티 단 건 조회 응답 타입
+
+export type ActivityType = 'BREATHING' | 'MEDITATION' | 'SOUND_EFFECT' ;
+export type ActivityCategory = 'BREATHING' | 'MEDITATION' | 'SLEEP' | 'REST' ;
+
 export interface Activity {
   id: number;
   title: string;
-  type: 'BREATHING' | 'MEDITATION' | 'SLEEP' | 'REST' ;
+  type: ActivityType;
+  category: ActivityCategory;
   thumbnailImageUrl: string | null;
   descriptions: string[];
   author: ActivityAuthor;
@@ -70,6 +75,8 @@ export interface GetActivitiesParams {
   size?: number; //페이지 당 데이터 수. 기본값 12
   sort?: string; //정렬 기준 (예: createdAt,desc). 기본값 createdAt,desc
   userId?: number; //(ADMIN용) 특정 사용자가 해당 activity 좋아요 눌렀는지 확인 용도. 없을 시 로그인한 유저 본인
+  type?: ActivityType;
+  category?: ActivityCategory;
 }
 
 // 사용자 즐겨찾기 액티비티 목록 조회 요청 타입
@@ -91,7 +98,8 @@ export interface ActivityFavoriteResponse {
 // 즐겨찾기 액티비티 상세 정보 (백엔드 API 명세에 맞춤)
 export type FavoriteActivity = {
   activityId: number;
-  type: 'BREATHING' | 'MEDITATION' | 'SLEEP' | 'REST';
+  type: ActivityType;
+  category: ActivityCategory;
   title: string;
   thumbnailImageUrl: string | null;
   durationInSeconds: number;
@@ -125,7 +133,8 @@ export const getActivities = async (
       if (params?.size !== undefined) queryParams.append('size', String(params.size));
       if (params?.sort) queryParams.append('sort', params.sort);
       if (params?.userId !== undefined) queryParams.append('userId', String(params.userId));
-
+      if (params?.type !== undefined) queryParams.append('type', params.type);
+      if (params?.category !== undefined) queryParams.append('category', params.category);
       const query = queryParams.toString();
       const url = query 
         ? `/activities?${query}` 
@@ -179,22 +188,25 @@ export const getActivityDetail = async (
  * 타입별 액티비티 조회
  */
 export const getActivitiesByType = async (
-  type: 'BREATHING' | 'MEDITATION' | 'SLEEP' | 'REST' ,
+  type: ActivityType,
   params?: Omit<GetActivitiesParams, 'type'>
 ): Promise<ActivitiesResponse> => {
-  // 실제 API에서는 type 필터링이 지원되지 않을 수 있으므로
-  // 클라이언트 사이드에서 필터링
-  const response = await getActivities(params);
-  const filteredActivities = response.content.filter(activity => activity.type === type);
-  
-  return {
-    content: filteredActivities,
-    page: {
-      ...response.page,
-      totalElements: filteredActivities.length,
-    },
-  };
+  // 서버가 type 파라미터를 지원하므로 서버 필터 사용
+  return getActivities({ ...(params || {}), type });
 };
+
+/**
+ * 카테고리별 액티비티 조회
+ */
+export const getActivitiesByCategory = async (
+  category: ActivityCategory,
+  params?: Omit<GetActivitiesParams, 'category'>
+): Promise<ActivitiesResponse> => {
+  // 서버가 category 파라미터를 지원하므로 서버 필터 사용
+  return getActivities({ ...(params || {}), category });
+};
+
+
 
 /**
  * 액티비티 즐겨찾기 토글 (실제 API 명세)

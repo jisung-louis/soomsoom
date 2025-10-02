@@ -62,7 +62,7 @@ const MyRoomDecorationPurchaseScreen = () => {
                 const mapped = res.content.map((it) => ({
                     id: it.id,
                     title: it.name,
-                    image: typeof it.imageUrl === 'string' ? null : (it.imageUrl as any) ?? null,
+                    image: typeof it.imageUrl === 'string' ? { uri: it.imageUrl } : (it.imageUrl as any) ?? null,
                     price: it.price,
                 }));
                 if (mounted) setItems(mapped);

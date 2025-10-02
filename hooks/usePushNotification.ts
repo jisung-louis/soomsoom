@@ -34,7 +34,8 @@ export type NotificationType =
 | 'ACHIEVEMENT_UNLOCKED'
 | 'NEWS_UPDATE'
 | 'MISSION_COMPLETED'
-| 'ALARM';
+| 'ALARM'
+| 'REWARD_ACQUIRED';
 
 export const usePushNotification = () => {
   const { showToast } = useToast();
@@ -93,6 +94,13 @@ export const usePushNotification = () => {
 
       case 'ALARM':
         // AlarmDismissScreen으로 이동 (큐에 저장하지 않음)
+        break;
+
+      case 'REWARD_ACQUIRED':
+        addToQueue({
+          type: 'REWARD_ACQUIRED',
+          payload: payload,
+        });
         break;
 
       default:
