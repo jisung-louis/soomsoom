@@ -13,6 +13,7 @@ import PlayResultScreen from '../../screens/subpages/play/PlayResultScreen';
 import PlayBreathContentScreen from '../../screens/subpages/play/PlayBreathContentScreen';
 import PlayActivityListScreen from '../../screens/subpages/play/play-category/PlayActivityListScreen';
 import PlayRestScreen from '../../screens/subpages/play/PlayRestScreen';
+import { RewardableMission } from '../../services/activityLogService';
 
 export type PlayStackParamList = {
   PlayTab: undefined;
@@ -23,7 +24,7 @@ export type PlayStackParamList = {
   PlayBreathScreen: { content: Activity };
   PlayBreathContentScreen: { content: Activity };
   PlayMeditationScreen: { content: Activity; initialPosition?: number };
-  PlayResultScreen: {effectTexts: string[]};
+  PlayResultScreen: {effectTexts: string[], rewardableMission?: RewardableMission};
   PlayActivityListScreen: { title: string, content: Activity[] };
   PlayRestScreen: { activityId: number, content: Activity };
 };

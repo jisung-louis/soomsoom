@@ -17,6 +17,7 @@ import { MultiStepMission } from '../../../utils/mathMissionGenerator';
 import { AD_SIZES } from '../../../constants/ads';
 import { BannerAdSize } from 'react-native-google-mobile-ads';
 import AdBanner from '../../../components/common/ads/AdBanner';
+import CustomAlert from '../../../components/common/alert/CustomAlert';
 
 interface AlarmDismissScreenProps {
   route: {
@@ -49,6 +50,8 @@ export default function AlarmDismissScreen({ route }: AlarmDismissScreenProps) {
     return backgroundImages[randomIndex];
   });
 
+  const [dismissAlertVisible, setDismissAlertVisible] = useState(false);
+
   const handleDismiss = async () => {
     try {
       // 알림 취소
@@ -56,22 +59,28 @@ export default function AlarmDismissScreen({ route }: AlarmDismissScreenProps) {
       // 알람 상태 비활성화
       dismissAlarm(alarmId);
       
-      Alert.alert('알림 해제', '알람이 해제되었습니다.');
+      setDismissAlertVisible(true);
       // 알람 탭 스택 초기화 후 홈 탭으로 이동
-      navigation.getParent()?.reset({
-        index: 0,
-        routes: [
-          { name: 'home' },
-          { name: 'record' },
-          { name: 'play' },
-          { name: 'alarm' },
-          { name: 'my' },
-        ],
-      });
+      
     } catch (error) {
       console.error('알림 해제 실패:', error);
       Alert.alert('오류', '알림 해제에 실패했습니다.');
+
     }
+  };
+
+  const handleDismissAlertClose = () => {
+    setDismissAlertVisible(false);
+    navigation.getParent()?.reset({
+      index: 0,
+      routes: [
+        { name: 'home' },
+        { name: 'record' },
+        { name: 'play' },
+        { name: 'alarm' },
+        { name: 'my' },
+      ],
+    });
   };
   
   const [now, setNow] = useState(new Date());
@@ -143,13 +152,19 @@ export default function AlarmDismissScreen({ route }: AlarmDismissScreenProps) {
               {missionType ? (
                   <Button title="미션 시작" variant="active" style={styles.button} textStyle={{...typography.heading9}} onPress={()=>{handleMissionStart()}} />
               ) : (
-                  <Button title="알림 해제" size="large" variant="active" style={styles.button} textStyle={{...typography.heading9}} onPress={handleDismiss} />
+                  <Button title="알람 해제" size="large" variant="active" style={styles.button} textStyle={{...typography.heading9}} onPress={handleDismiss} />
               )}
           </View>
       </ImageBackground>
       <View style={styles.adContainer}>
         <AdBanner size={AD_SIZES.ANCHORED_ADAPTIVE_BANNER as BannerAdSize} />
       </View>
+      <CustomAlert
+        visible={dismissAlertVisible}
+        message="알람이 해제되었어요!"
+        buttons={[{ text: '확인', onPress: () => { handleDismissAlertClose(); } }]}
+        closeButton={false}
+      />
     </>
   );
 }

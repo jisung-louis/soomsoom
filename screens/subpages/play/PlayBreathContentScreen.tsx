@@ -26,6 +26,7 @@ import { useToast } from "../../../contexts/ToastContext";
 import { useAppConfigStore } from "../../../stores/appConfigStore";
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import { useAudioPlayer } from "../../../hooks/useAudioPlayer";
+import { RewardableMission } from "../../../services/activityLogService";
 
 const PlayBreathContentScreen = ({route}: {route: RouteProp<PlayStackParamList, 'PlayBreathContentScreen'>}) => {
     const {content} = route.params;
@@ -85,7 +86,7 @@ const PlayBreathContentScreen = ({route}: {route: RouteProp<PlayStackParamList, 
             try { if (hasAudio) pauseAudio(); } catch {}
 
             console.log(`🎉 호흡 액티비티 완료 처리: ${content.id}`);
-            navigation.navigate('PlayResultScreen', { effectTexts: res.completionEffectTexts || null });
+            navigation.navigate('PlayResultScreen', { effectTexts: res.completionEffectTexts || null , rewardableMission: res.rewardableMission as RewardableMission });
         } catch (error) {
             console.error('호흡 액티비티 완료 처리 실패:', error);
             showToast({

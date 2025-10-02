@@ -50,22 +50,22 @@ function AppNavigatorContent() {
       <Tab.Screen 
         name="record" 
         component={RecordStackNavigator}
-        options={{ lazy: false }}
+        options={{ lazy: true }}
       />
       <Tab.Screen 
         name="play" 
         component={PlayStackNavigator}
-        options={{ lazy: false }}
+        options={{ lazy: true }}
       />
       <Tab.Screen 
         name="alarm" 
         component={AlarmStackNavigator}
-        options={{ lazy: false }}
+        options={{ lazy: true }}
       />
       <Tab.Screen 
         name="my" 
         component={MyStackNavigator}
-        options={{ lazy: false }}
+        options={{ lazy: true }}
       />
     </Tab.Navigator>
   );

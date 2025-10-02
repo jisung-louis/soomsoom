@@ -17,6 +17,7 @@ import {
   updateActivityProgress, 
   getActivityProgress 
 } from '../../../services/activityLogService';
+import { RewardableMission } from '../../../services/activityLogService';
 
 const PlayMeditationScreen = ({route}: {route: RouteProp<PlayStackParamList, 'PlayMeditationScreen'>}) => {
   const {content, initialPosition} = route.params;
@@ -167,7 +168,7 @@ const PlayMeditationScreen = ({route}: {route: RouteProp<PlayStackParamList, 'Pl
       // TODO: 액티비티 완료 처리 후 오는 응답(효과 3줄)을 받아서 처리하기(효과 3줄은 PlayResult에 prop으로 넘겨서 처리하면 됨)
       
       console.log(`🎉 액티비티 완료 처리: ${content.id}`);
-      navigation.navigate('PlayResultScreen', { effectTexts: res.completionEffectTexts || null });
+      navigation.navigate('PlayResultScreen', { effectTexts: res.completionEffectTexts || null , rewardableMission: res.rewardableMission as RewardableMission });
     } catch (error) {
       console.error('액티비티 완료 처리 실패:', error);
       showToast({

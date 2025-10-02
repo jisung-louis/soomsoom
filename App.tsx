@@ -1,12 +1,13 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import * as Notifications from 'expo-notifications';
+import { Platform } from 'react-native';
+import { requestTrackingPermissionsAsync } from 'expo-tracking-transparency';
+import mobileAds, { AdsConsent, AdsConsentStatus } from 'react-native-google-mobile-ads';
 import { OnboardingProvider } from './contexts/OnboardingContext';
 import { ToastProvider } from './contexts/ToastContext';
 import { SocialLoginProvider } from './contexts/SocialLoginContext';
 import AppContent from './app/AppContent';
 import { useAppConfigStore } from './stores/appConfigStore';
-
-import DeviceInfo from 'react-native-device-info';
 
 // 포어그라운드 알림 핸들러 설정 (앱 시작 시 1회)
 Notifications.setNotificationHandler({
@@ -36,17 +37,51 @@ Notifications.setNotificationHandler({
 export default function App() {
   const { useMockApi } = useAppConfigStore();
   
-  useEffect(() => {
-    const getDeviceId = async () => {
+  // 앱 시작 시 ATT/UMP 동의 팝업 처리
+  React.useEffect(() => {
+    const handlePermissions = async () => {
       try {
-        const deviceId = await DeviceInfo.getUniqueId();
-        console.log('📱 기기 ID:', deviceId);
+        // 1) iOS: ATT 요청
+        if (Platform.OS === 'ios') {
+          try {
+            const res = await requestTrackingPermissionsAsync();
+            console.log('🧾 ATT 권한 결과(앱시작):', res?.status ?? 'unknown');
+          } catch (err) {
+            console.warn('⚠️ ATT 권한 요청 실패(앱시작):', err);
+          }
+        }
+
+        // 2) UMP 동의 플로우
+        try {
+          console.log('🔄 [Ads] UMP consent info 업데이트 요청(앱시작)');
+          const infoAfterUpdate = await AdsConsent.requestInfoUpdate({});
+          console.log('✅ [Ads] UMP 업데이트 결과(앱시작):', {
+            status: infoAfterUpdate.status,
+            isConsentFormAvailable: infoAfterUpdate.isConsentFormAvailable,
+            canRequestAds: infoAfterUpdate.canRequestAds,
+          });
+
+          if (
+            infoAfterUpdate.isConsentFormAvailable &&
+            (infoAfterUpdate.status === AdsConsentStatus.UNKNOWN || infoAfterUpdate.status === AdsConsentStatus.REQUIRED)
+          ) {
+            console.log('🧾 [Ads] 동의 폼 표시 시도(앱시작)');
+            await AdsConsent.loadAndShowConsentFormIfRequired();
+            console.log('✅ [Ads] 동의 폼 처리 완료(앱시작)');
+          } else {
+            console.log('ℹ️ [Ads] 동의 폼 표시 불필요(앱시작) (상태:', infoAfterUpdate.status, ')');
+          }
+        } catch (consentErr) {
+          console.warn('⚠️ [Ads] UMP 동의 처리 실패(앱시작):', consentErr);
+        }
       } catch (error) {
-        console.error('❌ 기기 ID 가져오기 실패:', error);
+        console.warn('⚠️ 권한 요청 처리 실패(앱시작):', error);
       }
     };
-    
-    getDeviceId();
+
+    // 앱 시작 후 짧은 지연을 두고 권한 요청
+    const timer = setTimeout(handlePermissions, 1000);
+    return () => clearTimeout(timer);
   }, []);
   
   return (

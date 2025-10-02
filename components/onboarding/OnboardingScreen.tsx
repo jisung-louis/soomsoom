@@ -8,8 +8,6 @@ import { toggleNotificationSetting, updateDiaryNotificationTime } from '../../se
 import { registerDevice } from '../../services/notificationService';
 import { getFcmTokenAsync } from '../../services/authService';
 import { View, StyleSheet, ImageBackground, Platform } from 'react-native';
-import { requestTrackingPermissionsAsync } from 'expo-tracking-transparency';
-import mobileAds, { AdsConsent, AdsConsentStatus } from 'react-native-google-mobile-ads';
 import { useOnboarding } from '../../hooks/useOnboarding';
 import { OnboardingStep } from './OnboardingStep';
 import { colors } from '../../constants/colors';
@@ -210,43 +208,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, initial
       } catch (e) {
         // 권한 요청/초기화 실패는 온보딩 진행을 막지 않음
       }
-      // iOS 시스템 팝업 연속 표시 억제 회피를 위한 짧은 지연
-      await new Promise(resolve => setTimeout(resolve, 450));
-       // 1) iOS: ATT 요청 - 이 시점에서 즉시 팝업 표시
-       if (Platform.OS === 'ios') {
-        try {
-          const res = await requestTrackingPermissionsAsync();
-          console.log('🧾 ATT 권한 결과(온보딩06):', res?.status ?? 'unknown');
-        } catch (err) {
-          console.warn('⚠️ ATT 권한 요청 실패(온보딩06):', err);
-        }
-      }
-
-      // 2) UMP 동의 플로우 (유럽 타깃이 아니면 대부분 UNKNOWN/NOT_REQUIRED일 수 있음)
-      try {
-        console.log('🔄 [Ads] UMP consent info 업데이트 요청(온보딩06)');
-        const infoAfterUpdate = await AdsConsent.requestInfoUpdate({});
-        console.log('✅ [Ads] UMP 업데이트 결과(온보딩06):', {
-          status: infoAfterUpdate.status,
-          isConsentFormAvailable: infoAfterUpdate.isConsentFormAvailable,
-          canRequestAds: infoAfterUpdate.canRequestAds,
-        });
-
-        if (
-          infoAfterUpdate.isConsentFormAvailable &&
-          (infoAfterUpdate.status === AdsConsentStatus.UNKNOWN || infoAfterUpdate.status === AdsConsentStatus.REQUIRED)
-        ) {
-          console.log('🧾 [Ads] 동의 폼 표시 시도(온보딩06)');
-          await AdsConsent.loadAndShowConsentFormIfRequired();
-          console.log('✅ [Ads] 동의 폼 처리 완료(온보딩06)');
-        } else {
-          console.log('ℹ️ [Ads] 동의 폼 표시 불필요(온보딩06) (상태:', infoAfterUpdate.status, ')');
-        }
-      } catch (consentErr) {
-        console.warn('⚠️ [Ads] UMP 동의 처리 실패(온보딩06):', consentErr);
-      }
-
-      // 선택 후(허용/거부 관계없이) 다음 단계로 이동
+      // 다음 단계로 이동
       goToNextStep();
     } else {
       goToNextStep();

@@ -14,9 +14,13 @@ import { getActivitiesByType, Activity, getActivities } from '../../services/con
 import { getActiveBanners } from '../../services/bannerService';
 import { Banner } from '../../types';
 import { ButtonSmall } from '../../components/common/buttons/ButtonSmall';
+import { useNotificationQueueProcessor } from '../../hooks/useNotificationQueueProcessor';
 
 const PlayTab = () => {
   const navigation = useNavigation<StackNavigationProp<PlayStackParamList>>();
+  
+  // 알림 큐 처리 (탭 포커스 시 큐에 있는 알림을 순차적으로 표시)
+  useNotificationQueueProcessor();
   
   // 데이터 상태 관리
   const [shortActivityData, setShortActivityData] = useState<Activity[]>([]);
@@ -77,6 +81,7 @@ const PlayTab = () => {
   <SafeAreaView style={styles.container}>
     {/* <ButtonSmall
       title="야옹이강사"
+      variant="active"
       onPress={() => navigation.navigate('PlayInstructorDetailScreen', { instructorId: 1 })}
     /> */}
     <FlatList

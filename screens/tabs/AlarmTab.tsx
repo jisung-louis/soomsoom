@@ -22,8 +22,12 @@ import {
 } from '../../utils/notificationUtils';
 import NoAlarm from '../../components/tabs/alarm/NoAlarm';
 import { useAppConfigStore } from '../../stores/appConfigStore';
+import { useNotificationQueueProcessor } from '../../hooks/useNotificationQueueProcessor';
 
 const AlarmTab = () => {
+  // 알림 큐 처리 (탭 포커스 시 큐에 있는 알림을 순차적으로 표시)
+  useNotificationQueueProcessor();
+  
   const navigation = useNavigation<StackNavigationProp<AlarmStackParamList>>();
   const [isEditMode, setIsEditMode] = useState(false);
   const [hour, setHour] = useState(0);

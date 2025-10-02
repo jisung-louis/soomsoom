@@ -30,6 +30,7 @@ import { useMailboxStore } from '../../stores/mailboxStore';
 import { getLogicalNow } from '../../utils/timeUtils';
 import { getActivitiesByType } from '../../services/contentService';
 import { typography } from '../../constants/typography';
+import { useNotificationQueueProcessor } from '../../hooks/useNotificationQueueProcessor';
 
 type HomeTabNavigationProp = StackNavigationProp<HomeStackParamList, 'HomeTab'>;
 
@@ -60,6 +61,9 @@ const HomeTab = () => {
   
   // 우편함 안 읽은 메일 개수 (캐시된 값 사용)
   const { unreadCount } = useMailboxStore();
+  
+  // 알림 큐 처리 (탭 포커스 시 큐에 있는 알림을 순차적으로 표시)
+  useNotificationQueueProcessor();
   
   // 포커스될 때마다 캐시된 값을 UI에 반영하기 위해 사용
   // (TopNavigation에서도 동일한 store를 구독하므로 자동으로 업데이트됨)

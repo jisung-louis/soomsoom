@@ -38,6 +38,7 @@ import { useAuthStore } from '../../stores/authStore';
 import { useAuth } from '../../hooks/useAuth';
 import { useBackgroundColor, useBgTopColor } from '../../hooks/useBackgroundColor';
 import { eventBus, APP_EVENTS } from '../../utils/eventBus';
+import { useNotificationQueueProcessor } from '../../hooks/useNotificationQueueProcessor';
 
 const mockStatusData = [
     { title: '기록', valueType: '회', value: null },
@@ -52,6 +53,9 @@ const BOTTOM_SHEET_MIN_HEIGHT = 118 + 20 + 129 + 10 // 바텀시트 탭매뉴 �
 const BOTTOM_SHEET_MAX_HEIGHT = 118 + 312 // 바텀시트 탭매뉴 높이(118) + 아이템리스트 컨테이너 높이(312)
 
 const MyTab = () => {
+  // 알림 큐 처리 (탭 포커스 시 큐에 있는 알림을 순차적으로 표시)
+  useNotificationQueueProcessor();
+  
   const navigation = useNavigation<StackNavigationProp<MyStackParamList, 'MyTab'>>();
   const route = useRoute<RouteProp<MyStackParamList, 'MyTab'>>();
   const scrollViewRef = useRef<ScrollView>(null);

@@ -69,7 +69,8 @@ const PlayRestScreen = ({route}: {route: RouteProp<PlayStackParamList, 'PlayRest
 
   const scheduleNext = React.useCallback(() => {
     // 정지 상태면 아무 것도 하지 않음
-    if (!isPlaying) return;
+    if (!isPlaying) 
+        return;
 
     // 현재 애니메이션 재생 시작 보장
     try { lottieRef.current?.play?.(); } catch {}

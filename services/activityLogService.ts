@@ -32,11 +32,16 @@ export interface GetUserActivitySummaryParams {
   userId?: number; // (ADMIN용) 특정 사용자의 활동 요약 정보를 조회할 때 사용. 없으면 본인 기록 조회.
 }
 
+export interface RewardableMission {
+  missionId: number; // 미션 ID
+  title: string; // 미션 제목
+}
+
 // 액티비티 완료 처리 응답 타입
 export interface CompleteActivityResponse {
   activityId: number;
   completionEffectTexts: string[]; // 효과 3줄
-  rewardable: boolean; // 하트 보상 가능 여부
+  rewardableMission: RewardableMission | null; // 하트 보상 가능 여부
 }
 
 /**

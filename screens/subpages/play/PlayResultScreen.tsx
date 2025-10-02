@@ -26,7 +26,7 @@ const MOCK_ACTIVITY_DESCRIPTION = [
 const PlayResultScreen = ({route}: {route: RouteProp<PlayStackParamList, 'PlayResultScreen'>}) => {
     const navigation = useNavigation<StackNavigationProp<PlayStackParamList>>();
     const buttonRef = useRef<ButtonRef>(null);
-    const { effectTexts } = route.params;
+    const { effectTexts, rewardableMission } = route.params;
     const handleBack = () => {
         navigation.goBack();
     };
@@ -39,22 +39,11 @@ const PlayResultScreen = ({route}: {route: RouteProp<PlayStackParamList, 'PlayRe
         exit();
     }
     const exit = () => {
-        //navigation.dispatch(StackActions.pop(3));//바꿔야됨
-        // navigation.reset({
-        //     index: 0,
-        //     routes: [{ name: 'PlayTab' }],
-        // });
-        // 홈 탭으로 이동
         navigation.reset({
             index: 0,
             routes: [{ name: 'PlayTab' }],
         });
         navigation.getParent()?.navigate('home');
-        {/* TODO: 하트 보상 받기 후 홈으로 이동 */}
-        // navigation.reset({
-        //     index: 0,
-        //     routes: [{ name: 'PlayTab' }],
-        // });
     };
 
     // 슬라이드업 애니메이션 훅 사용
@@ -74,46 +63,32 @@ const PlayResultScreen = ({route}: {route: RouteProp<PlayStackParamList, 'PlayRe
     return (
         <View style={styles.background}>
             <SafeAreaView style={styles.container}>
-                {/* <View style={styles.contentContainer}>
-                    <View style={styles.characterWrapper}>
-                        <ShadowSVG style={styles.shadow} />
-                        <DefaultCharacter style={styles.character} />
-                    </View>
-                    <Text style={{...syongsyongTypography.title4, ...styles.title}}>좋아요! 지금 당신은</Text>
-                    <View style={styles.infoBoxContainer}>
-                        <View style={styles.infoBox}>
-                            <View style={styles.infoTextBoxContainer}>
-                                <View style={styles.infoTextRow}>
-                                    <CheckIcon width={28} height={28} />
-                                    <Text style={styles.infoText}>뇌에 맑은 산소가 가득 차올랐고...</Text>
-                                </View>
-                                <View style={styles.infoTextRow}>
-                                    <CheckIcon width={28} height={28} />
-                                    <Text style={styles.infoText}>마음은 하루를 준비할 평온함을 얻고...</Text>
-                                </View>
-                                <View style={styles.infoTextRow}>
-                                    <CheckIcon width={28} height={28} />
-                                    <Text style={styles.infoText}>무엇인가 집중할 준비가 되었어요!</Text>
-                                </View>
-                            </View>
-                        </View>
-                    </View>
-                </View> */}{/* PlayResult.tsx 컴포넌트로 분리 및 공통관리 */}
                 <PlayResult 
                     style={styles.playResult} 
                     activityDescription={effectTexts || MOCK_ACTIVITY_DESCRIPTION}
                     onAnimationsEnd={handleResultAnimationsEnd}
                 />
                 <Animated.View style={[styles.buttonContainer, buttonAnimatedStyle]}>
-                    <Button
-                        ref={buttonRef}
-                        icon="heart"
-                        title="하트 보상받기"
-                        size="large"
-                        variant="active"
-                        style={styles.button}
-                        onPress={handleActivityEnd}
-                    />
+                    {rewardableMission !== null ? (
+                        <Button
+                            ref={buttonRef}
+                            icon="heart"
+                            title="하트 보상받기"
+                            size="large"
+                            variant="active"
+                            style={styles.button}
+                            onPress={handleActivityEnd}
+                        />
+                    ) : (
+                        <Button
+                            ref={buttonRef}
+                            title="확인"
+                            size="large"
+                            variant="active"
+                            style={styles.button}
+                            onPress={handleActivityEnd}
+                        />
+                    )}
                 </Animated.View>
             </SafeAreaView>
         </View>
