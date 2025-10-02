@@ -74,30 +74,92 @@ const UserRoom = ({children, previewMode = false, previewItemIds = [], cropTop =
     });
   }, [previewItemIds, itemMap]);
 
-  // 대상 변경 시, 짧은 지연 뒤 동시에 재생 (로드 콜백 의존 제거)
+  // 대상 변경 시, ref 바인딩 완료까지 기다린 후 동시에 재생
   useEffect(() => {
     // 사용하지 않는 ref 정리
     Object.keys(itemLottieRefs.current).forEach(k => {
       const id = Number(k);
       if (!lottieItemIds.includes(id)) delete itemLottieRefs.current[id];
     });
-    const t = setTimeout(() => {
-      try {
-        const cat = catRef.current as any;
-        if (cat) {
-          if (typeof cat.reset === 'function') cat.reset();
-          if (typeof cat.play === 'function') cat.play();
+
+    // ref 바인딩 완료까지 폴링으로 대기
+    let isCompleted = false; // 성공 완료 플래그
+    
+    const waitForRefsAndPlay = () => {
+      if (isCompleted) return; // 이미 완료되었으면 중단
+      
+      const cat = catRef.current as any;
+      
+      // 디버깅: 현재 상태 로그
+      // console.log('🔍 ref 상태 체크:', {
+      //   lottieItemIds,
+      //   catReady: cat && typeof cat.reset === 'function' && typeof cat.play === 'function',
+      //   itemRefsStatus: lottieItemIds.map(id => {
+      //     const ref = itemLottieRefs.current[id] as any;
+      //     return {
+      //       id,
+      //       hasRef: !!ref,
+      //       hasReset: ref && typeof ref.reset === 'function',
+      //       hasPlay: ref && typeof ref.play === 'function'
+      //     };
+      //   })
+      // });
+      
+      const allItemRefsReady = lottieItemIds.every(id => {
+        const ref = itemLottieRefs.current[id] as any;
+        return ref && typeof ref.reset === 'function' && typeof ref.play === 'function';
+      });
+      
+      // 고양이 ref와 모든 아이템 ref가 준비되었는지 확인
+      const catReady = cat && typeof cat.reset === 'function' && typeof cat.play === 'function';
+      
+      if (catReady && allItemRefsReady) {
+        try {
+          // 고양이 애니메이션 (수동 제어)
+          cat.reset();
+          cat.play();
+          console.log('🔄 고양이 애니메이션 동기화 완료');
+          
+          // 아이템 애니메이션들 (onAnimationLoaded에서 이미 재생됨)
+          lottieItemIds.forEach(id => {
+            const ref = itemLottieRefs.current[id] as any;
+            if (ref) {
+              console.log(`🎬 아이템 애니메이션 확인 (ID: ${id}): onAnimationLoaded에서 재생됨`);
+              
+              // 동기화를 위해 reset만 호출 (이미 play는 onAnimationLoaded에서 실행됨)
+              try {
+                ref.reset();
+                ref.play(); // 동기화를 위해 다시 play 호출
+                console.log(`🔄 아이템 동기화 완료 (ID: ${id})`);
+              } catch (syncError) {
+                console.warn(`⚠️ 아이템 동기화 실패 (ID: ${id}):`, syncError);
+              }
+            } else {
+              console.warn(`⚠️ 아이템 ref가 없음 (ID: ${id})`);
+            }
+          });
+          
+          // 성공 완료 플래그 설정
+          isCompleted = true;
+          console.log('✅ 모든 애니메이션 동기화 완료 - 폴링 중단');
+        } catch (error) {
+          console.warn('애니메이션 재생 중 오류:', error);
         }
-        lottieItemIds.forEach(id => {
-          const ref = itemLottieRefs.current[id] as any;
-          if (ref) {
-            if (typeof ref.reset === 'function') ref.reset();
-            if (typeof ref.play === 'function') ref.play();
-          }
-        });
-      } catch {}
-    }, 50);
-    return () => clearTimeout(t);
+      } else {
+        // 아직 준비되지 않았으면 50ms 후 다시 시도
+        setTimeout(waitForRefsAndPlay, 50);
+      }
+    };
+
+    // 최대 1초까지만 대기 (무한 대기 방지)
+    const timeoutId = setTimeout(() => {
+      console.warn('⚠️ 애니메이션 ref 바인딩 타임아웃 (1초)');
+    }, 1000);
+
+    // 즉시 첫 번째 시도
+    waitForRefsAndPlay();
+
+    return () => clearTimeout(timeoutId);
   }, [lottieItemIds.join(','), itemMap]);
 
   const renderLottieItem = useCallback((itemId: number | null, position: { x: number; y: number }, style: any, key: string) => {
@@ -106,14 +168,31 @@ const UserRoom = ({children, previewMode = false, previewItemIds = [], cropTop =
     if (!item?.lottieJson) return null;
     return (
       <LottieView
-        ref={(ref) => { itemLottieRefs.current[itemId] = ref; }}
+        ref={(ref) => { 
+          itemLottieRefs.current[itemId] = ref;
+          console.log(`🔗 아이템 ref 바인딩 완료 (ID: ${itemId})`);
+        }}
         source={item.lottieJson}
         autoPlay={false}
-        loop
+        loop={true}
         style={[style, {
           top: position.y,
           left: position.x,
         }]}
+        onAnimationLoaded={() => {
+          console.log(`🎬 아이템 LottieView 로드 완료 (ID: ${itemId})`);
+          // 로드 완료 후 즉시 재생 시도
+          const ref = itemLottieRefs.current[itemId];
+          if (ref) {
+            try {
+              ref.reset();
+              ref.play();
+              console.log(`▶️ 아이템 애니메이션 즉시 재생 (ID: ${itemId})`);
+            } catch (error) {
+              console.warn(`❌ 아이템 애니메이션 즉시 재생 실패 (ID: ${itemId}):`, error);
+            }
+          }
+        }}
       />
     );
   }, [itemMap]);
