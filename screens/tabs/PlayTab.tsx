@@ -51,6 +51,7 @@ const PlayTab = () => {
         console.log('🔍 회복을 위한 짧은 5분:', JSON.stringify(shortActivityResponse.content, null, 2));
         setRecommendedActivityData(randomFive); // 나를 위한 추천 콘텐츠
         setBannerData(bannersResponse); // 모든 배너 표시
+        console.log('🔍 배너 데이터:', JSON.stringify(bannersResponse, null, 2));
       } catch (error) {
         console.error('데이터 로드 실패:', error);
       } finally {

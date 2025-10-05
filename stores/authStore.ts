@@ -3,6 +3,7 @@ import { devtools } from 'zustand/middleware';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type { AuthResponse, AuthPhase } from '../types/auth';
 import { decodeJwt } from '../utils/jwt';
+import { setInstallUuid } from '../utils/deviceId';
 
 export interface AuthState {
   tokens: AuthResponse | null;
@@ -41,6 +42,16 @@ export const useAuthStore = create<AuthState>()(
           const payload = decodeJwt(tokens.accessToken);
           const role = (payload?.auth as string) || undefined;
           const loginType = role === 'ROLE_USER' ? 'social' : 'device';
+
+          // 소셜 로그인인 경우 서버의 deviceId를 로컬에 동기화
+          if (loginType === 'social' && payload?.deviceId) {
+            try {
+              await setInstallUuid(payload.deviceId);
+              console.log('🔄 서버 deviceId를 로컬에 동기화 완료:', payload.deviceId);
+            } catch (error) {
+              console.warn('⚠️ deviceId 동기화 실패 (무시하고 계속):', error);
+            }
+          }
 
           set({ tokens, isLoggedIn: true, role, loginType });
           console.log('✅ Zustand에 로그인 정보(액세스 토큰, 리프레시 토큰) 저장 완료!', { 

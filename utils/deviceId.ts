@@ -191,6 +191,25 @@ export async function clearInstallUuid() {
 }
 
 /**
+ * 특정 UUID를 설치 UUID로 설정한다.
+ * - 서버에서 받은 deviceId를 로컬에 동기화할 때 사용
+ */
+export async function setInstallUuid(uuid: string): Promise<void> {
+  const secure = await storageIsSecureAvailable();
+  if (secure) {
+    try {
+      await SecureStore.setItemAsync(KEY, uuid);
+    } catch (error) {
+      console.warn('SecureStore 저장 실패, AsyncStorage로 폴백:', error);
+      await AsyncStorage.setItem(KEY, uuid);
+    }
+  } else {
+    await AsyncStorage.setItem(KEY, uuid);
+  }
+  uuidCache = uuid;
+}
+
+/**
  * 소셜 로그아웃 등 특정 시점에 설치 UUID를 회전(재발급)한다.
  * - 기존 저장된 UUID를 제거한 뒤 새 UUID를 생성/저장하여 반환한다.
  */

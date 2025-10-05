@@ -16,6 +16,12 @@ import PlayResult from '../../../components/tabs/play/PlayResultScreen/PlayResul
 import Animated from 'react-native-reanimated';
 import { useSpringUpAnimation } from '../../../hooks/useSpringUpAnimation';
 import { eventBus, APP_EVENTS } from '../../../utils/eventBus';
+import { RewardableMission } from '../../../services/activityLogService';
+import { claimMission } from '../../../services/missionService';
+import { ss, sv } from '../../../utils/scale';
+import { useToast } from '../../../hooks/useToast';
+import { useCurrencyStore } from '../../../stores/currencyStore';
+import { getUserPoints } from '../../../services/userService';
 
 const MOCK_ACTIVITY_DESCRIPTION = [
         '뇌에 맑은 산소가 가득 차올랐고...',
@@ -30,14 +36,46 @@ const PlayResultScreen = ({route}: {route: RouteProp<PlayStackParamList, 'PlayRe
     const handleBack = () => {
         navigation.goBack();
     };
-    const handleActivityEnd = () => {
+
+    const { showToast } = useToast();
+    const handleActivityEnd = async (rewardableMission?: RewardableMission | null) => {
         // TODO: 액티비티 종료 후 하트 보상 받기
         // TODO: 얼마의 하트를 줘야하는지 백엔드에서 조회 후 보상 받기
         // TODO: 하트 보상 받기 후 홈으로 이동
+        if (rewardableMission) {
+            try {
+                const res = await claimMission(rewardableMission.missionId);
+                showToast({
+                    amount: res.claimedReward.points,
+                    message: '하트 획득했어요!',
+                    theme: 'dark',
+                    iconType: 'heart',
+                    style: {
+                        width: ss(280),
+                        height: sv(48),
+                    },
+                    textStyle: {
+                        ...typography.body1,
+                        textAlign: 'center',
+                    },
+                    iconSize: ss(32),
+                });
+                const readHeartPoints = await getUserPoints();
+                useCurrencyStore.getState().setHeartPoints(readHeartPoints.points);
+            } catch (error) {
+                console.error('하트 보상 받기 실패:', error);
+                showToast({
+                    message: '하트 보상 받기에 실패했어요.',
+                    theme: 'dark',
+                    iconType: 'brokenHeart',
+                });
+            }
+        }
     // 요약 데이터 새로고침 트리거
     eventBus.emit(APP_EVENTS.REFRESH_SUMMARY);
-        exit();
-    }
+    exit();
+    };
+
     const exit = () => {
         navigation.reset({
             index: 0,
@@ -77,7 +115,7 @@ const PlayResultScreen = ({route}: {route: RouteProp<PlayStackParamList, 'PlayRe
                             size="large"
                             variant="active"
                             style={styles.button}
-                            onPress={handleActivityEnd}
+                            onPress={() => handleActivityEnd(rewardableMission)}
                         />
                     ) : (
                         <Button
@@ -86,7 +124,7 @@ const PlayResultScreen = ({route}: {route: RouteProp<PlayStackParamList, 'PlayRe
                             size="large"
                             variant="active"
                             style={styles.button}
-                            onPress={handleActivityEnd}
+                            onPress={() => handleActivityEnd()}
                         />
                     )}
                 </Animated.View>

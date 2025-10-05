@@ -94,9 +94,9 @@ const ToastView: React.FC<ToastViewProps> = ({ message, theme, amount, iconType 
           style={styles.icon}
         />} */}
         {icon}
-        {typeof amount === 'number' && amount > 0 ? (
+        {typeof amount === 'number' && amount > 0 && (
           <Text style={[styles.amount, { color: themeStyle.textColor }]}>+{amount}</Text>
-        ) : null}
+        )}
       </View>}
       <Text
         style={[

@@ -13,6 +13,7 @@ import { playIcons } from "../../../constants/icons";
 import BubbleTalk from "../../../components/common/bubbletalk/BubbleTalk";
 import { radius } from "../../../constants/radius";
 import CatBasic from '../../../assets/images/play/playBreathing/basic.svg';
+import CatInhaling from '../../../assets/images/play/playBreathing/hold.svg';
 import { ButtonSmall } from "../../../components/common/buttons/ButtonSmall";
 import { convertSecondsToMinutesAndSeconds } from "../../../utils/timeUtils";
 import { BreathAction } from "../../../services/contentService";
@@ -86,6 +87,7 @@ const PlayBreathContentScreen = ({route}: {route: RouteProp<PlayStackParamList, 
             try { if (hasAudio) pauseAudio(); } catch {}
 
             console.log(`🎉 호흡 액티비티 완료 처리: ${content.id}`);
+            console.log('🔍 호흡 액티비티 완료 처리 응답:', JSON.stringify(res, null, 2));
             navigation.navigate('PlayResultScreen', { effectTexts: res.completionEffectTexts || null , rewardableMission: res.rewardableMission as RewardableMission });
         } catch (error) {
             console.error('호흡 액티비티 완료 처리 실패:', error);
@@ -171,15 +173,15 @@ const PlayBreathContentScreen = ({route}: {route: RouteProp<PlayStackParamList, 
             return require('../../../assets/animations/inhale_cat.json');
         }
         // HOLD 또는 기타: 직전 호흡 액션을 재귀로 탐색
-        if (step === 0) return null; // 처음이면 기본 SVG
+        if (step === 0) return 'basic'; // 처음이면 기본 SVG
         const lastBreath = findPreviousBreathAction(step);
         if (lastBreath === 'INHALE') {
-            return require('../../../assets/animations/breathing_motion.json');
+            return 'inhaling';
         }
         if (lastBreath === 'EXHALE') {
-            return require('../../../assets/animations/inhale_cat.json');
+            return 'basic';
         }
-        return null; // 아무것도 못 찾으면 기본 SVG
+        return 'basic'; // 아무것도 못 찾으면 숨쉬는 SVG
     }, [action, step, content.timeline]);
 
     // 컴포넌트 마운트 시 이전 진행상황 조회
@@ -337,7 +339,15 @@ const PlayBreathContentScreen = ({route}: {route: RouteProp<PlayStackParamList, 
                 {/* )} */}
             </SafeAreaView>
 
-            {animationSource ? (
+            {animationSource === 'basic' ? (
+                <View style={styles.catSVGContainer}>
+                    <CatBasic width={ss(375)} height={sv(375)} />
+                </View>
+            ) : animationSource === 'inhaling' ? (
+                <View style={styles.catSVGContainer}>
+                    <CatInhaling width={ss(375)} height={sv(375)} />
+                </View>
+            ) : (
                 <LottieView
                     ref={lottieRef}
                     source={animationSource}
@@ -346,10 +356,6 @@ const PlayBreathContentScreen = ({route}: {route: RouteProp<PlayStackParamList, 
                     speed={Math.min(3, Math.max(0.2, 2 / (duration || 1)))}
                     style={styles.breathingCatAnimation}
                 />
-            ) : (
-                <View style={styles.catSVGContainer}>
-                    <CatBasic width={ss(375)} height={sv(375)} />
-                </View>
             )}
 
 

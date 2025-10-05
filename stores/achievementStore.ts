@@ -7,6 +7,11 @@ import { MyAchievement } from '../types';
 import { useAppConfigStore } from './appConfigStore';
 import { apiClient } from '../services/apiClient';
 import { useAuthStore } from './authStore';
+import { useToast } from '../hooks/useToast';
+import { ss, sv } from '../utils/scale';
+import { typography } from '../constants/typography';
+import { getUserPoints } from '../services/userService';
+import { useCurrencyStore } from './currencyStore';
 
 // 백엔드 API 응답 타입은 types/index.ts의 MyAchievement, PagedResponse 사용
 
@@ -243,6 +248,36 @@ export function navigateToAchievements() {
         console.warn('⚠️ 네비게이션 핸들러 재시도 실패');
       }
     }, 1000);
+  }
+}
+
+export async function heartReward(amount: number, showToast: (toast: any) => void) {
+  console.log('🔗 하트 보상 핸들러 호출됨');
+  try {
+    const readHeartPoints = await getUserPoints();
+    useCurrencyStore.getState().setHeartPoints(readHeartPoints.points);
+    showToast({
+      message: '하트 획득했어요!',
+      theme: 'dark',
+      iconType: 'heart',
+      amount: amount,
+      style: {
+        width: ss(280),
+        height: sv(48),
+      },
+      textStyle: {
+        ...typography.body1,
+        textAlign: 'center',
+      },
+      iconSize: ss(32),
+    });
+  } catch (error) {
+    console.error('하트 포인트 동기화 실패:', error);
+    showToast({
+      message: '하트 포인트 동기화 실패했어요.',
+      theme: 'dark',
+      iconType: 'brokenHeart',
+    });
   }
 }
 

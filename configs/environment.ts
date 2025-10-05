@@ -31,7 +31,8 @@ export const isProduction = getEnvironment() === 'production';
 export const environmentConfig = {
   // API 설정
   api: {
-    baseUrl: 'https://soomsoome.com',     // 백엔드 서버
+    //baseUrl: 'https://soomsoome.com',     // 백엔드 서버
+    baseUrl: 'https://e6e0ce410c37.ngrok-free.app',     // 백엔드 임시 서버
     timeout: 10000 // 10초동안 응답이 없으면 에러 처리
   },
 

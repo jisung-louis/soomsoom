@@ -593,7 +593,7 @@ const MyTab = () => {
                               renderItem={({ item: achievement }) => (
                                 <View style={styles.achievementItem}>
                                   {renderBadgeIcon(achievement.grade, 48, 48)}
-                                  <Text style={styles.achievementName} numberOfLines={2}>
+                                  <Text style={styles.achievementName} numberOfLines={1}>
                                     {achievement.name}
                                   </Text>
                                 </View>

@@ -9,6 +9,7 @@ import {
   createHeartRewardPopup,
 } from '../components/common/popup/UniversalPopup';
 import { AchievementGrade } from '../types';
+import { useToast } from '../contexts/ToastContext';
 
 /**
  * 알림 큐 처리 커스텀 훅
@@ -16,6 +17,7 @@ import { AchievementGrade } from '../types';
  */
 export const useNotificationQueueProcessor = () => {
   const { processNext, setProcessing, queue, isProcessing } = useNotificationQueueStore();
+  const { showToast } = useToast();
   const processingRef = useRef(false);
 
   /**
@@ -35,7 +37,8 @@ export const useNotificationQueueProcessor = () => {
           const badgeGrade = payload?.achievementGrade as AchievementGrade;
           const message = String(payload?.aps?.alert?.title || '새로운 업적을 달성했어요!');
           const subMessage = String(payload?.aps?.alert?.body || '새 업적을 달성했어요!');
-          const popup = createAchievementPopup(badgeGrade, message, subMessage);
+          const points = Number(payload?.points);
+          const popup = createAchievementPopup(badgeGrade, message, subMessage, points, showToast);
           showUniversalPopup(popup);
           break;
 
@@ -59,8 +62,9 @@ export const useNotificationQueueProcessor = () => {
           if (payload?.points) {
             const message = String(payload?.aps?.alert?.title || '하트 획득했어요!');
             const subMessage = String(payload?.aps?.alert?.body || '하트를 획득했어요!');
-            const amount = payload?.points;
+            const amount = Number(payload?.points); // 문자열을 숫자로 변환
             const popup = createHeartRewardPopup(message, subMessage, amount);
+            console.log('amount 전달 확인:', amount, typeof amount);
             showUniversalPopup(popup);
           }
           else if (payload?.imageUrl) {

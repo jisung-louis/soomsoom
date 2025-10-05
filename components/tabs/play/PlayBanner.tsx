@@ -163,7 +163,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    height: '50%',
+    height: '100%',
     justifyContent: 'flex-end',
     paddingHorizontal: 16,
     paddingBottom: 16,

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { MyAchievement, AchievementGrade } from '../../../types';
-import { bindAchievementPopupHandler, navigateToAchievements, navigateToMyDecoration } from '../../../stores/achievementStore';
+import { bindAchievementPopupHandler, heartReward, navigateToAchievements, navigateToMyDecoration } from '../../../stores/achievementStore';
 import CustomAlert from '../alert/CustomAlert';
 import { useToast } from '../../../contexts/ToastContext';
 import { useCurrencyStore } from '../../../stores/currencyStore';
@@ -8,6 +8,7 @@ import { getUserPoints } from '../../../services/userService';
 import { StyleSheet, Text } from 'react-native';
 import LottieView from 'lottie-react-native';
 import { ss, sv } from '../../../utils/scale';
+import { typography } from '../../../constants/typography';
 
 // 팝업 타입 정의
 export type PopupType = 'achievement' | 'reward_heart' | 'reward_item' | 'mailbox' | 'alarm' | 'generic';
@@ -55,7 +56,7 @@ export default function UniversalPopup() {
   useEffect(() => {
     // 범용 팝업 핸들러 등록
     bindUniversalPopupHandler((popupData, onClose) => {
-      console.log('🎭 범용 팝업 표시 요청:', popupData.type, popupData.title);
+      console.log('🎭 범용 팝업 표시 요청:', popupData.type, popupData.title, popupData.amount);
       setData(popupData);
       setOnCloseCb(() => onClose);
       setOpen(true);
@@ -127,10 +128,19 @@ export default function UniversalPopup() {
                   const res = await getUserPoints();
                   useCurrencyStore.getState().setHeartPoints(res.points);
                   showToast({ 
-                    amount: data.amount,
-                    message: '하트가 적립되었어요!', 
+                    amount: data.amount as number,
+                    message: '하트 획득했어요!', 
                     theme: 'dark', 
                     iconType: 'heart',
+                    style: {
+                      width: ss(280),
+                      height: sv(48),
+                    },
+                    textStyle: {
+                      ...typography.body1,
+                      textAlign: 'center',
+                    },
+                    iconSize: ss(32),
                   });
                 } catch (e) {
                   // 포인트 동기화 실패는 사용자 흐름에 치명적이지 않으므로 조용히 처리
@@ -179,13 +189,26 @@ export function showUniversalPopup(data: PopupData, onClose?: () => void) {
 }
 
 // Push notification type별 팝업 생성 헬퍼 함수들
-export function createAchievementPopup(badgeGrade: AchievementGrade, message: string, subMessage: string): PopupData {
+export function createAchievementPopup(
+  badgeGrade: AchievementGrade, 
+  message: string, 
+  subMessage: string, 
+  points?: number,
+  showToast?: (toast: any) => void
+): PopupData {
   return {
     type: 'achievement',
     image: { lottie: animByGrade[badgeGrade] },
     message: message,
     subMessage: subMessage,
-    buttons: [
+    buttons: 
+    points && showToast ? [ // 업적에 하트보상도 있을 때 
+      {
+        text: '하트 보상받기',
+        icon: 'heart',
+        onPress: () => heartReward(points, showToast),
+      }
+    ] : [ // 업적에 아무 보상 없을 때
       {
         text: '닫기',
         onPress: () => {},
