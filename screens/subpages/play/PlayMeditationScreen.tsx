@@ -17,6 +17,7 @@ import {
   updateActivityProgress, 
   getActivityProgress 
 } from '../../../services/activityLogService';
+import { cleanupTrackPlayer } from '../../../services/trackPlayerService';
 import { RewardableMission } from '../../../services/activityLogService';
 
 const PlayMeditationScreen = ({route}: {route: RouteProp<PlayStackParamList, 'PlayMeditationScreen'>}) => {
@@ -44,9 +45,9 @@ const PlayMeditationScreen = ({route}: {route: RouteProp<PlayStackParamList, 'Pl
   useEffect(() => {
     const loadPreviousProgress = async () => {
       try {
-        // initialPosition이 있으면 그것을 사용 (이어듣기)
+        // initialPosition이 명시적으로 전달되면 그것을 사용
         if (initialPosition !== undefined) {
-          console.log(`📖 이어듣기 위치 설정: ${initialPosition/1000}초`);
+          console.log(`📖 초기 위치 설정: ${initialPosition/1000}초`);
           setLastPosition(initialPosition);
           return;
         }
@@ -68,6 +69,16 @@ const PlayMeditationScreen = ({route}: {route: RouteProp<PlayStackParamList, 'Pl
 
     loadPreviousProgress();
   }, [content.id, initialPosition]);
+
+  // 컴포넌트 언마운트 시 Track Player 정리
+  useEffect(() => {
+    return () => {
+      // 컴포넌트가 언마운트될 때 Track Player 정리
+      cleanupTrackPlayer().catch(error => {
+        console.error('컴포넌트 언마운트 시 Track Player 정리 실패:', error);
+      });
+    };
+  }, []);
 
   // 진행상황 기록 함수
   const saveProgress = async (position: number, playTime: number) => {
@@ -117,13 +128,16 @@ const PlayMeditationScreen = ({route}: {route: RouteProp<PlayStackParamList, 'Pl
         playerControls.current.pause();
       }
       
-      // 2. 진행상황 추적 중지
+      // 2. Track Player 완전 정리 (백그라운드 플레이바 제거)
+      await cleanupTrackPlayer();
+      
+      // 3. 진행상황 추적 중지
       stopProgressTracking();
       
-      // 3. 액티비티 진행 상황 기록
+      // 4. 액티비티 진행 상황 기록
       await saveProgress(lastPosition, actualPlayTime);
       
-      // 4. 이전 화면으로 이동
+      // 5. 이전 화면으로 이동
       navigation.goBack();
     } catch (error) {
       console.error('뒤로가기 처리 중 오류:', error);
@@ -158,10 +172,13 @@ const PlayMeditationScreen = ({route}: {route: RouteProp<PlayStackParamList, 'Pl
 
   const handleOnEnd = async () => {
     try {
-      // 진행상황 추적 중지
+      // 1. Track Player 완전 정리 (백그라운드 플레이바 제거)
+      await cleanupTrackPlayer();
+      
+      // 2. 진행상황 추적 중지
       stopProgressTracking();
       
-      // 액티비티 완료 처리
+      // 3. 액티비티 완료 처리
       const res = await completeActivity(content.id);
       console.log('🔍 액티비티 완료 처리 응답:', JSON.stringify(res, null, 2));
       setIsCompleted(true);

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Text, View, StyleSheet, InteractionManager } from 'react-native';
+import { Text, View, StyleSheet, InteractionManager, DeviceEventEmitter } from 'react-native';
 import { Image } from 'react-native';
 import { RouteProp, useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -16,16 +16,25 @@ import LottieView from 'lottie-react-native';
 import { ss, sv } from '../../../utils/scale';
 import CatBasic from '../../../assets/images/play/playBreathing/basic.svg';
 import { Activity, getActivityDetail } from '../../../services/contentService';
+import { cleanupTrackPlayer } from '../../../services/trackPlayerService';
 
 
 const PlayRestScreen = ({route}: {route: RouteProp<PlayStackParamList, 'PlayRestScreen'>}) => {
   const navigation = useNavigation<StackNavigationProp<PlayStackParamList>>();
-  const handleBack = () => {
-    // 오디오 인스턴스 해제
-    if (hasAudio) {
-      pauseAudio();
+  const handleBack = async () => {
+    try {
+      // Track Player 완전 정리 (백그라운드 플레이바 제거)
+      await cleanupTrackPlayer();
+      
+      // 오디오 인스턴스 해제
+      if (hasAudio) {
+        pauseAudio();
+      }
+      navigation.goBack();
+    } catch (error) {
+      console.error('뒤로가기 처리 중 오류:', error);
+      navigation.goBack();
     }
-    navigation.goBack();
   };
 
   
@@ -53,16 +62,33 @@ const PlayRestScreen = ({route}: {route: RouteProp<PlayStackParamList, 'PlayRest
 
 
 
-  const { isLoading: audioLoading, play: playAudio, pause: pauseAudio } = useAudioPlayer({
+  const { 
+    isLoading: audioLoading, 
+    isPlaying: audioIsPlaying,
+    play: playAudio, 
+    pause: pauseAudio 
+  } = useAudioPlayer({
     source: audioSource as any,
-    autoPlay: false,
+    autoPlay: true,
     repeat: true,
+    content: content,
     onEnd: () => {
       console.log('🔁 오디오 1 사이클 종료');
     }
   });
   const [isPlaying, setIsPlaying] = useState(false);
   const insets = useSafeAreaInsets();
+
+  // audioIsPlaying과 isPlaying 동기화
+  useEffect(() => {
+    if (hasAudio) {
+      setIsPlaying(audioIsPlaying);
+      // 오디오가 로딩 완료되면 isLoading을 true로 설정
+      if (!audioLoading && audioIsPlaying) {
+        setIsLoading(true);
+      }
+    }
+  }, [audioIsPlaying, hasAudio, audioLoading]);
 
   // 두 가지 로띠를 2초 간격으로 번갈아 재생
   const animations = React.useMemo(() => [
@@ -132,27 +158,28 @@ const PlayRestScreen = ({route}: {route: RouteProp<PlayStackParamList, 'PlayRest
   
 
   const [isLoading, setIsLoading] = useState(false);
-  // 화면 진입 시, 모든 인터랙션/레이아웃이 끝난 다음 자동 재생 시작
-  React.useEffect(() => {
-    setIsLoading(false);
-    const task = InteractionManager.runAfterInteractions(() => {
-      requestAnimationFrame(() => {
-        try {
-          if (hasAudio) playAudio();
-          setIsPlaying(true);
-          setIsLoading(true);
-        } catch {}
-      });
-    });
-    return () => {
-      // 정리: 자동 시작 예약 취소 및 타이머 해제는 상위 이펙트에서 처리
-      // InteractionManager에는 취소 API가 없어 no-op
-    };
-  }, [hasAudio, playAudio]);
+  
+  // 오디오가 없는 경우 즉시 타임라인 시작
+  useEffect(() => {
+    if (!hasAudio) {
+      setIsPlaying(true);
+      setIsLoading(true);
+    }
+  }, [hasAudio]);
 
   React.useEffect(() => {
     console.log('🔁 isLoading', isLoading);
   }, [isLoading]);
+
+  // 컴포넌트 언마운트 시 정리
+  useEffect(() => {
+    return () => {
+      // Track Player 정리 (백그라운드 플레이바 제거)
+      cleanupTrackPlayer().catch(error => {
+        console.error('컴포넌트 언마운트 시 Track Player 정리 실패:', error);
+      });
+    };
+  }, []);
 
   return (
     <SafeAreaView style={styles.container}>

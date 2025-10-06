@@ -145,7 +145,10 @@ const PlayDetailScreen: React.FC = () => {
   const handleResumeFromStart = () => {
     if (!content) return;
     setShowResumeAlert(false);
-    navigation.navigate('PlayMeditationScreen', { content });
+    navigation.navigate('PlayMeditationScreen', { 
+      content,
+      initialPosition: 0  // 처음부터 시작하도록 명시적으로 0 전달
+    });
   };
 
   const handleResumeFromProgress = () => {

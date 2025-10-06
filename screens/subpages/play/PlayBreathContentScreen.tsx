@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, DeviceEventEmitter } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import SubpageHeader, {SUBPAGE_HEADER_HEIGHT} from "../../../components/common/top-navigation/SubpageHeader";
 import { RouteProp, useNavigation } from "@react-navigation/native";
@@ -27,6 +27,7 @@ import { useToast } from "../../../contexts/ToastContext";
 import { useAppConfigStore } from "../../../stores/appConfigStore";
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import { useAudioPlayer } from "../../../hooks/useAudioPlayer";
+import { cleanupTrackPlayer } from "../../../services/trackPlayerService";
 import { RewardableMission } from "../../../services/activityLogService";
 
 const PlayBreathContentScreen = ({route}: {route: RouteProp<PlayStackParamList, 'PlayBreathContentScreen'>}) => {
@@ -37,9 +38,20 @@ const PlayBreathContentScreen = ({route}: {route: RouteProp<PlayStackParamList, 
         // require(...) 결과(숫자)면 그대로 전달, 문자열 URL이면 { uri }로 래핑
         return typeof content.audioUrl === 'string' ? { uri: content.audioUrl } : content.audioUrl;
     }, [content.audioUrl]);
-    const { isLoading: audioLoading, play: playAudio, pause: pauseAudio } = useAudioPlayer({
+    const { 
+        isLoading: audioLoading, 
+        isPlaying: audioIsPlaying,
+        play: playAudio, 
+        pause: pauseAudio 
+    } = useAudioPlayer({
         source: audioSource as any,
-        autoPlay: false,
+        autoPlay: true,
+        content: content,
+        onEnd: () => {
+            console.log('🌀 호흡 오디오 종료');
+            // 오디오가 끝나면 자동으로 결과 화면으로 이동
+            goToResultScreen();
+        }
     });
     const [isPlaying, setIsPlaying] = useState(false);
     const navigation = useNavigation<StackNavigationProp<PlayStackParamList>>();       
@@ -56,17 +68,20 @@ const PlayBreathContentScreen = ({route}: {route: RouteProp<PlayStackParamList, 
     
     const handleBack = async () => {
         try {
-            // 1. 진행상황 추적 중지
+            // 1. Track Player 완전 정리 (백그라운드 플레이바 제거)
+            await cleanupTrackPlayer();
+            
+            // 2. 진행상황 추적 중지
             stopProgressTracking();
             
-            // 2. 액티비티 진행 상황 기록 (실제 재생 시간 사용)
+            // 3. 액티비티 진행 상황 기록 (실제 재생 시간 사용)
             const actualPlayTime = getActualPlayTime();
             await saveProgress(lastPosition, actualPlayTime);
             
             // 오디오 정지 (타임라인과 분리, 재생 중이었다면 일시정지)
             try { if (hasAudio) pauseAudio(); } catch {}
 
-            // 3. 두 스택 뒤(PlayDetailScreen)로 이동
+            // 4. 두 스택 뒤(PlayDetailScreen)로 이동
             navigation.pop(2);
         } catch (error) {
             console.error('뒤로가기 처리 중 오류:', error);
@@ -76,10 +91,13 @@ const PlayBreathContentScreen = ({route}: {route: RouteProp<PlayStackParamList, 
     
     const goToResultScreen = async () => {
         try {
-            // 1. 진행상황 추적 중지
+            // 1. Track Player 완전 정리 (백그라운드 플레이바 제거)
+            await cleanupTrackPlayer();
+            
+            // 2. 진행상황 추적 중지
             stopProgressTracking();
             
-            // 2. 액티비티 완료 처리
+            // 3. 액티비티 완료 처리
             const res = await completeActivity(content.id);
             setIsCompleted(true);
             
@@ -205,21 +223,19 @@ const PlayBreathContentScreen = ({route}: {route: RouteProp<PlayStackParamList, 
         loadPreviousProgress();
     }, [content.id]);
 
-    // 오디오 준비 완료 시 자동 재생 및 타임라인 시작 (오디오 없으면 즉시 시작)
-    const autoStartedRef = useRef(false);
+    // 오디오가 없는 경우 즉시 타임라인 시작
     useEffect(() => {
-        if (autoStartedRef.current) return; // 자동 시작은 1회만
         if (!hasAudio) {
-            autoStartedRef.current = true;
-            setIsPlaying(true);
-            return;
-        }
-        if (!audioLoading) {
-            autoStartedRef.current = true;
-            try { playAudio(); } catch {}
             setIsPlaying(true);
         }
-    }, [hasAudio, audioLoading, playAudio]);
+    }, [hasAudio]);
+
+    // audioIsPlaying과 isPlaying 동기화
+    useEffect(() => {
+        if (hasAudio) {
+            setIsPlaying(audioIsPlaying);
+        }
+    }, [audioIsPlaying, hasAudio]);
 
     // 재생 상태에 따른 진행상황 추적 시작/중지 및 화면 꺼짐 방지
     useEffect(() => {
@@ -255,9 +271,32 @@ const PlayBreathContentScreen = ({route}: {route: RouteProp<PlayStackParamList, 
         setLastPosition(elapsed);
     }, [elapsed]);
 
+    // 백그라운드 점프 이벤트 수신
+    useEffect(() => {
+        const jumpForwardListener = DeviceEventEmitter.addListener('trackPlayerJumpForward', (data) => {
+            console.log(`⏩ 호흡 점프 포워드: ${data.seconds}초`);
+            setRemainingTime(prev => Math.max(0, prev - data.seconds));
+        });
+
+        const jumpBackwardListener = DeviceEventEmitter.addListener('trackPlayerJumpBackward', (data) => {
+            console.log(`⏪ 호흡 점프 백워드: ${data.seconds}초`);
+            setRemainingTime(prev => Math.min(content.durationInSeconds, prev + data.seconds));
+        });
+
+        return () => {
+            jumpForwardListener.remove();
+            jumpBackwardListener.remove();
+        };
+    }, [content.durationInSeconds]);
+
     // 컴포넌트 언마운트 시 정리
     useEffect(() => {
         return () => {
+            // Track Player 정리 (백그라운드 플레이바 제거)
+            cleanupTrackPlayer().catch(error => {
+                console.error('컴포넌트 언마운트 시 Track Player 정리 실패:', error);
+            });
+            
             stopProgressTracking();
             // 화면 꺼짐 방지 해제
             deactivateKeepAwake('breathing-session');

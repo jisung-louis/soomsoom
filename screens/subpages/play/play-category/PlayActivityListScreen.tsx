@@ -142,13 +142,13 @@ const PlayActivityListScreen = ({route}: {route: RouteProp<PlayStackParamList, '
           </View>
         ) : (
           <FlatList
-          data={activityList}
-          keyExtractor={(item) => item.id.toString()}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{gap: 10, paddingBottom: 50}}
-          renderItem={({item}) => (
-            <ProgramList programData={[item]} />
-          )}
+            data={activityList}
+            keyExtractor={(item) => item.id.toString()}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{gap: 10, paddingBottom: 50}}
+            renderItem={({item}) => (
+              <ProgramList programData={[item]} />
+            )}
           />
         )}
       </View>

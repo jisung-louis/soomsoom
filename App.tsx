@@ -8,6 +8,7 @@ import { ToastProvider } from './contexts/ToastContext';
 import { SocialLoginProvider } from './contexts/SocialLoginContext';
 import AppContent from './app/AppContent';
 import { useAppConfigStore } from './stores/appConfigStore';
+import { setupTrackPlayer } from './services/trackPlayerService';
 
 // 포어그라운드 알림 핸들러 설정 (앱 시작 시 1회)
 Notifications.setNotificationHandler({
@@ -41,6 +42,9 @@ export default function App() {
   React.useEffect(() => {
     const handlePermissions = async () => {
       try {
+        // 0) Track Player 초기화
+        await setupTrackPlayer();
+        
         // 1) iOS: ATT 요청
         if (Platform.OS === 'ios') {
           try {

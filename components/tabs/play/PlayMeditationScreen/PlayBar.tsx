@@ -57,6 +57,10 @@ const PlayBar = ({
   // 실제 재생 시간 추적
   const playTimeRef = React.useRef(0);
   const playTimeIntervalRef = React.useRef<NodeJS.Timeout | null>(null);
+  
+  // 드래그 상태 관리
+  const [isDragging, setIsDragging] = React.useState(false);
+  const [dragPosition, setDragPosition] = React.useState(0);
 
   const {
     isPlaying, isLoading, duration, position,
@@ -64,6 +68,7 @@ const PlayBar = ({
     setPlaybackRate, playbackRate,
   } = useAudioPlayer({ 
     source: content.audioUrl,
+    content: content,
     repeat: isRepeat,
     onEnd: () => {
       console.log('🌀 onEnd triggered');
@@ -142,20 +147,19 @@ const PlayBar = ({
   // duration이 로드되면 저장된 이어듣기 위치 적용 및 자동 재생
   React.useEffect(() => {
     if (duration > 0) {
+      console.log(`🎵 Duration loaded: ${duration / 1000}초`);
+      
       if (pendingInitialPosition.current) {
         const position = pendingInitialPosition.current;
         if (position < duration / 1000) {
           console.log(`🎯 이어듣기 위치 설정: ${position}초 (전체: ${duration / 1000}초)`);
-          // 약간의 지연을 두고 seekTo 호출 (오디오가 완전히 로드된 후)
-          const timer = setTimeout(() => {
-            seekTo(position * 1000); // 초를 밀리초로 변환
-            pendingInitialPosition.current = null; // 적용 완료 후 초기화
-            // 이어듣기 위치 설정 후 자동 재생
-            play();
-            console.log(`▶️ 이어듣기 자동 재생 시작`);
-          }, 500);
-          
-          return () => clearTimeout(timer);
+          // Track Player는 seekTo 후 자동으로 재생됨
+          seekTo(position * 1000); // 초를 밀리초로 변환
+          pendingInitialPosition.current = null; // 적용 완료 후 초기화
+          console.log(`▶️ 이어듣기 위치 설정 완료`);
+          // 이어듣기 자동 재생
+          play();
+          console.log(`▶️ 이어듣기 자동 재생 시작`);
         } else {
           console.log(`🎯 이어듣기 위치가 전체 길이보다 큼: ${position}초 (전체: ${duration / 1000}초) - 처음부터 재생`);
           pendingInitialPosition.current = null; // 무효한 위치이므로 초기화
@@ -168,6 +172,8 @@ const PlayBar = ({
         play();
         console.log(`▶️ 처음부터 자동 재생 시작`);
       }
+    } else {
+      console.log(`🎵 Duration not loaded yet: ${duration}ms`);
     }
   }, [duration, seekTo, play]);
 
@@ -205,15 +211,26 @@ const PlayBar = ({
             style={{ width: '100%', height: 24 }} 
             minimumValue={0}
             maximumValue={duration}
-            value={position}
+            value={isDragging ? dragPosition : position}
             minimumTrackTintColor={colors.primary300}
             maximumTrackTintColor={colors.primary50}
             thumbTintColor={colors.primary300}
             thumbImage={require('../../../../assets/images/play/playBar/thumb.png')}
-            onSlidingComplete={seekTo}
+            onValueChange={(value) => {
+              setDragPosition(value);
+            }}
+            onSlidingStart={() => {
+              setIsDragging(true);
+              setDragPosition(position);
+            }}
+            onSlidingComplete={(value) => {
+              setIsDragging(false);
+              setDragPosition(0);
+              seekTo(value);
+            }}
           />
           <View style={styles.timeRow}>
-            <Text style={styles.timeText}>{formatTime(position)}</Text>
+            <Text style={styles.timeText}>{formatTime(isDragging ? dragPosition : position)}</Text>
             <Text style={styles.timeText}>{formatTime(duration)}</Text>
           </View>
         </View>
