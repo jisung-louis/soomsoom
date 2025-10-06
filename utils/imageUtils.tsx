@@ -1,5 +1,5 @@
 import React from 'react';
-import { Image, ImageSourcePropType, ImageResizeMode } from 'react-native';
+import { Image, ImageSourcePropType, ImageResizeMode, View } from 'react-native';
 import { SvgUri } from 'react-native-svg';
 
 /**
@@ -19,6 +19,7 @@ export interface ImageRenderOptions {
   height?: number | string;
   resizeMode?: ImageResizeMode;
   style?: any;
+  itemContainerSize?: number;
 }
 
 /**
@@ -40,7 +41,8 @@ export const renderImage = (
     width,
     height,
     resizeMode,
-    style
+    style,
+    itemContainerSize = 80
   } = options;
 
   // image가 { uri: string } 형태인 경우
@@ -49,23 +51,23 @@ export const renderImage = (
     
     if (isSvgUrl(imageUrl)) {
       // SVG인 경우
-      const svgWidth = width || (isCollection ? '100%' : 80);
-      const svgHeight = height || (isCollection ? '100%' : 80);
+      const svgWidth = width || (isCollection ? '100%' : itemContainerSize);
+      const svgHeight = height || (isCollection ? '205%' : itemContainerSize);
       
       return (
         <SvgUri
           uri={imageUrl}
           width={svgWidth}
           height={svgHeight}
-          style={style || (isCollection ? {} : { width: 80, height: 80 })}
+          style={style || (isCollection ? {} : { width: itemContainerSize, height: itemContainerSize })}
         />
       );
     } else {
       // PNG, JPG 등 일반 이미지인 경우
-      const imageResizeMode = resizeMode || (itemType === '배경' && !isCollection ? "cover" : "contain");
+      const imageResizeMode = resizeMode || ((itemType === '배경' || itemType === 'BACKGROUND') && !isCollection ? "cover" : "contain");
       const imageStyle = style || [
-        isCollection ? {} : { width: 80, height: 80 },
-        itemType === '배경' && !isCollection ? { width: '100%', height: '100%' } : {}
+        isCollection ? {} : { width: itemContainerSize, height: itemContainerSize },
+        (itemType === '배경' || itemType === 'BACKGROUND') && !isCollection ? { width: '100%', height: '100%' } : {}
       ];
       
       return (
@@ -79,10 +81,10 @@ export const renderImage = (
   }
 
   // 로컬 이미지인 경우 (require() 등)
-  const imageResizeMode = resizeMode || (itemType === '배경' && !isCollection ? "cover" : "contain");
+  const imageResizeMode = resizeMode || ((itemType === '배경' || itemType === 'BACKGROUND') && !isCollection ? "cover" : "contain");
   const imageStyle = style || [
-    isCollection ? {} : { width: 80, height: 80 },
-    itemType === '배경' && !isCollection ? { width: '100%', height: '100%' } : {}
+    isCollection ? {} : { width: itemContainerSize, height: itemContainerSize },
+    (itemType === '배경' || itemType === 'BACKGROUND') && !isCollection ? { width: '100%', height: '100%' } : {}
   ];
   
   return (
@@ -99,11 +101,14 @@ export const renderImage = (
  */
 export const renderCollectionImage = (
   image: ImageSourcePropType | null,
-  style?: any
+  style?: any,
+  itemContainerSize?: number,
+
 ): React.ReactElement | null => {
   return renderImage(image, {
     isCollection: true,
-    style
+    style,
+    itemContainerSize,
   });
 };
 
@@ -113,11 +118,59 @@ export const renderCollectionImage = (
 export const renderItemImage = (
   image: ImageSourcePropType | null,
   itemType: string = '',
-  style?: any
+  style?: any,
+  itemContainerSize?: number,
+  width?: number,
+  height?: number,
 ): React.ReactElement | null => {
   return renderImage(image, {
     isCollection: false,
     itemType,
-    style
+    style,
+    itemContainerSize,
+    width,
+    height,
   });
+};
+
+/**
+ * ImageBackground용 SVG 지원 렌더링 함수
+ */
+export const renderImageBackground = (
+  image: ImageSourcePropType | null,
+  style?: any,
+  children?: React.ReactNode
+): React.ReactElement | null => {
+  if (!image) return null;
+
+  // image가 { uri: string } 형태인 경우
+  if (typeof image === 'object' && 'uri' in image && typeof image.uri === 'string') {
+    const imageUrl = image.uri;
+    
+    if (isSvgUrl(imageUrl)) {
+      // SVG인 경우 - ImageBackground는 SVG를 직접 지원하지 않으므로 View로 감싸서 처리
+      return (
+        <View style={style}>
+          <SvgUri
+            uri={imageUrl}
+            width="100%"
+            height="100%"
+            style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+          />
+          {children}
+        </View>
+      );
+    }
+  }
+
+  // 일반 이미지인 경우 ImageBackground 사용
+  const ImageBackground = require('react-native').ImageBackground;
+  return (
+    <ImageBackground
+      source={image}
+      style={style}
+    >
+      {children}
+    </ImageBackground>
+  );
 };

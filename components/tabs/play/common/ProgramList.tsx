@@ -12,6 +12,7 @@ import { PlayStackParamList } from '../../../../navigations/tabs/PlayStackNaviga
 import { Activity, ActivityCategory } from '../../../../services/contentService';
 import { titleLineBreaker } from '../../../../utils/textUtils';
 import { normalizeImageSource } from '../../../../utils/textUtils';
+import { renderItemImage } from '../../../../utils/imageUtils';
 
 const ProgramList = ({ programData }: { programData: Activity[] }) => {
   const navigation = useNavigation<StackNavigationProp<PlayStackParamList>>();
@@ -46,7 +47,11 @@ const ProgramList = ({ programData }: { programData: Activity[] }) => {
         programData.map((item) => (
           <TouchableOpacity key={item.id} style={styles.cardContainer} onPress={() => {onPress(item)}}> 
             <View style={styles.card}>
-              <Image source={normalizeImageSource(item.thumbnailImageUrl)} style={styles.image} resizeMode='cover' />
+              {renderItemImage(
+                normalizeImageSource(item.thumbnailImageUrl),
+                '',
+                styles.image
+              )}
               <View style={styles.cardContent}>
                 <View style={styles.textHeader}>
                   <Badge title={categoryToString(item.category)} />

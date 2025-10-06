@@ -7,6 +7,7 @@ import XButton from '../../../assets/icons/common/close.svg';
 import { Button, ButtonProps } from '../buttons/Button';
 import LottieView from 'lottie-react-native';
 import { ss, sv, sx } from '../../../utils/scale';
+import { renderImage } from '../../../utils/imageUtils';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -119,9 +120,21 @@ const CustomAlert = ({ visible, image, particle=false, message, subMessage, butt
               ) : typeof image === 'string' && image.endsWith('.json') ? (
                 <LottieView source={image} autoPlay loop style={styles.image} resizeMode="contain" />
               ) : typeof image === 'string' || typeof image === 'object' && 'uri' in image ? ( //uri 형태일때
-                <Image source={image as any} style={styles.image} resizeMode="contain" />
+                renderImage(
+                  image as any,
+                  {
+                    style: styles.image,
+                    resizeMode: 'contain'
+                  }
+                )
               ) : typeof image === 'number' ? (
-                <Image source={image} style={styles.image} resizeMode="contain" />
+                renderImage(
+                  image,
+                  {
+                    style: styles.image,
+                    resizeMode: 'contain'
+                  }
+                )
               ) : null}
             </View>
           )}

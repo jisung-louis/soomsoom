@@ -19,6 +19,8 @@ import UserRoom from '../../../components/common/userroom/UserRoom';
 import InPossessionItemList from '../../../components/tabs/home/InPossessionItemList';
 import { radius } from '../../../constants/radius';
 import { Alert } from 'react-native';
+import { renderItemImage } from '../../../utils/imageUtils';
+import { useBgTopColor } from '../../../hooks/useBackgroundColor';
 
 type ShopItemDetailScreenRouteProp = RouteProp<HomeStackParamList, 'ShopItemDetailScreen'>;
 
@@ -30,8 +32,8 @@ const ShopItemDetailScreen = () => {
     const [item, setItem] = useState<Item | null>(null);
     const [collection, setCollection] = useState<CollectionDetail | null>(null);
     const [isPossessionModalVisible, setPossessionModalVisible] = useState(false);
-    console.log('item', item);
-    console.log('collection', collection);
+    console.log('item', JSON.stringify(item, null, 2));
+    console.log('collection', JSON.stringify(collection, null, 2));
     const heartPoints = useCurrencyStore(state => state.heartPoints);
     const isOwnedSelector = useRoomStore(state => state.isOwned);
     const alreadyOwned = useMemo(() => {
@@ -158,19 +160,23 @@ const ShopItemDetailScreen = () => {
         });
     }, [navigation]);
 
+  const [roomBgUri, setRoomBgUri] = useState<string | null>(null);
+
+  const isBGColorDark = useBgTopColor(roomBgUri);
   return (
     <>
     <UserRoom
       previewMode={true}
       previewItemIds={isCollection ? (collection?.items?.map(it => it.id) ?? []) : [itemId]}
       showPlacedItems={true}
+      onBackgroundImageUri={setRoomBgUri}
     >
       <SubpageHeader 
         onBack={handleBack} 
         style={{paddingHorizontal: 20}}
-        right={<HeartPoint money={heartPoints.toString()} onPress={() => {}}/>}
+        right={<HeartPoint money={heartPoints.toString()} onPress={() => {}} isBGColorDark={isBGColorDark}/>}
+        isBGColorDark={isBGColorDark}
       />
-      
       <View style={styles.content}>
         {alreadyOwned ? (
           <View style={styles.collectionInfo}>
@@ -183,30 +189,27 @@ const ShopItemDetailScreen = () => {
         ):(
           !isCollection ? (
           <View style={styles.itemImageContainer}>
-            {(() => {
-              const placeholder = require('../../../assets/icons/default_test_image.png');
-              let src;
-              src = typeof item?.imageUrl === 'string'
-                ? { uri: item.imageUrl }
-                : (item?.imageUrl || placeholder);
-              return (
-                <Image source={src as any} style={styles.itemImage} resizeMode='contain' />
-              );
-            })()}
+            {item?.itemType !== 'BACKGROUND' ? renderItemImage(
+              typeof item?.imageUrl === 'string' ? { uri: item.imageUrl } : (item?.imageUrl || require('../../../assets/icons/default_test_image.png')),
+              '',
+              styles.itemImage
+            ) : (
+              <View style={styles.itemImageContainer}/>
+            )}
           </View>
         ) : (
-            <View style={styles.collectionInfo}>
-              <TouchableOpacity style={styles.collectionCountContainer} onPress={() => setPossessionModalVisible(true)}>
-                <Text style={styles.collectionCount}>
-                  보유현황 보기 ({collection?.ownedItemsCount}/{collection?.totalItemsCount})
-                </Text>
-              </TouchableOpacity>
-            </View>
+          <View style={styles.collectionInfo}>
+            <TouchableOpacity style={styles.collectionCountContainer} onPress={() => setPossessionModalVisible(true)}>
+              <Text style={styles.collectionCount}>
+                보유현황 보기 ({collection?.ownedItemsCount}/{collection?.totalItemsCount})
+              </Text>
+            </TouchableOpacity>
+          </View>
           )
         )}
         <View style={styles.itemInfo}>
           <View style={styles.itemName}>
-            <Text style={styles.itemNameText}>
+            <Text style={[styles.itemNameText, {color: isBGColorDark ? colors.grayScale100 : colors.grayScale800}]}>
               {isCollection 
                 ? (collection?.name || '컬렉션 이름이 없습니다.') 
                 : (item?.name || '아이템 이름이 없습니다.')
@@ -221,14 +224,14 @@ const ShopItemDetailScreen = () => {
               }
             </Text>
           </View>
-          {isCollection && collection && (
+          {/* {isCollection && collection && (
             <View style={styles.collectionInfo}>
               <Text style={styles.collectionPhrase}>{collection.phrase}</Text>
               <Text style={styles.collectionCount}>
                 보유: {collection.ownedItemsCount}/{collection.totalItemsCount}개
               </Text>
             </View>
-          )}
+          )} */}
         </View>
       </View>
       

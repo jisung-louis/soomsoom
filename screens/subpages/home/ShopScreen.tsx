@@ -401,7 +401,11 @@ const ShopScreen = () => {
   }, [isOwned, navigation]);
 
   const handleCollectionItemPress = useCallback((collection: RoomItemLike) => {
-    navigation.navigate('ShopItemDetailScreen', { itemId: collection.id, isCollection: true });
+    if (collection.isCollection) {
+      navigation.navigate('ShopItemDetailScreen', { itemId: collection.id, isCollection: true });
+    } else {
+      navigation.navigate('ShopItemDetailScreen', { itemId: collection.id, isCollection: false });
+    }
   }, [navigation]);
   
   // 품절 아이템 목록은 서버 isSoldOut으로 초기화하고,

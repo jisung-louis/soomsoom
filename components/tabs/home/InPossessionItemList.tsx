@@ -6,6 +6,7 @@ import { radius } from '../../../constants/radius';
 import EmotionIcon from '../../../assets/icons/common/emotion.svg';
 import { typography } from '../../../constants/typography';
 import CheckIcon from '../../../assets/icons/common/check.svg';
+import { renderItemImage } from '../../../utils/imageUtils';
 
 type Props = {
   collection: CollectionDetail;
@@ -23,7 +24,12 @@ const InPossessionItemList: React.FC<Props> = ({ collection, onClose }) => {
         renderItem={({ item }) => (
           <View style={styles.itemCard}>
             <View style={styles.itemImageContainer}>
-              <Image source={item.imageUrl as any} style={styles.itemImage} resizeMode="contain" />
+              {renderItemImage(
+                typeof item.imageUrl === 'string' ? { uri: item.imageUrl } : item.imageUrl,
+                item.itemType,
+                styles.itemImage,
+                item.itemType === 'BACKGROUND' ? 64 : 64*0.8
+              )}
               {item.isOwned && 
                 <View style={styles.itemOwnedDimmedContainer}>
                     <CheckIcon width={40} height={40} color={colors.white} />
@@ -116,6 +122,7 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     backgroundColor: 'rgba(255,170,51,0.6)',
+    opacity: 0.6,
     borderRadius: radius.r8,
     alignItems: 'center',
     justifyContent: 'center',

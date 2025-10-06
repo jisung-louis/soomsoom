@@ -28,8 +28,8 @@ export const objectPosition = {
 
   // 아이템 관련
   floor: { x: sx(41), y: sy(460) },
-  shelf: { x: sx(228), y: sy(322.5) },
-  frame: { x: sx(250), y: sy(264) },
+  shelf: { x: sx(225), y: sy(314) },
+  frame: { x: sx(248), y: sy(262) },
   //frame1: { x: sx(308), y: sy(264) },
   eyewear: { x: sx(135), y: sy(356) },
   hat: { x: sx(122), y: sy(339) },
@@ -95,15 +95,15 @@ export const itemStyles = {
     zIndex: zIndex.shelf,
   },
   shelf: {
-    width: ss(147),
-    height: sv(13),
+    width: ss(150),
+    height: sv(30),
   },
   frameContainer: {
     position: 'absolute' as const,
     zIndex: zIndex.frame,
   },
   frame: {
-    width: ss(50+8+50),
-    height: sv(60),
+    width: ss(54+4+54),
+    height: sv(64),
   },
 };

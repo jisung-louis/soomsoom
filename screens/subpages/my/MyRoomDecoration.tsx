@@ -20,6 +20,7 @@ import { getItems } from '../../../services/itemService';
 import { getCollections, getCollectionDetail, type CollectionSummary, type CollectionDetail } from '../../../services/collectionService';
 import { useRoomStore } from '../../../stores/roomStore';
 import { normalizeImageSource } from '../../../utils/textUtils';
+import { renderItemImage, renderCollectionImage } from '../../../utils/imageUtils';
 import { SvgProps } from 'react-native-svg';
 import { RoomItemCategory } from '../../../types/room';
 import IconTabMenu, { TabMenuItem } from '../../../components/common/tabmenu/IconTabMenu';
@@ -181,8 +182,29 @@ const MyRoomDecoration = ({
         try {
           setCollectionsLoading(true);
           const res = await getCollections({ sort: 'CREATED', page: 1, size: 12 });
+          console.log('🔍 컬렉션 목록 로드 성공:', JSON.stringify(res, null, 2));
           if (!mounted) return;
           setCollections(res.content);
+          
+          // 컬렉션 상세 정보도 미리 로드
+          const detailPromises = res.content.map(collection => 
+            getCollectionDetail(collection.id).catch(err => {
+              console.warn(`컬렉션 ${collection.id} 상세 정보 로드 실패:`, err);
+              return null;
+            })
+          );
+          
+          const details = await Promise.all(detailPromises);
+          const detailMap = new Map<number, CollectionDetail>();
+          details.forEach((detail, index) => {
+            if (detail) {
+              detailMap.set(res.content[index].id, detail);
+            }
+          });
+          
+          if (mounted) {
+            setCollectionDetails(detailMap);
+          }
         } catch (e) {
           console.warn('컬렉션 목록 로드 실패:', e);
         } finally {
@@ -204,7 +226,7 @@ const MyRoomDecoration = ({
       filteredData = collections.map(collection => ({
         id: collection.id,
         title: collection.name,
-        image: collection.imageUrl ? require('../../../assets/images/backgrounds/chuseok.png') : undefined,
+        image: collection.imageUrl as any,
         price: collection.purchasePrice,
         type: '컬렉션' as any,
         isCollection: true,
@@ -235,8 +257,8 @@ const MyRoomDecoration = ({
         
         // 컬렉션 상세 정보에서 아이템 ID들을 가져옴
         const collectionDetail = collectionDetails.get(collectionId);
-        if (!collectionDetail || !collectionDetail.items) {
-            console.log('❌ 컬렉션 상세 정보를 찾을 수 없음:', collectionId);
+        if (!collectionDetail || !collectionDetail.items || collectionDetail.items.length === 0) {
+            console.log('❌ 컬렉션 상세 정보를 찾을 수 없음 또는 items가 비어있음:', collectionId);
             return false;
         }
         
@@ -244,17 +266,18 @@ const MyRoomDecoration = ({
         const collectionItemIds = collectionDetail.items.map(item => item.id);
         const isSelected = collectionItemIds.every(itemId => selectedItems.includes(itemId));
         
-        console.log('🔍 컬렉션 선택 상태 확인:', {
-            collectionId,
-            collectionItemIds,
-            selectedItems,
-            isSelected,
-            everyCheck: collectionItemIds.map(itemId => ({
-                itemId,
-                isIncluded: selectedItems.includes(itemId)
-            }))
-        });
-        
+        // console.log('🔍 컬렉션 선택 상태 확인:', JSON.stringify(
+        //     {
+        //     collectionId,
+        //     collectionItemIds,
+        //     selectedItems,
+        //     isSelected,
+        //     everyCheck: collectionItemIds.map(itemId => ({
+        //         itemId,
+        //         isIncluded: selectedItems.includes(itemId)
+        //     }))
+        // }, null, 2));
+
         return isSelected;
     };
 
@@ -315,10 +338,16 @@ const MyRoomDecoration = ({
                            </View>
                          )}
                          <View style={styles.collectionItemImageContainer}>
-                           <Image source={normalizeImageSource(item.image)} style={styles.collectionItemImage} resizeMode='cover'/>
+                           {renderCollectionImage(
+                             normalizeImageSource(item.image),
+                             styles.collectionItemImage
+                           )}
                            {isCollectionSelected(item.id) && (  
                              <View style={styles.collectionYellowDimmedContainer}>
-                                 <CheckIcon width={56} height={56} color={colors.white} />
+                                <View style={styles.collectionYellowDimmed}/>
+                                <View style={styles.checkIconContainer}>
+                                  <CheckIcon width={56} height={56} color={colors.white} style={styles.checkIcon} />
+                                </View>
                              </View>
                          )}
                          </View>
@@ -344,15 +373,19 @@ const MyRoomDecoration = ({
                             </View>
                         )}
                         {selectedItems.includes(item.id) && (  
-                          <View style={styles.yellowDimmedContainer}>
-                            <View style={styles.yellowDimmed}/>
+                          <View style={styles.collectionYellowDimmedContainer}>
+                            <View style={styles.collectionYellowDimmed}/>
                             <View style={styles.checkIconContainer}>
                               <CheckIcon width={56} height={56} color={colors.white} style={styles.checkIcon} />
                             </View>
                           </View>
                         )}
                         <View style={styles.collectionItemImageContainer}>
-                          <Image source={normalizeImageSource(item.image)} style={styles.collectionItemImage} resizeMode="cover"/>
+                          {renderItemImage(
+                            normalizeImageSource(item.image),
+                            '배경',
+                            styles.collectionItemImage
+                          )}
                         </View>
                         <View style={styles.itemInfo}>
                           <Text style={styles.itemTitle}>{item.title}</Text>
@@ -380,7 +413,11 @@ const MyRoomDecoration = ({
                           </View>
                         )}
                         <View style={styles.itemImageContainer}>
-                          <Image source={normalizeImageSource(item.image)} style={styles.itemImage} resizeMode="contain"/>
+                          {renderItemImage(
+                            normalizeImageSource(item.image),
+                            '',
+                            styles.itemImage
+                          )}
                         </View>
                         <View style={styles.itemInfo}>
                           <Text style={styles.itemTitle}>{item.title}</Text>
@@ -486,12 +523,25 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   collectionYellowDimmedContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: COLLECTION_IMAGE_WIDTH,
+    height: COLLECTION_IMAGE_HEIGHT,
+    borderRadius: radius.r8,
+  },
+  collectionYellowDimmed: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
     width: COLLECTION_IMAGE_WIDTH,
     height: COLLECTION_IMAGE_HEIGHT,
     backgroundColor: '#FFAA33',
     opacity: 0.6,
     borderRadius: radius.r8,
-    zIndex: 100,
+    zIndex: 1000,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   yellowDimmedContainer: {
     width: ITEM_IMAGE_WIDTH,
@@ -520,6 +570,8 @@ const styles = StyleSheet.create({
     zIndex: 10000,
     alignItems: 'center',
     justifyContent: 'center',
+    width: '100%',
+    height: '100%',
   },
   checkIcon: {
   },

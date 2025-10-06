@@ -19,6 +19,7 @@ import LoadingSpinner from '../../../components/common/loading/LoadingSpinner';
 import ErrorMessage from '../../../components/common/error/ErrorMessage';
 import { getActivityDetail, Activity } from '../../../services/contentService';
 import { normalizeImageSource } from '../../../utils/textUtils';
+import { renderItemImage } from '../../../utils/imageUtils';
 import { claimMission } from '../../../services/missionService';
 import { useCurrencyStore } from '../../../stores/currencyStore';
 import { getUserPoints } from '../../../services/userService';
@@ -144,7 +145,11 @@ const PlayInstructorDetailScreen: React.FC = () => {
         <SubpageHeader onBack={handleBack} />
         <View style={styles.contentContainer}>
           <View style={styles.contentHeader}>
-            <Image source={normalizeImageSource(instructor.profileImageUrl) || require('../../../assets/images/common/default_profile_image.png')} style={styles.contentHeaderTitleImage} />
+            {renderItemImage(
+              normalizeImageSource(instructor.profileImageUrl) || require('../../../assets/images/common/default_profile_image.png'),
+              '',
+              styles.contentHeaderTitleImage
+            )}
             <Text style={styles.contentHeaderTitle}>{instructor.name}</Text>
           </View>
           <Text style={styles.bio}>{instructor.bio}</Text>
@@ -204,11 +209,11 @@ const PlayInstructorDetailScreen: React.FC = () => {
       <View style={styles.contentContainer}>
         <View style={styles.contentHeader}>
             {instructor.profileImageUrl ? (
-              <Image 
-                //source={__DEV__ ? instructor.profileImageUrl as any : { uri: instructor.profileImageUrl }}
-                source={normalizeImageSource(instructor.profileImageUrl)}
-                style={styles.contentHeaderTitleImage} 
-              />
+              renderItemImage(
+                normalizeImageSource(instructor.profileImageUrl),
+                '',
+                styles.contentHeaderTitleImage
+              )
             ) : (
               <View style={[styles.contentHeaderTitleImage, { backgroundColor: colors.grayScale200 }]} />
             )}

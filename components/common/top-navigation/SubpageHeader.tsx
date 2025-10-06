@@ -11,6 +11,7 @@ interface SubpageHeaderProps {
   showBackButton?: boolean;
   onLayout?: (event: LayoutChangeEvent) => void;
   style?: StyleProp<ViewStyle>;
+  isBGColorDark?: boolean;
 }
 
 export const SUBPAGE_HEADER_HEIGHT = 48;
@@ -26,16 +27,17 @@ const SubpageHeader: React.FC<SubpageHeaderProps> = ({
   showBackButton = true,
   onLayout,
   style,
+  isBGColorDark = false,
 }) => (
   <View style={[styles.header, style]} onLayout={onLayout}>
     {showBackButton ? (
       <TouchableOpacity onPress={onBack} style={styles.backButton}>
-        <ArrowLeftIcon width={36} height={36} color={colors.grayScale800} />
+        <ArrowLeftIcon width={36} height={36} color={isBGColorDark ? colors.grayScale100 : colors.grayScale800} />
       </TouchableOpacity>
     ) : (
       <View style={styles.backButton} />
     )}
-    {title ? <Text style={styles.title}>{titleLineCombiner(title)}</Text> : <View style={{ flex: 1 }} />}
+    {title ? <Text style={[styles.title, {color: isBGColorDark ? colors.grayScale100 : colors.grayScale800}]}>{titleLineCombiner(title)}</Text> : <View style={{ flex: 1 }} />}
     {right ? right : <View style={styles.rightPlaceholder} />}
   </View>
 );
@@ -57,7 +59,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   title: {
-    color: colors.grayScale800,
     flex: 1,
     textAlign: 'center',
     ...typography.body1,

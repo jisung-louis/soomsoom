@@ -9,6 +9,7 @@ import { objectPosition, itemStyles } from '../../../constants/roomLayout';
 import { ss, sv } from '../../../utils/scale';
 import Shadow from '../../../assets/icons/items/default-background/shadow.svg'
 import { colors } from '../../../constants/colors';
+import { renderItemImage } from '../../../utils/imageUtils';
 
 export type UserRoomProps = {
   children: React.ReactNode;
@@ -285,7 +286,7 @@ const UserRoom = ({children, previewMode = false, previewItemIds = [], showPlace
           top: position.y,
           left: position.x,
         }]}> 
-        <Image source={item.image} style={imageStyle} />
+        {renderItemImage(item.image, '', imageStyle, undefined, imageStyle.width, imageStyle.height)}
       </View>
     );
   }, [itemMap]);

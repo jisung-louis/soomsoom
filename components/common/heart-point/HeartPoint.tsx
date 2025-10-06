@@ -7,13 +7,14 @@ import { colors } from '../../../constants/colors';
 interface HeartPointProps {
   money: string;
   onPress: () => void;
+  isBGColorDark?: boolean;
 }
 
-const HeartPoint = ({ money, onPress }: HeartPointProps) => {
+const HeartPoint = ({ money, onPress, isBGColorDark = false }: HeartPointProps) => {
   return (
     <TouchableOpacity style={styles.container} onPress={onPress}>
       <HeartIcon width={40} height={40} />
-      <Text style={styles.text}>{money}</Text>
+      <Text style={[styles.text, {color: isBGColorDark ? colors.grayScale100 : colors.grayScale800}]}>{money}</Text>
     </TouchableOpacity>
   );
 };
@@ -27,7 +28,6 @@ const styles = StyleSheet.create({
   },
   text: {
     ...typography.body1,
-    color: colors.grayScale900,
   },
 });
 

@@ -9,6 +9,7 @@ import { colors } from '../../../constants/colors';
 import { typography } from '../../../constants/typography';
 import HeartIcon from '../../../assets/icons/common/Heart.svg';
 import { normalizeImageSource } from '../../../utils/textUtils';
+import { renderItemImage } from '../../../utils/imageUtils';
 
 interface PurchaseItemListProps {
     item: {
@@ -33,7 +34,11 @@ const PurchaseItemList = ({ item, isChecked, onCheckPress, onXPress }: PurchaseI
                 <View style={styles.itemInfoContainer}>
                     <View style={styles.itemImageContainer}>
                         {item.image !== null && item.image !== undefined ? (
-                            <Image source={normalizeImageSource(item.image)} style={styles.itemImage} resizeMode='contain' />
+                            renderItemImage(
+                                normalizeImageSource(item.image),
+                                '',
+                                styles.itemImage
+                            )
                         ) : null}
                     </View>
                     <View style={styles.itemInfo}>

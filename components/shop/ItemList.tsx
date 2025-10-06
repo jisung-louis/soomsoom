@@ -6,6 +6,7 @@ import { colors } from '../../constants/colors';
 import { typography } from '../../constants/typography';
 import { radius } from '../../constants/radius';
 import { ss } from '../../utils/scale';
+import { renderItemImage, renderCollectionImage } from '../../utils/imageUtils';
 
 export type RoomItemLike = {
   id: number;
@@ -133,7 +134,18 @@ const ItemList: React.FC<Props> = ({ filteredItems, onItemPress, isOutOfStock, i
               <>
                 <View style={styles.collectionImage}>
                   {item.image !== null && (
-                    <Image source={item.image as any} style={styles.collectionImageInner} resizeMode="cover" />
+                    isBackground ? (
+                      renderItemImage(
+                        item.image,
+                        '배경',
+                        styles.collectionImageInner
+                      )
+                    ) : (
+                    renderCollectionImage(
+                      item.image,
+                      styles.collectionImageInner
+                    )
+                    )
                   )}
                 </View>
                 <View style={styles.collectionInfo}>
@@ -161,7 +173,11 @@ const ItemList: React.FC<Props> = ({ filteredItems, onItemPress, isOutOfStock, i
               <>
                 <View style={styles.itemImageContainer}>
                   {item.image !== null && (
-                    <Image source={item.image as any} style={[styles.itemImage, item.type === '배경' ? {width: '100%', height: '100%'} : {}]} resizeMode={item.type === '배경' ? "cover" : "contain"} />
+                    renderItemImage(
+                      item.image,
+                      item.type,
+                      [styles.itemImage, item.type === '배경' ? {width: '100%', height: '100%'} : {}]
+                    )
                   )}
                 </View>
                 <View style={styles.itemInfo}>
@@ -267,6 +283,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.grayScale100,
     borderRadius: radius.r12,
     overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   collectionImageInner: {
     width: '100%',

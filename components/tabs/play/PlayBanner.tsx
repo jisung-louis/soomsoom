@@ -11,6 +11,7 @@ import { Dimensions } from 'react-native';
 import CatCryIcon from '../../../assets/icons/charactors/cat-variation/cat_cry.svg';
 import { titleLineBreaker } from '../../../utils/textUtils';
 import { sv } from '../../../utils/scale';
+import { renderImageBackground } from '../../../utils/imageUtils';
 
 interface PlayBannerProps {
   style?: StyleProp<ViewStyle>;
@@ -68,10 +69,9 @@ const PlayBanner = ({ style, onPress, banners, isLoading = false }: PlayBannerPr
 
   const renderBannerItem = ({ item: banner }: { item: Banner }) => (
     <View style={styles.card}>
-      <ImageBackground
-        source={typeof banner.imageUrl === 'string' ? { uri: banner.imageUrl } : banner.imageUrl}
-        style={styles.image}
-      >
+      {renderImageBackground(
+        typeof banner.imageUrl === 'string' ? { uri: banner.imageUrl } : banner.imageUrl,
+        styles.image,
         <LinearGradient
           colors={['transparent', 'rgba(11, 11, 11, 0.6)']}
           style={styles.gradient}
@@ -92,7 +92,7 @@ const PlayBanner = ({ style, onPress, banners, isLoading = false }: PlayBannerPr
             />
           </View>
         </LinearGradient>
-      </ImageBackground>
+      )}
     </View>
   );
 
