@@ -6,6 +6,7 @@ buildscript {
     mavenCentral()
   }
   dependencies {
+        classpath 'com.google.gms:google-services:4.4.1'
     classpath('com.android.tools.build:gradle')
     classpath('com.facebook.react:react-native-gradle-plugin')
     classpath('org.jetbrains.kotlin:kotlin-gradle-plugin')
@@ -35,3 +36,28 @@ allprojects {
 
 apply plugin: "expo-root-project"
 apply plugin: "com.facebook.react.rootproject"
+// Force consistent Java/Kotlin toolchains across all modules (fixes JVM 17/21 mismatches)
+subprojects { sub ->
+  // Java toolchain
+  tasks.withType(JavaCompile).configureEach {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+  }
+
+  tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+    kotlinOptions {
+      jvmTarget = '17'
+      freeCompilerArgs += ['-Xjdk-release=17']
+    }
+  }
+
+  // Some libraries (e.g., react-native-image-colors) may still set a different target; re-assert here
+  if (sub.name == "react-native-image-colors") {
+    tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+      kotlinOptions {
+        jvmTarget = '17'
+        freeCompilerArgs += ['-Xjdk-release=17']
+      }
+    }
+  }
+}

@@ -6,7 +6,7 @@
     "orientation": "portrait",
     "icon": "./assets/app-icons/icon.png",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "splash": {
       "image": "./assets/app-icons/icon.png",
       "resizeMode": "cover",
@@ -35,11 +35,16 @@
         "foregroundImage": "./assets/app-icons/icon.png",
         "backgroundColor": "#ffaa33"
       },
+      "googleServicesFile": "./android/app/google-services.json",
       "edgeToEdgeEnabled": true,
       "package": "com.soomsoom.app",
       "permissions": [
         "android.permission.RECORD_AUDIO",
-        "android.permission.MODIFY_AUDIO_SETTINGS"
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "android.permission.POST_NOTIFICATIONS",
+        "android.permission.VIBRATE",
+        "android.permission.WAKE_LOCK",
+        "android.permission.FOREGROUND_SERVICE"
       ]
     },
     "web": {
@@ -78,10 +83,8 @@
       [
         "react-native-google-mobile-ads",
         {
-          "googleMobileAdsAppId": {
-            "ios": "ca-app-pub-4758709448782249~5612676219",
-            "android": "ca-app-pub-3940256099942544~3347511713"
-          }
+          "android_app_id": "ca-app-pub-3940256099942544~3347511713",
+          "ios_app_id": "ca-app-pub-3940256099942544~1458002511"
         }
       ],
       "@react-native-firebase/app"

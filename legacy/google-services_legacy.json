@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "818553600955",
+    "project_id": "soomsoom-a3dad",
+    "storage_bucket": "soomsoom-a3dad.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:818553600955:android:168ca9f34277dae4ea229e",
+        "android_client_info": {
+          "package_name": "com.soomsoom.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC4vrGsfzdoArU0WMuXJUZKdrjZ48YDZfs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -113,7 +113,7 @@ const ToastView: React.FC<ToastViewProps> = ({ message, theme, amount, iconType 
       <LottieView
         source={require('../../../assets/animations/heart_up.json')}
         autoPlay
-        loop
+        loop={false}
         onAnimationFinish={() => {
           console.log('Animation finished');
         }}

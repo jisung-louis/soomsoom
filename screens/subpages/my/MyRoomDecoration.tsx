@@ -352,7 +352,7 @@ const MyRoomDecoration = ({
                          )}
                          </View>
                         <View style={styles.itemInfo}>
-                          <Text style={styles.itemTitle}>{item.title}</Text>
+                          <Text style={styles.itemTitle} numberOfLines={1} ellipsizeMode='tail'>{item.title}</Text>
                           {!item.collectionOwned && (
                             <>
                               <View style={styles.itemPriceContainer}>
@@ -388,7 +388,7 @@ const MyRoomDecoration = ({
                           )}
                         </View>
                         <View style={styles.itemInfo}>
-                          <Text style={styles.itemTitle}>{item.title}</Text>
+                          <Text style={styles.itemTitle} numberOfLines={1} ellipsizeMode='tail'>{item.title}</Text>
                           {!isOwned(item.id) && (
                             <View style={styles.itemPriceContainer}>
                               <EmotionIcon width={16} height={16} />
@@ -420,7 +420,7 @@ const MyRoomDecoration = ({
                           )}
                         </View>
                         <View style={styles.itemInfo}>
-                          <Text style={styles.itemTitle}>{item.title}</Text>
+                          <Text style={styles.itemTitle} numberOfLines={1} ellipsizeMode='tail'>{item.title}</Text>
                           {!isOwned(item.id) && (
                             <View style={styles.itemPriceContainer}>
                               <EmotionIcon width={16} height={16} />
@@ -492,11 +492,13 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   itemInfo: {
+    width: ITEM_IMAGE_WIDTH,
     gap: 4,
   },
   itemTitle: {
     color: colors.grayScale700,
     textAlign: 'center',
+    width: '100%',
   },
   itemPriceContainer: {
     flexDirection: 'row',

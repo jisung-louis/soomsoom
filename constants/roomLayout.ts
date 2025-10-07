@@ -74,9 +74,9 @@ export const itemStyles = {
     position: 'absolute' as const,
     zIndex: zIndex.floor,
   },
-  floor: {
-    width: ss(290),
-    height: sv(112),
+  floor: { //이거
+    width: ss(294),
+    height: sv(116),
   },
   shadowStyle: {
     position: 'absolute' as const,

@@ -124,7 +124,7 @@ const HomeTab = () => {
       theme: 'dark',
       iconType: 'heart',
       hasAnimation: true,
-      duration: 900,
+      //duration: 900,
       amount: 10,
       style: {
         width: ss(335),

@@ -2,22 +2,18 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>CLIENT_ID</key>
-	<string>107458236623-0mru63ph97l3va5ru46hravkoo7r2q9q.apps.googleusercontent.com</string>
-	<key>REVERSED_CLIENT_ID</key>
-	<string>com.googleusercontent.apps.107458236623-0mru63ph97l3va5ru46hravkoo7r2q9q</string>
 	<key>API_KEY</key>
-	<string>AIzaSyAJJKW1_Hd0impW1X0IdLElbPP0L_McCPw</string>
+	<string>AIzaSyARZrzad3uwVs-5L9OcW0Xu_3NgFrilPTI</string>
 	<key>GCM_SENDER_ID</key>
-	<string>107458236623</string>
+	<string>818553600955</string>
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
 	<string>com.soomsoom.app</string>
 	<key>PROJECT_ID</key>
-	<string>soomsoom</string>
+	<string>soomsoom-a3dad</string>
 	<key>STORAGE_BUCKET</key>
-	<string>soomsoom.firebasestorage.app</string>
+	<string>soomsoom-a3dad.firebasestorage.app</string>
 	<key>IS_ADS_ENABLED</key>
 	<false></false>
 	<key>IS_ANALYTICS_ENABLED</key>
@@ -29,6 +25,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:107458236623:ios:869b0ed4efc0c098c3a7ba</string>
+	<string>1:818553600955:ios:ca4109283ed53812ea229e</string>
 </dict>
 </plist>

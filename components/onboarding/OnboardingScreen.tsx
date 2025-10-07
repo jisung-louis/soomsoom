@@ -7,7 +7,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { toggleNotificationSetting, updateDiaryNotificationTime } from '../../services/notificationService';
 import { registerDevice } from '../../services/notificationService';
 import { getFcmTokenAsync } from '../../services/authService';
-import { View, StyleSheet, ImageBackground, Platform } from 'react-native';
+import { View, StyleSheet, ImageBackground, Platform, PermissionsAndroid } from 'react-native';
 import { useOnboarding } from '../../hooks/useOnboarding';
 import { OnboardingStep } from './OnboardingStep';
 import { colors } from '../../constants/colors';
@@ -147,7 +147,23 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, initial
     } else if (currentStepData.id === 'onboarding06') {
       // 알림 권한 요청 후 허용 시 즉시 초기 스케줄링 수행
       try {
-       
+        // Android: 런타임 권한 요청
+        if (Platform.OS === 'android') {
+          try {
+            if (Platform.Version >= 33) {
+              const result = await PermissionsAndroid.request(
+                PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS
+              );
+              console.log('🧾 Android 알림 권한 결과(온보딩 step06):', result);
+            } else {
+              console.log('🧾 Android 알림 권한: Android 12 이하 - 런타임 요청 불필요');
+            }
+          } catch (err) {
+            console.warn('⚠️ Android 권한 요청 실패(온보딩 step06):', err);
+          }
+        }
+
+        // 알림 권한 요청
         const { status } = await Notifications.getPermissionsAsync();
         let final = status;
         if (status !== 'granted') {

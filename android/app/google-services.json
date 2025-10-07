@@ -1,0 +1,70 @@
+{
+  "project_info": {
+    "project_number": "107458236623",
+    "project_id": "soomsoom",
+    "storage_bucket": "soomsoom.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:107458236623:android:f941125426f48542c3a7ba",
+        "android_client_info": {
+          "package_name": "com.soomsoom.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "107458236623-a0dqm43t5tq3fiqcc20kk2rnagtt791d.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.soomsoom.app",
+            "certificate_hash": "f7b965bea21e589188e864b7507c95be289991e4"
+          }
+        },
+        {
+          "client_id": "107458236623-gue2t9uu87mu27egcmafa94j43a69ptt.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.soomsoom.app",
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+          }
+        },
+        {
+          "client_id": "107458236623-ri3h629k08b5se4m32a8oljutdrn9afd.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.soomsoom.app",
+            "certificate_hash": "54a72932bd16aac162ce54d9ad99db8222c52caf"
+          }
+        },
+        {
+          "client_id": "107458236623-5cc2h8h6ot6irjfnso4bmgrf2c8pi5sm.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBafceys8DWeNB6pBtSLKOjg9Rwe-pLxOg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "107458236623-5cc2h8h6ot6irjfnso4bmgrf2c8pi5sm.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "107458236623-0mru63ph97l3va5ru46hravkoo7r2q9q.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.soomsoom.app"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

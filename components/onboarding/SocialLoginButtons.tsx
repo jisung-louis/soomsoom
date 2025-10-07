@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 import { useAuth } from '../../hooks/useAuth';
 import GoogleIcon from '../../assets/images/onboarding/google_icon.svg';
 import AppleIcon from '../../assets/images/onboarding/apple_icon.svg';
@@ -42,6 +42,7 @@ export const SocialLoginButtons: React.FC<Props> = ({ onSuccess }) => {
         </Text>
       </TouchableOpacity>
       
+      {Platform.OS === 'ios' && (
       <TouchableOpacity 
         style={[styles.button, { backgroundColor: colors.black }]} 
         onPress={handleApple} 
@@ -53,6 +54,8 @@ export const SocialLoginButtons: React.FC<Props> = ({ onSuccess }) => {
           {loading === 'APPLE' ? '애플 로그인 중...' : '애플로 계속하기'}
         </Text>
       </TouchableOpacity>
+      )}
+
     </View>
   );
 };

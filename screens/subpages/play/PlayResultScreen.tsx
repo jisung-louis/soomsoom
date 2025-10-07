@@ -59,6 +59,7 @@ const PlayResultScreen = ({route}: {route: RouteProp<PlayStackParamList, 'PlayRe
                         textAlign: 'center',
                     },
                     iconSize: ss(32),
+                    hasAnimation: true,
                 });
                 const readHeartPoints = await getUserPoints();
                 useCurrencyStore.getState().setHeartPoints(readHeartPoints.points);
