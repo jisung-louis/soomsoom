@@ -2,7 +2,7 @@
   "expo": {
     "name": "숨숨",
     "slug": "soomsoom",
-    "version": "0.1.10",
+    "version": "0.1.12",
     "orientation": "portrait",
     "icon": "./assets/app-icons/icon.png",
     "userInterfaceStyle": "light",
@@ -15,7 +15,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.soomsoom.app",
-      "buildNumber": "1",
+      "buildNumber": "2",
       "usesAppleSignIn": true,
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
