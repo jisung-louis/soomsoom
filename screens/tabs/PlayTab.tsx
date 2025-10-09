@@ -10,7 +10,7 @@ import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { PlayStackParamList } from '../../navigations/tabs/PlayStackNavigator';
 import { colors } from '../../constants/colors';
-import { getActivitiesByType, Activity, getActivities } from '../../services/contentService';
+import { getActivitiesByType, Activity, getActivities, getActivitiesByCategory } from '../../services/contentService';
 import { getActiveBanners } from '../../services/bannerService';
 import { Banner } from '../../types';
 import { ButtonSmall } from '../../components/common/buttons/ButtonSmall';
@@ -35,20 +35,21 @@ const PlayTab = () => {
         setIsLoading(true);
         
         // 병렬로 데이터 로딩
-        const [shortActivityResponse, breathingActivitiesResponse, meditationActivitiesResponse, bannersResponse] = await Promise.all([
-          getActivitiesByType('BREATHING'), // 호흡 타입 액티비티 가져오기
+        const [breathingActivitiesResponse, meditationActivitiesResponse, bannersResponse] = await Promise.all([
           getActivitiesByType('BREATHING'), // 호흡 타입 액티비티
           getActivitiesByType('MEDITATION'), // 명상 타입 액티비티
           getActiveBanners(), // 활성 배너 목록 가져오기
         ]);
-        
         // BREATHING과 MEDITATION 액티비티를 합쳐서 랜덤으로 5개 선택
         const combinedActivities = [...breathingActivitiesResponse.content, ...meditationActivitiesResponse.content];
         const shuffled = combinedActivities.sort(() => 0.5 - Math.random());
         const randomFive = shuffled.slice(0, 5);
+
+        // const GET_ALL_ACTIVITIES = await getActivities({ page: 1, size: 1000 });
+        // console.log('🔍 모든 액티비티:', JSON.stringify(GET_ALL_ACTIVITIES.content, null, 2));
         
-        setShortActivityData(shortActivityResponse.content); // 회복을 위한 짧은 5분!
-        console.log('🔍 회복을 위한 짧은 5분:', JSON.stringify(shortActivityResponse.content, null, 2));
+        setShortActivityData(breathingActivitiesResponse.content); // 회복을 위한 짧은 5분!
+        console.log('🔍 회복을 위한 짧은 5분:', JSON.stringify(breathingActivitiesResponse.content, null, 2));
         setRecommendedActivityData(randomFive); // 나를 위한 추천 콘텐츠
         setBannerData(bannersResponse); // 모든 배너 표시
         console.log('🔍 배너 데이터:', JSON.stringify(bannersResponse, null, 2));

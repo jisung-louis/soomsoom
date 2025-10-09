@@ -191,8 +191,10 @@ export const getActivitiesByType = async (
   type: ActivityType,
   params?: Omit<GetActivitiesParams, 'type'>
 ): Promise<ActivitiesResponse> => {
-  // 서버가 type 파라미터를 지원하므로 서버 필터 사용
-  return getActivities({ ...(params || {}), type });
+  // 모든 값을 비교/활용할 수 있도록 기본적으로 큰 페이지 사이즈로 조회
+  const page = params?.page ?? 1;
+  const size = params?.size ?? 100; // 백엔드 허용 최대 사이즈에 맞춰 필요 시 조정
+  return getActivities({ ...(params || {}), page, size, type });
 };
 
 /**
@@ -202,8 +204,10 @@ export const getActivitiesByCategory = async (
   category: ActivityCategory,
   params?: Omit<GetActivitiesParams, 'category'>
 ): Promise<ActivitiesResponse> => {
-  // 서버가 category 파라미터를 지원하므로 서버 필터 사용
-  return getActivities({ ...(params || {}), category });
+  // 모든 값을 비교/활용할 수 있도록 기본적으로 큰 페이지 사이즈로 조회
+  const page = params?.page ?? 1;
+  const size = params?.size ?? 100; // 백엔드 허용 최대 사이즈에 맞춰 필요 시 조정
+  return getActivities({ ...(params || {}), page, size, category });
 };
 
 

@@ -387,7 +387,7 @@ const MyRoomDecoration = ({
                             styles.collectionItemImage
                           )}
                         </View>
-                        <View style={styles.itemInfo}>
+                        <View style={[styles.itemInfo, {width: COLLECTION_IMAGE_WIDTH}]}>
                           <Text style={styles.itemTitle} numberOfLines={1} ellipsizeMode='tail'>{item.title}</Text>
                           {!isOwned(item.id) && (
                             <View style={styles.itemPriceContainer}>

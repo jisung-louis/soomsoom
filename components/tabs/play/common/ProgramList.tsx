@@ -52,7 +52,7 @@ const ProgramList = ({ programData }: { programData: Activity[] }) => {
               <View style={styles.cardContent}>
                 <View style={styles.textHeader}>
                   <Badge title={categoryToString(item.category)} />
-                  <MoreIcon color={colors.grayScale300} />
+                  {/* <MoreIcon color={colors.grayScale300} /> */}
                 </View>
                 <View style={styles.cardTitleAndTimeContainer}>
                   <View style={styles.cardTitleContainer}>

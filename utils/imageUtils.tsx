@@ -109,6 +109,7 @@ export const renderCollectionImage = (
     isCollection: true,
     style,
     itemContainerSize,
+    resizeMode: 'cover',
   });
 };
 

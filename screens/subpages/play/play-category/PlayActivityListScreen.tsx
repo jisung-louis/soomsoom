@@ -16,6 +16,7 @@ const PlayActivityListScreen = ({route}: {route: RouteProp<PlayStackParamList, '
   const { title: initialTitle, content: initialContent } = route.params;
   const navigation = useNavigation<StackNavigationProp<PlayStackParamList>>();
   const handleBack = () => {
+    console.log('🔍 handleBack');
     navigation.goBack();
   };
   

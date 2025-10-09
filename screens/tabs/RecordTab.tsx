@@ -280,7 +280,7 @@ const RecordTab = () => {
   const onToActivityPress = useCallback(() => {
     // 하단 탭 네비게이터로 올라가 Play 탭으로 전환
     handleActivityInducingClose();
-    setTimeout(() => navigation.getParent()?.navigate('play' as never), 120);
+    setTimeout(() => (navigation.getParent() as any)?.navigate('play', { screen: 'PlayActivityListScreen', params: { title: '호흡', content: [] } }), 120);
   }, [navigation, handleActivityInducingClose]);
 
   const handlePastDayPress = useCallback((date: dayjs.Dayjs) => {
