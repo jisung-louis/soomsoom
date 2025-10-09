@@ -46,6 +46,7 @@ const PlayBreathContentScreen = ({route}: {route: RouteProp<PlayStackParamList, 
     } = useAudioPlayer({
         source: audioSource as any,
         autoPlay: true,
+      enableBackgroundControls: false, // 백그라운드 컨트롤 비활성화
         content: content,
         onEnd: () => {
             console.log('🌀 호흡 오디오 종료');

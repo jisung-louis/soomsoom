@@ -70,6 +70,7 @@ const PlayRestScreen = ({route}: {route: RouteProp<PlayStackParamList, 'PlayRest
   } = useAudioPlayer({
     source: audioSource as any,
     autoPlay: true,
+    enableBackgroundControls: true, // 백그라운드 컨트롤 활성화
     repeat: true,
     content: content,
     onEnd: () => {

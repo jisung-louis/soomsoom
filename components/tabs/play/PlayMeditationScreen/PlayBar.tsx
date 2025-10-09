@@ -70,6 +70,7 @@ const PlayBar = ({
     source: content.audioUrl,
     content: content,
     repeat: isRepeat,
+    enableBackgroundControls: false, // 백그라운드 컨트롤 비활성화
     onEnd: () => {
       console.log('🌀 onEnd triggered');
       if (!isRepeatRef.current) {

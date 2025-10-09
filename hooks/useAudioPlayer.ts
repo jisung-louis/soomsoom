@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import TrackPlayer, { State, Event, Capability } from 'react-native-track-player';
+import { AppState, AppStateStatus } from 'react-native';
+import TrackPlayer, { State, Event, Capability, AppKilledPlaybackBehavior } from 'react-native-track-player';
 import { 
   setupTrackPlayerEvents, 
   addTrack, 
@@ -24,6 +25,7 @@ export interface UseAudioPlayerOptions {
   repeat?: boolean;
   onJumpForward?: (seconds: number) => void;
   onJumpBackward?: (seconds: number) => void;
+  enableBackgroundControls?: boolean; // 제어센터/잠금화면 컨트롤 활성화 여부
 }
 
 export interface UseAudioPlayerResult {
@@ -43,7 +45,7 @@ export interface UseAudioPlayerResult {
   player: any; // Track Player는 직접 접근하지 않음
 }
 
-export function useAudioPlayer({ source, content, autoPlay = false, onEnd, repeat = false, onJumpForward, onJumpBackward }: UseAudioPlayerOptions): UseAudioPlayerResult {
+export function useAudioPlayer({ source, content, autoPlay = false, onEnd, repeat = false, onJumpForward, onJumpBackward, enableBackgroundControls = true }: UseAudioPlayerOptions): UseAudioPlayerResult {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [duration, setDuration] = useState(0);
@@ -56,6 +58,7 @@ export function useAudioPlayer({ source, content, autoPlay = false, onEnd, repea
   const currentTrackId = useRef<string | null>(null);
   const positionUpdateInterval = useRef<NodeJS.Timeout | null>(null);
   const cleanupRef = useRef<(() => void) | null>(null);
+  const appStateListenerRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     isMounted.current = true;
@@ -67,6 +70,10 @@ export function useAudioPlayer({ source, content, autoPlay = false, onEnd, repea
       }
       if (cleanupRef.current) {
         cleanupRef.current();
+      }
+      if (appStateListenerRef.current) {
+        try { appStateListenerRef.current(); } catch {}
+        appStateListenerRef.current = null;
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -83,33 +90,48 @@ export function useAudioPlayer({ source, content, autoPlay = false, onEnd, repea
         return;
       }
 
-      // 백그라운드 컨트롤 다시 활성화 (cleanupTrackPlayer 후 재진입 시 필요)
-      await TrackPlayer.updateOptions({
-        capabilities: [
-          Capability.Play,
-          Capability.Pause,
-          Capability.Stop,
-          Capability.SeekTo,
-          Capability.JumpForward,
-          Capability.JumpBackward,
-        ],
-        compactCapabilities: [
-          Capability.Play,
-          Capability.Pause,
-          Capability.JumpForward,
-          Capability.JumpBackward,
-        ],
-        notificationCapabilities: [
-          Capability.Play,
-          Capability.Pause,
-          Capability.Stop,
-          Capability.JumpForward,
-          Capability.JumpBackward,
-        ],
-        forwardJumpInterval: 5,
-        backwardJumpInterval: 5,
-      });
-      console.log('🔄 백그라운드 컨트롤 다시 활성화');
+      // 백그라운드 컨트롤 설정 (화면별 정책 적용)
+      if (enableBackgroundControls) {
+        await TrackPlayer.updateOptions({
+          capabilities: [
+            Capability.Play,
+            Capability.Pause,
+            Capability.Stop,
+            Capability.SeekTo,
+            Capability.JumpForward,
+            Capability.JumpBackward,
+          ],
+          compactCapabilities: [
+            Capability.Play,
+            Capability.Pause,
+            Capability.JumpForward,
+            Capability.JumpBackward,
+          ],
+          notificationCapabilities: [
+            Capability.Play,
+            Capability.Pause,
+            Capability.Stop,
+            Capability.JumpForward,
+            Capability.JumpBackward,
+          ],
+          android: {
+            appKilledPlaybackBehavior: AppKilledPlaybackBehavior.ContinuePlayback,
+          },
+          forwardJumpInterval: 5,
+          backwardJumpInterval: 5,
+        });
+        console.log('🔄 백그라운드 컨트롤 활성화');
+      } else {
+        await TrackPlayer.updateOptions({
+          capabilities: [],
+          compactCapabilities: [],
+          notificationCapabilities: [],
+          android: {
+            appKilledPlaybackBehavior: AppKilledPlaybackBehavior.StopPlaybackAndRemoveNotification,
+          },
+        });
+        console.log('🚫 백그라운드 컨트롤 비활성화');
+      }
 
       // 기존 큐 초기화
       await resetQueue();
@@ -237,6 +259,27 @@ export function useAudioPlayer({ source, content, autoPlay = false, onEnd, repea
       setIsLoading(false);
     }
   };
+
+  // 백그라운드 재생 비활성화 모드: 앱이 비활성/백그라운드로 갈 때 즉시 일시정지
+  useEffect(() => {
+    if (!enableBackgroundControls) {
+      const onChange = (nextState: AppStateStatus) => {
+        if (
+          //nextState === 'inactive'
+           //|| 
+           nextState === 'background'
+          ) {
+          // 백그라운드 진입 시 일시정지만 수행
+          pauseTrack().catch(() => {});
+        }
+      };
+      const sub = AppState.addEventListener('change', onChange);
+      appStateListenerRef.current = () => sub.remove();
+      return () => {
+        try { sub.remove(); } catch {}
+      };
+    }
+  }, [enableBackgroundControls]);
 
   // Track Player API를 사용한 함수들
   const play = useCallback(async () => { 

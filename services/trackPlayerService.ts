@@ -9,41 +9,13 @@ export async function setupTrackPlayer() {
       autoHandleInterruptions: true,
     });
 
-    // 백그라운드 재생을 위한 설정
+    // 기본값은 백그라운드 컨트롤/노티 비활성화 (화면에서 필요 시 활성화)
     await TrackPlayer.updateOptions({
-      capabilities: [
-        Capability.Play,
-        Capability.Pause,
-        Capability.Stop,
-        Capability.SeekTo,
-        Capability.SkipToNext,
-        Capability.SkipToPrevious,
-        Capability.JumpForward,
-        Capability.JumpBackward,
-      ],
-      // 백그라운드 재생을 위한 설정
-      compactCapabilities: [
-        Capability.Play,
-        Capability.Pause,
-        Capability.Stop,
-        Capability.SeekTo,
-        Capability.JumpForward,
-        Capability.JumpBackward,
-      ],
-      // 잠금화면 컨트롤을 위한 설정
-      notificationCapabilities: [
-        Capability.Play,
-        Capability.Pause,
-        Capability.Stop,
-        Capability.SeekTo,
-        Capability.SkipToNext,
-        Capability.SkipToPrevious,
-        Capability.JumpForward,
-        Capability.JumpBackward,
-      ],
-      // 백그라운드 재생을 위한 추가 설정
+      capabilities: [],
+      compactCapabilities: [],
+      notificationCapabilities: [],
       android: {
-        appKilledPlaybackBehavior: AppKilledPlaybackBehavior.ContinuePlayback,
+        appKilledPlaybackBehavior: AppKilledPlaybackBehavior.StopPlaybackAndRemoveNotification,
         alwaysPauseOnInterruption: false,
       },
       forwardJumpInterval: 5,
