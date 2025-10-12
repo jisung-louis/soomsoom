@@ -184,6 +184,11 @@ const MyTab = () => {
     return achieved;
   }, [cache]);
 
+  // 업적 데이터 로딩 상태 (cache가 비어있으면 아직 로딩 중)
+  const isAchievementsLoading = useMemo(() => {
+    return cache.size === 0;
+  }, [cache.size]);
+
   // 3의 배수로 맞추기 위한 데이터 (placeholder 포함)
   const achievementDataWithPlaceholders = useMemo(() => {
     const data: Array<{id: number | string, name: string, grade: string}> = [...achievedAchievements];
@@ -513,13 +518,18 @@ const MyTab = () => {
   const isBGColorDark = useBgTopColor(roomBgUri);
 
   const achievementCardHeight = useMemo(() => {
+    // 로딩 중이면 기본 높이 사용 (레이아웃 점프 방지)
+    if (isAchievementsLoading) {
+      return 1000; // 빈 업적 카드 높이(239)
+    }
+    
     const length = achievedAchievements.length;
     if (length === 0) return 239; // 빈 업적 카드 높이(239)
     else {
       const rowCount = Math.floor(length / 3);
       return 72 + ( 94 * rowCount); // 업적 카드 높이(72) + 업적 카드 개수(94) * 행 개수(rowCount)
     }
-  }, [achievedAchievements]);
+  }, [achievedAchievements, isAchievementsLoading]);
 
   return (
     <View style={[styles.container, { backgroundColor: dynamicBgColor }]}>
