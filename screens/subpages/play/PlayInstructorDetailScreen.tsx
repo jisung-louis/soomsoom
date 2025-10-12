@@ -146,7 +146,7 @@ const PlayInstructorDetailScreen: React.FC = () => {
         <View style={styles.contentContainer}>
           <View style={styles.contentHeader}>
             {renderItemImage(
-              normalizeImageSource(instructor.profileImageUrl) || require('../../../assets/images/common/default_profile_image.png'),
+              normalizeImageSource(instructor.profileImageUrl || require('../../../assets/images/common/default_profile_image.png')),
               '',
               styles.contentHeaderTitleImage
             )}
@@ -208,15 +208,13 @@ const PlayInstructorDetailScreen: React.FC = () => {
       <ScrollView contentContainerStyle={{flexGrow: 1, paddingBottom: 100}}>
       <View style={styles.contentContainer}>
         <View style={styles.contentHeader}>
-            {instructor.profileImageUrl ? (
+            {
               renderItemImage(
-                normalizeImageSource(instructor.profileImageUrl),
+                normalizeImageSource(instructor.profileImageUrl || require('../../../assets/images/common/default_profile_image.png')),
                 '',
                 styles.contentHeaderTitleImage
               )
-            ) : (
-              <View style={[styles.contentHeaderTitleImage, { backgroundColor: colors.grayScale200 }]} />
-            )}
+            }
             <Text style={styles.contentHeaderTitle}>{instructor.name}</Text>
         </View>
         <Text style={styles.bio}>{instructor.bio}</Text>

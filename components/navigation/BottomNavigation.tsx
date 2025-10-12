@@ -21,6 +21,7 @@ interface BottomNavigationProps {
 
 export const BottomNavigation: React.FC<BottomNavigationProps> = (props) => {
   const { selectedTab, onTabPress, style } = props;
+  // height : 126
   return (
     <SafeAreaView edges={["bottom"]} style={[styles.safeArea, style]}>
       <View style={styles.container}>

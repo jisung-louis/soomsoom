@@ -18,7 +18,7 @@ const AccountInfoScreen = () => {
     const navigation = useNavigation();
     const { showToast } = useToast();
     const { lastProviderToken, role } = useAuthStore();
-    const { logout } = useAuth();
+    const { logout, deleteAccount, loading } = useAuth();
     const { resetOnboarding } = useOnboarding();
     const { showSocialLoginModal } = useSocialLogin();
     const [confirmVisible, setConfirmVisible] = React.useState(false);
@@ -51,16 +51,30 @@ const AccountInfoScreen = () => {
     const handleWithdraw = () => {
         console.log('회원탈퇴 버튼 클릭');
         Alert.alert(
-            '회원탈퇴',
-            '는 아직 구현되지 않았어요 ...',
+            '정말로 탈퇴하시겠어요?',
+            '\n탈퇴하시면 모든 데이터가 삭제되고 \n복구할 수 없어요.',
             [
-                { text: '뒤로가기', style: 'destructive', onPress: () => {
-                    console.log('회원탈퇴 버튼 클릭');
+                { text: '탈퇴', style: 'destructive', onPress: async () => {
+                    try {
+                        console.log('회원탈퇴 실행 중...');
+                        const result = await deleteAccount();
+                        if (result.success) {
+                            console.log('회원탈퇴 완료');
+                            // deleteAccount에서 이미 토스트 메시지와 상태 초기화를 처리함
+                        } else {
+                            console.error('회원탈퇴 실패:', result.error);
+                        }
+                    } catch (error) {
+                        console.error('회원탈퇴 중 에러:', error);
+                        showToast({ message: '회원탈퇴 중 문제가 발생했어요.' });
+                    }
+                } },
+                { text: '뒤로가기', style: 'cancel', onPress: () => {
+                    console.log('회원탈퇴 취소 버튼 클릭');
                 } }
             ],
             { cancelable: true }
         );
-        //TODO:회원탈퇴 기능 구현
     };
 
   return (
@@ -83,12 +97,23 @@ const AccountInfoScreen = () => {
                 </TouchableOpacity>
             </View>
             <Surface height={1} color={colors.grayScale100}/>
+            {isSocialLogin && (
             <View style={styles.settingItem}>
                 <Text style={styles.withdrawText}>회원정보를 삭제하시겠어요?</Text>
-                <TouchableOpacity onPress={handleWithdraw}>
-                    <Text style={styles.withdrawText}>회원탈퇴</Text>
+                <TouchableOpacity 
+                    onPress={handleWithdraw}
+                    disabled={loading === 'DELETE'}
+                    style={loading === 'DELETE' ? styles.disabledButton : null}
+                >
+                    <Text style={[
+                        styles.withdrawText,
+                        loading === 'DELETE' && styles.disabledText
+                    ]}>
+                        {loading === 'DELETE' ? '탈퇴 중...' : '회원탈퇴'}
+                    </Text>
                 </TouchableOpacity>
             </View>
+            )}
         </View>
 
         {/* 확인 모달 */}
@@ -151,6 +176,12 @@ const styles = StyleSheet.create({
     withdrawText: {
         ...typography.body5,
         color: colors.grayScale400,
+    },
+    disabledButton: {
+        opacity: 0.5,
+    },
+    disabledText: {
+        color: colors.grayScale300,
     },
 });
 

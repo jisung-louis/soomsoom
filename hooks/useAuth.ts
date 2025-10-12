@@ -8,6 +8,7 @@ import {
   postSocialLogin, 
   postDeviceLogin, 
   postLogout,
+  deleteUser,
   SocialProvider,
   getFcmTokenAsync,
   onFcmTokenRefresh
@@ -33,7 +34,7 @@ import { ss, sv } from '../utils/scale';
 export const useAuth = () => {
   const { showToast } = useToast();
   const setSession = useAuthStore(s => s.setSession);
-  const [loading, setLoading] = useState<'GOOGLE' | 'APPLE' | 'DEVICE' | 'LOGOUT' | null>(null);
+  const [loading, setLoading] = useState<'GOOGLE' | 'APPLE' | 'DEVICE' | 'LOGOUT' | 'DELETE' | null>(null);
   const { setPhase } = useAuthStore();
 
 
@@ -89,7 +90,8 @@ export const useAuth = () => {
    * 플로우:
    * 1. 소셜 로그인 수행 (구글/애플)
    * 2. 서버에서 토큰 교환 (postSocialLogin)
-   * 3. postSocialLogin 성공 후 기존 디바이스 세션 로그아웃
+   * 3. postSocialLogin 성공 후 기존 디바이스 세션 로그아웃 
+   * (기존 디바이스 로그인이 되어있지 않은 상태라면, 우선 디바이스 로그인부터 실행 (항상 소셜로그인 전에는 디바이스 로그인이 되어있어야 함))
    * 4. 새 세션 설정
    * 
    * 안전성: postSocialLogin이 성공한 후에만 디바이스 로그아웃을 수행하여
@@ -111,6 +113,7 @@ export const useAuth = () => {
       console.log(deviceId)
       let tokens;
       try {
+        await deviceLogin();
         tokens = await postSocialLogin({ provider, providerToken, deviceId });
       } catch (err: any) {
         const msg = String(err?.message ?? '');
@@ -262,6 +265,102 @@ export const useAuth = () => {
   }, [setSession, setPhase]);
 
   /**
+   * 회원탈퇴
+   * 서버에서 계정을 완전히 삭제하고 로컬 상태를 초기화
+   */
+  const deleteAccount = async () => {
+    try {
+      setLoading('DELETE');
+      console.log('🗑️ 회원탈퇴 시작...');
+      
+      // FCM 토큰 해지 (서버 탈퇴 전에 시도, 실패해도 계속 진행)
+      console.log('📱 FCM 토큰 해지 중...');
+      try {
+        await unregisterFcmToken();
+      } catch (fcmError) {
+        console.warn('⚠️ FCM 토큰 해지 실패 (무시하고 계속):', fcmError);
+      }
+      
+      const currentTokens = useAuthStore.getState().tokens;
+      if (currentTokens?.refreshToken) {
+        // 서버에서 계정 삭제
+        console.log('🗑️ 서버에서 계정 삭제 중...');
+        await deleteUser(currentTokens.refreshToken);
+        console.log('✅ 서버 계정 삭제 완료');
+      }
+      
+      // 로컬 상태 초기화
+      useAuthStore.getState().logout();
+      
+      // 앱 상태 완전 초기화 (캐시, 스토어 등)
+      await resetAppState(true); // true = 완전 초기화
+      
+      // deviceId 회전 (새 UUID 발급)
+      try {
+        await rotateInstallUuid();
+        console.log('🔄 deviceId 회전 완료 (회원탈퇴)');
+      } catch (e) {
+        console.warn('⚠️ deviceId 회전 실패(무시):', e);
+      }
+      
+      console.log('✅ 회원탈퇴 완료');
+      showToast({ 
+        message: '회원탈퇴가 완료되었어요. 이용해주셔서 감사합니다.',
+        textStyle: {
+          ...typography.body5,
+        },
+        style: {
+          width: 'auto',
+          height: 'auto',
+        },
+      });
+      setPhase('logged_out');
+      return { success: true };
+    } catch (error: any) {
+      console.error('회원탈퇴 에러:', error);
+      setPhase('logged_out');
+      
+      // FCM 토큰 해지 (에러 상황에서도 시도)
+      try {
+        console.log('📱 FCM 토큰 해지 중...');
+        await unregisterFcmToken();
+      } catch (fcmError) {
+        console.error('❌ FCM 토큰 해지 실패 (에러 상황):', fcmError);
+      }
+      
+      // 서버 탈퇴 실패해도 로컬 상태는 초기화
+      useAuthStore.getState().logout();
+      
+      // 앱 상태 완전 초기화
+      await resetAppState(true);
+      
+      // deviceId 회전
+      try {
+        await rotateInstallUuid();
+        console.log('🔄 deviceId 회전 완료 (회원탈퇴 에러 상황)');
+      } catch (e) {
+        console.warn('⚠️ deviceId 회전 실패(무시):', e);
+      }
+      
+      // 에러 타입별 구체적인 메시지 제공
+      let errorMessage = '회원탈퇴에 실패했어요.';
+      
+      if (error?.message?.includes('네트워크')) {
+        errorMessage = '네트워크 연결을 확인해주세요.';
+      } else if (error?.message?.includes('권한')) {
+        errorMessage = '회원탈퇴 권한이 없어요.';
+      } else if (error?.message?.includes('서버')) {
+        errorMessage = '서버에 문제가 있어요. 잠시 후 다시 시도해주세요.';
+      }
+      
+      showToast({ message: errorMessage });
+      return { success: false, error };
+    } finally {
+      setLoading(null);
+    }
+  };
+
+  /**
    * 로그아웃
    * 현재 세션을 서버에서 무효화하고 로컬 상태를 초기화
    */
@@ -337,6 +436,7 @@ export const useAuth = () => {
     socialLogin,
     deviceLogin,
     logout,
+    deleteAccount, // 회원탈퇴 함수 추가
     registerFcmToken, // FCM 토큰 등록 함수 노출
     
     // 상태

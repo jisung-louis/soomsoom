@@ -181,3 +181,7 @@ export async function getPushTokenAsync(): Promise<string | null> { // DEPRECATE
 export async function postLogout(refreshToken: string): Promise<void> { // 리프레시 토큰 사용하여 로그아웃
   return await apiClient.post<void>('/auth/logout', { refreshToken });
 }
+
+export async function deleteUser(refreshToken: string): Promise<void> {
+  return await apiClient.delete<void>('/users/me', { refreshToken });
+}

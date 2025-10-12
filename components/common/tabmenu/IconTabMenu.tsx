@@ -61,7 +61,7 @@ const styles = StyleSheet.create({
   },
   tabMenu: {
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
   },
   tabMenuIcon: {
     opacity: 1,

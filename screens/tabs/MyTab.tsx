@@ -9,7 +9,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { MyStackParamList } from '../../navigations/tabs/MyStackNavigator';
 import { useRef } from 'react';
 import { BottomSheetModal, WINDOW_HEIGHT } from '@gorhom/bottom-sheet';
-import { ss, sv } from '../../utils/scale';
+import { ss, sv, sy } from '../../utils/scale';
 import MyTabTopNavigation from '../../components/common/top-navigation/MyTabTopNavigation';
 import { useCurrencyStore } from '../../stores/currencyStore';
 import { syongsyongTypography } from '../../constants/typography';
@@ -39,6 +39,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { useBackgroundColor, useBgTopColor } from '../../hooks/useBackgroundColor';
 import { eventBus, APP_EVENTS } from '../../utils/eventBus';
 import { useNotificationQueueProcessor } from '../../hooks/useNotificationQueueProcessor';
+import ToastView from '../../components/common/toast/ToastView';
 
 const mockStatusData = [
     { title: '기록', valueType: '회', value: null },
@@ -511,6 +512,15 @@ const MyTab = () => {
 
   const isBGColorDark = useBgTopColor(roomBgUri);
 
+  const achievementCardHeight = useMemo(() => {
+    const length = achievedAchievements.length;
+    if (length === 0) return 239; // 빈 업적 카드 높이(239)
+    else {
+      const rowCount = Math.floor(length / 3);
+      return 72 + ( 94 * rowCount); // 업적 카드 높이(72) + 업적 카드 개수(94) * 행 개수(rowCount)
+    }
+  }, [achievedAchievements]);
+
   return (
     <View style={[styles.container, { backgroundColor: dynamicBgColor }]}>
         <MyTabTopNavigation
@@ -542,77 +552,88 @@ const MyTab = () => {
             previewMode={isEditMode}
             previewItemIds={isEditMode ? editModeSelectedItems : []}
             onBackgroundImageUri={setRoomBgUri}
+            myTabEditMode={isEditMode}
+            achievementCardHeight={achievementCardHeight}
             >
             <View style={{marginTop: sv(176)}}>{/* 176(figma 기준) 아래로 전체 컨텐츠 이동 */}
                 {!isEditMode && (
-                <View style={[styles.content, {marginTop: sv(438)}]}>
-                    <Button 
-                    title="방 꾸미기" 
-                    variant='active' 
-                    size='large' 
-                    textStyle={{...typography.body1}}
-                    style={styles.button} 
-                    onPress={() => {enterEditMode()}}
+                  <>
+                  {!isSocialLogin && (
+                    <ToastView
+                      message="계정을 연동하면 데이터를 안전하게 저장할 수 있어요!"
+                      theme="dark"
+                      iconType="none"
+                      hasAnimation={false}
+                      style={styles.nonmemberToast}
                     />
-                    <View style={styles.cardContainer}>
-                        <View style={styles.statusCardHeader}>
-                            <View style={styles.statusCardHeaderLeft}>
-                              <Text style={styles.cardHeaderNameText}>야옹이님</Text>
-                              <Text style={styles.cardHeaderIdText}>ID : {deviceId || '로드 중...'}</Text>
-                            </View>
-                            {/* TODO: 연동 기능 추가 */}
-                            <View style={styles.statusCardHeaderRight}>
-                              <ToggleButton
-                                defaultTitle=""
-                                activeTitle={isSocialLogin ? "연동완료" : "연동하기"}
-                                isActive
-                                checkIcon={isSocialLogin}
-                                onPress={!isSocialLogin ? logout : () => {}}
-                                />
-                            </View>
-                        </View>
-                        <View style={styles.statusCardContent}>
-                            {statusData.map((item, index) => (
-                            <View style={styles.statusCardContentItem} key={index}>
-                                <Text style={styles.statusCardContentItemTitle}>{item.title}</Text>
-                                <Text style={styles.statusCardContentItemValue}>{item.valueType === 'hh:mm' ? (item.value === '00:00' ? '-' : item.value) : (item.value === 0 ? '-' : `${item.value}${item.valueType}`)}</Text>
-                            </View>
-                            ))}
-                        </View>
-                    </View>
+                  )}
+                  <View style={[styles.content, {marginTop: sv(438)}]}>
+                      <Button 
+                      title="방 꾸미기" 
+                      variant='active' 
+                      size='large' 
+                      textStyle={{...typography.body1}}
+                      style={styles.button} 
+                      onPress={() => {enterEditMode()}}
+                      />
+                      <View style={styles.cardContainer}>
+                          <View style={styles.statusCardHeader}>
+                              <View style={styles.statusCardHeaderLeft}>
+                                <Text style={styles.cardHeaderNameText}>야옹이님</Text>
+                                <Text style={styles.cardHeaderIdText}>ID : {deviceId || '로드 중...'}</Text>
+                              </View>
+                              {/* TODO: 연동 기능 추가 */}
+                              <View style={styles.statusCardHeaderRight}>
+                                <ToggleButton
+                                  defaultTitle=""
+                                  activeTitle={isSocialLogin ? "연동완료" : "연동하기"}
+                                  isActive
+                                  checkIcon={isSocialLogin}
+                                  onPress={!isSocialLogin ? logout : () => {}}
+                                  />
+                              </View>
+                          </View>
+                          <View style={styles.statusCardContent}>
+                              {statusData.map((item, index) => (
+                              <View style={styles.statusCardContentItem} key={index}>
+                                  <Text style={styles.statusCardContentItemTitle}>{item.title}</Text>
+                                  <Text style={styles.statusCardContentItemValue}>{item.valueType === 'hh:mm' ? (item.value === '00:00' ? '-' : item.value) : (item.value === 0 ? '-' : `${item.value}${item.valueType}`)}</Text>
+                              </View>
+                              ))}
+                          </View>
+                      </View>
 
-                    <View style={styles.cardContainer}>
-                        <TouchableOpacity style={styles.achievementCardHeader} onPress={() => {navigation.navigate('MyAchievementScreen')}}>
-                            <Text style={{...syongsyongTypography.title5}}>업적</Text>
-                            <ArrowRight width={24} height={24} fill={colors.grayScale800} />
-                        </TouchableOpacity>
-                        {achievedAchievements.length > 0 ? (
-                          <View style={styles.achievementCardContent}>
-                            <FlatList
-                              data={achievementDataWithPlaceholders}
-                              renderItem={({ item: achievement }) => (
-                                <View style={styles.achievementItem}>
-                                  {renderBadgeIcon(achievement.grade, 48, 48)}
-                                  <Text style={styles.achievementName} numberOfLines={1}>
-                                    {achievement.name}
-                                  </Text>
-                                </View>
-                              )}
-                              keyExtractor={(item) => item.id.toString()}
-                              numColumns={3}
-                              scrollEnabled={false}
-                              contentContainerStyle={styles.achievementGrid}
-                              columnWrapperStyle={styles.achievementRow}
-                            />
-                          </View>
-                        ) : (
-                          <View style={styles.achievementCardNoContent}>
-                            <BadgeEmpty width={100} height={100} />
-                            <Text style={{...syongsyongTypography.title6}}>완료한 업적이 없어요!</Text>
-                          </View>
-                        )}
-                    </View>
-                </View>
+                      <View style={styles.cardContainer}>
+                          <TouchableOpacity style={styles.achievementCardHeader} onPress={() => {navigation.navigate('MyAchievementScreen')}}>
+                              <Text style={{...syongsyongTypography.title5}}>업적</Text>
+                              <ArrowRight width={28} height={28} fill={colors.grayScale800} />
+                          </TouchableOpacity>
+                          {achievedAchievements.length > 0 ? (
+                              <FlatList
+                                data={achievementDataWithPlaceholders}
+                                renderItem={({ item: achievement }) => (
+                                  <View style={styles.achievementItem}>
+                                    {renderBadgeIcon(achievement.grade, 48, 48)}
+                                    <Text style={styles.achievementName} numberOfLines={1}>
+                                      {achievement.name}
+                                    </Text>
+                                  </View>
+                                )}
+                                keyExtractor={(item) => item.id.toString()}
+                                numColumns={3}
+                                scrollEnabled={false}
+                                contentContainerStyle={styles.achievementGrid}
+                                columnWrapperStyle={styles.achievementRow}
+                              />
+                          ) : (
+                            <View style={styles.achievementCardNoContent}>
+                              <BadgeEmpty width={100} height={100} />
+                              <Text style={{...syongsyongTypography.title6}}>완료한 업적이 없어요!</Text>
+                            </View>
+                          )}
+                      </View>
+                  </View>
+                  </>
                 )}
             </View>
         </UserRoom>
@@ -680,6 +701,13 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     width: '100%',
   },
+  nonmemberToast: {
+    position: 'absolute',
+    top: sy(386),
+    left: 20,
+    right: 20,
+    alignItems: 'center',
+  },
   cardContainer: {
     marginTop: 10,
     backgroundColor: colors.white,
@@ -713,8 +741,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-  },
-  achievementCardContent: {
   },
   achievementGrid: {
     gap: 20,

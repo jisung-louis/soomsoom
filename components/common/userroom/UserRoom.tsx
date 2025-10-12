@@ -10,6 +10,7 @@ import { ss, sv } from '../../../utils/scale';
 import Shadow from '../../../assets/icons/items/default-background/shadow.svg'
 import { colors } from '../../../constants/colors';
 import { renderItemImage } from '../../../utils/imageUtils';
+import { WINDOW_HEIGHT } from '@gorhom/bottom-sheet';
 
 export type UserRoomProps = {
   children: React.ReactNode;
@@ -20,9 +21,11 @@ export type UserRoomProps = {
   scrollable?: boolean; // 스크롤 가능 여부 (cropTop이 있으면 자동 true)
   scrollViewRef?: React.RefObject<ScrollView>
   onBackgroundImageUri?: (uri: string) => void; // 배경 이미지 URI 전달 콜백
+  myTabEditMode?: boolean; // 방 꾸미기 모드 여부
+  achievementCardHeight?: number; // 업적 카드 높이
 };
 
-const UserRoom = ({children, previewMode = false, previewItemIds = [], showPlacedItems = false, cropTop = 0, scrollable, scrollViewRef, onBackgroundImageUri}: UserRoomProps) => {
+const UserRoom = ({children, previewMode = false, previewItemIds = [], showPlacedItems = false, cropTop = 0, scrollable, scrollViewRef, onBackgroundImageUri, myTabEditMode = false, achievementCardHeight = 0}: UserRoomProps) => {
   const placedItems = useRoomStore(state => state.placedItems);
   // 로띠 동기 재생을 위한 ref들
   const catRef = useRef<LottieView | null>(null);
@@ -318,6 +321,8 @@ const UserRoom = ({children, previewMode = false, previewItemIds = [], showPlace
   // cropTop이 있으면 자동으로 스크롤 가능
   //const isScrollable = scrollable !== undefined ? scrollable : cropTop > 0;
   
+  const PADDING_BOTTOM = 672 + achievementCardHeight + 40 + 126 - WINDOW_HEIGHT;
+  
   if (scrollable) {
     return (
       <View style={styles.container}>
@@ -328,13 +333,15 @@ const UserRoom = ({children, previewMode = false, previewItemIds = [], showPlace
           bounces={false}
           alwaysBounceVertical={false}
           overScrollMode="never"
-          contentContainerStyle={{ paddingBottom: 150 }}
+          scrollEnabled={!myTabEditMode}
+          contentContainerStyle={
+            { paddingBottom: PADDING_BOTTOM }
+          }
         >
           <ImageBackground
             source={backgroundImage || require('../../../assets/images/backgrounds/default.png')}
             style={[
               styles.scrollableBackground,
-              {paddingBottom: sv(cropTop)+800}, // 추후 동적 계산 고려
               cropTop > 0 && { transform: [{ translateY: -sv(cropTop) }] }
             ]}
             resizeMode="cover"

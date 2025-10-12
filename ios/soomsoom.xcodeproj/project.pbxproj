@@ -18,6 +18,7 @@
 		9651BC712E81370500B6BDAF /* hawaii.caf in Resources */ = {isa = PBXBuildFile; fileRef = 9651BC6E2E81370400B6BDAF /* hawaii.caf */; };
 		9651BC722E81370500B6BDAF /* exciting.caf in Resources */ = {isa = PBXBuildFile; fileRef = 9651BC6F2E81370500B6BDAF /* exciting.caf */; };
 		9651BC732E81370500B6BDAF /* morning_rise.caf in Resources */ = {isa = PBXBuildFile; fileRef = 9651BC702E81370500B6BDAF /* morning_rise.caf */; };
+		96BCF10A2E9BCBAC000A37CA /* cat-meow-short-push.wav in Resources */ = {isa = PBXBuildFile; fileRef = 96BCF1092E9BCBAC000A37CA /* cat-meow-short-push.wav */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
 		CC8D2E28EA894F97A36D129C /* default_alarm_audio.wav in Resources */ = {isa = PBXBuildFile; fileRef = B66CCA3FC4934E90B356B433 /* default_alarm_audio.wav */; };
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
@@ -38,6 +39,7 @@
 		9651BC6E2E81370400B6BDAF /* hawaii.caf */ = {isa = PBXFileReference; lastKnownFileType = file; name = hawaii.caf; path = "../assets/audios/alarm-sound/hawaii.caf"; sourceTree = "<group>"; };
 		9651BC6F2E81370500B6BDAF /* exciting.caf */ = {isa = PBXFileReference; lastKnownFileType = file; name = exciting.caf; path = "../assets/audios/alarm-sound/exciting.caf"; sourceTree = "<group>"; };
 		9651BC702E81370500B6BDAF /* morning_rise.caf */ = {isa = PBXFileReference; lastKnownFileType = file; name = morning_rise.caf; path = "../assets/audios/alarm-sound/morning_rise.caf"; sourceTree = "<group>"; };
+		96BCF1092E9BCBAC000A37CA /* cat-meow-short-push.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; name = "cat-meow-short-push.wav"; path = "../assets/audios/alarm-sound/cat-meow-short-push.wav"; sourceTree = "<group>"; };
 		A22411A1A32E5D2E924E1414 /* Pods_soomsoom.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_soomsoom.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = soomsoom/SplashScreen.storyboard; sourceTree = "<group>"; };
 		B66CCA3FC4934E90B356B433 /* default_alarm_audio.wav */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = default_alarm_audio.wav; path = soomsoom/default_alarm_audio.wav; sourceTree = "<group>"; };
@@ -142,6 +144,7 @@
 				9651BC6F2E81370500B6BDAF /* exciting.caf */,
 				9651BC6E2E81370400B6BDAF /* hawaii.caf */,
 				9651BC702E81370500B6BDAF /* morning_rise.caf */,
+				96BCF1092E9BCBAC000A37CA /* cat-meow-short-push.wav */,
 			);
 			name = Resources;
 			sourceTree = "<group>";
@@ -226,6 +229,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				96BCF10A2E9BCBAC000A37CA /* cat-meow-short-push.wav in Resources */,
 				9639F97F2E7DB16F00D83E98 /* GoogleService-Info.plist in Resources */,
 				BB2F792D24A3F905000567C9 /* Expo.plist in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
@@ -495,7 +499,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = soomsoom/soomsoom.entitlements;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = W66KG43LUC;
 				ENABLE_BITCODE = NO;
 				GCC_PREPROCESSOR_DEFINITIONS = (
@@ -509,7 +513,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.1.12;
+				MARKETING_VERSION = 0.1.13;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -534,7 +538,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = soomsoom/soomsoom.entitlements;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = W66KG43LUC;
 				INFOPLIST_FILE = soomsoom/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "숨숨";
@@ -543,7 +547,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.1.12;
+				MARKETING_VERSION = 0.1.13;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",

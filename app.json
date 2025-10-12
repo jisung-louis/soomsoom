@@ -60,7 +60,7 @@
         {
           "icon": "./assets/app-icons/icon.png",
           "sounds": [
-            "./assets/audios/alarm-sound/default_alarm_audio.wav"
+            "./assets/audios/alarm-sound/cat-meow-short-push.wav"
           ]
         }
       ],

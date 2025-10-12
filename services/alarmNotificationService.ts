@@ -5,9 +5,9 @@ import { buildAlarmNotificationContent } from '../utils/notificationContentBuild
 
 // iOS/alarm 사운드 정규화 (확장자 중복 방지 및 기본음 처리)
 const normalizeIosSoundName = (soundName: string): 'default' | string => {
-  if (!soundName) return 'default';
+  if (!soundName) return 'cat-meow-short-push.wav';
   const raw = String(soundName).trim();
-  if (raw === '기본' || raw.toLowerCase() === 'default') return 'default';
+  if (raw === '기본' || raw.toLowerCase() === 'default') return 'cat-meow-short-push.wav';
 
   const m = raw.toLowerCase().match(/^(.*?)(\.(wav|mp3|caf))?$/i);
   const base = m?.[1] ?? raw.toLowerCase();
