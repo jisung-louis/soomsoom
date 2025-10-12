@@ -3,18 +3,6 @@ import { AppState } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import { useToast } from '../contexts/ToastContext';
 import { useMailboxStore } from '../stores/mailboxStore';
-import { useCurrencyStore } from '../stores/currencyStore';
-import { getUserPoints } from '../services/userService';
-import { 
-  showUniversalPopup, 
-  createAchievementPopup,
-  createItemRewardPopup,
-  createHeartRewardPopup,
-  createGenericPopup 
-} from '../components/common/popup/UniversalPopup';
-import { AchievementGrade } from '../types';
-import { ss, sv } from '../utils/scale';
-import { typography } from '../constants/typography';
 import { useAchievementStore } from '../stores/achievementStore';
 import { useNotificationQueueStore } from '../stores/notificationQueueStore';
 
@@ -117,7 +105,17 @@ export const usePushNotification = () => {
    */
   useEffect(() => {
     // 포그라운드에서 푸시 받을 때
-    const foregroundSubscription = Notifications.addNotificationReceivedListener(handlePushNotification);
+    const foregroundSubscription = Notifications.addNotificationReceivedListener((notification) => {
+      console.log('📱 포그라운드 푸시 받음:', notification);
+      handlePushNotification(notification);
+    });
+
+    // 백그라운드에서 푸시 받을 때 (앱이 종료된 상태에서도 처리)
+    const backgroundSubscription = Notifications.addNotificationResponseReceivedListener((response) => {
+      console.log('📱 백그라운드 푸시 탭됨:', response);
+      // 백그라운드에서 푸시를 탭했을 때도 동일한 로직 처리
+      handlePushNotification(response.notification);
+    });
 
     // 앱 상태 변경 리스너 (백그라운드 → 포그라운드)
     const appStateSubscription = AppState.addEventListener('change', (nextAppState) => {
@@ -128,6 +126,7 @@ export const usePushNotification = () => {
 
     return () => {
       foregroundSubscription.remove();
+      backgroundSubscription.remove();
       appStateSubscription?.remove();
     };
   }, []);

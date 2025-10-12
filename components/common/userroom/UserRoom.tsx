@@ -338,6 +338,11 @@ const UserRoom = ({children, previewMode = false, previewItemIds = [], showPlace
             { paddingBottom: PADDING_BOTTOM }
           }
         >
+          {/* <View style={{position: 'absolute', top: 50, left: 50, right: 0, bottom: 0, zIndex: 1000000, width: 50, height: 50, backgroundColor: 'red'}}>
+            <Text>{achievementCardHeight}</Text>
+            <Text>{PADDING_BOTTOM}</Text>
+            <Text>{WINDOW_HEIGHT}</Text>
+          </View> */}
           <ImageBackground
             source={backgroundImage || require('../../../assets/images/backgrounds/default.png')}
             style={[

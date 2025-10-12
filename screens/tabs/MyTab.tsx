@@ -4,7 +4,7 @@ import { View, StyleSheet, Text, ScrollView, TouchableOpacity, FlatList } from '
 import { colors } from '../../constants/colors';
 import { radius } from '../../constants/radius';
 import { typography } from '../../constants/typography';
-import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { MyStackParamList } from '../../navigations/tabs/MyStackNavigator';
 import { useRef } from 'react';
@@ -85,6 +85,48 @@ const MyTab = () => {
   const { loadOwnedItems } = useOwnedItems();
   const { useMockApi } = useAppConfigStore.getState();
   const { getAccessToken, role } = useAuthStore();
+  
+  // 탭 포커스 시 리렌더링 및 데이터 새로고침
+  useFocusEffect(
+    useCallback(() => {
+      console.log('👤 MyTab 포커스됨 - 데이터 새로고침');
+      
+      // 디바이스 ID 새로고침 (토큰 변경 시 반영)
+      const refreshDeviceId = async () => {
+        try {
+          const accessToken = getAccessToken();
+          if (accessToken) {
+            const { decodeJwt } = await import('../../utils/jwt');
+            const payload = decodeJwt(accessToken);
+            if (payload?.deviceId) {
+              setDeviceId(payload.deviceId);
+              return;
+            }
+          }
+          
+          const id = await getCachedInstallUuid();
+          setDeviceId(id);
+        } catch (error) {
+          console.error('디바이스 ID 새로고침 실패:', error);
+        }
+      };
+      
+      refreshDeviceId();
+      
+      // 요약 데이터 새로고침 (최신 상태 반영)
+      const refreshSummary = async () => {
+        try {
+          if (!getAccessToken()) return;
+          const res = await getUserActivitySummary();
+          setSummary(res);
+        } catch (e) {
+          // 무시: 비회원/권한 없음 등
+        }
+      };
+      
+      refreshSummary();
+    }, [getAccessToken])
+  );
   // 장바구니 관련 훅
   const { getCartItems, clearAllCartItems } = usePurchase();
   const { logout } = useAuth();
@@ -114,10 +156,22 @@ const MyTab = () => {
     loadOwnedItems();
   }, [loadOwnedItems]);
 
-  // 디바이스 ID 로드
+  // 디바이스 ID 로드 (액세스 토큰에서 추출)
   useEffect(() => {
     const loadDeviceId = async () => {
       try {
+        // 액세스 토큰에서 deviceId 추출 시도
+        const accessToken = getAccessToken();
+        if (accessToken) {
+          const { decodeJwt } = await import('../../utils/jwt');
+          const payload = decodeJwt(accessToken);
+          if (payload?.deviceId) {
+            setDeviceId(payload.deviceId);
+            return;
+          }
+        }
+        
+        // 토큰에서 추출 실패 시 로컬 캐시에서 로드
         const id = await getCachedInstallUuid();
         setDeviceId(id);
       } catch (error) {
@@ -126,7 +180,7 @@ const MyTab = () => {
       }
     };
     loadDeviceId();
-  }, []);
+  }, [getAccessToken]);
 
   // 사용자 요약 데이터 로드 (/users/me/summary)
   useEffect(() => {
@@ -520,14 +574,14 @@ const MyTab = () => {
   const achievementCardHeight = useMemo(() => {
     // 로딩 중이면 기본 높이 사용 (레이아웃 점프 방지)
     if (isAchievementsLoading) {
-      return 1000; // 빈 업적 카드 높이(239)
+      return 239; // 빈 업적 카드 높이(239)
     }
     
     const length = achievedAchievements.length;
     if (length === 0) return 239; // 빈 업적 카드 높이(239)
     else {
-      const rowCount = Math.floor(length / 3);
-      return 72 + ( 94 * rowCount); // 업적 카드 높이(72) + 업적 카드 개수(94) * 행 개수(rowCount)
+      const rowCount = Math.ceil(length / 3);
+      return 72 + ( 94 * (rowCount)); // 업적 카드 높이(72) + 업적 카드 개수(94) * 행 개수(rowCount)
     }
   }, [achievedAchievements, isAchievementsLoading]);
 

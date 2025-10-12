@@ -10,15 +10,20 @@ import AppContent from './app/AppContent';
 import { useAppConfigStore } from './stores/appConfigStore';
 import { setupTrackPlayer } from './services/trackPlayerService';
 
-// 포어그라운드 알림 핸들러 설정 (앱 시작 시 1회)
+// 포어그라운드/백그라운드 알림 핸들러 설정 (앱 시작 시 1회)
 Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,   // 포어그라운드에서 알림 표시
-    shouldPlaySound: true,   // 소리 재생
-    shouldSetBadge: false,   // 배지 설정 안함
-    shouldShowBanner: true,  // 배너 표시
-    shouldShowList: true,    // 알림 목록에 표시
-  }),
+  handleNotification: async (notification) => {
+    console.log('📱 알림 핸들러 호출:', notification);
+    
+    // 백그라운드에서도 알림이 표시되도록 설정
+    return {
+      shouldShowAlert: true,   // 포어그라운드/백그라운드에서 알림 표시
+      shouldPlaySound: true,   // 소리 재생
+      shouldSetBadge: true,    // 배지 설정 (백그라운드에서 중요)
+      shouldShowBanner: true,  // 배너 표시
+      shouldShowList: true,    // 알림 목록에 표시
+    };
+  },
 });
 
 
