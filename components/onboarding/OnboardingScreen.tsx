@@ -340,11 +340,11 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, initial
       ) : null}
 
     {/*DEV ONLY*/}
-    {currentStepData.id !== 'register' && (
+    {/* {currentStepData.id !== 'register' && (
     <View style={{position: 'absolute', top: 50, left: 0, right: 0, alignItems: 'flex-end', padding: 10}}>
       <ButtonSmall variant="secondary" title="SKIP(DEV ONLY)" onPress={() => goToStep(15)} style={{width: '40%'}} />
     </View>
-    )}
+    )} */}
     {/*DEV ONLY*/}
     </>
   );

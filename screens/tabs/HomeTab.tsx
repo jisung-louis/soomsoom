@@ -328,16 +328,16 @@ const HomeTab = () => {
         </>
       )}
 
-      <View style={[styles.developerButtons,{marginBottom: 10}]}> 
+      {/* <View style={[styles.developerButtons,{marginBottom: 10}]}> 
         <ButtonSmall
           title={useMockApiMode ? '실제 서버 연결' : '내부 데이터 사용'}
           onPress={onModeToggle}
           variant="active"
           style={{width: '100%'}}
         />
-      </View>
+      </View> */}
       {/* 개발자용 버튼 (추후 삭제) */}
-      {useMockApiMode && (
+      {/* {useMockApiMode && (
       <View style={styles.developerButtons}>
         <Text>개발자용 버튼</Text>
         <ButtonSmall
@@ -373,7 +373,7 @@ const HomeTab = () => {
           style={{width: '100%'}}
           />
         </View>
-      )}
+      )} */}
 
       
     </UserRoom>
