@@ -520,6 +520,12 @@ const ShopScreen = () => {
         collectionOwned: collection.isOwned,
       }));
     }
+
+    // 0원 아이템은 보유중인 경우를 제외하고 숨김 (컬렉션 제외)
+    if (selectedItemTab !== 1) {
+      list = list.filter(item => !(item.price === 0 && !isOwned(item.id)));
+    }
+
     if (excludeOwnedItems) {
       list = list.filter(item => !item.isOwned);
     }
@@ -542,7 +548,7 @@ const ShopScreen = () => {
         break;
     }
     return sorted;
-  }, [items, selectedItemTab, excludeOwnedItems, sortKey, collections]);
+  }, [items, selectedItemTab, excludeOwnedItems, sortKey, collections, isOwned]);
   
 
   const renderItemTab = () => {

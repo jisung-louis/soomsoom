@@ -12,7 +12,7 @@ import Badge from '../../../../components/common/badge/Badge';
 import HeartIcon from '../../../../assets/icons/common/emotion.svg';
 import { useCurrencyStore } from '../../../../stores/currencyStore';
 import { typography, syongsyongTypography } from '../../../../constants/typography';
-import { getItems } from '../../../../services/itemService';
+import { getItems, type ItemType } from '../../../../services/itemService';
 import type { ImageSourcePropType } from 'react-native';
 import PurchaseItemList from '../../../../components/tabs/my/PurchaseItemList';
 import { Button } from '../../../../components/common/buttons/Button';
@@ -52,7 +52,7 @@ const MyRoomDecorationPurchaseScreen = () => {
     }, [purchaseItemsParams]);
 
     // 빠른 조회를 위한 id→item 맵
-    const [items, setItems] = useState<Array<{ id: number; title: string; image: ImageSourcePropType | null; price: number }>>([]);
+    const [items, setItems] = useState<Array<{ id: number; title: string; image: ImageSourcePropType | null; price: number; itemType: ItemType }>>([]);
 
     useEffect(() => {
         let mounted = true;
@@ -64,6 +64,7 @@ const MyRoomDecorationPurchaseScreen = () => {
                     title: it.name,
                     image: typeof it.imageUrl === 'string' ? { uri: it.imageUrl } : (it.imageUrl as any) ?? null,
                     price: it.price,
+                    itemType: it.itemType,
                 }));
                 if (mounted) setItems(mapped);
             } catch (e) {
@@ -74,7 +75,7 @@ const MyRoomDecorationPurchaseScreen = () => {
     }, []);
 
     const itemMap = useMemo(() => {
-        const m = new Map<number, { id: number; title: string; image: ImageSourcePropType | null; price: number }>();
+        const m = new Map<number, { id: number; title: string; image: ImageSourcePropType | null; price: number; itemType: ItemType }>();
         items.forEach((it) => m.set(it.id, it));
         return m;
     }, [items]);

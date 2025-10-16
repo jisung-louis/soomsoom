@@ -16,7 +16,7 @@ import { radius } from '../../../constants/radius';
 import EmotionIcon from '../../../assets/icons/common/emotion.svg';
 import Badge from '../../../components/common/badge/Badge';
 import CheckIcon from '../../../assets/icons/common/check.svg';
-import { getItems } from '../../../services/itemService';
+import { getItemDetail, getItems, type ItemType } from '../../../services/itemService';
 import { getCollections, getCollectionDetail, type CollectionSummary, type CollectionDetail } from '../../../services/collectionService';
 import { useRoomStore } from '../../../stores/roomStore';
 import { normalizeImageSource } from '../../../utils/textUtils';
@@ -69,6 +69,7 @@ const tabMenu: TabMenuItem[] = [
 type ItemList = {
   id: number;
   type?: RoomItemCategory;
+  itemType?: ItemType; // 원본 ItemType 추가
   title?: string;
   image?: ImageSourcePropType;
   price?: number | null;
@@ -91,6 +92,7 @@ function padToThreeColumns(data: ItemList[], isCollection: boolean) {
       id: 0,
       image: undefined,
       type: '',
+      itemType: undefined,
       title: '',
       price: null,
       isCollection: false,
@@ -107,6 +109,7 @@ function padToThreeColumns(data: ItemList[], isCollection: boolean) {
         id: 0,
         image: undefined,
         type: '',
+        itemType: undefined,
         title: '',
         price: null,
         isCollection: false,
@@ -165,6 +168,7 @@ const MyRoomDecoration = ({
           const mapped: ItemList[] = res.content.map((it) => ({
             id: it.id,
             type: (it.itemType === 'ACCESSORY' ? '악세사리' : it.itemType === 'HAT' ? '모자' : it.itemType === 'BACKGROUND' ? '배경' : it.itemType === 'FLOOR' ? '러그' : it.itemType === 'SHELF' ? '선반' : '장식품') as any,
+            itemType: it.itemType, // 원본 ItemType 추가
             title: it.name,
             image: typeof it.imageUrl === 'string' && it.imageUrl.length > 0 ? ({ uri: it.imageUrl } as any) : (it.imageUrl as any) ?? undefined,
             price: it.price,
@@ -236,8 +240,18 @@ const MyRoomDecoration = ({
         collectionOwned: collection.isOwned,
       }));
     } else {
-      // 기타 카테고리 탭
-      filteredData = items.filter(item => item.type === tabMenu[selectedTab].title);
+      // 기타 카테고리 탭 - 0원 아이템은 보유중인 경우만 표시
+      filteredData = items.filter(item => {
+        if (item.type !== tabMenu[selectedTab].title) return false;
+        
+        // 0원 아이템인 경우 보유중인지 확인
+        if (item.price === 0 || item.price === null) {
+          return isOwned(item.id);
+        }
+        
+        // 0원이 아닌 아이템은 모두 표시
+        return true;
+      });
     }
 
     const isCollection = selectedTab === 1;
@@ -306,6 +320,8 @@ const MyRoomDecoration = ({
         } else {
             // 일반 아이템인 경우 기존 로직
             console.log('🔧 일반 아이템 선택:', id);
+            // const itemDetail = await getItemDetail(id);
+            // console.log('🔍 아이템 상세 정보:', JSON.stringify(itemDetail, null, 2));
             onItemSelection(id);
         }
     };
@@ -383,7 +399,7 @@ const MyRoomDecoration = ({
                         <View style={styles.collectionItemImageContainer}>
                           {renderItemImage(
                             normalizeImageSource(item.image),
-                            '배경',
+                            item.itemType || 'BACKGROUND',
                             styles.collectionItemImage
                           )}
                         </View>
@@ -415,7 +431,7 @@ const MyRoomDecoration = ({
                         <View style={styles.itemImageContainer}>
                           {renderItemImage(
                             normalizeImageSource(item.image),
-                            '',
+                            item.itemType || '',
                             styles.itemImage
                           )}
                         </View>

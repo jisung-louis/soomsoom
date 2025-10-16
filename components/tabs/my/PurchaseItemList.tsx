@@ -10,6 +10,7 @@ import { typography } from '../../../constants/typography';
 import HeartIcon from '../../../assets/icons/common/Heart.svg';
 import { normalizeImageSource } from '../../../utils/textUtils';
 import { renderItemImage } from '../../../utils/imageUtils';
+import { ItemType } from '../../../services/purchaseService';
 
 interface PurchaseItemListProps {
     item: {
@@ -17,6 +18,7 @@ interface PurchaseItemListProps {
         title: string;
         image: ImageSourcePropType | null;
         price: number;
+        itemType: ItemType;
     };
     isChecked: boolean;
     onCheckPress: () => void;
@@ -36,8 +38,9 @@ const PurchaseItemList = ({ item, isChecked, onCheckPress, onXPress }: PurchaseI
                         {item.image !== null && item.image !== undefined ? (
                             renderItemImage(
                                 normalizeImageSource(item.image),
-                                '',
-                                styles.itemImage
+                                item.itemType,
+                                {width: 64, height: 64}, // Background인 경우 100% 커버
+                                56, // Background 이외 타입의 container size (width, height)
                             )
                         ) : null}
                     </View>
@@ -81,10 +84,7 @@ const styles = StyleSheet.create({
         backgroundColor: colors.grayScale50,
         alignItems: 'center',
         justifyContent: 'center',
-    },
-    itemImage: {
-        width: 56,
-        height: 56,
+        overflow: 'hidden',
     },
     itemInfo: {
         justifyContent: 'center',
