@@ -227,15 +227,30 @@ const MyTab = () => {
     ];
   }, [summary]);
 
-  // 달성한 업적들 가져오기 (cache 기준)
+  // 달성한 업적들 가져오기 (cache 기준) - 최신 달성 순으로 최대 3개만
   const achievedAchievements = useMemo(() => {
-    const achieved: Array<{id: number, name: string, grade: string}> = [];
+    const achieved: Array<{id: number, name: string, grade: string, achievedAt: string | null | undefined}> = [];
     for (const a of Array.from(cache.values())) {
       if (a.isAchieved) {
-        achieved.push({ id: a.achievementId, name: a.name, grade: a.grade });
+        achieved.push({ 
+          id: a.achievementId, 
+          name: a.name, 
+          grade: a.grade,
+          achievedAt: a.achievedAt 
+        });
       }
     }
-    return achieved;
+    
+    // achievedAt 기준 내림차순 정렬 (최신 달성 순)
+    achieved.sort((a, b) => {
+      if (!a.achievedAt && !b.achievedAt) return 0;
+      if (!a.achievedAt) return 1; // null은 뒤로
+      if (!b.achievedAt) return -1; // null은 뒤로
+      return new Date(b.achievedAt).getTime() - new Date(a.achievedAt).getTime();
+    });
+    
+    // 최대 3개만 반환
+    return achieved.slice(0, 3);
   }, [cache]);
 
   // 업적 데이터 로딩 상태 (cache가 비어있으면 아직 로딩 중)
@@ -243,11 +258,12 @@ const MyTab = () => {
     return cache.size === 0;
   }, [cache.size]);
 
-  // 3의 배수로 맞추기 위한 데이터 (placeholder 포함)
+  // 3의 배수로 맞추기 위한 데이터 (placeholder 포함) - 최대 3개이므로 간소화
   const achievementDataWithPlaceholders = useMemo(() => {
     const data: Array<{id: number | string, name: string, grade: string}> = [...achievedAchievements];
     const remainder = data.length % 3;
     
+    // 최대 3개이므로 0, 1, 2개일 때만 placeholder 추가
     if (remainder !== 0) {
       const placeholdersNeeded = 3 - remainder;
       for (let i = 0; i < placeholdersNeeded; i++) {

@@ -181,7 +181,7 @@ const ItemList: React.FC<Props> = ({ filteredItems, onItemPress, isOutOfStock, i
                   )}
                 </View>
                 <View style={styles.itemInfo}>
-                  <Text style={styles.itemTitle}>{item.title}</Text>
+                  <Text style={styles.itemTitle} numberOfLines={1}>{item.title}</Text>
                   {!isOwned(item.id) ? (
                     <View style={styles.itemPriceContainer}>
                       <EmotionIcon width={16} height={16} />

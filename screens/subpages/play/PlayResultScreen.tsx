@@ -45,6 +45,8 @@ const PlayResultScreen = ({route}: {route: RouteProp<PlayStackParamList, 'PlayRe
         if (rewardableMission) {
             try {
                 const res = await claimMission(rewardableMission.missionId);
+                console.log('res', JSON.stringify(res, null, 2));
+                if (res.claimedReward.points > 0) {
                 showToast({
                     amount: res.claimedReward.points,
                     message: '하트 획득했어요!',
@@ -63,6 +65,15 @@ const PlayResultScreen = ({route}: {route: RouteProp<PlayStackParamList, 'PlayRe
                 });
                 const readHeartPoints = await getUserPoints();
                 useCurrencyStore.getState().setHeartPoints(readHeartPoints.points);
+                }
+                if (res.claimedReward.itemId) {
+                    showToast({
+                        amount: res.claimedReward.itemId,
+                        message: '아이템 획득했어요!',
+                        theme: 'dark',
+                    });
+                    // TODO: 아이템 획득은 팝업으로 바꿔야함.
+                }
             } catch (error) {
                 console.error('하트 보상 받기 실패:', error);
                 showToast({

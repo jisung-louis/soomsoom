@@ -51,7 +51,7 @@ const PlayDetailScreen: React.FC = () => {
       try {
         setIsLoading(true);
         const activityDetail = await getActivityDetail(activityId);
-        console.log('🔍 액티비티 상세 정보:', JSON.stringify(activityDetail, null, 2));
+        //console.log('🔍 액티비티 상세 정보:', JSON.stringify(activityDetail, null, 2));
         setContent(activityDetail);
       } catch (error) {
         console.error('액티비티 상세 정보 조회 실패:', error);
