@@ -358,8 +358,7 @@ const PlayBreathContentScreen = ({route}: {route: RouteProp<PlayStackParamList, 
                     {/* <Text style={styles.contentText}>{currentStepRemaining}</Text> */}
                     <Text style={styles.contentText}>{text}</Text>
                 </View>
-
-                {/* {useMockApi && ( */}
+                    {/* debug */}
                     <View style={styles.debugContainer}>
                         <View style={styles.debugButtonContainer}>
                             <ButtonSmall title="초기화" variant="active" style={styles.debugButton} onPress={() => { setStep(0); setRemainingTime(content.durationInSeconds); }} />
@@ -367,7 +366,6 @@ const PlayBreathContentScreen = ({route}: {route: RouteProp<PlayStackParamList, 
                             <ButtonSmall title="1분 넘기기" variant="active" style={styles.debugButton} onPress={() => { setRemainingTime(remainingTime - 60); }} />
                         </View>
                         <TouchableOpacity onPress={() => {goToResultScreen()}}>
-                            {/* <Text>{JSON.stringify(content.timeline, ['id','time', 'action', 'text', 'duration',], 10)}</Text> */}
                             <Text>Step: {step} / {content.timeline?.length ? content.timeline.length - 1 : 0}</Text>
                             <Text>Total Remaining Time: {remainingTime} sec</Text>
                             <Text>Total Elapsed Time: {elapsed} sec</Text>
@@ -376,7 +374,7 @@ const PlayBreathContentScreen = ({route}: {route: RouteProp<PlayStackParamList, 
                             <Text>Breathing is {isPlaying ? '\"PLAYING\"' : '\"PAUSED\"'} </Text>
                         </TouchableOpacity>
                     </View>
-                {/* )} */}
+                    {/* debug */}
             </SafeAreaView>
 
             {animationSource === 'basic' ? (
