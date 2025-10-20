@@ -2,6 +2,7 @@ import React from 'react';
 import { View, StyleSheet, Image, Text } from 'react-native';
 import { ButtonSmall } from '../../common/buttons/ButtonSmall';
 import { syongsyongTypography } from '../../../constants/typography';
+import { ss, sx, sv } from '../../../utils/scale';
 
 const NoAlarm = ({ onAddAlarmPress }: { onAddAlarmPress: () => void }) => {
   return (
@@ -23,8 +24,10 @@ const styles = StyleSheet.create({
     gap: 20,
   },
   noContentImage: {
-    width: 100,
-    height: 71,
+    width: ss(100),
+    height: sv(71),
+    marginLeft: sx(162),
+    alignSelf: 'flex-start',
   },
   noContentTextContainer: {
     alignItems: 'center',
