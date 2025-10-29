@@ -13,6 +13,7 @@ import {
 import { useOwnedItems } from './useOwnedItems';
 import { parseError } from '../utils/errorHandler';
 import { useAppConfigStore } from '../stores/appConfigStore';
+import { logPurchaseStart, logPurchaseComplete } from '../utils/analytics';
 
 export interface UsePurchaseOptions {
   onSuccess?: () => void;
@@ -122,7 +123,15 @@ export function usePurchase(options: UsePurchaseOptions = {}): UsePurchaseReturn
       return;
     }
 
-    await executePurchase(() => purchaseItemsApi({ itemIds, expectedTotalPrice }), { expectedTotalPrice });
+    // Analytics: 구매 시작 이벤트
+    await logPurchaseStart(itemIds, expectedTotalPrice);
+
+    await executePurchase(async () => {
+      const result = await purchaseItemsApi({ itemIds, expectedTotalPrice });
+      // Analytics: 구매 완료 이벤트 (전환 이벤트!)
+      await logPurchaseComplete(itemIds, expectedTotalPrice, 'heart_points');
+      return result;
+    }, { expectedTotalPrice });
   }, [executePurchase]);
 
   // 단일 아이템 구매
@@ -216,6 +225,14 @@ export function usePurchase(options: UsePurchaseOptions = {}): UsePurchaseReturn
     try {
       setIsPurchasing(true);
       const response = await purchaseCart({ expectedTotalPrice });
+      
+      // Analytics: 장바구니 구매 완료 이벤트
+      try {
+        const itemIds = response.purchasedItems?.map((item: any) => item.id) || [];
+        await logPurchaseComplete(itemIds, expectedTotalPrice, 'heart_points');
+      } catch (analyticsError) {
+        console.warn('⚠️ Analytics 구매 이벤트 로깅 실패:', analyticsError);
+      }
       
       // 구매 후 보유 포인트 반영
       if (typeof response?.remainingPoints === 'number') {

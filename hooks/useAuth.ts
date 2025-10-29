@@ -19,6 +19,7 @@ import { resetAppState } from '../utils/resetAppState';
 import { syncAllUserData } from '../hooks/useUserDataSync';
 import { colors } from '../constants/colors';
 import { typography } from '../constants/typography';
+import { logSocialLogin, setUserId } from '../utils/analytics';
 
 import { ss, sv } from '../utils/scale';
 
@@ -166,6 +167,18 @@ export const useAuth = () => {
         refreshToken: tokens.refreshToken,
       });
       setPhase('logged_in');
+
+      // 4.5 Analytics: 사용자 ID 설정 및 로그인 이벤트
+      try {
+        const { decodeJwt } = await import('../utils/jwt');
+        const payload = decodeJwt(tokens.accessToken);
+        if (payload?.userId || payload?.sub) {
+          await setUserId(String(payload.userId || payload.sub));
+        }
+        await logSocialLogin(provider);
+      } catch (analyticsError) {
+        console.warn('⚠️ Analytics 로그인 이벤트 로깅 실패:', analyticsError);
+      }
 
       // 5. FCM 토큰 등록 (소셜 로그인 시에는 즉시 등록)
       console.log('📱 FCM 토큰 등록 중...');
@@ -384,6 +397,13 @@ export const useAuth = () => {
       if (currentTokens?.refreshToken) {
         // 서버에서 토큰 무효화
         await postLogout(currentTokens.refreshToken);
+      }
+      
+      // Analytics: 사용자 ID 초기화 (로그아웃)
+      try {
+        await setUserId(null);
+      } catch (analyticsError) {
+        console.warn('⚠️ Analytics 사용자 ID 초기화 실패:', analyticsError);
       }
       
       // 로컬 상태 초기화

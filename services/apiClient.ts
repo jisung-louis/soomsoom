@@ -136,8 +136,21 @@ export class ApiClient {
       // 액세스 토큰이 있으면 Authorization 헤더 추가
       // NOTE: 콜드스타트/복원 타이밍을 위해 항상 전역 스토어에서 최신 토큰 조회
       const liveToken = useAuthStore.getState().getAccessToken();
+      const role = useAuthStore.getState().role;
       if (liveToken) {
         headers['Authorization'] = `Bearer ${liveToken}`;
+        // 디버깅: 업적 API 요청 시에만 상세 로그
+        if (endpoint.includes('/achievements')) {
+          const { decodeJwt } = await import('../utils/jwt');
+          const payload = decodeJwt(liveToken);
+          console.log('🔐 [apiClient] 업적 API 요청 헤더 설정:', {
+            endpoint,
+            hasToken: true,
+            role: role || payload?.auth,
+            userId: payload?.userId || payload?.sub,
+            tokenExpiresIn: payload?.exp ? `${Math.round((payload.exp * 1000 - Date.now()) / 1000)}초` : 'unknown',
+          });
+        }
       }
       else {
         console.warn('❌ API 요청에 인증 토큰 없음:', endpoint);

@@ -19,6 +19,7 @@ import {
 } from '../../../services/activityLogService';
 import { cleanupTrackPlayer } from '../../../services/trackPlayerService';
 import { RewardableMission } from '../../../services/activityLogService';
+import { logPlayActivityComplete } from '../../../utils/analytics';
 
 const PlayMeditationScreen = ({route}: {route: RouteProp<PlayStackParamList, 'PlayMeditationScreen'>}) => {
   const {content, initialPosition} = route.params;
@@ -182,6 +183,15 @@ const PlayMeditationScreen = ({route}: {route: RouteProp<PlayStackParamList, 'Pl
       const res = await completeActivity(content.id);
       console.log('🔍 액티비티 완료 처리 응답:', JSON.stringify(res, null, 2));
       setIsCompleted(true);
+      
+      // Analytics: 명상/호흡 완료 이벤트
+      try {
+        const duration = Math.floor(actualPlayTime / 1000); // 초 단위로 변환
+        await logPlayActivityComplete('MEDITATION', duration, content.id);
+      } catch (analyticsError) {
+        console.warn('⚠️ Analytics 활동 완료 이벤트 로깅 실패:', analyticsError);
+      }
+      
       // TODO: 액티비티 완료 처리 후 오는 응답(효과 3줄)을 받아서 처리하기(효과 3줄은 PlayResult에 prop으로 넘겨서 처리하면 됨)
       
       console.log(`🎉 액티비티 완료 처리: ${content.id}`);

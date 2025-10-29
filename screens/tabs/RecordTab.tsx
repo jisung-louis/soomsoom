@@ -29,6 +29,7 @@ import { getLogicalNow as getLogicalNowUtil } from '../../utils/timeUtils';
 import { radius } from '../../constants/radius';
 import { ss, sv } from '../../utils/scale';
 import { useNotificationQueueProcessor } from '../../hooks/useNotificationQueueProcessor';
+import { logScreenView } from '../../utils/analytics';
 
 type RecordTabNavigationProp = CompositeNavigationProp<
   BottomTabNavigationProp<RootTabParamList, 'record'>,
@@ -42,6 +43,9 @@ const RecordTab = () => {
   // 탭을 벗어날 때 바텀시트 닫기
   useFocusEffect(
     useCallback(() => {
+      // Analytics: 화면 조회 추적
+      logScreenView('RecordTab');
+      
       return () => {
         // 탭을 벗어날 때 바텀시트가 열려있으면 닫기
         activityInducingSheetRef.current?.close();

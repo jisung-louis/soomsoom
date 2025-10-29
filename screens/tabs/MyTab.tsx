@@ -40,6 +40,7 @@ import { useBackgroundColor, useBgTopColor } from '../../hooks/useBackgroundColo
 import { eventBus, APP_EVENTS } from '../../utils/eventBus';
 import { useNotificationQueueProcessor } from '../../hooks/useNotificationQueueProcessor';
 import ToastView from '../../components/common/toast/ToastView';
+import { logScreenView } from '../../utils/analytics';
 
 const mockStatusData = [
     { title: '기록', valueType: '회', value: null },
@@ -90,6 +91,9 @@ const MyTab = () => {
   useFocusEffect(
     useCallback(() => {
       console.log('👤 MyTab 포커스됨 - 데이터 새로고침');
+      
+      // Analytics: 화면 조회 추적
+      logScreenView('MyTab');
       
       // 디바이스 ID 새로고침 (토큰 변경 시 반영)
       const refreshDeviceId = async () => {

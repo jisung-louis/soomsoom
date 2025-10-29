@@ -20,6 +20,7 @@ import CustomBottomSheet from '../../../components/common/bottomsheet/CustomBott
 import { CustomAlert, AlertButton } from '../../../components/common/alert';
 import { convert24To12Hour, convert12To24Hour } from '../../../utils/timeUtils';
 import { generateMissionsByData } from '../../../utils/mathMissionGenerator';
+import { logAlarmSet } from '../../../utils/analytics';
 
 type BottomSheetType = 'repeat' | 'mission' | 'sound' | null;
 
@@ -243,6 +244,14 @@ const AlarmAddScreen = () => {
         // 새 알람 추가
         const newAlarmId = await addAlarm(alarmData);
         console.log('알람 추가 완료 - ID:', newAlarmId);
+        
+        // Analytics: 알람 설정 이벤트
+        try {
+          await logAlarmSet(timeString, alarmData.mission ? 'with_mission' : 'no_mission');
+        } catch (analyticsError) {
+          console.warn('⚠️ Analytics 알람 설정 이벤트 로깅 실패:', analyticsError);
+        }
+        
         setShowSuccessAlert(true);
       } else {
         // 기존 알람 수정
@@ -251,6 +260,14 @@ const AlarmAddScreen = () => {
         }
         await updateAlarm(alarmId, alarmData);
         console.log('알람 수정 완료 - ID:', alarmId);
+        
+        // Analytics: 알람 설정 이벤트 (수정도 기록)
+        try {
+          await logAlarmSet(timeString, alarmData.mission ? 'with_mission' : 'no_mission');
+        } catch (analyticsError) {
+          console.warn('⚠️ Analytics 알람 설정 이벤트 로깅 실패:', analyticsError);
+        }
+        
         setShowSuccessAlert(true);
       }
       

@@ -25,6 +25,7 @@ import FavoriteButton from '../../../components/common/buttons/FavoriteButton';
 import { getActivityProgress } from '../../../services/activityLogService';
 import CustomAlert from '../../../components/common/alert/CustomAlert';
 import { getActivityDetail, Activity } from '../../../services/contentService';
+import { logPlayActivity } from '../../../utils/analytics';
   
 const PlayDetailScreen: React.FC = () => {
   const navigation = useNavigation<StackNavigationProp<PlayStackParamList>>();
@@ -105,6 +106,12 @@ const PlayDetailScreen: React.FC = () => {
       // 방문 기록: 재생 진입 시점에 방문으로 기록
       useVisitedActivityStore.getState().addVisited(content.id);
     } catch {}
+    // Analytics: 명상/호흡 실행 이벤트
+    try {
+      await logPlayActivity('BREATHING', content.id);
+    } catch (analyticsError) {
+      console.warn('⚠️ Analytics 활동 시작 이벤트 로깅 실패:', analyticsError);
+    }
     navigation.navigate('PlayBreathScreen', { content: content });
   };
 
@@ -131,12 +138,24 @@ const PlayDetailScreen: React.FC = () => {
       } else {
         // 이전 기록이 없는 경우 바로 시작
         try { useVisitedActivityStore.getState().addVisited(content.id); } catch {}
+        // Analytics: 명상/호흡 실행 이벤트
+        try {
+          await logPlayActivity('MEDITATION', content.id);
+        } catch (analyticsError) {
+          console.warn('⚠️ Analytics 활동 시작 이벤트 로깅 실패:', analyticsError);
+        }
         navigation.navigate('PlayMeditationScreen', { content });
       }
     } catch (error) {
       console.error('이전 진행상황 조회 실패:', error);
       // 에러가 발생해도 바로 시작
       try { useVisitedActivityStore.getState().addVisited(content.id); } catch {}
+      // Analytics: 명상/호흡 실행 이벤트
+      try {
+        await logPlayActivity('MEDITATION', content.id);
+      } catch (analyticsError) {
+        console.warn('⚠️ Analytics 활동 시작 이벤트 로깅 실패:', analyticsError);
+      }
       navigation.navigate('PlayMeditationScreen', { content });
     }
   };
@@ -145,6 +164,14 @@ const PlayDetailScreen: React.FC = () => {
   const handleResumeFromStart = () => {
     if (!content) return;
     setShowResumeAlert(false);
+    // Analytics: 명상/호흡 실행 이벤트
+    (async () => {
+      try {
+        await logPlayActivity('MEDITATION', content.id);
+      } catch (analyticsError) {
+        console.warn('⚠️ Analytics 활동 시작 이벤트 로깅 실패:', analyticsError);
+      }
+    })();
     navigation.navigate('PlayMeditationScreen', { 
       content,
       initialPosition: 0  // 처음부터 시작하도록 명시적으로 0 전달
@@ -154,6 +181,14 @@ const PlayDetailScreen: React.FC = () => {
   const handleResumeFromProgress = () => {
     if (!content) return;
     setShowResumeAlert(false);
+    // Analytics: 명상/호흡 실행 이벤트
+    (async () => {
+      try {
+        await logPlayActivity('MEDITATION', content.id);
+      } catch (analyticsError) {
+        console.warn('⚠️ Analytics 활동 시작 이벤트 로깅 실패:', analyticsError);
+      }
+    })();
     if (resumeProgress !== null) {
       navigation.navigate('PlayMeditationScreen', { 
         content,

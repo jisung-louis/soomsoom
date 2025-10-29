@@ -32,6 +32,7 @@ import { getActivitiesByType, getActivityDetail } from '../../services/contentSe
 import { typography } from '../../constants/typography';
 import { useNotificationQueueProcessor } from '../../hooks/useNotificationQueueProcessor';
 import { showUniversalPopup, createAchievementPopup, createHeartRewardPopup, createItemRewardPopup } from '../../components/common/popup/UniversalPopup';
+import { logScreenView } from '../../utils/analytics';
 
 type HomeTabNavigationProp = StackNavigationProp<HomeStackParamList, 'HomeTab'>;
 
@@ -74,6 +75,9 @@ const HomeTab = () => {
       console.log('🏠 HomeTab 완전 재마운트!');
       setShowInnerContainer(false);
       setBubbleTalkKey(prev => prev + 1);
+      
+      // Analytics: 화면 조회 추적
+      logScreenView('HomeTab');
       
       // 홈 화면 진입 시 체류 시간 추적 시작
       startTracking();

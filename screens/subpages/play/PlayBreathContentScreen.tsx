@@ -29,6 +29,7 @@ import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import { useAudioPlayer } from "../../../hooks/useAudioPlayer";
 import { cleanupTrackPlayer } from "../../../services/trackPlayerService";
 import { RewardableMission } from "../../../services/activityLogService";
+import { logPlayActivityComplete } from '../../../utils/analytics';
 
 const PlayBreathContentScreen = ({route}: {route: RouteProp<PlayStackParamList, 'PlayBreathContentScreen'>}) => {
     const {content} = route.params;
@@ -101,6 +102,14 @@ const PlayBreathContentScreen = ({route}: {route: RouteProp<PlayStackParamList, 
             // 3. 액티비티 완료 처리
             const res = await completeActivity(content.id);
             setIsCompleted(true);
+            
+            // Analytics: 호흡 완료 이벤트
+            try {
+                const duration = Math.floor(getActualPlayTime()); // 초 단위
+                await logPlayActivityComplete('BREATHING', duration, content.id);
+            } catch (analyticsError) {
+                console.warn('⚠️ Analytics 활동 완료 이벤트 로깅 실패:', analyticsError);
+            }
             
             // 오디오 정지 (타임라인과 분리, 재생 중이었다면 일시정지)
             try { if (hasAudio) pauseAudio(); } catch {}

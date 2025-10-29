@@ -42,6 +42,23 @@ export const fetchMyAchievements = async (
   params: FetchMyAchievementsParams = {}
 ): Promise<ServerPagedResponse> => {
   try {
+    // 디버깅: 토큰 및 role 확인
+    const { useAuthStore } = await import('../stores/authStore');
+    const { decodeJwt } = await import('../utils/jwt');
+    const token = useAuthStore.getState().getAccessToken();
+    const role = useAuthStore.getState().role;
+    if (token) {
+      const payload = decodeJwt(token);
+      console.log('🔐 [업적 API] 요청 시 토큰 상태:', {
+        hasToken: !!token,
+        role: role || payload?.auth,
+        userId: payload?.userId || payload?.sub,
+        deviceId: payload?.deviceId,
+      });
+    } else {
+      console.warn('⚠️ [업적 API] 요청 시 토큰 없음');
+    }
+
     // apiClient 사용 (Authorization 자동 주입)
     const qp = new URLSearchParams();
     if (params.userId !== undefined) qp.set('userId', String(params.userId));

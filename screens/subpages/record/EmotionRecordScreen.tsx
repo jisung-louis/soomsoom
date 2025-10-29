@@ -18,6 +18,7 @@ import { SUBPAGE_HEADER_HEIGHT } from '../../../components/common/top-navigation
 import dayjs from 'dayjs';
 import { getLogicalNow } from '../../../utils/timeUtils';
 import { eventBus, APP_EVENTS } from '../../../utils/eventBus';
+import { logEmotionRecord } from '../../../utils/analytics';
 
 type ScreenMode = 'create' | 'view' | 'edit';
 
@@ -123,6 +124,13 @@ const EmotionRecordScreen = () => {
     if (screenMode === 'create') {
       const result = await saveEmotionRecord();
       if (result.success) {
+        // Analytics: 감정 기록 이벤트
+        try {
+          await logEmotionRecord(emotionKey || '');
+        } catch (analyticsError) {
+          console.warn('⚠️ Analytics 감정 기록 이벤트 로깅 실패:', analyticsError);
+        }
+        
         // 요약 데이터 새로고침 트리거
         eventBus.emit(APP_EVENTS.REFRESH_SUMMARY);
         // 정책상 토스트 메시지는 띄우지 않음 (주석 처리)

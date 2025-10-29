@@ -3,6 +3,7 @@ import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 import { requestTrackingPermissionsAsync } from 'expo-tracking-transparency';
 import mobileAds, { AdsConsent, AdsConsentStatus } from 'react-native-google-mobile-ads';
+import analytics from '@react-native-firebase/analytics';
 import { OnboardingProvider } from './contexts/OnboardingContext';
 import { ToastProvider } from './contexts/ToastContext';
 import { SocialLoginProvider } from './contexts/SocialLoginContext';
@@ -43,12 +44,20 @@ Notifications.setNotificationHandler({
 export default function App() {
   const { useMockApi } = useAppConfigStore();
   
-  // 앱 시작 시 ATT/UMP 동의 팝업 처리
+  // 앱 시작 시 ATT/UMP 동의 팝업 처리 및 Analytics 초기화
   React.useEffect(() => {
     const handlePermissions = async () => {
       try {
         // 0) Track Player 초기화
         await setupTrackPlayer();
+        
+        // 0.5) Analytics 초기화 및 앱 열림 이벤트 로깅
+        try {
+          await analytics().logAppOpen();
+          console.log('✅ Firebase Analytics 초기화 완료');
+        } catch (analyticsError) {
+          console.warn('⚠️ Analytics 초기화 실패:', analyticsError);
+        }
         
         // 1) iOS: ATT 요청
         if (Platform.OS === 'ios') {

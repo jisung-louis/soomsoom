@@ -12,6 +12,7 @@ import { ss, sv } from '../utils/scale';
 import { typography } from '../constants/typography';
 import { getUserPoints } from '../services/userService';
 import { useCurrencyStore } from './currencyStore';
+import { AppError, ErrorType } from '../utils/errorHandler';
 
 // 백엔드 API 응답 타입은 types/index.ts의 MyAchievement, PagedResponse 사용
 
@@ -115,7 +116,18 @@ export const useAchievementStore = create<AchievementState>()(
 
     loadUserAchievements: async (statusFilter: 'ALL' | 'ACHIEVED' | 'NOT_ACHIEVED' = 'ALL') => {
       try {
-        const response = await fetchMyAchievements({ statusFilter, page: 1, size: 50 });
+        // 인증 토큰이 없으면 조용히 리턴 (디바이스 로그인 사용자 등)
+        const accessToken = useAuthStore.getState().getAccessToken();
+        if (!accessToken) {
+          console.log('⚠️ 인증 토큰이 없어 업적 목록을 로드하지 않습니다.');
+          return;
+        }
+
+        const response = await fetchMyAchievements({
+          statusFilter,
+          page: 1,
+          size: 50,
+        });
 
         // 서버 응답을 내부 타입(MyAchievement)으로 그대로 저장 (progress 필드 원형 유지)
         const normalizedList: MyAchievement[] = response.content as any;
@@ -142,6 +154,16 @@ export const useAchievementStore = create<AchievementState>()(
         set({ userAchievements, cache });
         console.log('✅ 사용자 업적 로드 완료(필터 적용):', cache.size);
       } catch (error) {
+        // 권한 없음(ROLE_ANONYMOUS 또는 토큰 없음)일 때는 조용히 빈 결과 반환
+        if (error instanceof AppError && error.type === ErrorType.PERMISSION) {
+          console.log('⚠️ 업적 목록 조회 권한 없음 (디바이스 로그인 사용자 등) - 조용히 처리');
+          return;
+        }
+        // 인증 에러도 조용히 처리 (토큰 만료 등)
+        if (error instanceof AppError && error.type === ErrorType.AUTHENTICATION) {
+          console.log('⚠️ 업적 목록 조회 인증 실패 - 조용히 처리');
+          return;
+        }
         console.error('❌ 사용자 업적 로드 실패:', error);
       }
     },
