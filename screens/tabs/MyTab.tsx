@@ -441,6 +441,7 @@ const MyTab = () => {
 
   const enterEditMode = () => {
     setIsEditMode(true);
+    setSelectedTab(0);
     const items: number[] = [];
     Object.entries(placedItems).forEach(([key, value]) => {
       if (typeof value === 'number') items.push(value);
@@ -458,6 +459,7 @@ const MyTab = () => {
     }
     
     setIsEditMode(false);
+    setSelectedTab(0);
     setEditModeSelectedItems([]);
     setInitialSelectedItems([]);
     setShowSaveAlert(false);

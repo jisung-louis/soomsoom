@@ -36,6 +36,7 @@ export interface Item {
   lottieUrl: string | null;
   isSoldOut: boolean;
   isOwned: boolean;
+  hasShadow?: boolean;
   isEquipped: boolean;
   createdAt: string;
   modifiedAt: string;

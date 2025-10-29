@@ -165,12 +165,22 @@ const RecordReportTab = ({
   }, [reportCurrentYear, reportCurrentMonth]);
 
   // 월이 변경될 때 주차를 첫째 주로 리셋하고 월별 데이터 로딩
-  useEffect(() => {
+useEffect(() => {
+  const isCurrentYear = dayjs().year() === reportCurrentYear;
+  const isCurrentMonth = dayjs().month() + 1 === reportCurrentMonth;
+  if (isCurrentYear && isCurrentMonth) {
+    // 현재 월이면 현재 주차 유지
+    setCurrentWeek(dayjs().week());
+    console.log('현재 월이면 현재 주차 유지', dayjs().week());
+  } else {
+    // 다른 월로 변경 시 첫째 주로 리셋
     resetWeekToFirstWeekOfMonth();
-    loadMonthlyData();
-    // 월 변경 시 힌트 초기화
-    setShowDonutHint(true);
-  }, [reportCurrentYear, reportCurrentMonth, resetWeekToFirstWeekOfMonth, loadMonthlyData]);
+    console.log('다른 월로 변경 시 첫째 주로 리셋');
+  }
+  loadMonthlyData();
+  // 월 변경 시 힌트 초기화
+  setShowDonutHint(true);
+}, [reportCurrentYear, reportCurrentMonth, resetWeekToFirstWeekOfMonth, loadMonthlyData]);
 
 
   // monthlyStatsData를 ranking 형식으로 변환

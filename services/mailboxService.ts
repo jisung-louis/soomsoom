@@ -25,6 +25,7 @@ export interface AnnouncementDetail {
   id: number;
   title: string;
   content: string;
+  imageUrl?: string;
   sentAt: string;
   createdAt: string;
   modifiedAt: string;

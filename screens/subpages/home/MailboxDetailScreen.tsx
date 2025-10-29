@@ -21,7 +21,7 @@ const MailboxDetailScreen = ({route}: {route: RouteProp<HomeStackParamList, 'Mai
       <SubpageHeader title={'새로운 소식'} onBack={handleBack} />
       <ScrollView style={styles.contentContainer}>
         <View style={styles.imageContainer}>
-            <Image source={require('../../../assets/images/common/placeholder.png')} style={styles.image} />
+            <Image source={content.imageUrl ? { uri: content.imageUrl } : require('../../../assets/images/common/placeholder.png')} style={styles.image} resizeMode='cover' />
         </View>
         <View style={styles.mainContainer}>
             <Text style={styles.title}>{content.title}</Text>

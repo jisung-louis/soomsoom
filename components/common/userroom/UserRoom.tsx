@@ -30,7 +30,7 @@ const UserRoom = ({children, previewMode = false, previewItemIds = [], showPlace
   // 로띠 동기 재생을 위한 ref들
   const catRef = useRef<LottieView | null>(null);
   const itemLottieRefs = useRef<Record<number, LottieView | null>>({});
-  const [itemMap, setItemMap] = React.useState<Map<number, { image?: any; lottieJson?: any; positionType?: string }>>(new Map());
+  const [itemMap, setItemMap] = React.useState<Map<number, { image?: any; lottieJson?: any; positionType?: string; hasShadow?: boolean }>>(new Map());
   const isFocused = useIsFocused();
 
 
@@ -39,12 +39,13 @@ const UserRoom = ({children, previewMode = false, previewItemIds = [], showPlace
     (async () => {
       try {
         const res = await getItems({ sort: 'CREATED', page: 1, size: 200 });
-        const map = new Map<number, { image?: any; lottieJson?: any; positionType?: string }>();
+        const map = new Map<number, { image?: any; lottieJson?: any; positionType?: string; hasShadow?: boolean }>();
         res.content.forEach((it) => {
           map.set(it.id, {
             image: typeof it.imageUrl === 'string' && it.imageUrl.length > 0 ? ({ uri: it.imageUrl } as any) : (it.imageUrl as any) ?? undefined,
             lottieJson: typeof it.lottieUrl === 'string' && it.lottieUrl.length > 0 ? ({ uri: it.lottieUrl } as any) : (it.lottieUrl as any) ?? undefined,
             positionType: it.equipSlot?.toLowerCase?.(),
+            hasShadow: typeof it.hasShadow === 'boolean' ? it.hasShadow : undefined,
           });
         });
         if (mounted) setItemMap(map);
@@ -131,6 +132,21 @@ const UserRoom = ({children, previewMode = false, previewItemIds = [], showPlace
       return Boolean(item?.lottieJson);
     });
   }, [previewMode, renderItems, placedItems, itemMap]);
+
+  // 그림자 표시 여부 계산: BACKGROUND 또는 FLOOR 중 하나라도 hasShadow === false 이면 숨김
+  const shouldShowShadow = useMemo(() => {
+    const floorId = renderItems?.floor ?? null;
+    if (floorId) {
+      const v = itemMap.get(floorId)?.hasShadow;
+      return v !== false; // undefined 또는 true면 표시, false면 숨김
+    }
+    const bgId = renderItems?.background ?? null;
+    if (bgId) {
+      const v = itemMap.get(bgId)?.hasShadow;
+      return v !== false;
+    }
+    return true; // 둘 다 없으면 표시
+  }, [renderItems?.floor, renderItems?.background, itemMap]);
 
   // 디버깅: 렌더링되는 아이템들 확인
   // useEffect(() => {
@@ -365,7 +381,9 @@ const UserRoom = ({children, previewMode = false, previewItemIds = [], showPlace
                 source={require('../../../assets/icons/items/default-background/shadow_default.png')}
                 style={itemStyles.shadow}
               /> */}
-              <Shadow width={itemStyles.shadowSize.width} height={itemStyles.shadowSize.height} style={itemStyles.shadowStyle} color={itemStyles.shadowColor} opacity={itemStyles.shadowOpacity} />
+              {shouldShowShadow && (
+                <Shadow width={itemStyles.shadowSize.width} height={itemStyles.shadowSize.height} style={itemStyles.shadowStyle} color={itemStyles.shadowColor} opacity={itemStyles.shadowOpacity} />
+              )}
 
               {/* 아이템 배치 (프리뷰 우선, 없으면 배치 아이템) */}
               {renderLottieItem(renderItems.eyewear, objectPosition.eyewear, itemStyles.eyewear, 'eyewear')}
@@ -429,7 +447,9 @@ const UserRoom = ({children, previewMode = false, previewItemIds = [], showPlace
             source={require('../../../assets/icons/items/default-background/shadow_default.png')}
             style={itemStyles.shadow}
           /> */}
-          <Shadow width={itemStyles.shadowSize.width} height={itemStyles.shadowSize.height} style={itemStyles.shadowStyle} color={itemStyles.shadowColor} opacity={itemStyles.shadowOpacity} />
+          {shouldShowShadow && (
+            <Shadow width={itemStyles.shadowSize.width} height={itemStyles.shadowSize.height} style={itemStyles.shadowStyle} color={itemStyles.shadowColor} opacity={itemStyles.shadowOpacity} />
+          )}
 
           {/* 아이템 배치 (프리뷰 우선, 없으면 배치 아이템) */}
           {renderLottieItem(renderItems.eyewear, objectPosition.eyewear, itemStyles.eyewear, 'eyewear')}
