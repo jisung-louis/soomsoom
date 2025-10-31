@@ -40,19 +40,6 @@ const RecordTab = () => {
   // 알림 큐 처리 (탭 포커스 시 큐에 있는 알림을 순차적으로 표시)
   useNotificationQueueProcessor();
 
-  // 탭을 벗어날 때 바텀시트 닫기
-  useFocusEffect(
-    useCallback(() => {
-      // Analytics: 화면 조회 추적
-      logScreenView('RecordTab');
-      
-      return () => {
-        // 탭을 벗어날 때 바텀시트가 열려있으면 닫기
-        activityInducingSheetRef.current?.close();
-      };
-    }, [])
-  );
-  
   // 논리적 오늘(now) 유틸 사용: utils에서 설정한 기본 boundaryHour 사용
   const getLogicalNow = useCallback(() => getLogicalNowUtil(), []);
 
@@ -126,6 +113,38 @@ const RecordTab = () => {
   const [monthlyStatsData, setMonthlyStatsData] = useState<MonthlyStatsItem[]>([]);
   const [reportCurrentYear, setReportCurrentYear] = useState(dayjs().year());
   const [reportCurrentMonth, setReportCurrentMonth] = useState(dayjs().month() + 1);
+
+  // 탭을 벗어날 때 바텀시트 닫기
+  useFocusEffect(
+    useCallback(() => {
+      // Analytics: 화면 조회 추적
+      logScreenView('RecordTab');
+      
+      // 탭 포커스 시 리포트 데이터 다시 fetch하여 리렌더링 유도
+      const fetchOnFocus = async () => {
+        try {
+          const monthlyStats = await emotionStatsService.getMonthlyEmotionStats({
+            year: reportCurrentYear,
+            month: reportCurrentMonth,
+          });
+          setMonthlyStatsData(monthlyStats);
+        } catch (error) {
+          console.error('월별 감정 통계 로드 실패:', error);
+          showToast({
+            message: '감정 데이터를 불러오지 못했어요.',
+            theme: 'dark',
+            iconType: 'brokenHeart',
+          });
+        }
+      };
+      fetchOnFocus();
+      
+      return () => {
+        // 탭을 벗어날 때 바텀시트가 열려있으면 닫기
+        activityInducingSheetRef.current?.close();
+      };
+    }, [reportCurrentYear, reportCurrentMonth, showToast])
+  );
 
 
 
