@@ -21,7 +21,8 @@ import ServerClosedScreen from '../screens/ServerClosedScreen';
 import { usePushNotification } from '../hooks/usePushNotification';
 import { registerDevice } from '../services/notificationService';
 import { getFcmTokenAsync } from '../services/authService';
-import { Platform } from 'react-native';
+import { Platform, View } from 'react-native';
+import { colors } from '../constants/colors';
 
 enableScreens(true);
 
@@ -36,7 +37,7 @@ const AppContent = () => {
   const navigationRef = React.useRef<NavigationContainerRef<any>>(null);
 
   const { isBootstrapping, run } = useAppBootstrap();
-  const { serverClosed } = useAppConfigStore();
+  const { serverClosed, forceUpdateBlocked } = useAppConfigStore();
   const { setupResponseListener } = useNotificationSetup(navigationRef);
   const { phase } = useAuthStore();
   const { deviceLogin } = useAuth();
@@ -121,6 +122,9 @@ const AppContent = () => {
       <PortalProvider>
         {serverClosed ? (
           <ServerClosedScreen />
+        ) : forceUpdateBlocked ? (
+          // 강제 업데이트 필요 시: Alert는 이미 표시되었으므로 빈 화면 유지 (앱 실행 차단)
+          <View style={{ flex: 1, backgroundColor: colors.primary100 }} />
         ) : (
         <AuthGate
           showSplash={showSplash}

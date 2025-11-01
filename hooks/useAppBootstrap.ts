@@ -14,7 +14,7 @@ export function useAppBootstrap() {
   const { initOnAppStart } = useAchievementStore();
   const { run: runAuth } = useAuthBootstrap();
   const [isBootstrapping, setIsBootstrapping] = React.useState(true);
-  const { setCanRequestPersonalizedAds, setServerClosed } = useAppConfigStore();
+  const { setCanRequestPersonalizedAds, setServerClosed, setForceUpdateBlocked } = useAppConfigStore();
 
   const run = React.useCallback(async () => {
     setIsBootstrapping(true);
@@ -24,10 +24,19 @@ export function useAppBootstrap() {
       // 서버 닫힘/점검 상태 → 앱을 막고 전용 화면으로
       setServerClosed(true);
       setIsBootstrapping(false);
+      console.log('🔍 서버 닫힘/점검 상태 → 앱을 막고 전용 화면으로');
+      return;
+    }
+    // 강제 업데이트 필요 시 앱 실행 차단
+    if (versionCheck.shouldBlockApp) {
+      setForceUpdateBlocked(true);
+      // isBootstrapping은 true로 유지하여 AuthGate가 로딩 화면을 계속 표시하도록 함
+      console.log('🚫 강제 업데이트 필요 → 앱 실행 차단');
       return;
     }
     // 서버 사용 가능 시, 과거에 true였던 값을 확실히 해제
     setServerClosed(false);
+    setForceUpdateBlocked(false);
     try {
       console.log('🛠️ [Ads] setRequestConfiguration 시작');
       await mobileAds().setRequestConfiguration({
@@ -51,7 +60,7 @@ export function useAppBootstrap() {
     setIsBootstrapping(false);
   }, [runAuth, 
     //checkAppVersionOnStart, 
-    initOnAppStart, setCanRequestPersonalizedAds]);
+    initOnAppStart, setCanRequestPersonalizedAds, setServerClosed, setForceUpdateBlocked]);
 
   return { isBootstrapping, run } as { isBootstrapping: boolean; run: () => Promise<void> };
 }

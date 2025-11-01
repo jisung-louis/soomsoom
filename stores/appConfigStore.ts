@@ -13,6 +13,9 @@ interface AppConfigState {
   // Server availability
   serverClosed: boolean;
   setServerClosed: (value: boolean) => void;
+  // Force update blocking
+  forceUpdateBlocked: boolean;
+  setForceUpdateBlocked: (value: boolean) => void;
 }
 
 export const useAppConfigStore = create<AppConfigState>()(
@@ -25,10 +28,12 @@ export const useAppConfigStore = create<AppConfigState>()(
         setCanRequestPersonalizedAds: (value: boolean) => set({ canRequestPersonalizedAds: value }),
         serverClosed: false,
         setServerClosed: (value: boolean) => set({ serverClosed: value }),
+        forceUpdateBlocked: false,
+        setForceUpdateBlocked: (value: boolean) => set({ forceUpdateBlocked: value }),
       }),
       {
         name: 'app_config',
-        version: 3,
+        version: 4,
         storage: createJSONStorage(() => AsyncStorage),
         migrate: async (persistedState: any, version: number) => {
           // 초기 설치 또는 저장값 없음
@@ -37,6 +42,7 @@ export const useAppConfigStore = create<AppConfigState>()(
               useMockApi: false,
               canRequestPersonalizedAds: null,
               serverClosed: false,
+              forceUpdateBlocked: false,
             } as AppConfigState;
           }
           // v1 -> v2: 새 필드 추가
@@ -51,6 +57,13 @@ export const useAppConfigStore = create<AppConfigState>()(
             return {
               ...persistedState,
               serverClosed: false,
+            } as AppConfigState;
+          }
+          // v3 -> v4: forceUpdateBlocked 추가
+          if (version < 4) {
+            return {
+              ...persistedState,
+              forceUpdateBlocked: false,
             } as AppConfigState;
           }
           return persistedState as AppConfigState;

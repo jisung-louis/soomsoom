@@ -23,6 +23,7 @@ export interface AppVersionInfo {
 export function getCurrentAppVersion(): AppVersionInfo {
   return {
     version: Application.nativeApplicationVersion || '1.0.0',
+    //version: '1.2.0', // 테스트용
     buildNumber: Application.nativeBuildVersion || '1',
     platform: Platform.OS as 'ios' | 'android',
   };
@@ -35,11 +36,12 @@ export async function checkLatestVersion(): Promise<VersionResponse> {
   try {
     // Prod 환경: 실제 서버 API 호출
     const currentApp = getCurrentAppVersion();
+    console.log('🔍 서버 버전 체크 시작:', JSON.stringify(currentApp));
     const response = await apiClient.post<VersionResponse>(`/app-versions/check`, {
       os: currentApp.platform === 'ios' ? 'IOS' : 'ANDROID',
       versionName: currentApp.version,
     });
-    console.log('✅ 서버 버전 체크 성공:');
+    console.log('✅ 서버 버전 체크 성공:', JSON.stringify(response));
     return response;
   } catch (error) {
     console.error('❌ 서버 버전 체크 실패:', error);
@@ -105,7 +107,7 @@ export function showUpdateAlert(
 /**
  * 앱 시작 시 버전 체크를 수행하는 함수
  */
-export async function checkAppVersionOnStart(): Promise<{ serverAvailable: boolean }> {
+export async function checkAppVersionOnStart(): Promise<{ serverAvailable: boolean; shouldBlockApp: boolean }> {
   try {
     console.log('🔍 앱 버전 체크 시작...');
     
@@ -116,14 +118,24 @@ export async function checkAppVersionOnStart(): Promise<{ serverAvailable: boole
     console.log('🌐 최신 버전인가? :', checkVersion.isLatest);
     console.log('⚠️ 강제 업데이트가 필요한가? :', checkVersion.forceUpdate);
     
+    // 강제 업데이트일 경우 Alert 표시하고 앱 실행 차단
+    if (checkVersion.forceUpdate) {
+      showUpdateAlert(checkVersion, () => {
+        openAppStore(storeUrlForPlatform);
+      });
+      return { serverAvailable: true, shouldBlockApp: true };
+    }
+    
+    // 강제 업데이트는 아니지만 최신 버전이 아닌 경우 선택적 업데이트 알림
     if (!checkVersion.isLatest) {
       showUpdateAlert(checkVersion, () => {
         openAppStore(storeUrlForPlatform);
       });
     }
-    return { serverAvailable: true };
+    
+    return { serverAvailable: true, shouldBlockApp: false };
   } catch (error) {
     console.error('❌ 버전 체크 실패:', error);
-    return { serverAvailable: false };
+    return { serverAvailable: false, shouldBlockApp: false };
   }
 }
