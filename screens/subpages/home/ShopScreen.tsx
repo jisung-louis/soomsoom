@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo, useRef, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, useWindowDimensions, Image, FlatList, TouchableOpacity, Alert, ActivityIndicator, InteractionManager } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation, useFocusEffect, useRoute, RouteProp } from '@react-navigation/native';
+import { useNavigation, useFocusEffect, useRoute, RouteProp, useIsFocused } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { HomeStackParamList } from '../../../navigations/tabs/HomeStackNavigator';
 import SubpageHeader from '../../../components/common/top-navigation/SubpageHeader';
@@ -47,6 +47,8 @@ import { environmentConfig } from '../../../configs/environment';
 import { useAppConfigStore } from '../../../stores/appConfigStore';
 import { getUserPoints } from '../../../services/userService';
 import { useNotificationQueueProcessor } from '../../../hooks/useNotificationQueueProcessor';
+import { useScreenAnalytics } from '../../../hooks/useScreenAnalytics';
+import { logScreenView } from '../../../utils/analytics';
 
 type ShopScreenNavigationProp = StackNavigationProp<HomeStackParamList, 'ShopScreen'>;
 
@@ -55,6 +57,8 @@ type ShopScreenNavigationProp = StackNavigationProp<HomeStackParamList, 'ShopScr
 ItemList.displayName = 'ItemList';
 
 const ShopScreen = () => {
+  useScreenAnalytics('ShopScreen');
+
   const navigation = useNavigation<ShopScreenNavigationProp>();
   const route = useRoute<RouteProp<HomeStackParamList, 'ShopScreen'>>();
   // 탭 포커스 시 큐에 있는 알림을 순차적으로 표시
@@ -239,6 +243,16 @@ const ShopScreen = () => {
     { key: 'item', title: '아이템' },
     { key: 'charge', title: '충전소' },
   ]);
+
+  const isFocused = useIsFocused();
+
+  useEffect(() => {
+    if (!isFocused) return;
+    const screenName = index === 0 ? 'ShopItemTab' : 'ShopChargeTab';
+    logScreenView(screenName).catch((error) => {
+      console.warn('⚠️ Analytics 화면 조회 이벤트 로깅 실패:', error);
+    });
+  }, [index, isFocused]);
 
   // initialTab 파라미터에 따라 초기 탭 설정
   useEffect(() => {

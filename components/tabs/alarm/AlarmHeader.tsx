@@ -44,6 +44,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 10,
     paddingVertical: 6,
+    zIndex: 10000,
   },
   buttonContainer: {
     flexDirection: 'row',

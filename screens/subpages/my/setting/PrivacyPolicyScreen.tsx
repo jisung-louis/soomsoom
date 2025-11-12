@@ -3,8 +3,11 @@ import { View, Text, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import SubpageHeader from '../../../../components/common/top-navigation/SubpageHeader';
 import { useNavigation } from '@react-navigation/native';
+import { useScreenAnalytics } from '../../../../hooks/useScreenAnalytics';
 
 const PrivacyPolicyScreen = () => {
+    useScreenAnalytics('PrivacyPolicyScreen');
+
     const navigation = useNavigation();
     const handleBack = () => {
         navigation.goBack();

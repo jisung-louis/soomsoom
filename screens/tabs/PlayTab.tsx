@@ -6,7 +6,7 @@ import PlayBanner from '../../components/tabs/play/PlayBanner';
 import PlayShortActivityList from '../../components/tabs/play/PlayShortActivityList';
 import PlayRecommendedContentList from '../../components/tabs/play/PlayRecommendedContentList';
 import PlayCategoryList from '../../components/tabs/play/PlayCategoryList';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { PlayStackParamList } from '../../navigations/tabs/PlayStackNavigator';
 import { colors } from '../../constants/colors';
@@ -15,20 +15,15 @@ import { getActiveBanners } from '../../services/bannerService';
 import { Banner } from '../../types';
 import { ButtonSmall } from '../../components/common/buttons/ButtonSmall';
 import { useNotificationQueueProcessor } from '../../hooks/useNotificationQueueProcessor';
-import { logScreenView } from '../../utils/analytics';
+import { useScreenAnalytics } from '../../hooks/useScreenAnalytics';
 
 const PlayTab = () => {
+  useScreenAnalytics('PlayTab');
+
   const navigation = useNavigation<StackNavigationProp<PlayStackParamList>>();
   
   // 알림 큐 처리 (탭 포커스 시 큐에 있는 알림을 순차적으로 표시)
   useNotificationQueueProcessor();
-  
-  // Analytics: 화면 조회 추적
-  useFocusEffect(
-    useCallback(() => {
-      logScreenView('PlayTab');
-    }, [])
-  );
   
   // 데이터 상태 관리
   const [shortActivityData, setShortActivityData] = useState<Activity[]>([]);

@@ -91,7 +91,7 @@ function CustomTabBar({ state, navigation, setHasBottomNavigation }: BottomTabBa
     home: ['ShopScreen', 'ShopItemDetailScreen', 'MailboxScreen', 'MailboxDetailScreen', 'TestScreen'],
     play: ['PlayFavoriteScreen', 'PlayHistoryScreen', 'PlayDetailScreen', 'PlayInstructorDetailScreen', 'PlayBreathScreen', 'PlayMeditationScreen', 'PlayResultScreen', 'PlayBreathContentScreen', 'PlayActivityListScreen', 'PlayRestScreen'],
     alarm: ['AlarmAddScreen', 'AlarmDismissScreen', 'MissionAccomplishmentScreen'],
-    my: ['MyRoomDecorationPurchaseScreen', 'MyAchievementScreen'],
+    my: ['MyRoomDecorationPurchaseScreen', 'MyAchievementScreen', 'MyTestScreen'],
   };
 
   // 현재 화면이 숨겨야 하는 화면인지 확인

@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors } from '../../../constants/colors';
 import { StyleSheet } from 'react-native';
 import SubpageHeader from '../../../components/common/top-navigation/SubpageHeader';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useIsFocused } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { PlayStackParamList } from '../../../navigations/tabs/PlayStackNavigator';
 import { TabMenu } from '../../../components/common/tabmenu/TabMenu';
@@ -18,11 +18,15 @@ import { useFavorites } from '../../../hooks/useFavorites';
 import { useToast } from '../../../contexts/ToastContext';
 import { catIconMap } from '../../../utils/iconMap';
 import { syongsyongTypography } from '../../../constants/typography';
+import { useScreenAnalytics } from '../../../hooks/useScreenAnalytics';
+import { logScreenView } from '../../../utils/analytics';
 
 const normalizeImageSource = (url?: string | null) =>
   url ? { uri: url } : require('../../../assets/images/play/playFavoriteScreen/default_image_1.png');
 
 const PlayFavoriteScreen = () => {
+  useScreenAnalytics('PlayFavoriteScreen');
+
   const navigation = useNavigation<StackNavigationProp<PlayStackParamList>>();
   const handleBack = () => {
     navigation.goBack();
@@ -34,6 +38,16 @@ const PlayFavoriteScreen = () => {
     { key: 'favorite', title: '즐겨찾기' },
     { key: 'follow', title: '팔로우' },
   ]);
+
+  const isFocused = useIsFocused();
+
+  useEffect(() => {
+    if (!isFocused) return;
+    const screenName = index === 0 ? 'PlayFavoriteTab' : 'PlayFollowTab';
+    logScreenView(screenName).catch((error) => {
+      console.warn('⚠️ Analytics 화면 조회 이벤트 로깅 실패:', error);
+    });
+  }, [index, isFocused]);
 
   // zustand store 사용
   const { 

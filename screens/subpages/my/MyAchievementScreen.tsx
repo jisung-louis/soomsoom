@@ -17,8 +17,11 @@ import BadgeBronze from "../../../assets/icons/my/badge_bronze.svg";
 import BadgeSilver from "../../../assets/icons/my/badge_silver.svg";
 import BadgeGold from "../../../assets/icons/my/badge_gold.svg";
 import BadgeHidden from "../../../assets/icons/my/badge_hidden.svg";
+import { useScreenAnalytics } from '../../../hooks/useScreenAnalytics';
 
 const MyAchievementScreen = () => {
+  useScreenAnalytics('MyAchievementScreen');
+
   const [selectedTab, setSelectedTab] = useState<string>('전체');
   const navigation = useNavigation<StackNavigationProp<MyStackParamList>>();
 

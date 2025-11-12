@@ -103,6 +103,9 @@ const ItemList: React.FC<Props> = ({ filteredItems, onItemPress, isOutOfStock, i
   return (
     <FlatList<RoomItemLike | Placeholder>
       style={isCollection ? styles.collectionListContainer : styles.itemListContainer}
+      contentContainerStyle={{
+        paddingBottom: 50,
+      }}
       data={padToThreeColumns(filteredItems, isCollection)}
       numColumns={isCollection ? 2 : 3}
       columnWrapperStyle={isCollection ? styles.collectionRow : styles.row}

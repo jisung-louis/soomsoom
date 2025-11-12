@@ -14,6 +14,7 @@ import RecordList from './RecordList';
 import { sv } from '../../../utils/scale';
 import { getLogicalNow } from '../../../utils/timeUtils';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Button } from '../../common/buttons/Button';
 
 type RecordDiaryTabNavigationProp = CompositeNavigationProp<
   BottomTabNavigationProp<RootTabParamList, 'record'>,

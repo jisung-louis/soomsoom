@@ -9,8 +9,11 @@ import { syongsyongTypography, typography } from "../../../constants/typography"
 import { colors } from "../../../constants/colors";
 import { typeMap } from "./MailboxScreen";
 import { ss, sv } from "../../../utils/scale";
+import { useScreenAnalytics } from '../../../hooks/useScreenAnalytics';
 
 const MailboxDetailScreen = ({route}: {route: RouteProp<HomeStackParamList, 'MailboxDetailScreen'>}) => {
+  useScreenAnalytics('MailboxDetailScreen');
+
   const { content } = route.params;
   const navigation = useNavigation<StackNavigationProp<HomeStackParamList>>();
   const handleBack = () => {

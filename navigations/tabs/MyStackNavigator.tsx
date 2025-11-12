@@ -12,6 +12,8 @@ import TermOfServiceScreen from "../../screens/subpages/my/setting/TermOfService
 import PrivacyPolicyScreen from "../../screens/subpages/my/setting/PrivacyPolicyScreen";
 import MyRoomDecorationPurchaseScreen from "../../screens/subpages/my/room-decoration/MyRoomDecorationPurchaseScreen";
 
+import MyTestScreen from "../../screens/subpages/my/MyTestScreen";
+
 export type MyStackParamList = {
   MyTab: { autoEnterEditMode?: boolean } | undefined;
   MyAchievementScreen: undefined;
@@ -24,6 +26,8 @@ export type MyStackParamList = {
   TermOfServiceScreen: undefined;
   PrivacyPolicyScreen: undefined;
   MyRoomDecorationPurchaseScreen: { purchaseItems: number[] };
+
+  MyTestScreen: undefined;
   };
 
 const Stack = createStackNavigator<MyStackParamList>();
@@ -48,6 +52,7 @@ export default function MyStackNavigator() {
       <Stack.Screen name="TermOfServiceScreen" component={TermOfServiceScreen} />
       <Stack.Screen name="PrivacyPolicyScreen" component={PrivacyPolicyScreen} />
       <Stack.Screen name="MyRoomDecorationPurchaseScreen" component={MyRoomDecorationPurchaseScreen} />
+      <Stack.Screen name="MyTestScreen" component={MyTestScreen} />
     </Stack.Navigator>
   );
 };

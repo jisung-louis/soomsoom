@@ -51,8 +51,8 @@ export class ApiClient {
   /**
    * GET 요청 - 서버 응답을 직접 반환 (ApiResponse 래퍼 없음)
    */
-  async get<T>(endpoint: string): Promise<T> {
-    return this.request<T>(endpoint, { method: 'GET' });
+  async get<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+    return this.request<T>(endpoint, { ...options, method: 'GET' });
   }
 
   /**

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { StyleSheet, Text, View, ScrollView, useWindowDimensions, Image, InteractionManager } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation, useTheme, useRoute, RouteProp, useFocusEffect } from '@react-navigation/native';
+import { useNavigation, useTheme, useRoute, RouteProp, useFocusEffect, useIsFocused } from '@react-navigation/native';
 import { CompositeNavigationProp } from '@react-navigation/native';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -30,6 +30,7 @@ import { radius } from '../../constants/radius';
 import { ss, sv } from '../../utils/scale';
 import { useNotificationQueueProcessor } from '../../hooks/useNotificationQueueProcessor';
 import { logScreenView } from '../../utils/analytics';
+import { useScreenAnalytics } from '../../hooks/useScreenAnalytics';
 
 type RecordTabNavigationProp = CompositeNavigationProp<
   BottomTabNavigationProp<RootTabParamList, 'record'>,
@@ -37,6 +38,8 @@ type RecordTabNavigationProp = CompositeNavigationProp<
 >;
 
 const RecordTab = () => {
+  useScreenAnalytics('RecordTab');
+
   // 알림 큐 처리 (탭 포커스 시 큐에 있는 알림을 순차적으로 표시)
   useNotificationQueueProcessor();
 
@@ -117,9 +120,6 @@ const RecordTab = () => {
   // 탭을 벗어날 때 바텀시트 닫기
   useFocusEffect(
     useCallback(() => {
-      // Analytics: 화면 조회 추적
-      logScreenView('RecordTab');
-      
       // 탭 포커스 시 리포트 데이터 다시 fetch하여 리렌더링 유도
       const fetchOnFocus = async () => {
         try {
@@ -320,6 +320,16 @@ const RecordTab = () => {
     { key: 'report', title: '마음 리포트' },
   ]);
 
+  const isFocused = useIsFocused();
+
+  useEffect(() => {
+    if (!isFocused) return;
+    const screenName = index === 0 ? 'RecordDiaryTab' : 'RecordReportTab';
+    logScreenView(screenName).catch((error) => {
+      console.warn('⚠️ Analytics 화면 조회 이벤트 로깅 실패:', error);
+    });
+  }, [index, isFocused]);
+
   // 탭 포커스 시 항상: 일기 탭, 주간 보기, 이번 주(오늘 포함 주)로 초기화
   useFocusEffect(
     useCallback(() => {
@@ -488,6 +498,7 @@ const styles = StyleSheet.create({
   bottomSheetTitle: {
     ...syongsyongTypography.title4,
     lineHeight: 26*1.3,
+    marginTop: 50,
   },
   bottomSheetMessage: {
     ...typography.body2,
@@ -515,7 +526,6 @@ const styles = StyleSheet.create({
   activityInducingContainer: {
     paddingBottom: 50,
     paddingHorizontal: 20,
-    marginTop: -10,
   },
   activityInducingTitle: {
     ...syongsyongTypography.title4,

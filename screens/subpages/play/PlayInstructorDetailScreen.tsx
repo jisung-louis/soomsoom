@@ -18,6 +18,7 @@ import { getInstructorDetail, getInstructorActivities, toggleFollowInstructor, I
 import LoadingSpinner from '../../../components/common/loading/LoadingSpinner';
 import ErrorMessage from '../../../components/common/error/ErrorMessage';
 import { getActivityDetail, Activity } from '../../../services/contentService';
+import { useScreenAnalytics } from '../../../hooks/useScreenAnalytics';
 import { normalizeImageSource } from '../../../utils/textUtils';
 import { renderItemImage } from '../../../utils/imageUtils';
 import { claimMission } from '../../../services/missionService';
@@ -27,6 +28,8 @@ import { ss } from '../../../utils/scale';
 import { sv } from '../../../utils/scale';
 
 const PlayInstructorDetailScreen: React.FC = () => {
+  useScreenAnalytics('PlayInstructorDetailScreen');
+
     const navigation = useNavigation<StackNavigationProp<PlayStackParamList>>();
     const route = useRoute<RouteProp<PlayStackParamList, 'PlayInstructorDetailScreen'>>();
     const { instructorId } = route.params;

@@ -13,8 +13,11 @@ import { decodeJwt } from '../../../../utils/jwt';
 import { useAuth } from '../../../../hooks/useAuth';
 import CustomAlert from '../../../../components/common/alert/CustomAlert';
 import { useSocialLogin } from '../../../../contexts/SocialLoginContext';
+import { useScreenAnalytics } from '../../../../hooks/useScreenAnalytics';
 
 const AccountInfoScreen = () => {
+    useScreenAnalytics('AccountInfoScreen');
+
     const navigation = useNavigation();
     const { showToast } = useToast();
     const { lastProviderToken, role } = useAuthStore();

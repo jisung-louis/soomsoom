@@ -15,6 +15,7 @@ import EmptyIcon from '../../../assets/images/home/mailbox/mailbox_empty.svg';
 import { radius } from '../../../constants/radius';
 import { useMailboxStore } from '../../../stores/mailboxStore';
 import { UserAnnouncement, getAnnouncementDetail } from '../../../services/mailboxService';
+import { useScreenAnalytics } from '../../../hooks/useScreenAnalytics';
 dayjs.extend(relativeTime);
 dayjs.locale('ko');
 
@@ -34,6 +35,8 @@ const sortAnnouncements = (announcements: UserAnnouncement[] | undefined | null)
 };
 
 const MailboxScreen = () => {
+  useScreenAnalytics('MailboxScreen');
+
   const navigation = useNavigation<StackNavigationProp<HomeStackParamList>>();
   const [refreshing, setRefreshing] = useState(false);
   

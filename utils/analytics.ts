@@ -128,7 +128,9 @@ export const logPurchaseComplete = async (
  * 방 꾸미기 시작 이벤트
  */
 export const logRoomDecorationStart = async () => {
-  await logEvent('room_decoration_start');
+  await logEvent('room_decoration_start', {
+    description: '방 꾸미기 시작',
+  });
 };
 
 /**
@@ -174,6 +176,16 @@ export const logAchievementUnlock = async (achievementId: number, achievementNam
   await logEvent('achievement_unlock', {
     achievement_id: achievementId,
     achievement_name: achievementName,
+  });
+};
+
+/**
+ * 홈 화면 말풍선 버튼 클릭 이벤트
+ */
+export const logHomeBubbleButtonClick = async (buttonType: 'record' | 'play') => {
+  await logEvent('home_bubble_button_click', {
+    button_type: buttonType,
+    description: '홈 화면 말풍선 버튼 클릭',
   });
 };
 

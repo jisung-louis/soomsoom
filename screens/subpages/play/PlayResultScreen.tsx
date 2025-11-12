@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, BackHandler, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { syongsyongTypography, typography } from '../../../constants/typography';
 import { colors } from '../../../constants/colors';
@@ -18,6 +18,7 @@ import { useSpringUpAnimation } from '../../../hooks/useSpringUpAnimation';
 import { eventBus, APP_EVENTS } from '../../../utils/eventBus';
 import { RewardableMission } from '../../../services/activityLogService';
 import { claimMission } from '../../../services/missionService';
+import { useScreenAnalytics } from '../../../hooks/useScreenAnalytics';
 import { ss, sv } from '../../../utils/scale';
 import { useToast } from '../../../hooks/useToast';
 import { useCurrencyStore } from '../../../stores/currencyStore';
@@ -30,6 +31,8 @@ const MOCK_ACTIVITY_DESCRIPTION = [
     ]
 
 const PlayResultScreen = ({route}: {route: RouteProp<PlayStackParamList, 'PlayResultScreen'>}) => {
+  useScreenAnalytics('PlayResultScreen');
+
     const navigation = useNavigation<StackNavigationProp<PlayStackParamList>>();
     const buttonRef = useRef<ButtonRef>(null);
     const { effectTexts, rewardableMission } = route.params;
@@ -95,6 +98,16 @@ const PlayResultScreen = ({route}: {route: RouteProp<PlayStackParamList, 'PlayRe
         });
         navigation.getParent()?.navigate('home');
     };
+
+  // Android 하드웨어 뒤로가기: 결과 화면에서 아무 동작도 하지 않음 (소비)
+  useEffect(() => {
+    if (Platform.OS !== 'android') return;
+    const onBack = () => {
+      return true; // consume: no-op
+    };
+    const sub = BackHandler.addEventListener('hardwareBackPress', onBack);
+    return () => sub.remove();
+  }, []);
 
     // 슬라이드업 애니메이션 훅 사용
     const { animatedStyle: buttonAnimatedStyle, triggerAnimation } = useSpringUpAnimation({

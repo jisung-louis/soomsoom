@@ -36,11 +36,12 @@ import { useAppConfigStore } from '../../stores/appConfigStore';
 import { getUserActivitySummary, UserActivitySummaryResponse } from '../../services/activityLogService';
 import { useAuthStore } from '../../stores/authStore';
 import { useAuth } from '../../hooks/useAuth';
-import { useBackgroundColor, useBgTopColor } from '../../hooks/useBackgroundColor';
+import { useBgTopColor } from '../../hooks/useBackgroundColor';
 import { eventBus, APP_EVENTS } from '../../utils/eventBus';
 import { useNotificationQueueProcessor } from '../../hooks/useNotificationQueueProcessor';
 import ToastView from '../../components/common/toast/ToastView';
-import { logScreenView } from '../../utils/analytics';
+import { useScreenAnalytics } from '../../hooks/useScreenAnalytics';
+import { logRoomDecorationStart } from '../../utils/analytics';
 
 const mockStatusData = [
     { title: '기록', valueType: '회', value: null },
@@ -49,12 +50,17 @@ const mockStatusData = [
 ];
 const statusCardContentItemWidth = 100 / mockStatusData.length;
 
-const BOTTOM_SHEET_DEFAULT_HEIGHT = (objectPosition.shadow.y + ss(30) + 10) - sv(176);
-const BOTTOM_SHEET_HEIGHT = WINDOW_HEIGHT - BOTTOM_SHEET_DEFAULT_HEIGHT; // 고양이 그림자 바로 아래 +10 까지 바텀시트 올림 (Default) + 176(figma 기준) 상단마진
+export const BOTTOM_SHEET_DEFAULT_HEIGHT = (objectPosition.shadow.y + ss(30) + 10) - sv(176);
+// WINDOW_HEIGHT가 undefined일 수 있으므로 안전하게 처리
+export const BOTTOM_SHEET_HEIGHT = (typeof WINDOW_HEIGHT === 'number' && !isNaN(WINDOW_HEIGHT) && WINDOW_HEIGHT > 0)
+  ? WINDOW_HEIGHT - BOTTOM_SHEET_DEFAULT_HEIGHT
+  : 600; // 기본값: 안드로이드에서 WINDOW_HEIGHT가 없을 때 사용할 높이
 const BOTTOM_SHEET_MIN_HEIGHT = 118 + 20 + 129 + 10 // 바텀시트 탭매뉴 높이(118) + 아이템리스트 컨테이너 패딩 높이(20) + 아이템 칼럼 높이(129) + 아이템 칼럼 하단 마진(10)
 const BOTTOM_SHEET_MAX_HEIGHT = 118 + 312 // 바텀시트 탭매뉴 높이(118) + 아이템리스트 컨테이너 높이(312)
 
 const MyTab = () => {
+  useScreenAnalytics('MyTab');
+
   // 알림 큐 처리 (탭 포커스 시 큐에 있는 알림을 순차적으로 표시)
   useNotificationQueueProcessor();
   
@@ -91,9 +97,6 @@ const MyTab = () => {
   useFocusEffect(
     useCallback(() => {
       console.log('👤 MyTab 포커스됨 - 데이터 새로고침');
-      
-      // Analytics: 화면 조회 추적
-      logScreenView('MyTab');
       
       // 디바이스 ID 새로고침 (토큰 변경 시 반영)
       const refreshDeviceId = async () => {
@@ -444,6 +447,11 @@ const MyTab = () => {
   }, [itemMap]);
 
   const enterEditMode = () => {
+    // Analytics: 방 꾸미기 시작 이벤트
+    logRoomDecorationStart().catch((analyticsError) => {
+      console.warn('⚠️ Analytics 방 꾸미기 시작 이벤트 로깅 실패:', analyticsError);
+    });
+    
     setIsEditMode(true);
     setSelectedTab(0);
     const items: number[] = [];
@@ -583,14 +591,29 @@ const MyTab = () => {
     }
   };
 
+  // Android 하드웨어 뒤로가기: 편집 모드일 때는 내장 네비게이션 대신 onBackButtonClick() 실행
+  React.useEffect(() => {
+    const { BackHandler, Platform } = require('react-native');
+    if (Platform.OS !== 'android') return;
+
+    const onHardwareBack = () => {
+      if (isEditMode) {
+        onBackButtonClick();
+        return true; // 기본 뒤로가기(탭 이동/네비 pop) 차단
+      }
+      return false; // 기본 동작 유지
+    };
+
+    const sub = BackHandler.addEventListener('hardwareBackPress', onHardwareBack);
+    return () => sub.remove();
+  }, [isEditMode, onBackButtonClick]);
+
   const isSocialLogin = useMemo(() => {
     return role === 'ROLE_USER';
   }, [role]);
 
   const [roomBgUri, setRoomBgUri] = useState<string | null>(null);
   const [deviceId, setDeviceId] = useState<string>('');
-  const dynamicBgColor = useBackgroundColor(roomBgUri);
-
   const isBGColorDark = useBgTopColor(roomBgUri);
 
   const achievementCardHeight = useMemo(() => {
@@ -608,7 +631,7 @@ const MyTab = () => {
   }, [achievedAchievements, isAchievementsLoading]);
 
   return (
-    <View style={[styles.container, { backgroundColor: dynamicBgColor }]}>
+    <View style={[styles.container]}>
         <MyTabTopNavigation
             isEditMode={isEditMode}
             onEditModeToggle={onBackButtonClick}
@@ -736,6 +759,9 @@ const MyTab = () => {
             />
           </View>
         }
+        hasSnapPoints
+        enableDynamicSizing={false}
+        snapPoints={[BOTTOM_SHEET_HEIGHT]}
         hasBackDrop={false}
         bottomSheetModalRef={bottomSheetRef}
         enablePanDownToClose={false}
@@ -864,7 +890,7 @@ const styles = StyleSheet.create({
   bottomSheetContent: { 
     height: BOTTOM_SHEET_HEIGHT,
     minHeight: BOTTOM_SHEET_MIN_HEIGHT,
-    maxHeight: BOTTOM_SHEET_MAX_HEIGHT,
+    //maxHeight: BOTTOM_SHEET_MAX_HEIGHT,
   },
 });
 

@@ -18,6 +18,7 @@ import { usePurchase } from '../../../hooks/usePurchase';
 import UserRoom from '../../../components/common/userroom/UserRoom';
 import InPossessionItemList from '../../../components/tabs/home/InPossessionItemList';
 import { radius } from '../../../constants/radius';
+import { useScreenAnalytics } from '../../../hooks/useScreenAnalytics';
 import { Alert } from 'react-native';
 import { renderItemImage } from '../../../utils/imageUtils';
 import { useBgTopColor } from '../../../hooks/useBackgroundColor';
@@ -25,6 +26,8 @@ import { useBgTopColor } from '../../../hooks/useBackgroundColor';
 type ShopItemDetailScreenRouteProp = RouteProp<HomeStackParamList, 'ShopItemDetailScreen'>;
 
 const ShopItemDetailScreen = () => {
+  useScreenAnalytics('ShopItemDetailScreen');
+
     const route = useRoute<ShopItemDetailScreenRouteProp>();
     const { itemId, isCollection } = route.params;
     const navigation = useNavigation<StackNavigationProp<HomeStackParamList>>();

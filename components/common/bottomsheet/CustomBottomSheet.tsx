@@ -12,7 +12,7 @@ interface CustomBottomSheetProps extends BottomSheetProps {
   hasSnapPoints?: boolean;
   hasBackDrop?: boolean;
   hasXButton?: boolean;
-  snapPoints?: string[];
+  snapPoints?: Array<string | number>;
   enableDynamicSizing?: boolean;
   style?: StyleProp<ViewStyle>;
   // New: top button/header controls
@@ -84,21 +84,35 @@ const CustomBottomSheet: React.FC<CustomBottomSheetProps> = ({
         ref={bottomSheetModalRef}
         index={-1}
         snapPoints={hasSnapPoints ? snapPoints : undefined}
-        style={[style,{
-          zIndex: 10,
-          elevation: 10,
+        style={[style, {
           overflow: 'visible',
         }]}
+        containerStyle={{
+          zIndex: 10000,
+          elevation: 10000, // 안드로이드에서 탭바(elevation: 1000)보다 위에 표시되도록 충분히 높게 설정
+        }}
+        backgroundStyle={{
+          elevation: 10000, // 안드로이드에서 배경에도 elevation 적용
+        }}
         backdropComponent={hasBackDrop ? renderBackdrop : undefined}
         enableDynamicSizing={enableDynamicSizing}
         enablePanDownToClose={true}
+        enableContentPanningGesture={false}
         handleComponent={renderHandle}
         {...props}
       >
         {/* NOTE: dynamic sizing 모드에서는 flex:1을 제거해야 콘텐츠 높이로 시트가 계산됩니다. */}
-        <BottomSheetView style={enableDynamicSizing ? { zIndex: 10000 } : { flex: 1, zIndex: 10000 }}>
+        <BottomSheetView 
+          style={{marginTop:0, ...(enableDynamicSizing ? { zIndex: 10000 } : { flex: 1, zIndex: 10000 })}}
+          pointerEvents="box-none"
+        >
           {hasXButton && (
-            <TouchableOpacity style={styles.closeButton} onPress={() => bottomSheetModalRef.current?.close()}>
+            <TouchableOpacity 
+              style={styles.closeButton} 
+              onPress={() => bottomSheetModalRef.current?.close()}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              activeOpacity={0.7}
+            >
               <CloseIcon width={24} height={24} />
             </TouchableOpacity>
           )}
@@ -119,8 +133,12 @@ const styles = StyleSheet.create({
     zIndex: 1000000,
   },
   closeButton: {
-    alignSelf: 'flex-end',
+    position: 'absolute',
+    top: 0,
+    right: 0,
     padding: 20,
+    zIndex: 10001,
+    elevation: 11, // 안드로이드에서 zIndex 대신 elevation 사용
   },
 
   celebrationParticleContainer: {

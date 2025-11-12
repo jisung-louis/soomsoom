@@ -12,10 +12,13 @@ import EmotionHelpBox from '../../../components/tabs/record/EmotionRecordHelp/Em
 import {Button} from '../../../components/common/buttons/Button';
 import { LinearGradient } from 'expo-linear-gradient';
 import { sv } from '../../../utils/scale';
+import { useScreenAnalytics } from '../../../hooks/useScreenAnalytics';
 
 type EmotionRecordHelpScreenNavigationProp = StackNavigationProp<RecordStackParamList, 'EmotionRecordHelpScreen'>;
 
 const EmotionRecordHelpScreen = () => {
+  useScreenAnalytics('EmotionRecordHelpScreen');
+
   const navigation = useNavigation<EmotionRecordHelpScreenNavigationProp>();
 
   const handleBack = () => {

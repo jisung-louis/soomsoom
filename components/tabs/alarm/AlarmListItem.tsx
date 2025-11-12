@@ -63,6 +63,7 @@ const AlarmListItem = ({ item, toggleSwitch, isEditMode, onDeleteAlarm, onEditAl
                       onValueChange={() => {toggleSwitch(item.id)}}
                       trackColor={{ false: colors.primary200, true: colors.primary300 }}
                       ios_backgroundColor={colors.primary200}
+                      thumbColor={colors.white}
                       style={styles.alarmItemSwitch}
                     />
                   </TouchableOpacity>

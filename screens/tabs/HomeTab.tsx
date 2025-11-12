@@ -25,19 +25,22 @@ import { useAuth } from '../../hooks/useAuth';
 import { resetAppState } from '../../utils/resetAppState';
 import { useHomeTimeLogger } from '../../hooks/useHomeTimeLogger';
 import { useTodayMissionStore } from '../../stores/todayMissionStore';
-import { useBackgroundColor, useBgTopColor } from '../../hooks/useBackgroundColor';
+import { useBgTopColor } from '../../hooks/useBackgroundColor';
 import { useMailboxStore } from '../../stores/mailboxStore';
 import { getLogicalNow } from '../../utils/timeUtils';
 import { getActivitiesByType, getActivityDetail } from '../../services/contentService';
 import { typography } from '../../constants/typography';
 import { useNotificationQueueProcessor } from '../../hooks/useNotificationQueueProcessor';
 import { showUniversalPopup, createAchievementPopup, createHeartRewardPopup, createItemRewardPopup } from '../../components/common/popup/UniversalPopup';
-import { logScreenView } from '../../utils/analytics';
+import { useScreenAnalytics } from '../../hooks/useScreenAnalytics';
+import { logHomeBubbleButtonClick } from '../../utils/analytics';
 
 type HomeTabNavigationProp = StackNavigationProp<HomeStackParamList, 'HomeTab'>;
 
 
 const HomeTab = () => {
+  useScreenAnalytics('HomeTab');
+
   const navigation = useNavigation<HomeTabNavigationProp>();
   const [showInnerContainer, setShowInnerContainer] = useState(false);
   const [bubbleTalkKey, setBubbleTalkKey] = useState(0);
@@ -75,9 +78,6 @@ const HomeTab = () => {
       console.log('🏠 HomeTab 완전 재마운트!');
       setShowInnerContainer(false);
       setBubbleTalkKey(prev => prev + 1);
-      
-      // Analytics: 화면 조회 추적
-      logScreenView('HomeTab');
       
       // 홈 화면 진입 시 체류 시간 추적 시작
       startTracking();
@@ -240,6 +240,13 @@ const HomeTab = () => {
 
   const onBubbleTalkPress = async () => {
     if (todayStatus === 'NEED_DIARY') {
+      // Analytics: 말풍선 버튼 (기록) 클릭 이벤트
+      try {
+        await logHomeBubbleButtonClick('record');
+      } catch (analyticsError) {
+        console.warn('⚠️ Analytics 말풍선 버튼 클릭 이벤트 로깅 실패:', analyticsError);
+      }
+      
       // 논리적 오늘 날짜 계산 (06:00 ~ 다음날 05:59 기준)
       const logicalToday = getLogicalNow();
       const todayDateString = logicalToday.format('YYYY-MM-DD');
@@ -252,6 +259,13 @@ const HomeTab = () => {
       return;
     }
     if (todayStatus === 'NEED_ACTIVITY') {
+      // Analytics: 말풍선 버튼 (놀기) 클릭 이벤트
+      try {
+        await logHomeBubbleButtonClick('play');
+      } catch (analyticsError) {
+        console.warn('⚠️ Analytics 말풍선 버튼 클릭 이벤트 로깅 실패:', analyticsError);
+      }
+      
       try {
         // BREATHING 타입의 액티비티 목록 가져오기 (짧은 활동용)
         const breathingActivities = await getActivitiesByType('BREATHING');
@@ -316,15 +330,15 @@ const HomeTab = () => {
           {showInnerContainer && (
             <TouchableOpacity 
               style={[itemStyles.bubbleTalkInnerContainer, {
-                top: objectPosition.bubbleTalk.y + 20,
-                left: objectPosition.bubbleTalk.x + 64,
+                top: objectPosition.bubbleTalk.y + sx(20),
+                left: objectPosition.bubbleTalk.x + sy(64),
               }]}
               onPress={onBubbleTalkPress}
             >
               {todayStatus === 'NEED_DIARY' ? (
-                <BubbleRecordIcon width={48} height={48} />
+                <BubbleRecordIcon width={ss(48)} height={sv(48)} />
               ) : (
-                <BubblePlayIcon width={48} height={48} />
+                <BubblePlayIcon width={ss(48)} height={sv(48)} />
               )}
               <Text style={{...syongsyongTypography.title4}}>!</Text>
             </TouchableOpacity>

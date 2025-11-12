@@ -10,6 +10,7 @@ import { SocialLoginProvider } from './contexts/SocialLoginContext';
 import AppContent from './app/AppContent';
 import { useAppConfigStore } from './stores/appConfigStore';
 import { setupTrackPlayer } from './services/trackPlayerService';
+import { setupAlarmNotificationChannel } from './services/alarmNotificationService';
 
 // 포어그라운드/백그라운드 알림 핸들러 설정 (앱 시작 시 1회)
 Notifications.setNotificationHandler({
@@ -51,8 +52,21 @@ export default function App() {
         // 0) Track Player 초기화
         await setupTrackPlayer();
         
+        // 0.3) Android: 알람 알림 채널 생성 (앱 시작 시 한 번만)
+        if (Platform.OS === 'android') {
+          await setupAlarmNotificationChannel();
+        }
+        
         // 0.5) Analytics 초기화 및 앱 열림 이벤트 로깅
         try {
+          // 개발 모드에서 DebugView 활성화
+          if (__DEV__) {
+            // iOS: 디버그 모드 활성화 (Xcode Scheme Arguments에 -FIRDebugEnabled 추가 필요)
+            // Android: ADB 명령어로 활성화 필요 (아래 주석 참고)
+            // adb shell setprop debug.firebase.analytics.app com.soomsoom.app
+            await analytics().setAnalyticsCollectionEnabled(true);
+            console.log('✅ Firebase Analytics 디버그 모드 활성화 (개발 모드)');
+          }
           await analytics().logAppOpen();
           console.log('✅ Firebase Analytics 초기화 완료');
         } catch (analyticsError) {

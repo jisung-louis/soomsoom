@@ -21,10 +21,13 @@ import { CustomAlert, AlertButton } from '../../../components/common/alert';
 import { convert24To12Hour, convert12To24Hour } from '../../../utils/timeUtils';
 import { generateMissionsByData } from '../../../utils/mathMissionGenerator';
 import { logAlarmSet } from '../../../utils/analytics';
+import { useScreenAnalytics } from '../../../hooks/useScreenAnalytics';
 
 type BottomSheetType = 'repeat' | 'mission' | 'sound' | null;
 
 const AlarmAddScreen = () => {
+  useScreenAnalytics('AlarmAddScreen');
+
   const route = useRoute<RouteProp<AlarmStackParamList, 'AlarmAddScreen'>>();
   const { isCreateMode, alarmId = null } = route.params;
   const navigation = useNavigation<StackNavigationProp<AlarmStackParamList>>();

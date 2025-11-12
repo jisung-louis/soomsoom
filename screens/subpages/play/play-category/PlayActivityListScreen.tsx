@@ -11,8 +11,11 @@ import { Activity, getActivitiesByCategory, getActivitiesByType } from '../../..
 import { catIconMap } from '../../../../utils/iconMap';
 import { activityRestData } from '../../../../data/activityRestData';
 import LoadingSpinner from '../../../../components/common/loading/LoadingSpinner';
+import { useScreenAnalytics } from '../../../../hooks/useScreenAnalytics';
 
 const PlayActivityListScreen = ({route}: {route: RouteProp<PlayStackParamList, 'PlayActivityListScreen'>}) => {
+  useScreenAnalytics('PlayActivityListScreen');
+
   const { title: initialTitle, content: initialContent } = route.params;
   const navigation = useNavigation<StackNavigationProp<PlayStackParamList>>();
   const handleBack = () => {

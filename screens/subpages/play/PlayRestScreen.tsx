@@ -17,9 +17,12 @@ import { ss, sv } from '../../../utils/scale';
 import CatBasic from '../../../assets/images/play/playBreathing/basic.svg';
 import { Activity, getActivityDetail } from '../../../services/contentService';
 import { cleanupTrackPlayer } from '../../../services/trackPlayerService';
+import { useScreenAnalytics } from '../../../hooks/useScreenAnalytics';
 
 
 const PlayRestScreen = ({route}: {route: RouteProp<PlayStackParamList, 'PlayRestScreen'>}) => {
+  useScreenAnalytics('PlayRestScreen');
+
   const navigation = useNavigation<StackNavigationProp<PlayStackParamList>>();
   const handleBack = async () => {
     try {

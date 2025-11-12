@@ -13,8 +13,11 @@ import { useVisitedActivityStore } from '../../../stores/visitedActivityStore';
 import ProgramList from '../../../components/tabs/play/common/ProgramList';
 import { catIconMap } from '../../../utils/iconMap';
 import { syongsyongTypography, typography } from '../../../constants/typography';
+import { useScreenAnalytics } from '../../../hooks/useScreenAnalytics';
 
 const PlayHistoryScreen = () => {
+  useScreenAnalytics('PlayHistoryScreen');
+
   const navigation = useNavigation<StackNavigationProp<PlayStackParamList>>();
   const handleBack = () => {
     navigation.goBack();

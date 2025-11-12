@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image, FlatList, ImageSourcePropType } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image, ImageSourcePropType, Platform } from 'react-native';
+import { BottomSheetFlatList } from '@gorhom/bottom-sheet';
 import InPossessionIcon from '../../../assets/icons/my/room-decoration/in_possession.svg';
 import AccessoryIcon from '../../../assets/icons/my/room-decoration/accessory.svg';
 import CollectionIcon from '../../../assets/icons/my/room-decoration/collection.svg';
@@ -25,6 +26,9 @@ import { SvgProps } from 'react-native-svg';
 import { RoomItemCategory } from '../../../types/room';
 import IconTabMenu, { TabMenuItem } from '../../../components/common/tabmenu/IconTabMenu';
 import { ss } from '../../../utils/scale';
+import { BOTTOM_SHEET_DEFAULT_HEIGHT, BOTTOM_SHEET_HEIGHT } from '../../tabs/MyTab';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { logScreenView } from '../../../utils/analytics';
 
 const ITEM_IMAGE_WIDTH = 105;
 const ITEM_IMAGE_HEIGHT = 105;
@@ -134,6 +138,13 @@ const MyRoomDecoration = ({
   onItemSelection: (itemId: number) => void,
   onCollectionSelection: (itemIds: number[]) => void
 }) => {
+    // Analytics: BottomSheet 내부 컴포넌트이므로 useEffect 사용 (useFocusEffect는 NavigationContainer 내부에서만 작동)
+    React.useEffect(() => {
+      logScreenView('MyRoomDecoration').catch((error) => {
+        console.warn('⚠️ Analytics 화면 조회 이벤트 로깅 실패:', error);
+      });
+    }, []);
+
     const { ownedItems, isOwned } = useRoomStore();
     const [items, setItems] = useState<ItemList[]>([]);
     const [collections, setCollections] = useState<CollectionSummary[]>([]);
@@ -325,7 +336,7 @@ const MyRoomDecoration = ({
             onItemSelection(id);
         }
     };
-
+    const androidPaddingBottom = useSafeAreaInsets().bottom;
 
     return (
         <View style={styles.container}>
@@ -333,10 +344,16 @@ const MyRoomDecoration = ({
                 tabs={tabMenu}
                 selectedTab={selectedTab}
                 onTabPress={handleTabPress}
+                useBottomSheetList={true}
             />
-            <FlatList 
+            <BottomSheetFlatList 
               key={isCollection || isBackground ? 'collection' : 'items'}
               style={styles.itemListContainer}
+              contentContainerStyle={{
+                paddingBottom: 
+                // Platform.OS === 'android' ? androidPaddingBottom + 40 : 
+                40,
+              }}
               data={paddedData} 
               numColumns={isCollection || isBackground ? 2 : 3}
               columnWrapperStyle={isCollection || isBackground ? styles.collectionRow : styles.row}
@@ -455,7 +472,6 @@ const MyRoomDecoration = ({
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
   },
   item: {
     flexDirection: 'column',
@@ -497,7 +513,10 @@ const styles = StyleSheet.create({
   itemListContainer: {
     padding: 20,
     gap: 10,
-    height: 312,
+    // BOTTOM_SHEET_HEIGHT가 NaN이거나 유효하지 않을 때를 대비한 안전 처리
+    height: (typeof BOTTOM_SHEET_HEIGHT === 'number' && !isNaN(BOTTOM_SHEET_HEIGHT) && BOTTOM_SHEET_HEIGHT > 0)
+      ? BOTTOM_SHEET_HEIGHT - 104
+      : 312, // 기본값: 이전에 사용하던 고정 높이
   },
   collectionRow: {
     justifyContent: 'space-between',

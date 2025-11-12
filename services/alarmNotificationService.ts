@@ -1,13 +1,14 @@
 import * as Notifications from 'expo-notifications';
+import { Platform } from 'react-native';
 import { parseAlarmTime } from '../utils/timeUtils';
 import { MathMission, MultiStepMission } from '../utils/mathMissionGenerator';
 import { buildAlarmNotificationContent } from '../utils/notificationContentBuilder';
 
 // iOS/alarm 사운드 정규화 (확장자 중복 방지 및 기본음 처리)
 const normalizeIosSoundName = (soundName: string): 'default' | string => {
-  if (!soundName) return 'cat-meow-short-push.wav';
+  if (!soundName) return 'cat_meow_short_push.wav';
   const raw = String(soundName).trim();
-  if (raw === '기본' || raw.toLowerCase() === 'default') return 'cat-meow-short-push.wav';
+  if (raw === '기본' || raw.toLowerCase() === 'default') return 'cat_meow_short_push.wav';
 
   const m = raw.toLowerCase().match(/^(.*?)(\.(wav|mp3|caf))?$/i);
   const base = m?.[1] ?? raw.toLowerCase();
@@ -15,6 +16,63 @@ const normalizeIosSoundName = (soundName: string): 'default' | string => {
 
   if (ext === 'wav' || ext === 'mp3' || ext === 'caf') return `${base}.${ext}`;
   return `${base}.wav`; // 확장자 없으면 기본 wav
+};
+
+// Android 사운드 정규화 (안드로이드는 .wav, .mp3, .ogg 형식 지원, .caf는 변환 필요)
+// 안드로이드 리소스 파일명 규칙: 소문자, 숫자, 언더스코어만 사용 가능 (하이픈 불가)
+const normalizeAndroidSoundName = (soundName: string): string => {
+  if (!soundName) return 'cat_meow_short_push.wav';
+  const raw = String(soundName).trim();
+  if (raw === '기본' || raw.toLowerCase() === 'default') return 'cat_meow_short_push.wav';
+
+  const m = raw.toLowerCase().match(/^(.*?)(\.(wav|mp3|caf|ogg))?$/i);
+  let base = m?.[1] ?? raw.toLowerCase();
+  const ext = (m?.[3] ?? '').toLowerCase();
+
+  // 안드로이드 리소스 파일명 규칙: 하이픈을 언더스코어로 변환
+  base = base.replace(/-/g, '_');
+
+  // 안드로이드는 .caf를 지원하지 않으므로 .mp3로 변환 (MP3 파일이 준비됨)
+  if (ext === 'caf') {
+    // .caf 파일명을 .mp3로 변환 (예: exciting.caf -> exciting.mp3)
+    // MP3 파일이 준비되어 있으므로 .mp3로 매핑
+    const soundMap: { [key: string]: string } = {
+      'exciting': 'exciting.mp3',
+      'morning_rise': 'morning_rise.mp3',
+      'hawaii': 'hawaii.mp3',
+      'cat': 'cat.mp3',
+      'dog': 'dog.mp3',
+    };
+    return soundMap[base] || 'cat_meow_short_push.wav';
+  }
+
+  // 안드로이드는 .wav, .mp3, .ogg 형식을 지원
+  if (ext === 'wav' || ext === 'mp3' || ext === 'ogg') return `${base}.${ext}`;
+  return `${base}.wav`; // 확장자 없으면 기본 wav
+};
+
+// Android 알림 채널 생성 (Android 8.0+ 필수)
+export const setupAlarmNotificationChannel = async (): Promise<void> => {
+  if (Platform.OS !== 'android') {
+    return;
+  }
+
+  try {
+    await Notifications.setNotificationChannelAsync('alarm_channel', {
+      name: '알람 알림',
+      description: '알람 시간에 표시되는 알림입니다',
+      importance: Notifications.AndroidImportance.HIGH, // HIGH: 소리, 진동, 헤드업 알림 표시
+      sound: 'cat_meow_short_push.wav',
+      vibrationPattern: [0, 250, 250, 250], // 진동 패턴: 0ms 대기, 250ms 진동, 250ms 대기, 250ms 진동
+      enableVibrate: true,
+      showBadge: true,
+      enableLights: true,
+      lightColor: '#FFAA33',
+    });
+    console.log('✅ Android 알람 알림 채널 생성 완료');
+  } catch (error) {
+    console.error('❌ Android 알람 알림 채널 생성 실패:', error);
+  }
 };
 
 // 알림 권한 요청
@@ -85,25 +143,39 @@ const scheduleBurstPerMinute = async (params: {
   title: string;
   body: string;
   soundName: string;
+  isVibrationOn: boolean;
   data: object;
   categoryIdentifier?: string;
 }): Promise<boolean> => {
   try {
-    const { alarmId, startDate, minutesWindow, title, body, soundName, data, categoryIdentifier } = params;
+    const { alarmId, startDate, minutesWindow, title, body, soundName, isVibrationOn, data, categoryIdentifier } = params;
     const notificationIds: string[] = [];
 
     for (let i = 0; i < minutesWindow; i++) {
       const triggerDate = new Date(startDate.getTime());
       triggerDate.setMinutes(triggerDate.getMinutes() + i);
 
+      const notificationContent: Notifications.NotificationContentInput = {
+        title,
+        body,
+        sound: Platform.OS === 'android' 
+          ? normalizeAndroidSoundName(soundName) 
+          : normalizeIosSoundName(soundName),
+        data: { alarmId, soundName, notificationType: 'ALARM', ...data },
+        ...(categoryIdentifier ? { categoryIdentifier } : {}),
+        // Android: 알림 채널 및 진동 설정
+        ...(Platform.OS === 'android' ? {
+          android: {
+            channelId: 'alarm_channel',
+            ...(isVibrationOn ? { vibrationPattern: [0, 250, 250, 250] } : {}),
+            priority: Notifications.AndroidNotificationPriority.HIGH,
+            sound: normalizeAndroidSoundName(soundName), // 안드로이드에서도 개별 사운드 지정
+          },
+        } : {}),
+      };
+
       const notificationId = await Notifications.scheduleNotificationAsync({
-        content: {
-          title,
-          body,
-          sound: normalizeIosSoundName(soundName),
-          data: { alarmId, soundName, notificationType: 'ALARM', ...data },
-          ...(categoryIdentifier ? { categoryIdentifier } : {}),
-        },
+        content: notificationContent,
         trigger: {
           type: Notifications.SchedulableTriggerInputTypes.DATE,
           date: triggerDate,
@@ -153,6 +225,7 @@ const scheduleOneTimeRegularAlarm = async (alarmData: {
       title,
       body,
       soundName: alarmData.soundName,
+      isVibrationOn: alarmData.isVibrationOn,
       data: { time: alarmData.time, notificationType: 'ALARM' },
     });
   } catch (error) {
@@ -203,6 +276,7 @@ const scheduleOneTimeMissionAlarm = async (alarmData: {
       title,
       body,
       soundName: alarmData.soundName,
+      isVibrationOn: alarmData.isVibrationOn,
       data: {
         notificationType: 'ALARM',
         alarmId: alarmData.id,
@@ -270,18 +344,32 @@ const scheduleWeeklyRegularAlarm = async (alarmData: {
             title,
             body,
             soundName: alarmData.soundName,
+            isVibrationOn: alarmData.isVibrationOn,
             data: { time: alarmData.time, day: day, notificationType: 'ALARM' },
           });
           console.log(`요일 ${day} 일반 알림 버스트 예약 완료`);
         } else {
           // 단일 모드 (마음일기 알림용)
+          const notificationContent: Notifications.NotificationContentInput = {
+            title,
+            body,
+            sound: Platform.OS === 'android' 
+              ? normalizeAndroidSoundName(alarmData.soundName) 
+              : normalizeIosSoundName(alarmData.soundName),
+            data: { alarmId: alarmData.id, time: alarmData.time, day: day, soundName: alarmData.soundName, notificationType: 'ALARM' },
+            // Android: 알림 채널 및 진동 설정
+            ...(Platform.OS === 'android' ? {
+              android: {
+                channelId: 'alarm_channel',
+                ...(alarmData.isVibrationOn ? { vibrationPattern: [0, 250, 250, 250] } : {}),
+                priority: Notifications.AndroidNotificationPriority.HIGH,
+                sound: normalizeAndroidSoundName(alarmData.soundName), // 안드로이드에서도 개별 사운드 지정
+              },
+            } : {}),
+          };
+
           const notificationId = await Notifications.scheduleNotificationAsync({
-            content: {
-              title,
-              body,
-              sound: normalizeIosSoundName(alarmData.soundName),
-              data: { alarmId: alarmData.id, time: alarmData.time, day: day, soundName: alarmData.soundName, notificationType: 'ALARM' },
-            },
+            content: notificationContent,
             trigger: {
               type: Notifications.SchedulableTriggerInputTypes.WEEKLY,
               weekday: weekday,
@@ -360,6 +448,7 @@ const scheduleWeeklyMissionAlarm = async (alarmData: {
           title,
           body,
           soundName: alarmData.soundName,
+          isVibrationOn: alarmData.isVibrationOn,
           data: {
             notificationType: 'ALARM',
             alarmId: alarmData.id,
@@ -448,6 +537,11 @@ export const scheduleAlarm = async (alarmData: {
   burstWindowMinutes?: number;
 }): Promise<boolean> => {
   try {
+    // Android: 알림 채널 생성 (앱 시작 시 한 번만 호출되지만, 안전을 위해 매번 확인)
+    if (Platform.OS === 'android') {
+      await setupAlarmNotificationChannel();
+    }
+
     const hasPermission = await requestNotificationPermissions();
     if (!hasPermission) {
       throw new Error('알림 권한이 필요합니다');

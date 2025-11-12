@@ -26,8 +26,11 @@ import { getActivityProgress } from '../../../services/activityLogService';
 import CustomAlert from '../../../components/common/alert/CustomAlert';
 import { getActivityDetail, Activity } from '../../../services/contentService';
 import { logPlayActivity } from '../../../utils/analytics';
+import { useScreenAnalytics } from '../../../hooks/useScreenAnalytics';
   
 const PlayDetailScreen: React.FC = () => {
+  useScreenAnalytics('PlayDetailScreen');
+
   const navigation = useNavigation<StackNavigationProp<PlayStackParamList>>();
   const route = useRoute<RouteProp<PlayStackParamList, 'PlayDetailScreen'>>();
   const { activityId, content: initialContent } = route.params;

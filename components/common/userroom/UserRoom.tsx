@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useCallback } from 'react';
-import { View, Text, ImageBackground, StyleSheet, Image, ScrollView } from 'react-native';
+import { View, Text, ImageBackground, StyleSheet, Image, ScrollView, Platform } from 'react-native';
 import LottieView from 'lottie-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useIsFocused } from '@react-navigation/native';
@@ -11,6 +11,8 @@ import Shadow from '../../../assets/icons/items/default-background/shadow.svg'
 import { colors } from '../../../constants/colors';
 import { renderItemImage } from '../../../utils/imageUtils';
 import { WINDOW_HEIGHT } from '@gorhom/bottom-sheet';
+import * as ImageManipulator from 'expo-image-manipulator';
+import * as FileSystem from 'expo-file-system';
 
 export type UserRoomProps = {
   children: React.ReactNode;
@@ -32,6 +34,7 @@ const UserRoom = ({children, previewMode = false, previewItemIds = [], showPlace
   const itemLottieRefs = useRef<Record<number, LottieView | null>>({});
   const [itemMap, setItemMap] = React.useState<Map<number, { image?: any; lottieJson?: any; positionType?: string; hasShadow?: boolean }>>(new Map());
   const isFocused = useIsFocused();
+  const [bottomStripUri, setBottomStripUri] = React.useState<string | null>(null);
 
 
   React.useEffect(() => {
@@ -329,15 +332,70 @@ const UserRoom = ({children, previewMode = false, previewItemIds = [], showPlace
     try {
       const resolved = typeof src === 'number' ? Image.resolveAssetSource(src)?.uri : (src?.uri ?? src);
       if (resolved && typeof resolved === 'string') {
+        console.log('[UserRoom] onBackgroundImageUri', resolved);
         onBackgroundImageUri?.(resolved);
       }
     } catch {}
   }, [backgroundImage, onBackgroundImageUri]);
+
+  // 하단 스트립 이미지 생성 (안드로이드/아이오에스 공통)
+  useEffect(() => {
+    const createBottomStrip = async () => {
+      try {
+        const src = backgroundImage || require('../../../assets/images/backgrounds/default.png');
+        const uri = typeof src === 'number' ? Image.resolveAssetSource(src)?.uri : (src?.uri ?? src);
+        if (!uri || typeof uri !== 'string') {
+          setBottomStripUri(null);
+          return;
+        }
+
+        let workingUri = uri;
+        const isHttp = workingUri.startsWith('http://') || workingUri.startsWith('https://');
+        if (Platform.OS === 'android' && isHttp) {
+          try {
+            const filename = `${FileSystem.cacheDirectory}bg_strip_${Date.now()}.png`;
+            const dl = await FileSystem.downloadAsync(workingUri, filename);
+            if (dl?.uri) workingUri = dl.uri;
+          } catch {}
+        }
+
+        // 고정 폭 리사이즈 후 하단 스트립 크롭
+        let resizedUri = workingUri;
+        try {
+          const resized = await ImageManipulator.manipulateAsync(
+            workingUri,
+            [{ resize: { width: 400 } }],
+            { compress: 0.9, format: ImageManipulator.SaveFormat.PNG }
+          );
+          resizedUri = resized.uri || workingUri;
+        } catch {}
+
+        // 크기 조회
+        const size = await new Promise<{ width: number; height: number }>((resolve, reject) => {
+          Image.getSize(resizedUri, (w, h) => resolve({ width: w, height: h }), (e) => reject(e));
+        });
+        const bottomCropRatio = 0.01; // 하단 1%
+        const minCrop = 24;
+        const cropHeight = Math.max(minCrop, Math.floor(size.height * bottomCropRatio));
+        const cropRect = { originX: 0, originY: Math.max(0, size.height - cropHeight), width: size.width, height: cropHeight } as const;
+
+        const cropped = await ImageManipulator.manipulateAsync(
+          resizedUri,
+          [{ crop: cropRect }],
+          { compress: 1, format: ImageManipulator.SaveFormat.PNG }
+        );
+        setBottomStripUri(cropped.uri || null);
+      } catch (e) {
+        setBottomStripUri(null);
+      }
+    };
+    createBottomStrip();
+  }, [backgroundImage]);
   
   // cropTop이 있으면 자동으로 스크롤 가능
   //const isScrollable = scrollable !== undefined ? scrollable : cropTop > 0;
   
-  const PADDING_BOTTOM = 672 + achievementCardHeight + 40 + 126 - WINDOW_HEIGHT;
+  const PADDING_BOTTOM = sv(672) + achievementCardHeight + 126 - WINDOW_HEIGHT;
   
   if (scrollable) {
     return (
@@ -420,6 +478,15 @@ const UserRoom = ({children, previewMode = false, previewItemIds = [], showPlace
           })()}
             </View>
           </ImageBackground>
+          
+          {/* 하단 스트립 영역: 남는 공간을 스트립 이미지로 채움 */}
+          <View style={{ position: 'absolute', bottom: 0, height: PADDING_BOTTOM + sv(cropTop), width: '100%',zIndex: -1000 }}>
+            {bottomStripUri ? (
+              <Image source={{ uri: bottomStripUri }} style={{ position: 'absolute', top: 0, width: '100%', height: '100%' }} resizeMode="cover" />
+            ) : (
+              <View style={{ flex: 1, backgroundColor: colors.grayScale100 }} />
+            )}
+          </View>
         </ScrollView>
       </View>
     );

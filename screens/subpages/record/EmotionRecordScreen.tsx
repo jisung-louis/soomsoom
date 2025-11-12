@@ -19,10 +19,13 @@ import dayjs from 'dayjs';
 import { getLogicalNow } from '../../../utils/timeUtils';
 import { eventBus, APP_EVENTS } from '../../../utils/eventBus';
 import { logEmotionRecord } from '../../../utils/analytics';
+import { useScreenAnalytics } from '../../../hooks/useScreenAnalytics';
 
 type ScreenMode = 'create' | 'view' | 'edit';
 
 const EmotionRecordScreen = () => {
+  useScreenAnalytics('EmotionRecordScreen');
+
   const route = useRoute();
   const navigation = useNavigation<StackNavigationProp<RecordStackParamList>>();
   const { showToast } = useToast();
@@ -246,8 +249,15 @@ const EmotionRecordScreen = () => {
           </View>
         </View>
         <KeyboardAvoidingView 
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined} 
-          style={styles.floatingContainer}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'position'} 
+          style={[
+            styles.floatingContainer,
+            Platform.select({
+              ios: styles.floatingContainerVisible,
+              android: isKeyboardVisible ? styles.floatingContainerVisible : styles.floatingContainerHidden,
+              default: styles.floatingContainerVisible,
+            }),
+          ]}
         >
           <View style={styles.saveButtonContainer}>
             <TouchableOpacity 
@@ -327,9 +337,16 @@ const styles = StyleSheet.create({
   },
   floatingContainer: {
     position: 'absolute',
-    bottom: -10000,
     left: 0,
+    bottom: -10000,
     right: 0,
+  },
+  floatingContainerHidden: {
+    display: 'none',
+    
+  },
+  floatingContainerVisible: {
+    display: 'flex',
   },
 });
 

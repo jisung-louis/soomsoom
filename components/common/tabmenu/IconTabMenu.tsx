@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, FlatList } from 'react-native';
+import { BottomSheetFlatList } from '@gorhom/bottom-sheet';
 import { SvgProps } from 'react-native-svg';
 import { typography } from '../../../constants/typography';
 import { colors } from '../../../constants/colors';
@@ -15,6 +16,7 @@ interface IconTabMenuProps {
   onTabPress: (index: number) => void;
   style?: any;
   contentContainerStyle?: any;
+  useBottomSheetList?: boolean; // 바텀시트 내부에서 사용 시 true
 }
 
 const IconTabMenu: React.FC<IconTabMenuProps> = ({
@@ -23,6 +25,7 @@ const IconTabMenu: React.FC<IconTabMenuProps> = ({
   onTabPress,
   style,
   contentContainerStyle,
+  useBottomSheetList = false,
 }) => {
   const listRef = React.useRef<FlatList | null>(null);
 
@@ -35,31 +38,35 @@ const IconTabMenu: React.FC<IconTabMenuProps> = ({
     }
   }, [selectedTab]);
 
-  return (
-    <FlatList
-      ref={listRef as any}
-      style={[styles.tabMenuContainer, style]}
-      data={tabs}
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      contentContainerStyle={[styles.tabMenuContentContainer, contentContainerStyle]}
-      renderItem={({ item, index }) => (
-        <TouchableOpacity 
-          style={styles.tabMenu}
-          onPress={() => onTabPress(index)}
-        >
-          <item.icon 
-            width={40} 
-            height={40} 
-            style={selectedTab === index ? styles.tabMenuIcon : styles.tabMenuIconUnselected} 
-          />
-          <Text style={selectedTab === index ? styles.tabMenuTitle : styles.tabMenuTitleUnselected}>
-            {item.title}
-          </Text>
-        </TouchableOpacity>
-      )}
-      keyExtractor={(item) => `tab-${item.title}`}
-    />
+  const commonProps = {
+    ref: listRef as any,
+    style: [styles.tabMenuContainer, style] as any,
+    data: tabs,
+    horizontal: true,
+    showsHorizontalScrollIndicator: false,
+    contentContainerStyle: [styles.tabMenuContentContainer, contentContainerStyle] as any,
+    renderItem: ({ item, index }: any) => (
+      <TouchableOpacity 
+        style={styles.tabMenu}
+        onPress={() => onTabPress(index)}
+      >
+        <item.icon 
+          width={40} 
+          height={40} 
+          style={selectedTab === index ? styles.tabMenuIcon : styles.tabMenuIconUnselected} 
+        />
+        <Text style={selectedTab === index ? styles.tabMenuTitle : styles.tabMenuTitleUnselected}>
+          {item.title}
+        </Text>
+      </TouchableOpacity>
+    ),
+    keyExtractor: (item: TabMenuItem) => `tab-${item.title}`,
+  } as const;
+
+  return useBottomSheetList ? (
+    <BottomSheetFlatList {...(commonProps as any)} />
+  ) : (
+    <FlatList {...(commonProps as any)} />
   );
 };
 

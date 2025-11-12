@@ -5,8 +5,11 @@ import { colors } from '../constants/colors';
 import CatConstructing from '../assets/icons/charactors/cat-variation/cat_constructing.svg';
 import Logo from '../assets/icons/logo.svg';
 import { ss, sv } from '../utils/scale';
+import { useScreenAnalytics } from '../hooks/useScreenAnalytics';
 
 const ServerClosedScreen = () => {
+    useScreenAnalytics('ServerClosedScreen');
+
     return (
         <View style={styles.container}>
             <View style={styles.titleContainer}>

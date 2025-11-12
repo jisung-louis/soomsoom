@@ -33,6 +33,7 @@ export const environmentConfig = {
   api: {
     baseUrl: 'https://soomsoome.com',     // 백엔드 서버
     //baseUrl: 'http://13.125.132.95:8080',     // 백엔드 테스트 서버
+    //baseUrl: 'http://52.78.160.223:8080',     // 백엔드 테스트 서버
     timeout: 10000 // 10초동안 응답이 없으면 에러 처리
   },
 

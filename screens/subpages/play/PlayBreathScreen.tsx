@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Dimensions, TouchableOpacity, BackHandler, Platform } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RouteProp, useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -8,6 +8,7 @@ import SubpageHeader from '../../../components/common/top-navigation/SubpageHead
 import Animated from 'react-native-reanimated';
 import { useSpringUpAnimation } from '../../../hooks/useSpringUpAnimation';
 import { colors } from '../../../constants/colors';
+import { useScreenAnalytics } from '../../../hooks/useScreenAnalytics';
 import {
   PlayBreathStep0,
   PlayBreathStep1,
@@ -18,6 +19,8 @@ import {
 import { useAppConfigStore } from '../../../stores/appConfigStore';
 
 const PlayBreathScreen = ({route}: {route: RouteProp<PlayStackParamList, 'PlayBreathScreen'>}) => {
+  useScreenAnalytics('PlayBreathScreen');
+
   const navigation = useNavigation<StackNavigationProp<PlayStackParamList>>();
   const {content} = route.params;
   const [step, setStep] = useState(0);
@@ -106,6 +109,17 @@ const PlayBreathScreen = ({route}: {route: RouteProp<PlayStackParamList, 'PlayBr
     }
   };
   const { useMockApi } = useAppConfigStore.getState();
+
+  // Android 하드웨어 뒤로가기: 프롤로그 화면에서는 handleBack 실행
+  useEffect(() => {
+    if (Platform.OS !== 'android') return;
+    const onBack = () => {
+      handleBack();
+      return true; // consume
+    };
+    const sub = BackHandler.addEventListener('hardwareBackPress', onBack);
+    return () => sub.remove();
+  }, [handleBack]);
 
   return (
     <SafeAreaView style={styles.container}>

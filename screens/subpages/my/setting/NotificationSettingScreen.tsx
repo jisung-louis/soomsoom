@@ -17,6 +17,7 @@ import { toggleNotificationSetting, updateDiaryNotificationTime } from '../../..
 import { parseNotificationTime } from '../../../../utils/timeUtils';
 import { useToast } from '../../../../hooks/useToast';
 import { useAppConfigStore } from '../../../../stores/appConfigStore';
+import { useScreenAnalytics } from '../../../../hooks/useScreenAnalytics';
 
 interface TimeData {
   period: string;
@@ -25,6 +26,8 @@ interface TimeData {
 }
 
 const NotificationSettingScreen = () => {
+    useScreenAnalytics('NotificationSettingScreen');
+
     const navigation = useNavigation();
     const [notificationTime, setNotificationTime] = useState<TimeData>({ 
       period: '오후', 
@@ -245,6 +248,7 @@ const NotificationSettingScreen = () => {
                     onValueChange={handleDiaryNotificationToggle}
                     trackColor={{ false: colors.primary200, true: colors.primary300 }}
                     ios_backgroundColor={colors.primary200}
+                    thumbColor={colors.white}
                     style={{transform: [{scaleX: 0.9}, {scaleY: 0.9}]}}
                 />
             </View>
@@ -262,6 +266,7 @@ const NotificationSettingScreen = () => {
                     onValueChange={handleGreetingNotificationToggle}
                     trackColor={{ false: colors.primary200, true: colors.primary300 }}
                     ios_backgroundColor={colors.primary200}
+                    thumbColor={colors.white}
                     style={{transform: [{scaleX: 0.9}, {scaleY: 0.9}]}}
                 />
             </View>
@@ -272,6 +277,7 @@ const NotificationSettingScreen = () => {
                     onValueChange={handleNewsNotificationToggle}
                     trackColor={{ false: colors.primary200, true: colors.primary300 }}
                     ios_backgroundColor={colors.primary200}
+                    thumbColor={colors.white}
                     style={{transform: [{scaleX: 0.9}, {scaleY: 0.9}]}}
                 />
             </View>

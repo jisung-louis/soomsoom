@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Image } from 'react-native';
+import { View, Text, StyleSheet, Image, Platform } from 'react-native';
 import { colors } from '../../constants/colors';
 import { syongsyongTypography } from '../../constants/typography';
 import { Button } from '../common/buttons/Button';
@@ -13,6 +13,7 @@ import LottieView from 'lottie-react-native';
 import { itemStyles } from '../../constants/roomLayout';
 import { LayoutChangeEvent } from 'react-native';
 import BreathingGuide from './BreathingGuide';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface OnboardingStepProps {
   stepId: string;
@@ -51,6 +52,7 @@ export const OnboardingStep: React.FC<OnboardingStepProps> = ({
   canProceed,
   submitOnboardingAnswers,
 }) => {
+  const paddingBottom = useSafeAreaInsets().bottom;
   // 제목 렌더링 함수
   const renderTitle = () => {
     return title.map((line, lineIndex) => (
@@ -190,7 +192,7 @@ export const OnboardingStep: React.FC<OnboardingStepProps> = ({
 
       {/* 버튼 */}
       {showNext && (
-        <View style={styles.buttonContainer}>
+        <View style={[styles.buttonContainer, { bottom: Platform.OS === 'android' ? paddingBottom + 20 : 46 }]}>
             <Button
                 title={specialButtonText ?  specialButtonText : '다음'}
                 onPress={onNext}

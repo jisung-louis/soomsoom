@@ -6,8 +6,11 @@ import SubpageHeader from '../../../components/common/top-navigation/SubpageHead
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { AlarmStackParamList } from '../../../navigations/tabs/AlarmStackNavigator';
+import { useScreenAnalytics } from '../../../hooks/useScreenAnalytics';
 
 const AlarmTestScreen = () => {
+    useScreenAnalytics('AlarmTestScreen');
+
     const navigation = useNavigation<StackNavigationProp<AlarmStackParamList>>();
 
   return (

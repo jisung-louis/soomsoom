@@ -2,7 +2,7 @@
   "expo": {
     "name": "숨숨",
     "slug": "soomsoom",
-    "version": "0.1.12",
+    "version": "1.1.1",
     "orientation": "portrait",
     "icon": "./assets/app-icons/icon.png",
     "userInterfaceStyle": "light",
@@ -60,7 +60,13 @@
         {
           "icon": "./assets/app-icons/icon.png",
           "sounds": [
-            "./assets/audios/alarm-sound/cat-meow-short-push.wav"
+            "./assets/audios/alarm-sound/cat_meow_short_push.wav",
+            "./assets/audios/alarm-sound/default_alarm_audio.wav",
+            "./assets/audios/alarm-sound/exciting.mp3",
+            "./assets/audios/alarm-sound/morning_rise.mp3",
+            "./assets/audios/alarm-sound/hawaii.mp3",
+            "./assets/audios/alarm-sound/cat.mp3",
+            "./assets/audios/alarm-sound/dog.mp3"
           ]
         }
       ],
@@ -83,8 +89,8 @@
       [
         "react-native-google-mobile-ads",
         {
-          "android_app_id": "ca-app-pub-3940256099942544~3347511713",
-          "ios_app_id": "ca-app-pub-3940256099942544~1458002511"
+          "android_app_id": "ca-app-pub-4758709448782249~5979653821",
+          "ios_app_id": "ca-app-pub-4758709448782249~5612676219"
         }
       ],
       "@react-native-firebase/app"

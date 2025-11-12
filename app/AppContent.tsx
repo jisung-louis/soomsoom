@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { PortalProvider } from '@gorhom/portal';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import AppNavigator from '../navigations/AppNavigator';
 import CustomToast from '../components/common/toast/CustomToast';
 import UniversalPopup from '../components/common/popup/UniversalPopup';
@@ -118,30 +119,32 @@ const AppContent = () => {
   };
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <PortalProvider>
-        {serverClosed ? (
-          <ServerClosedScreen />
-        ) : forceUpdateBlocked ? (
-          // 강제 업데이트 필요 시: Alert는 이미 표시되었으므로 빈 화면 유지 (앱 실행 차단)
-          <View style={{ flex: 1, backgroundColor: colors.primary100 }} />
-        ) : (
-        <AuthGate
-          showSplash={showSplash}
-          onCompleteSplash={() => setShowSplash(false)}
-          isBootstrapping={isBootstrapping}
-          hasSeenOnboarding={hasSeenOnboarding}
-          onCompleteOnboarding={completeOnboarding}
-          fontsLoaded={fontsLoaded}
-        >
-          <AppNavigator ref={navigationRef} />
-          <StatusBar style="auto" />
-          <CustomToast />
-          <UniversalPopup />
-        </AuthGate>
-        )}
-      </PortalProvider>
-    </GestureHandlerRootView>
+    <SafeAreaProvider>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <PortalProvider>
+          {serverClosed ? (
+            <ServerClosedScreen />
+          ) : forceUpdateBlocked ? (
+            // 강제 업데이트 필요 시: Alert는 이미 표시되었으므로 빈 화면 유지 (앱 실행 차단)
+            <View style={{ flex: 1, backgroundColor: colors.primary100 }} />
+          ) : (
+          <AuthGate
+            showSplash={showSplash}
+            onCompleteSplash={() => setShowSplash(false)}
+            isBootstrapping={isBootstrapping}
+            hasSeenOnboarding={hasSeenOnboarding}
+            onCompleteOnboarding={completeOnboarding}
+            fontsLoaded={fontsLoaded}
+          >
+            <AppNavigator ref={navigationRef} />
+            <StatusBar style="auto" />
+            <CustomToast />
+            <UniversalPopup />
+          </AuthGate>
+          )}
+        </PortalProvider>
+      </GestureHandlerRootView>
+    </SafeAreaProvider>
   );
 };
 

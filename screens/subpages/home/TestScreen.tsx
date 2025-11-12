@@ -18,6 +18,7 @@ import { useAchievementStore } from '../../../stores/achievementStore';
 // 업적 모킹 제거
 import { getItems } from '../../../services/itemService';
 import { mockContentData, mockInstructorsData } from '../../../data/playContentData';
+import { useScreenAnalytics } from '../../../hooks/useScreenAnalytics';
 import { Activity } from '../../../services/contentService';
 import { Surface } from '../../../components/common/surface/Surface';
 import LottieView from 'lottie-react-native';
@@ -33,6 +34,8 @@ import { useCartStore } from '../../../stores/cartStore';
 import { getCachedInstallUuid } from '../../../utils/deviceId';
 
 const TestScreen = () => {
+  useScreenAnalytics('TestScreen');
+
   const navigation = useNavigation<StackNavigationProp<HomeStackParamList>>();
   const buttonRef = useRef<ButtonRef>(null);
   const { showToast } = useToast();

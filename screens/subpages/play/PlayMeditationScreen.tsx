@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { View, Text, StyleSheet, ImageBackground } from 'react-native';
+import { View, Text, StyleSheet, ImageBackground, BackHandler, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { typography } from '../../../constants/typography';
 import { colors } from '../../../constants/colors';
@@ -20,8 +20,11 @@ import {
 import { cleanupTrackPlayer } from '../../../services/trackPlayerService';
 import { RewardableMission } from '../../../services/activityLogService';
 import { logPlayActivityComplete } from '../../../utils/analytics';
+import { useScreenAnalytics } from '../../../hooks/useScreenAnalytics';
 
 const PlayMeditationScreen = ({route}: {route: RouteProp<PlayStackParamList, 'PlayMeditationScreen'>}) => {
+  useScreenAnalytics('PlayMeditationScreen');
+
   const {content, initialPosition} = route.params;
   const navigation = useNavigation<StackNavigationProp<PlayStackParamList>>();
   const { favoriteActivities } = usePlayStore();
@@ -235,6 +238,18 @@ const PlayMeditationScreen = ({route}: {route: RouteProp<PlayStackParamList, 'Pl
     playerControls.current = controls;
     console.log('🎮 플레이어 제어 함수 준비 완료');
   };
+
+  // Android 하드웨어 뒤로가기: 명상 화면에서는 handleBack 실행
+  useEffect(() => {
+    if (Platform.OS !== 'android') return;
+    const onBack = () => {
+      handleBack();
+      return true; // consume
+    };
+    const sub = BackHandler.addEventListener('hardwareBackPress', onBack);
+    return () => sub.remove();
+  }, [handleBack]);
+
   return (
     <>
       <UserRoom cropTop={CROP_TOP}>

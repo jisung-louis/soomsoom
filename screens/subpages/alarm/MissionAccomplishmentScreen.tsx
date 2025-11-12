@@ -18,6 +18,7 @@ import AdBanner from '../../../components/common/ads/AdBanner';
 import CustomAlert from '../../../components/common/alert/CustomAlert';
 import { AD_SIZES } from '../../../constants/ads';
 import { BannerAdSize } from 'react-native-google-mobile-ads';
+import { useScreenAnalytics } from '../../../hooks/useScreenAnalytics';
 
 interface MissionAccomplishmentScreenProps {
   route: {
@@ -31,6 +32,8 @@ interface MissionAccomplishmentScreenProps {
 }
 
 function MissionAccomplishmentScreen({ route }: MissionAccomplishmentScreenProps) {
+  useScreenAnalytics('MissionAccomplishmentScreen');
+
   const { alarmId, missionType, missionData, missionPack } = route.params;
   const navigation = useNavigation();
   const { dismissAlarm, updateMissionProgress } = useAlarmStore();

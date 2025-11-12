@@ -2,24 +2,27 @@ import React, { useState } from 'react';
 import {
   View,
   StyleSheet,
-  SafeAreaView,
   Text,
 } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { colors } from '../../../constants/colors';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { RecordStackParamList } from '../../../navigations/tabs/RecordStackNavigator';
 import { EmotionGrid, Emotion } from '../../../components/tabs/record/EmotionSelect';
 import { Button } from '../../../components/common/buttons/Button';
 import SubpageHeader from '../../../components/common/top-navigation/SubpageHeader';
 import { syongsyongTypography } from '../../../constants/typography';
 import { sv, sy } from '../../../utils/scale';
+import { useScreenAnalytics } from '../../../hooks/useScreenAnalytics';
 
 type RecordScreenNavigationProp = StackNavigationProp<RecordStackParamList, 'EmotionSelectScreen'>;
 
 
 
 const EmotionSelectScreen: React.FC = () => {
+  useScreenAnalytics('EmotionSelectScreen');
+
   const route = useRoute();
   const {date} = route.params as { date: string };
   const navigation = useNavigation<RecordScreenNavigationProp>();

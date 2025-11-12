@@ -18,6 +18,7 @@ import { AD_SIZES } from '../../../constants/ads';
 import { BannerAdSize } from 'react-native-google-mobile-ads';
 import AdBanner from '../../../components/common/ads/AdBanner';
 import CustomAlert from '../../../components/common/alert/CustomAlert';
+import { useScreenAnalytics } from '../../../hooks/useScreenAnalytics';
 
 interface AlarmDismissScreenProps {
   route: {
@@ -34,6 +35,8 @@ interface AlarmDismissScreenProps {
 type AlarmDismissScreenNavigationProp = StackNavigationProp<AlarmStackParamList, 'AlarmDismissScreen'>;
 
 export default function AlarmDismissScreen({ route }: AlarmDismissScreenProps) {
+  useScreenAnalytics('AlarmDismissScreen');
+
   const navigation = useNavigation<AlarmDismissScreenNavigationProp>();
   const { dismissAlarm } = useAlarmStore();
   const { alarmId, missionType, missionData, missionPack, soundName } = route.params;

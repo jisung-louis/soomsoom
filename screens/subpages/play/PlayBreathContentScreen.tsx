@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, DeviceEventEmitter } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, DeviceEventEmitter, BackHandler, Platform } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import SubpageHeader, {SUBPAGE_HEADER_HEIGHT} from "../../../components/common/top-navigation/SubpageHeader";
 import { RouteProp, useNavigation } from "@react-navigation/native";
@@ -30,8 +30,11 @@ import { useAudioPlayer } from "../../../hooks/useAudioPlayer";
 import { cleanupTrackPlayer } from "../../../services/trackPlayerService";
 import { RewardableMission } from "../../../services/activityLogService";
 import { logPlayActivityComplete } from '../../../utils/analytics';
+import { useScreenAnalytics } from '../../../hooks/useScreenAnalytics';
 
 const PlayBreathContentScreen = ({route}: {route: RouteProp<PlayStackParamList, 'PlayBreathContentScreen'>}) => {
+    useScreenAnalytics('PlayBreathContentScreen');
+
     const {content} = route.params;
     const hasAudio = !!content.audioUrl;
     const audioSource = React.useMemo(() => {
@@ -126,6 +129,17 @@ const PlayBreathContentScreen = ({route}: {route: RouteProp<PlayStackParamList, 
             });
         }
     }
+
+    // Android 하드웨어 뒤로가기: 이 화면에서는 handleBack 실행
+    useEffect(() => {
+        if (Platform.OS !== 'android') return;
+        const onBack = () => {
+            handleBack();
+            return true; // consume
+        };
+        const sub = BackHandler.addEventListener('hardwareBackPress', onBack);
+        return () => sub.remove();
+    }, [handleBack]);
     
     const [step, setStep] = useState(0);
     const [remainingTime, setRemainingTime] = useState(content.durationInSeconds);

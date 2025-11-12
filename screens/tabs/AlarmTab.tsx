@@ -23,20 +23,13 @@ import {
 import NoAlarm from '../../components/tabs/alarm/NoAlarm';
 import { useAppConfigStore } from '../../stores/appConfigStore';
 import { useNotificationQueueProcessor } from '../../hooks/useNotificationQueueProcessor';
-import { useFocusEffect } from '@react-navigation/native';
-import { useCallback } from 'react';
-import { logScreenView } from '../../utils/analytics';
+import { useScreenAnalytics } from '../../hooks/useScreenAnalytics';
 
 const AlarmTab = () => {
+  useScreenAnalytics('AlarmTab');
+
   // 알림 큐 처리 (탭 포커스 시 큐에 있는 알림을 순차적으로 표시)
   useNotificationQueueProcessor();
-  
-  // Analytics: 화면 조회 추적
-  useFocusEffect(
-    useCallback(() => {
-      logScreenView('AlarmTab');
-    }, [])
-  );
   
   const navigation = useNavigation<StackNavigationProp<AlarmStackParamList>>();
   const [isEditMode, setIsEditMode] = useState(false);

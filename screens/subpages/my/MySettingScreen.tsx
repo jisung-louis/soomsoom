@@ -13,8 +13,12 @@ import { TERMS_URL, PRIVACY_URL, INQUIRY_BUG_URL } from '../../../constants/exte
 import { useOpenExternalLink } from '../../../hooks/useOpenExternalLink';
 import { checkLatestVersion } from '../../../services/versionService';
 import { storeUrlForPlatform } from '../../../constants/externalUrl';
+import { Button } from '../../../components/common/buttons/Button';
+import { useScreenAnalytics } from '../../../hooks/useScreenAnalytics';
 
 const MySettingScreen = () => {
+  useScreenAnalytics('MySettingScreen');
+
   const navigation = useNavigation<StackNavigationProp<MyStackParamList>>();
   const openExternalLink = useOpenExternalLink();
   const [isLatest, setIsLatest] = React.useState<boolean | null>(null);
@@ -80,6 +84,7 @@ const MySettingScreen = () => {
                 <Text style={styles.settingItemText}>개인정보처리방침</Text>
             </TouchableOpacity>
         </View>
+        {/* <Button title="MyTestScreen" onPress={() => {navigation.navigate('MyTestScreen')}} /> */}
     </SafeAreaView>
   );
 };

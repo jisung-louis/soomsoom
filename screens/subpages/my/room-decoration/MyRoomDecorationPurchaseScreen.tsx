@@ -19,10 +19,13 @@ import { Button } from '../../../../components/common/buttons/Button';
 import CustomAlert from '../../../../components/common/alert/CustomAlert';
 import { usePurchase } from '../../../../hooks/usePurchase';
 import { useRoomStore } from '../../../../stores/roomStore';
+import { useScreenAnalytics } from '../../../../hooks/useScreenAnalytics';
 
 const contentStartY = sy(326);
 
 const MyRoomDecorationPurchaseScreen = () => {
+    useScreenAnalytics('MyRoomDecorationPurchaseScreen');
+
     const navigation = useNavigation<StackNavigationProp<MyStackParamList>>();
     const route = useRoute<RouteProp<MyStackParamList, 'MyRoomDecorationPurchaseScreen'>>();
     const purchaseItemsParams = route.params?.purchaseItems ?? [];  

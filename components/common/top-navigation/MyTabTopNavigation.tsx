@@ -19,6 +19,7 @@ interface MyTabTopNavigationProps {
 const MyTabTopNavigation = ({isEditMode, onEditModeToggle, onSettingPress, onHeartPress, style, isBGColorDark = false}: MyTabTopNavigationProps) => {
   const textColor = isBGColorDark ? colors.grayScale100 : colors.grayScale900;
   const iconFill = isBGColorDark ? colors.grayScale100 : colors.grayScale800;
+  //console.log('[MyTabTopNavigation] isBGColorDark', isBGColorDark, textColor, iconFill);
   return (
     isEditMode ? (
       <View style={[styles.container, style]}>
