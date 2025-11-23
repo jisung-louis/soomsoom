@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useCallback } from 'react';
-import { View, Text, ImageBackground, StyleSheet, Image, ScrollView, Platform } from 'react-native';
+import { View, Text, ImageBackground, StyleSheet, Image, ScrollView, Platform, Dimensions } from 'react-native';
 import LottieView from 'lottie-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useIsFocused } from '@react-navigation/native';
@@ -293,6 +293,7 @@ const UserRoom = ({children, previewMode = false, previewItemIds = [], showPlace
         style={[style, {
           top: position.y,
           left: position.x,
+          //backgroundColor: 'rgba(0, 0, 0, 0.3)',//투명도 30%
         }]}
       />
     );
@@ -307,6 +308,7 @@ const UserRoom = ({children, previewMode = false, previewItemIds = [], showPlace
         style={[containerStyle, {
           top: position.y,
           left: position.x,
+          //backgroundColor: 'red',
         }]}> 
         {renderItemImage(item.image, '', imageStyle, undefined, imageStyle.width, imageStyle.height)}
       </View>
@@ -397,6 +399,15 @@ const UserRoom = ({children, previewMode = false, previewItemIds = [], showPlace
   
   const PADDING_BOTTOM = sv(672) + achievementCardHeight + 126 - WINDOW_HEIGHT;
   
+  // 비율을 0.462 (Figma 기준)로 고정하기 위한 크기 계산
+  const FIGMA_ASPECT_RATIO = 375 / 812; // 0.462
+  const backgroundSize = useMemo(() => {
+    const { width: screenWidth } = Dimensions.get('window');
+    const bgWidth = ss(375); // 기존과 동일하게 너비는 ss(375) 사용
+    const bgHeight = bgWidth / FIGMA_ASPECT_RATIO; // 비율 고정
+    return { width: bgWidth, height: bgHeight };
+  }, []);
+  
   if (scrollable) {
     return (
       <View style={styles.container}>
@@ -408,9 +419,10 @@ const UserRoom = ({children, previewMode = false, previewItemIds = [], showPlace
           alwaysBounceVertical={false}
           overScrollMode="never"
           scrollEnabled={!myTabEditMode}
-          contentContainerStyle={
-            { paddingBottom: PADDING_BOTTOM }
-          }
+          contentContainerStyle={[
+            { paddingBottom: PADDING_BOTTOM },
+            styles.scrollableContentContainer
+          ]}
         >
           {/* <View style={{position: 'absolute', top: 50, left: 50, right: 0, bottom: 0, zIndex: 1000000, width: 50, height: 50, backgroundColor: 'red'}}>
             <Text>{achievementCardHeight}</Text>
@@ -420,7 +432,13 @@ const UserRoom = ({children, previewMode = false, previewItemIds = [], showPlace
           <ImageBackground
             source={backgroundImage || require('../../../assets/images/backgrounds/default.png')}
             style={[
-              styles.scrollableBackground,
+              {
+                width: backgroundSize.width,
+                height: backgroundSize.height,
+                justifyContent: 'flex-end',
+                alignItems: 'center',
+                position: 'relative',
+              },
               cropTop > 0 && { transform: [{ translateY: -sv(cropTop) }] }
             ]}
             resizeMode="cover"
@@ -591,6 +609,9 @@ const styles = StyleSheet.create({
   scrollableContent: {
     flex: 1,
     zIndex: 1,
+  },
+  scrollableContentContainer: {
+    alignItems: 'center', // 배경 이미지를 중앙 정렬하여 여백 처리
   },
 });
 

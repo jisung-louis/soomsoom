@@ -27,6 +27,7 @@ import CustomAlert from '../../../components/common/alert/CustomAlert';
 import { getActivityDetail, Activity } from '../../../services/contentService';
 import { logPlayActivity } from '../../../utils/analytics';
 import { useScreenAnalytics } from '../../../hooks/useScreenAnalytics';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
   
 const PlayDetailScreen: React.FC = () => {
   useScreenAnalytics('PlayDetailScreen');
@@ -38,7 +39,7 @@ const PlayDetailScreen: React.FC = () => {
   const { showToast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [content, setContent] = useState<Activity | null>(initialContent || null);
-  
+  const insets = useSafeAreaInsets();
   // CustomAlert 상태
   const [showResumeAlert, setShowResumeAlert] = useState(false);
   const [resumeProgress, setResumeProgress] = useState<number | null>(null);
@@ -282,7 +283,7 @@ const PlayDetailScreen: React.FC = () => {
         onClose={handleCloseResumeAlert}
       />
     </SafeAreaView>
-          <View style={styles.buttonContainer}>
+          <View style={[styles.buttonContainer, { paddingBottom: insets.bottom + 20}]}>
             <ToastView
               message='잠깐! 시작전에 소리를 키워주세요!'
               theme='light'

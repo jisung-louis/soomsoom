@@ -1,6 +1,11 @@
 import { Dimensions } from 'react-native';
 
-const { width: WW, height: WH } = Dimensions.get('window');
+const { width: WW, 
+    //height: WH
+} = Dimensions.get('window');
+
+const WH = WW * 812 / 375;
+
 const FW = 375; // Figma design width
 const FH = 812; // Figma design height
 

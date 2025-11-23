@@ -100,8 +100,7 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.04,
     shadowRadius: 10, // Figma의 blur 20은 RN 기준으로 반값 정도
-
-    elevation: 1, // Android용. 1~2 정도가 4% 불투명한 그림자 느낌
+    //elevation: 3, // Android용. 1~2 정도가 4% 불투명한 그림자 느낌
   },
   containerStyle: {
     gap: 14,
@@ -111,6 +110,8 @@ const styles = StyleSheet.create({
     width: CARD_WIDTH,
     borderRadius: 16,
     overflow: 'hidden',
+    elevation: 1,
+    marginVertical: 2,
   },
   image: {
     width: '100%',

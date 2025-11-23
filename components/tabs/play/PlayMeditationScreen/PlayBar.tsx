@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, ViewStyle, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ViewStyle, TouchableOpacity, ActivityIndicator, Platform } from 'react-native';
 import Slider from '@react-native-community/slider';
 import { colors } from '../../../../constants/colors';
 import { radius } from '../../../../constants/radius';
@@ -18,7 +18,7 @@ import { BannerAdSize } from 'react-native-google-mobile-ads';
 // type 정의는 그대로 유지
 
 type PlayBarProps = {
-  style: ViewStyle;
+  style: ViewStyle[] | ViewStyle;
   content: Activity;
   handleToggleFavorite: () => void;
   isFavorite: boolean;
@@ -193,7 +193,7 @@ const PlayBar = ({
   };
 
   return (
-    <View style={[styles.container, style]}>
+    <View style={[styles.container, ...(Array.isArray(style) ? style : [style])]}>
       <View style={styles.contentContainer}>
         <View style={styles.infoContainer}>
           <View style={styles.titleContainer}>
@@ -214,7 +214,7 @@ const PlayBar = ({
             maximumValue={duration}
             value={isDragging ? dragPosition : position}
             minimumTrackTintColor={colors.primary300}
-            maximumTrackTintColor={colors.primary50}
+            maximumTrackTintColor={Platform.OS === 'android' ? colors.primary300 : colors.primary50}
             thumbTintColor={colors.primary300}
             thumbImage={require('../../../../assets/images/play/playBar/thumb.png')}
             onValueChange={(value) => {
@@ -299,7 +299,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: radius.r20,
     borderTopRightRadius: radius.r20,
     gap: 10,
-    paddingBottom: 40, // iOS 홈 인디케이터 대응
+    paddingBottom: 0,
   },
   contentContainer: {
     gap: 20,

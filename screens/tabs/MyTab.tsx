@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import UserRoom from '../../components/common/userroom/UserRoom';
-import { View, StyleSheet, Text, ScrollView, TouchableOpacity, FlatList } from 'react-native';
+import { View, StyleSheet, Text, ScrollView, TouchableOpacity, FlatList, Dimensions } from 'react-native';
 import { colors } from '../../constants/colors';
 import { radius } from '../../constants/radius';
 import { typography } from '../../constants/typography';
@@ -8,8 +8,8 @@ import { useNavigation, useRoute, RouteProp, useFocusEffect } from '@react-navig
 import { StackNavigationProp } from '@react-navigation/stack';
 import { MyStackParamList } from '../../navigations/tabs/MyStackNavigator';
 import { useRef } from 'react';
-import { BottomSheetModal, WINDOW_HEIGHT } from '@gorhom/bottom-sheet';
-import { ss, sv, sy } from '../../utils/scale';
+import { BottomSheetModal, WINDOW_HEIGHT, WINDOW_WIDTH } from '@gorhom/bottom-sheet';
+import { ss, sv, sx, sy } from '../../utils/scale';
 import MyTabTopNavigation from '../../components/common/top-navigation/MyTabTopNavigation';
 import { useCurrencyStore } from '../../stores/currencyStore';
 import { syongsyongTypography } from '../../constants/typography';
@@ -42,6 +42,7 @@ import { useNotificationQueueProcessor } from '../../hooks/useNotificationQueueP
 import ToastView from '../../components/common/toast/ToastView';
 import { useScreenAnalytics } from '../../hooks/useScreenAnalytics';
 import { logRoomDecorationStart } from '../../utils/analytics';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const mockStatusData = [
     { title: '기록', valueType: '회', value: null },
@@ -615,7 +616,7 @@ const MyTab = () => {
   const [roomBgUri, setRoomBgUri] = useState<string | null>(null);
   const [deviceId, setDeviceId] = useState<string>('');
   const isBGColorDark = useBgTopColor(roomBgUri);
-
+  const insets = useSafeAreaInsets();
   const achievementCardHeight = useMemo(() => {
     // 로딩 중이면 기본 높이 사용 (레이아웃 점프 방지)
     if (isAchievementsLoading) {
@@ -665,6 +666,22 @@ const MyTab = () => {
             achievementCardHeight={achievementCardHeight}
             >
             <View style={{marginTop: sv(176)}}>{/* 176(figma 기준) 아래로 전체 컨텐츠 이동 */}
+
+            {/* <View style={{position: 'absolute', top: 30, left: 20, right: 0, zIndex: 9999999999}}>
+                <Text>insets.bottom: {insets.bottom}</Text>
+                <Text>insets.top: {insets.top}</Text>
+                <Text>insets.left: {insets.left}</Text>
+                <Text>insets.right: {insets.right}</Text>
+                <Text>WINDOW_HEIGHT: {WINDOW_HEIGHT}</Text>
+                <Text>WINDOW_WIDTH: {WINDOW_WIDTH}</Text>
+                <Text>{Dimensions.get('window').width}</Text>
+                <Text>{Dimensions.get('window').height}</Text>
+                <Text>aspectRatio: {WINDOW_WIDTH / WINDOW_HEIGHT}</Text>
+                <Text>Frame's Position Y(sy(262)): {sy(262)}</Text>
+                <Text>Shelf's Position Y(sy(314)): {sy(314)}</Text>
+                <Text>Frame's height(SV(64)): {sv(64)}</Text>
+                <Text>Shelf's height(SV(30)): {sv(30)}</Text>
+              </View> */}
                 {!isEditMode && (
                   <>
                   {!isSocialLogin && (

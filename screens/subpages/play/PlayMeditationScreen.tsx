@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { View, Text, StyleSheet, ImageBackground, BackHandler, Platform } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { typography } from '../../../constants/typography';
 import { colors } from '../../../constants/colors';
 import { RouteProp, useNavigation } from '@react-navigation/native';
@@ -30,7 +30,7 @@ const PlayMeditationScreen = ({route}: {route: RouteProp<PlayStackParamList, 'Pl
   const { favoriteActivities } = usePlayStore();
   const { showToast } = useToast();
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  
+  const insets = useSafeAreaInsets();
   // 액티비티 진행상황 기록을 위한 상태
   const [lastPosition, setLastPosition] = useState<number>(0);
   const [actualPlayTime, setActualPlayTime] = useState<number>(0);
@@ -256,7 +256,7 @@ const PlayMeditationScreen = ({route}: {route: RouteProp<PlayStackParamList, 'Pl
         <SubpageHeader onBack={handleBack} style={{transform: [{translateY: CROP_TOP}]}} />
       </UserRoom>
       <PlayBar 
-        style={styles.playBar} 
+        style={[styles.playBar, { bottom: insets.bottom + 20}]} 
         content={content} 
         handleToggleFavorite={handleToggleFavorite} 
         isFavorite={isFavorite}
