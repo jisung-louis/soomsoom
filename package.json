@@ -14,7 +14,7 @@
     "@gorhom/portal": "^1.0.14",
     "@quidone/react-native-wheel-picker": "^1.5.2",
     "@react-native-async-storage/async-storage": "^2.2.0",
-    "@react-native-community/slider": "5.0.1",
+    "@react-native-community/slider": "4.5.7",
     "@react-native-firebase/analytics": "^23.3.1",
     "@react-native-firebase/app": "^23.3.1",
     "@react-native-firebase/messaging": "^23.3.1",
@@ -77,7 +77,8 @@
   "expo": {
     "install": {
       "exclude": [
-        "react-native-reanimated"
+        "react-native-reanimated",
+        "@react-native-community/slider"
       ]
     }
   },
