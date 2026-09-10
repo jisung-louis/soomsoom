@@ -13,21 +13,8 @@ buildscript {
   }
 }
 
-def reactNativeAndroidDir = new File(
-  providers.exec {
-    workingDir(rootDir)
-    commandLine("node", "--print", "require.resolve('react-native/package.json')")
-  }.standardOutput.asText.get().trim(),
-  "../android"
-)
-
 allprojects {
   repositories {
-    maven {
-      // All of React Native (JS, Obj-C sources, Android binaries) is installed from npm
-      url(reactNativeAndroidDir)
-    }
-
     google()
     mavenCentral()
     maven { url 'https://www.jitpack.io' }
@@ -36,28 +23,3 @@ allprojects {
 
 apply plugin: "expo-root-project"
 apply plugin: "com.facebook.react.rootproject"
-// Force consistent Java/Kotlin toolchains across all modules (fixes JVM 17/21 mismatches)
-subprojects { sub ->
-  // Java toolchain
-  tasks.withType(JavaCompile).configureEach {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
-  }
-
-  tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
-    kotlinOptions {
-      jvmTarget = '17'
-      freeCompilerArgs += ['-Xjdk-release=17']
-    }
-  }
-
-  // Some libraries (e.g., react-native-image-colors) may still set a different target; re-assert here
-  if (sub.name == "react-native-image-colors") {
-    tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
-      kotlinOptions {
-        jvmTarget = '17'
-        freeCompilerArgs += ['-Xjdk-release=17']
-      }
-    }
-  }
-}

@@ -2,7 +2,7 @@
   "expo": {
     "name": "숨숨",
     "slug": "soomsoom",
-    "version": "1.1.1",
+    "version": "1.1.3",
     "orientation": "portrait",
     "icon": "./assets/app-icons/icon.png",
     "userInterfaceStyle": "light",
@@ -15,7 +15,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.soomsoom.app",
-      "buildNumber": "2",
+      "buildNumber": "4",
       "usesAppleSignIn": true,
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
@@ -32,7 +32,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/app-icons/icon.png",
+        "foregroundImage": "./assets/app-icons/adaptive-icon.png",
         "backgroundColor": "#ffaa33"
       },
       "googleServicesFile": "./android/app/google-services.json",
@@ -89,11 +89,12 @@
       [
         "react-native-google-mobile-ads",
         {
-          "android_app_id": "ca-app-pub-4758709448782249~5979653821",
-          "ios_app_id": "ca-app-pub-4758709448782249~5612676219"
+          "androidAppId": "ca-app-pub-4758709448782249~5979653821",
+          "iosAppId": "ca-app-pub-4758709448782249~5612676219"
         }
       ],
-      "@react-native-firebase/app"
+      "@react-native-firebase/app",
+      "expo-asset"
     ],
     "scheme": "soomsoom",
     "extra": {
