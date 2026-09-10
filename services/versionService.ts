@@ -2,6 +2,7 @@ import { apiClient } from './apiClient';
 import { storeUrlForPlatform } from '../constants/externalUrl';
 import { Platform, Linking, Alert } from 'react-native';
 import * as Application from 'expo-application';
+import { PORTFOLIO_CAPTURE } from '../configs/portfolioCapture';
 
 
 // 서버에서 받는 버전 정보 타입
@@ -34,6 +35,13 @@ export function getCurrentAppVersion(): AppVersionInfo {
  */
 export async function checkLatestVersion(): Promise<VersionResponse> {
   try {
+    if (PORTFOLIO_CAPTURE.forceUpdateAlert) {
+      return {
+        isLatest: false,
+        forceUpdate: true,
+      };
+    }
+
     // Prod 환경: 실제 서버 API 호출
     const currentApp = getCurrentAppVersion();
     console.log('🔍 서버 버전 체크 시작:', JSON.stringify(currentApp));

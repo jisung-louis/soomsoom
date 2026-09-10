@@ -22,6 +22,7 @@ import { useScreenAnalytics } from '../../../hooks/useScreenAnalytics';
 import { Alert } from 'react-native';
 import { renderItemImage } from '../../../utils/imageUtils';
 import { useBgTopColor } from '../../../hooks/useBackgroundColor';
+import { PORTFOLIO_CAPTURE } from '../../../configs/portfolioCapture';
 
 type ShopItemDetailScreenRouteProp = RouteProp<HomeStackParamList, 'ShopItemDetailScreen'>;
 
@@ -166,6 +167,32 @@ const ShopItemDetailScreen = () => {
   const [roomBgUri, setRoomBgUri] = useState<string | null>(null);
 
   const isBGColorDark = useBgTopColor(roomBgUri);
+
+  if (PORTFOLIO_CAPTURE.shopErrorScreen) {
+    return (
+      <View style={[styles.portfolioErrorContainer, {paddingTop: 50}] }>
+        <SubpageHeader
+          onBack={handleBack}
+          style={{ paddingHorizontal: 20 }}
+          right={<HeartPoint money={heartPoints.toString()} onPress={() => {}} />}
+        />
+        <View style={styles.portfolioErrorContent}>
+          <View style={styles.portfolioErrorIcon}>
+            <Text style={styles.portfolioErrorIconText}>!</Text>
+          </View>
+          <Text style={styles.portfolioErrorTitle}>상점 정보를 불러오지 못했어요</Text>
+          <Text style={styles.portfolioErrorMessage}>
+            알 수 없는 오류가 발생했습니다.{'\n'}
+            다시 시도해주세요.
+          </Text>
+          <View style={styles.portfolioErrorButton}>
+            <Text style={styles.portfolioErrorButtonText}>다시 시도</Text>
+          </View>
+        </View>
+      </View>
+    );
+  }
+
   return (
     <>
     <UserRoom
@@ -368,6 +395,56 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     width: '100%',
     zIndex: 1000,
+  },
+  portfolioErrorContainer: {
+    flex: 1,
+    backgroundColor: colors.white,
+  },
+  portfolioErrorContent: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 28,
+    paddingBottom: 80,
+  },
+  portfolioErrorIcon: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: colors.grayScale100,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 24,
+  },
+  portfolioErrorIconText: {
+    ...typography.heading9,
+    color: colors.grayScale500,
+  },
+  portfolioErrorTitle: {
+    ...typography.heading9,
+    color: colors.grayScale900,
+    textAlign: 'center',
+    marginBottom: 12,
+  },
+  portfolioErrorMessage: {
+    ...typography.body2,
+    color: colors.grayScale500,
+    textAlign: 'center',
+    lineHeight: 24,
+    marginBottom: 28,
+  },
+  portfolioErrorButton: {
+    minWidth: 144,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: colors.primary300,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 24,
+  },
+  portfolioErrorButtonText: {
+    ...typography.body5,
+    color: colors.white,
   },
   modalBackdrop: {
     flex: 1,
