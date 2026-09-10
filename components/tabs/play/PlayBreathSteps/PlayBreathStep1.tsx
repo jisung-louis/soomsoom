@@ -31,8 +31,8 @@ export const PlayBreathStep1: React.FC<PlayBreathStep1Props> = ({
       <PlayBreathStep0
         windowHeight={windowHeight}
         safeAreaHeight={safeAreaHeight}
-        onAnimationFinish={onAnimationFinish}
-        isActive={false}//Step 1에서는 Step 0의 애니메이션이 재생되면 안됨
+        onAnimationFinish={() => {}} // Step1에서는 애니메이션 완료 핸들러 불필요
+        isActive={false} // Step 1에서는 Step 0의 애니메이션이 재생되면 안됨
       />
       
       {/* 화면 터치 안내 텍스트 (애니메이션) */}

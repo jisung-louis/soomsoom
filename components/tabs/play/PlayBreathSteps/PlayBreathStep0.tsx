@@ -32,6 +32,7 @@ export const PlayBreathStep0: React.FC<PlayBreathStep0Props> = ({
         source={require('../../../../assets/animations/fish_down.json')}
         autoPlay={isActive}
         loop={false}
+        progress={isActive ? undefined : 1} // 비활성화 시 마지막 프레임 고정
         style={[
           styles.fish,
           {
