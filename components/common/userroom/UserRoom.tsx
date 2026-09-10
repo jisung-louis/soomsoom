@@ -12,7 +12,7 @@ import { colors } from '../../../constants/colors';
 import { renderItemImage } from '../../../utils/imageUtils';
 import { WINDOW_HEIGHT } from '@gorhom/bottom-sheet';
 import * as ImageManipulator from 'expo-image-manipulator';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 
 export type UserRoomProps = {
   children: React.ReactNode;
