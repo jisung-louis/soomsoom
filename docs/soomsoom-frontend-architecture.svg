@@ -1,0 +1,187 @@
+<svg width="1600" height="900" viewBox="0 0 1600 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1600" y2="900" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFF7E8"/>
+      <stop offset="0.52" stop-color="#F8FBFF"/>
+      <stop offset="1" stop-color="#ECF7F0"/>
+    </linearGradient>
+    <linearGradient id="orange" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FFB547"/>
+      <stop offset="1" stop-color="#FF7A59"/>
+    </linearGradient>
+    <linearGradient id="blue" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#60A5FA"/>
+      <stop offset="1" stop-color="#2563EB"/>
+    </linearGradient>
+    <linearGradient id="green" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#6EE7B7"/>
+      <stop offset="1" stop-color="#10B981"/>
+    </linearGradient>
+    <linearGradient id="violet" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#C4B5FD"/>
+      <stop offset="1" stop-color="#7C3AED"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="14" stdDeviation="16" flood-color="#172033" flood-opacity="0.12"/>
+    </filter>
+    <filter id="softShadow" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#172033" flood-opacity="0.10"/>
+    </filter>
+    <marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
+      <path d="M2 2L10 6L2 10" stroke="#64748B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+    <marker id="orangeArrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="10" markerHeight="10" orient="auto-start-reverse">
+      <path d="M2 2L10 6L2 10" stroke="#F97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M40 0H0V40" stroke="#CBD5E1" stroke-width="1" stroke-opacity="0.25"/>
+    </pattern>
+    <style>
+      .title { font: 800 46px "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif; fill: #172033; }
+      .subtitle { font: 500 22px "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif; fill: #64748B; }
+      .section-title { font: 800 24px "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif; fill: #172033; }
+      .section-sub { font: 500 15px "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif; fill: #64748B; }
+      .label-white { font: 800 18px "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif; fill: #FFFFFF; }
+      .card-title { font: 800 18px "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif; fill: #1E293B; }
+      .card-small { font: 600 14px "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif; fill: #64748B; }
+      .chip { font: 700 13px "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif; fill: #334155; }
+      .note-title { font: 800 19px "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif; fill: #172033; }
+      .note { font: 600 15px "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif; fill: #475569; }
+    </style>
+  </defs>
+
+  <rect x="0" y="0" width="1600" height="900" fill="#FFFFFF"/>
+
+  <g transform="translate(125 190)">
+    <rect x="0" y="0" width="220" height="595" rx="34" fill="#111827" filter="url(#softShadow)"/>
+    <rect x="18" y="38" width="184" height="510" rx="24" fill="#FFF7ED"/>
+    <rect x="78" y="15" width="64" height="7" rx="3.5" fill="#374151"/>
+    <circle cx="110" cy="570" r="11" fill="#374151"/>
+    <circle cx="110" cy="145" r="58" fill="url(#orange)"/>
+    <text x="110" y="138" text-anchor="middle" class="label-white">숨숨</text>
+    <text x="110" y="162" text-anchor="middle" class="label-white" style="font-size:13px;font-weight:700">Soomsoom</text>
+    <text x="110" y="235" text-anchor="middle" class="card-title">Mobile App</text>
+    <text x="110" y="268" text-anchor="middle" class="card-small">React Native</text>
+    <text x="110" y="292" text-anchor="middle" class="card-small">Expo</text>
+    <text x="110" y="316" text-anchor="middle" class="card-small">TypeScript</text>
+    <rect x="42" y="366" width="136" height="38" rx="19" fill="#FED7AA"/>
+    <text x="110" y="391" text-anchor="middle" class="chip">iOS / Android</text>
+    <rect x="42" y="420" width="136" height="38" rx="19" fill="#DBEAFE"/>
+    <text x="110" y="445" text-anchor="middle" class="chip">EAS Build</text>
+  </g>
+
+  <g transform="translate(385 188)">
+    <text x="0" y="0" class="section-title">App Flow</text>
+    <text x="0" y="28" class="section-sub">앱 실행부터 화면 렌더링까지의 프론트엔드 책임 분리</text>
+
+    <g transform="translate(0 60)">
+      <rect x="0" y="0" width="780" height="80" rx="22" fill="#FFF7ED" stroke="#FDBA74" stroke-width="2"/>
+      <rect x="22" y="20" width="168" height="40" rx="20" fill="url(#orange)"/>
+      <text x="106" y="46" text-anchor="middle" class="label-white">App Entry</text>
+      <text x="220" y="34" class="card-title">App.tsx / Bootstrap</text>
+      <text x="220" y="58" class="card-small">버전 체크, 권한 확인, 광고/분석 초기화, 인증 상태 확인</text>
+    </g>
+
+    <path d="M390 150V185" stroke="#64748B" stroke-width="2.5" marker-end="url(#arrow)"/>
+
+    <g transform="translate(0 190)">
+      <rect x="0" y="0" width="780" height="108" rx="24" fill="#EFF6FF" stroke="#93C5FD" stroke-width="2"/>
+      <rect x="22" y="23" width="168" height="40" rx="20" fill="url(#blue)"/>
+      <text x="106" y="49" text-anchor="middle" class="label-white">UI / Navigation</text>
+      <text x="220" y="35" class="card-title">React Navigation</text>
+      <text x="220" y="60" class="card-small">Bottom Tab + Stack Navigator로 홈, 기록, 플레이, 알람, 마이페이지 구성</text>
+      <g transform="translate(220 74)">
+        <rect x="0" y="0" width="86" height="26" rx="13" fill="#DBEAFE"/>
+        <text x="43" y="18" text-anchor="middle" class="chip">Home</text>
+        <rect x="96" y="0" width="86" height="26" rx="13" fill="#DBEAFE"/>
+        <text x="139" y="18" text-anchor="middle" class="chip">Record</text>
+        <rect x="192" y="0" width="86" height="26" rx="13" fill="#DBEAFE"/>
+        <text x="235" y="18" text-anchor="middle" class="chip">Play</text>
+        <rect x="288" y="0" width="86" height="26" rx="13" fill="#DBEAFE"/>
+        <text x="331" y="18" text-anchor="middle" class="chip">Alarm</text>
+        <rect x="384" y="0" width="86" height="26" rx="13" fill="#DBEAFE"/>
+        <text x="427" y="18" text-anchor="middle" class="chip">My</text>
+      </g>
+    </g>
+
+    <path d="M390 308V343" stroke="#64748B" stroke-width="2.5" marker-end="url(#arrow)"/>
+
+    <g transform="translate(0 348)">
+      <rect x="0" y="0" width="780" height="98" rx="24" fill="#F5F3FF" stroke="#C4B5FD" stroke-width="2"/>
+      <rect x="22" y="29" width="168" height="40" rx="20" fill="url(#violet)"/>
+      <text x="106" y="55" text-anchor="middle" class="label-white">Hooks</text>
+      <text x="220" y="36" class="card-title">Custom Hooks</text>
+      <text x="220" y="61" class="card-small">화면 이벤트, 오디오 재생, 푸시 알림, 화면 분석 로직을 재사용 가능한 단위로 분리</text>
+      <text x="220" y="84" class="card-small">useAppBootstrap · useAudioPlayer · usePushNotification · useScreenAnalytics</text>
+    </g>
+
+    <path d="M286 456V491" stroke="#64748B" stroke-width="2.5" marker-end="url(#arrow)"/>
+    <path d="M494 456V491" stroke="#64748B" stroke-width="2.5" marker-end="url(#arrow)"/>
+
+    <g transform="translate(0 496)">
+      <rect x="0" y="0" width="372" height="122" rx="24" fill="#ECFDF5" stroke="#86EFAC" stroke-width="2"/>
+      <rect x="22" y="22" width="132" height="36" rx="18" fill="url(#green)"/>
+      <text x="88" y="46" text-anchor="middle" class="label-white">State</text>
+      <text x="178" y="36" class="card-title">Zustand Store</text>
+      <text x="28" y="78" class="card-small">auth · alarm · play · achievement</text>
+      <text x="28" y="101" class="card-small">currency · room · notificationQueue</text>
+    </g>
+
+    <g transform="translate(408 496)">
+      <rect x="0" y="0" width="372" height="122" rx="24" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="2"/>
+      <rect x="22" y="22" width="132" height="36" rx="18" fill="#334155"/>
+      <text x="88" y="46" text-anchor="middle" class="label-white">Service</text>
+      <text x="178" y="36" class="card-title">Service Layer</text>
+      <text x="28" y="78" class="card-small">apiClient · authService · versionService</text>
+      <text x="28" y="101" class="card-small">content · emotion · notification · audio</text>
+    </g>
+
+    <path d="M372 557H408" stroke="#F97316" stroke-width="2.5" marker-end="url(#orangeArrow)"/>
+  </g>
+
+  <g transform="translate(1200 188)">
+    <text x="0" y="0" class="section-title">External / Local</text>
+    <text x="0" y="28" class="section-sub">앱 외부 기능과 로컬 저장소 연동</text>
+
+    <g transform="translate(0 60)">
+      <rect x="0" y="0" width="270" height="72" rx="22" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="2" filter="url(#softShadow)"/>
+      <circle cx="37" cy="36" r="18" fill="#DBEAFE"/>
+      <text x="70" y="31" class="card-title">Server API</text>
+      <text x="70" y="54" class="card-small">Axios API Client</text>
+    </g>
+    <g transform="translate(0 150)">
+      <rect x="0" y="0" width="270" height="72" rx="22" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="2" filter="url(#softShadow)"/>
+      <circle cx="37" cy="36" r="18" fill="#FEF3C7"/>
+      <text x="70" y="31" class="card-title">Firebase</text>
+      <text x="70" y="54" class="card-small">Analytics · FCM</text>
+    </g>
+    <g transform="translate(0 240)">
+      <rect x="0" y="0" width="270" height="72" rx="22" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="2" filter="url(#softShadow)"/>
+      <circle cx="37" cy="36" r="18" fill="#DCFCE7"/>
+      <text x="70" y="31" class="card-title">Local Storage</text>
+      <text x="70" y="54" class="card-small">SecureStore · AsyncStorage</text>
+    </g>
+    <g transform="translate(0 330)">
+      <rect x="0" y="0" width="270" height="72" rx="22" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="2" filter="url(#softShadow)"/>
+      <circle cx="37" cy="36" r="18" fill="#FCE7F3"/>
+      <text x="70" y="31" class="card-title">Native Features</text>
+      <text x="70" y="54" class="card-small">Notifications · Audio</text>
+    </g>
+    <g transform="translate(0 442)">
+      <rect x="0" y="0" width="270" height="112" rx="26" fill="#FFF7ED" stroke="#FDBA74" stroke-width="2"/>
+      <text x="24" y="34" class="note-title">설계 포인트</text>
+      <text x="24" y="64" class="note">Screen은 UI 표현에 집중</text>
+      <text x="24" y="88" class="note">상태와 외부 연동 책임 분리</text>
+    </g>
+  </g>
+
+  <path d="M1165 745C1195 745 1195 224 1200 224" stroke="#CBD5E1" stroke-width="2.5" stroke-dasharray="8 8" marker-end="url(#arrow)"/>
+  <path d="M1165 745C1195 745 1195 314 1200 314" stroke="#CBD5E1" stroke-width="2.5" stroke-dasharray="8 8" marker-end="url(#arrow)"/>
+  <path d="M775 745C1030 820 1188 494 1200 494" stroke="#CBD5E1" stroke-width="2.5" stroke-dasharray="8 8" marker-end="url(#arrow)"/>
+  <path d="M1165 745C1195 745 1195 584 1200 584" stroke="#CBD5E1" stroke-width="2.5" stroke-dasharray="8 8" marker-end="url(#arrow)"/>
+
+  <g transform="translate(383 790)">
+    <rect x="0" y="0" width="780" height="34" rx="17" fill="#F8FAFC" stroke="#E2E8F0"/>
+    <text x="390" y="23" text-anchor="middle" class="card-small">UI, 상태, 외부 연동 책임을 분리해 화면 복잡도를 낮추고 기능 변경 시 수정 범위를 명확히 함</text>
+  </g>
+</svg>

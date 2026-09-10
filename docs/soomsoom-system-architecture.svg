@@ -1,0 +1,141 @@
+<svg width="1600" height="900" viewBox="0 0 1600 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="appGradient" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#61DAFB"/>
+      <stop offset="1" stop-color="#0EA5E9"/>
+    </linearGradient>
+    <linearGradient id="serverGradient" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#6DB33F"/>
+      <stop offset="1" stop-color="#2E7D32"/>
+    </linearGradient>
+    <linearGradient id="dbGradient" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#4479A1"/>
+      <stop offset="1" stop-color="#00758F"/>
+    </linearGradient>
+    <linearGradient id="externalGradient" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FDE68A"/>
+      <stop offset="1" stop-color="#F59E0B"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="12" stdDeviation="15" flood-color="#172033" flood-opacity="0.12"/>
+    </filter>
+    <filter id="softShadow" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="7" stdDeviation="9" flood-color="#172033" flood-opacity="0.10"/>
+    </filter>
+    <marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="10" markerHeight="10" orient="auto">
+      <path d="M2 2L10 6L2 10" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+    <marker id="orangeArrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="10" markerHeight="10" orient="auto">
+      <path d="M2 2L10 6L2 10" stroke="#F97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="1600" height="900" fill="#FFFFFF"/>
+
+  <g transform="translate(85 70)">
+    <rect x="0" y="0" width="440" height="120" rx="28" fill="#FFFBEB" stroke="#FBBF24" stroke-width="2" filter="url(#softShadow)"/>
+    <rect x="24" y="24" width="96" height="34" rx="17" fill="url(#externalGradient)"/>
+    <text x="72" y="47" text-anchor="middle" font-family="Pretendard, Apple SD Gothic Neo, Noto Sans KR, sans-serif" font-size="18" font-weight="800" fill="#FFFFFF">External</text>
+    <text x="142" y="39" font-family="Pretendard, Apple SD Gothic Neo, Noto Sans KR, sans-serif" font-size="19" font-weight="800" fill="#172033">Firebase / Social Login</text>
+    <text x="142" y="66" font-family="Pretendard, Apple SD Gothic Neo, Noto Sans KR, sans-serif" font-size="14" font-weight="600" fill="#64748B">FCM · Analytics · Google Sign-In · Apple Auth</text>
+    <text x="142" y="91" font-family="Pretendard, Apple SD Gothic Neo, Noto Sans KR, sans-serif" font-size="12" font-weight="600" fill="#64748B">푸시 알림, 사용자 분석, 소셜 인증 연동</text>
+  </g>
+
+  <g transform="translate(85 235)">
+    <rect x="0" y="0" width="345" height="480" rx="34" fill="#ECFEFF" stroke="#61DAFB" stroke-width="2.5" filter="url(#shadow)"/>
+    <rect x="26" y="30" width="116" height="42" rx="21" fill="url(#appGradient)"/>
+    <text x="84" y="58" text-anchor="middle" font-family="Pretendard, Apple SD Gothic Neo, Noto Sans KR, sans-serif" font-size="18" font-weight="800" fill="#FFFFFF">Mobile</text>
+    <text x="166" y="48" font-family="Pretendard, Apple SD Gothic Neo, Noto Sans KR, sans-serif" font-size="25" font-weight="800" fill="#172033">React Native</text>
+    <text x="166" y="75" font-family="Pretendard, Apple SD Gothic Neo, Noto Sans KR, sans-serif" font-size="15" font-weight="600" fill="#64748B">iOS / Android 클라이언트</text>
+
+    <rect x="30" y="116" width="285" height="86" rx="22" fill="#FFFFFF" stroke="#BAE6FD" stroke-width="2"/>
+    <text x="52" y="148" font-family="Pretendard, Apple SD Gothic Neo, Noto Sans KR, sans-serif" font-size="19" font-weight="800" fill="#172033">UI / Navigation</text>
+    <text x="52" y="174" font-family="Pretendard, Apple SD Gothic Neo, Noto Sans KR, sans-serif" font-size="14" font-weight="600" fill="#64748B">React Navigation 기반 Tab / Stack 화면 구성</text>
+
+    <rect x="30" y="222" width="285" height="86" rx="22" fill="#FFFFFF" stroke="#BAE6FD" stroke-width="2"/>
+    <text x="52" y="254" font-family="Pretendard, Apple SD Gothic Neo, Noto Sans KR, sans-serif" font-size="19" font-weight="800" fill="#172033">State Management</text>
+    <text x="52" y="280" font-family="Pretendard, Apple SD Gothic Neo, Noto Sans KR, sans-serif" font-size="14" font-weight="600" fill="#64748B">Zustand로 인증, 기록, 알람, 보상 상태 관리</text>
+
+    <rect x="30" y="328" width="285" height="82" rx="22" fill="#FFFFFF" stroke="#BAE6FD" stroke-width="2"/>
+    <text x="52" y="360" font-family="Pretendard, Apple SD Gothic Neo, Noto Sans KR, sans-serif" font-size="19" font-weight="800" fill="#172033">Service / Hooks</text>
+    <text x="52" y="386" font-family="Pretendard, Apple SD Gothic Neo, Noto Sans KR, sans-serif" font-size="14" font-weight="600" fill="#64748B">API, 알림, 오디오, 버전 체크 로직 분리</text>
+  </g>
+
+  <g transform="translate(103 785)">
+    <rect x="0" y="0" width="309" height="96" rx="24" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="2" filter="url(#softShadow)"/>
+    <text x="24" y="35" font-family="Pretendard, Apple SD Gothic Neo, Noto Sans KR, sans-serif" font-size="19" font-weight="800" fill="#172033">Local Storage</text>
+    <text x="24" y="61" font-family="Pretendard, Apple SD Gothic Neo, Noto Sans KR, sans-serif" font-size="14" font-weight="600" fill="#64748B">AsyncStorage · SecureStore · Zustand persist</text>
+    <text x="24" y="82" font-family="Pretendard, Apple SD Gothic Neo, Noto Sans KR, sans-serif" font-size="12" font-weight="600" fill="#64748B">앱 재실행 후 필요한 로컬 상태 유지</text>
+  </g>
+
+  <path d="M257 190V225" stroke="#475569" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <path d="M257 755V775" stroke="#475569" stroke-width="2.5" marker-end="url(#arrow)"/>
+
+  <g transform="translate(545 165)">
+    <rect x="0" y="0" width="460" height="595" rx="36" fill="#F0FDF4" stroke="#6DB33F" stroke-width="2.5" filter="url(#shadow)"/>
+    <rect x="28" y="28" width="104" height="42" rx="21" fill="url(#serverGradient)"/>
+    <text x="80" y="56" text-anchor="middle" font-family="Pretendard, Apple SD Gothic Neo, Noto Sans KR, sans-serif" font-size="18" font-weight="800" fill="#FFFFFF">AWS EC2</text>
+    <text x="154" y="46" font-family="Pretendard, Apple SD Gothic Neo, Noto Sans KR, sans-serif" font-size="25" font-weight="800" fill="#172033">Spring Boot Backend</text>
+    <text x="154" y="73" font-family="Pretendard, Apple SD Gothic Neo, Noto Sans KR, sans-serif" font-size="15" font-weight="600" fill="#64748B">REST API 서버 / 비즈니스 로직 처리</text>
+
+    <rect x="38" y="116" width="384" height="74" rx="22" fill="#FFFFFF" stroke="#BBF7D0" stroke-width="2"/>
+    <text x="64" y="149" font-family="Pretendard, Apple SD Gothic Neo, Noto Sans KR, sans-serif" font-size="19" font-weight="800" fill="#172033">API Layer</text>
+    <text x="64" y="174" font-family="Pretendard, Apple SD Gothic Neo, Noto Sans KR, sans-serif" font-size="14" font-weight="600" fill="#64748B">모바일 앱 요청 처리, JSON 응답, 버전 체크 및 인증 흐름 연동</text>
+
+    <rect x="38" y="214" width="384" height="250" rx="24" fill="#FFFFFF" stroke="#BBF7D0" stroke-width="2"/>
+    <text x="64" y="248" font-family="Pretendard, Apple SD Gothic Neo, Noto Sans KR, sans-serif" font-size="19" font-weight="800" fill="#172033">Service Layer</text>
+    <text x="64" y="276" font-family="Pretendard, Apple SD Gothic Neo, Noto Sans KR, sans-serif" font-size="14" font-weight="600" fill="#64748B">도메인별 비즈니스 로직 분리</text>
+
+    <g transform="translate(64 306)">
+      <rect x="0" y="0" width="160" height="34" rx="17" fill="#DCFCE7"/>
+      <text x="80" y="22" text-anchor="middle" font-family="Pretendard, Apple SD Gothic Neo, Noto Sans KR, sans-serif" font-size="13" font-weight="700" fill="#334155">User / Auth</text>
+      <rect x="176" y="0" width="160" height="34" rx="17" fill="#DCFCE7"/>
+      <text x="256" y="22" text-anchor="middle" font-family="Pretendard, Apple SD Gothic Neo, Noto Sans KR, sans-serif" font-size="13" font-weight="700" fill="#334155">Emotion Record</text>
+      <rect x="0" y="48" width="160" height="34" rx="17" fill="#DCFCE7"/>
+      <text x="80" y="70" text-anchor="middle" font-family="Pretendard, Apple SD Gothic Neo, Noto Sans KR, sans-serif" font-size="13" font-weight="700" fill="#334155">Content</text>
+      <rect x="176" y="48" width="160" height="34" rx="17" fill="#DCFCE7"/>
+      <text x="256" y="70" text-anchor="middle" font-family="Pretendard, Apple SD Gothic Neo, Noto Sans KR, sans-serif" font-size="13" font-weight="700" fill="#334155">Mission / Reward</text>
+      <rect x="0" y="96" width="160" height="34" rx="17" fill="#DCFCE7"/>
+      <text x="80" y="118" text-anchor="middle" font-family="Pretendard, Apple SD Gothic Neo, Noto Sans KR, sans-serif" font-size="13" font-weight="700" fill="#334155">Notification</text>
+      <rect x="176" y="96" width="160" height="34" rx="17" fill="#DCFCE7"/>
+      <text x="256" y="118" text-anchor="middle" font-family="Pretendard, Apple SD Gothic Neo, Noto Sans KR, sans-serif" font-size="13" font-weight="700" fill="#334155">Version Check</text>
+    </g>
+
+    <rect x="38" y="492" width="384" height="66" rx="22" fill="#FFFFFF" stroke="#BBF7D0" stroke-width="2"/>
+    <text x="64" y="523" font-family="Pretendard, Apple SD Gothic Neo, Noto Sans KR, sans-serif" font-size="19" font-weight="800" fill="#172033">Data Access Layer</text>
+    <text x="64" y="548" font-family="Pretendard, Apple SD Gothic Neo, Noto Sans KR, sans-serif" font-size="14" font-weight="600" fill="#64748B">MySQL 데이터 조회/저장 및 도메인 데이터 영속화</text>
+  </g>
+
+  <g transform="translate(1205 255)">
+    <rect x="0" y="0" width="280" height="230" rx="34" fill="#EFF6FF" stroke="#4479A1" stroke-width="2.5" filter="url(#shadow)"/>
+    <text x="114" y="48" font-family="Pretendard, Apple SD Gothic Neo, Noto Sans KR, sans-serif" font-size="25" font-weight="800" fill="#172033">MySQL</text>
+    <text x="114" y="75" font-family="Pretendard, Apple SD Gothic Neo, Noto Sans KR, sans-serif" font-size="15" font-weight="600" fill="#64748B">서비스 데이터 저장소</text>
+
+    <rect x="40" y="116" width="96" height="34" rx="17" fill="#DBEAFE"/>
+    <text x="88" y="138" text-anchor="middle" font-family="Pretendard, Apple SD Gothic Neo, Noto Sans KR, sans-serif" font-size="13" font-weight="700" fill="#334155">User Data</text>
+    <rect x="154" y="116" width="96" height="34" rx="17" fill="#DBEAFE"/>
+    <text x="202" y="138" text-anchor="middle" font-family="Pretendard, Apple SD Gothic Neo, Noto Sans KR, sans-serif" font-size="13" font-weight="700" fill="#334155">Emotion Log</text>
+    <rect x="40" y="164" width="96" height="34" rx="17" fill="#DBEAFE"/>
+    <text x="88" y="186" text-anchor="middle" font-family="Pretendard, Apple SD Gothic Neo, Noto Sans KR, sans-serif" font-size="13" font-weight="700" fill="#334155">Content Log</text>
+    <rect x="154" y="164" width="96" height="34" rx="17" fill="#DBEAFE"/>
+    <text x="202" y="186" text-anchor="middle" font-family="Pretendard, Apple SD Gothic Neo, Noto Sans KR, sans-serif" font-size="13" font-weight="700" fill="#334155">Reward Data</text>
+  </g>
+
+  <g transform="translate(1145 550)">
+    <rect x="0" y="0" width="350" height="185" rx="30" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="2" filter="url(#softShadow)"/>
+    <text x="28" y="43" font-family="Pretendard, Apple SD Gothic Neo, Noto Sans KR, sans-serif" font-size="19" font-weight="800" fill="#172033">Frontend 담당 관점</text>
+    <text x="28" y="75" font-family="Pretendard, Apple SD Gothic Neo, Noto Sans KR, sans-serif" font-size="14" font-weight="600" fill="#64748B">화면 컴포넌트가 API/저장소를 직접 다루지 않도록</text>
+    <text x="28" y="100" font-family="Pretendard, Apple SD Gothic Neo, Noto Sans KR, sans-serif" font-size="14" font-weight="600" fill="#64748B">Service, Hooks, Store 계층으로 책임을 분리</text>
+    <text x="28" y="132" font-family="Pretendard, Apple SD Gothic Neo, Noto Sans KR, sans-serif" font-size="14" font-weight="600" fill="#64748B">서버 API와 로컬 상태를 연결해 앱 사용 흐름 구성</text>
+  </g>
+
+  <path d="M430 460H535" stroke="#475569" stroke-width="3" marker-end="url(#arrow)"/>
+  <text x="482" y="438" text-anchor="middle" font-family="Pretendard, Apple SD Gothic Neo, Noto Sans KR, sans-serif" font-size="15" font-weight="800" fill="#475569">REST API</text>
+  <text x="482" y="485" text-anchor="middle" font-family="Pretendard, Apple SD Gothic Neo, Noto Sans KR, sans-serif" font-size="12" font-weight="600" fill="#64748B">Axios / JSON</text>
+
+  <path d="M1035 430H1135" stroke="#475569" stroke-width="3" marker-end="url(#arrow)"/>
+  <text x="1085" y="407" text-anchor="middle" font-family="Pretendard, Apple SD Gothic Neo, Noto Sans KR, sans-serif" font-size="15" font-weight="800" fill="#475569">Read / Write</text>
+
+  <path d="M1035 610H1135" stroke="#CBD5E1" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <text x="1085" y="588" text-anchor="middle" font-family="Pretendard, Apple SD Gothic Neo, Noto Sans KR, sans-serif" font-size="12" font-weight="600" fill="#64748B">구조 설명</text>
+</svg>
